@@ -510,7 +510,6 @@ func runRouteRequestTests(t *testing.T, router *Router) {
 	}
 }
 
-
 func TestRouter_RouteRequest_WithSession(t *testing.T) {
 	sessionReceived := false
 	backend := setupSessionTestBackend(&sessionReceived)

@@ -1,0 +1,8 @@
+=== COMPREHENSIVE GO MODULE COVERAGE ===
+Timestamp: Thu Sep 25 14:23:50 PDT 2025
+Found modules: . ./test/e2e/k8s ./test/e2e/weather ./test/e2e/full_stack ./test/e2e/full_stack/test-mcp-server ./services/gateway ./services/router
+
+=== COLLECTING COVERAGE FROM MODULE: . (1/7) ===
+Running coverage for module: root
+Starting coverage collection (timeout: 480s)...
+Running go test (allowing integration tests to complete)...

@@ -33,14 +33,25 @@ import (
 )
 
 func TestBootstrapGatewayServer(t *testing.T) {
-	cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger := setupBootstrapTestDependencies(t)
+	cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger :=
+		setupBootstrapTestDependencies(t)
 	
-	server := BootstrapGatewayServer(cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger)
+	server := BootstrapGatewayServer(
+		cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger)
 	
 	validateBootstrappedServer(t, server, cfg, mockHealth, registry, logger)
 }
 
-func setupBootstrapTestDependencies(t *testing.T) (*config.Config, *mockAuthProvider, *mockSessionManager, *router.Router, *health.Checker, *metrics.Registry, ratelimit.RateLimiter, *zap.Logger) {
+func setupBootstrapTestDependencies(t *testing.T) (
+	*config.Config,
+	*mockAuthProvider,
+	*mockSessionManager,
+	*router.Router,
+	*health.Checker,
+	*metrics.Registry,
+	ratelimit.RateLimiter,
+	*zap.Logger,
+) {
 	t.Helper()
 	
 	cfg := &config.Config{
@@ -64,7 +75,10 @@ func setupBootstrapTestDependencies(t *testing.T) (*config.Config, *mockAuthProv
 		},
 	}
 	mockDiscovery := &mockServiceDiscovery{}
-	testRouter := router.InitializeRequestRouter(context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), testutil.NewTestLogger(t))
+	testRouter := router.InitializeRequestRouter(
+		context.Background(), routerCfg, mockDiscovery,
+		testutil.CreateTestMetricsRegistry(),
+		testutil.NewTestLogger(t))
 
 	mockHealth := health.CreateHealthMonitor(nil, zap.NewNop())
 	registry := testutil.CreateTestMetricsRegistry()
@@ -74,7 +88,14 @@ func setupBootstrapTestDependencies(t *testing.T) (*config.Config, *mockAuthProv
 	return cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger
 }
 
-func validateBootstrappedServer(t *testing.T, server *GatewayServer, cfg *config.Config, mockHealth *health.Checker, registry *metrics.Registry, logger *zap.Logger) {
+func validateBootstrappedServer(
+	t *testing.T,
+	server *GatewayServer,
+	cfg *config.Config,
+	mockHealth *health.Checker,
+	registry *metrics.Registry,
+	logger *zap.Logger,
+) {
 	t.Helper()
 	
 	if server == nil {
@@ -230,7 +251,10 @@ func setupWebSocketTestServer(t *testing.T) *GatewayServer {
 		},
 	}
 	mockDiscovery := &mockServiceDiscovery{}
-	testRouter := router.InitializeRequestRouter(context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), testutil.NewTestLogger(t))
+	testRouter := router.InitializeRequestRouter(
+		context.Background(), routerCfg, mockDiscovery,
+		testutil.CreateTestMetricsRegistry(),
+		testutil.NewTestLogger(t))
 
 	mockHealth := health.CreateHealthMonitor(nil, zap.NewNop())
 	registry := testutil.CreateTestMetricsRegistry()

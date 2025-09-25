@@ -1,0 +1,28 @@
+=== REPOSITORY COVERAGE SUMMARY ===
+Timestamp: Thu Sep 25 15:11:01 PDT 2025
+Total Coverage: 0.0%
+Coverage Threshold: 80%
+Status: FAIL
+
+=== MODULE COVERAGE STATUS ===
+Modules successfully collected (0/7):
+  (none)
+
+Modules that failed coverage collection (7/7):
+  ❌ root (       1 package(s) with test failures)
+  ⏭️  k8s (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⏭️  weather (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⏭️  full_stack (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⏭️  test-mcp-server (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⚙️  gateway (test setup failed)
+  💥 router (test panic)
+
+=== COVERAGE BY PACKAGE ===
+
+=== LOW COVERAGE FILES (<70%) ===
+total: 0.0%
+
+=== COVERAGE COLLECTION WARNINGS ===
+⚠️  Coverage data is incomplete due to 7 failed modules.
+    The reported coverage percentage only reflects successfully tested modules.
+    Fix failing tests in the failed modules for complete coverage analysis.

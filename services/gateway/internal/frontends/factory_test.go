@@ -104,6 +104,7 @@ func TestDefaultFactory_CreateFrontend_UnsupportedProtocol(t *testing.T) {
 
 func TestDefaultFactory_CreateStdioFrontend(t *testing.T) {
 	t.Parallel()
+
 	tests := createStdioFrontendTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -1,0 +1,41 @@
+=== COMPREHENSIVE GO MODULE COVERAGE ===
+Timestamp: Thu Sep 25 13:17:44 PDT 2025
+Found modules: . ./test/e2e/k8s ./test/e2e/weather ./test/e2e/full_stack ./test/e2e/full_stack/test-mcp-server ./services/gateway ./services/router
+
+=== COLLECTING COVERAGE FROM MODULE: . (1/7) ===
+Running coverage for module: root
+Starting coverage collection (timeout: 480s)...
+Running go test (allowing integration tests to complete)...
+Module root coverage: SUCCESS (    1285 lines)
+
+=== COLLECTING COVERAGE FROM MODULE: ./test/e2e/k8s (2/7) ===
+Module k8s: SKIPPED (E2E tests skipped (set RUN_E2E_TESTS=true to enable))
+=== COLLECTING COVERAGE FROM MODULE: ./test/e2e/weather (3/7) ===
+Module weather: SKIPPED (E2E tests skipped (set RUN_E2E_TESTS=true to enable))
+=== COLLECTING COVERAGE FROM MODULE: ./test/e2e/full_stack (4/7) ===
+Module full_stack: SKIPPED (E2E tests skipped (set RUN_E2E_TESTS=true to enable))
+=== COLLECTING COVERAGE FROM MODULE: ./test/e2e/full_stack/test-mcp-server (5/7) ===
+Module test-mcp-server: SKIPPED (E2E tests skipped (set RUN_E2E_TESTS=true to enable))
+=== COLLECTING COVERAGE FROM MODULE: ./services/gateway (6/7) ===
+Running coverage for module: gateway
+Starting coverage collection (timeout: 600s)...
+Running go test (allowing integration tests to complete)...
+Module gateway coverage: FAILED after 17s
+Test log has      177 lines. Analyzing failure...
+❌ SETUP FAILURE: Test setup/initialization failed
+Setup error:         	            	[frontend_stdio] INTERNAL: failed to start unix socket mode: [frontend_stdio] ...
+
+=== COLLECTING COVERAGE FROM MODULE: ./services/router (7/7) ===
+Running coverage for module: router
+Starting coverage collection (timeout: 720s)...
+Running go test (allowing integration tests to complete)...
+Module router coverage: FAILED after 602s
+Test log has      120 lines. Analyzing failure...
+❌ PANIC: Tests panicked during execution
+Panic in test: 
+Panic: panic: test timed out after 10m0s...
+
+=== COVERAGE COLLECTION COMPLETE ===
+Successful modules: root
+Failed modules: k8s:skipped_E2E_tests_skipped_(set_RUN_E2E_TESTS=true_to_enable) weather:skipped_E2E_tests_skipped_(set_RUN_E2E_TESTS=true_to_enable) full_stack:skipped_E2E_tests_skipped_(set_RUN_E2E_TESTS=true_to_enable) test-mcp-server:skipped_E2E_tests_skipped_(set_RUN_E2E_TESTS=true_to_enable) gateway:setup_failed router:panic
+Total profiles collected: 1/7

@@ -195,11 +195,31 @@ func setupProtocolGroupingTest(t *testing.T) (*HybridLoadBalancer, []*discovery.
 	t.Helper()
 	
 	endpoints := []*discovery.Endpoint{
-		{Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
-		{Service: "http-svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
-		{Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations, Scheme: "ws", Metadata: map[string]string{"protocol": "websocket"}},
-		{Service: "ws-svc2", Address: "192.168.1.4", Port: 8080, Healthy: true, Weight: testIterations, Scheme: "wss", Metadata: map[string]string{"protocol": "websocket"}},
-		{Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Healthy: true, Weight: testIterations, Scheme: "http", Path: "/events", Metadata: map[string]string{"protocol": "sse"}},
+		{
+			Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Healthy: true,
+			Weight: testIterations, Scheme: "http",
+			Metadata: map[string]string{"protocol": "http"},
+		},
+		{
+			Service: "http-svc2", Address: "192.168.1.2", Port: 8080, Healthy: true,
+			Weight: testIterations, Scheme: "http",
+			Metadata: map[string]string{"protocol": "http"},
+		},
+		{
+			Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Healthy: true,
+			Weight: testIterations, Scheme: "ws",
+			Metadata: map[string]string{"protocol": "websocket"},
+		},
+		{
+			Service: "ws-svc2", Address: "192.168.1.4", Port: 8080, Healthy: true,
+			Weight: testIterations, Scheme: "wss",
+			Metadata: map[string]string{"protocol": "websocket"},
+		},
+		{
+			Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Healthy: true,
+			Weight: testIterations, Scheme: "http", Path: "/events",
+			Metadata: map[string]string{"protocol": "sse"},
+		},
 	}
 
 	config := HybridConfig{
@@ -278,9 +298,21 @@ func testSSELastResort(t *testing.T, originalEndpoints []*discovery.Endpoint) {
 	
 	// Create endpoints with only SSE healthy
 	endpointsOnlySSE := []*discovery.Endpoint{
-		{Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Healthy: false, Weight: testIterations, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
-		{Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Healthy: false, Weight: testIterations, Scheme: "ws", Metadata: map[string]string{"protocol": "websocket"}},
-		{Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Healthy: true, Weight: testIterations, Scheme: "http", Path: "/events", Metadata: map[string]string{"protocol": "sse"}},
+		{
+			Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Healthy: false,
+			Weight: testIterations, Scheme: "http",
+			Metadata: map[string]string{"protocol": "http"},
+		},
+		{
+			Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Healthy: false,
+			Weight: testIterations, Scheme: "ws",
+			Metadata: map[string]string{"protocol": "websocket"},
+		},
+		{
+			Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Healthy: true,
+			Weight: testIterations, Scheme: "http", Path: "/events",
+			Metadata: map[string]string{"protocol": "sse"},
+		},
 	}
 
 	config := HybridConfig{
@@ -625,7 +657,9 @@ func TestHybridLoadBalancer_UpdateEndpoints_Advanced(t *testing.T) {
 	// Update with new endpoints
 	updatedEndpoints := []*discovery.Endpoint{
 		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations}, // svc2 removed, svc3 added
+		{
+			Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations,
+		}, // svc2 removed, svc3 added
 		{Service: "svc4", Address: "192.168.1.4", Port: 8080, Healthy: true, Weight: testIterations}, // svc4 added
 	}
 

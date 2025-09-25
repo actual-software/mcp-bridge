@@ -1,0 +1,56 @@
+=== REPOSITORY COVERAGE SUMMARY ===
+Timestamp: Thu Sep 25 13:31:32 PDT 2025
+Total Coverage: 39.0%
+Coverage Threshold: 80%
+Status: FAIL
+
+=== MODULE COVERAGE STATUS ===
+Modules successfully collected (1/7):
+  ✅ root
+
+Modules that failed coverage collection (6/7):
+  ⏭️  k8s (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⏭️  weather (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⏭️  full_stack (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⏭️  test-mcp-server (skipped: E2E tests skipped (set RUN E2E TESTS=true to enable))
+  ⚙️  gateway (test setup failed)
+  💥 router (test panic)
+
+=== COVERAGE BY PACKAGE ===
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:65:   100.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:60:   100.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:281:   100.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:276:   100.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:156:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:95:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:86:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:76:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:39:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:15:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:141:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:132:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:122:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/tracing/websocket.go:109:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/slo/calculator.go:346:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/slo/calculator.go:340:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/slo/calculator.go:335:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/slo/calculator.go:330:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/slo/calculator.go:325:   100.0%
+github.com/poiley/mcp-bridge/pkg/common/slo/calculator.go:320:   100.0%
+
+=== LOW COVERAGE FILES (<70%) ===
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:147: 0.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:161: 0.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:181: 0.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:190: 0.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:211: 0.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:252: 0.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:295: 0.0%
+github.com/poiley/mcp-bridge/test/integration/docker_stack.go:320: 0.0%
+github.com/poiley/mcp-bridge/test/patterns/test_patterns.go:100: 0.0%
+github.com/poiley/mcp-bridge/test/patterns/test_patterns.go:126: 0.0%
+
+=== COVERAGE COLLECTION WARNINGS ===
+⚠️  Coverage data is incomplete due to 6 failed modules.
+    The reported coverage percentage only reflects successfully tested modules.
+    Fix failing tests in the failed modules for complete coverage analysis.

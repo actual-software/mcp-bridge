@@ -263,6 +263,7 @@ func TestRateLimitConfig_SecurityValidation(t *testing.T) {
 			err := ValidateRateLimitConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}

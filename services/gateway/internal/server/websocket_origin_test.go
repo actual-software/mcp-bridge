@@ -73,14 +73,29 @@ func setupWebSocketOriginTestServer(t *testing.T) (*GatewayServer, *httptest.Ser
 		},
 	}
 	mockDiscovery := &mockServiceDiscovery{}
-	testRouter := router.InitializeRequestRouter(context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), zap.NewNop())
+	testRouter := router.InitializeRequestRouter(
+		context.Background(),
+		routerCfg,
+		mockDiscovery,
+		testutil.CreateTestMetricsRegistry(),
+		zap.NewNop(),
+	)
 
 	mockHealth := health.CreateHealthMonitor(nil, zap.NewNop())
 	registry := testutil.CreateTestMetricsRegistry()
 	mockRateLimiter := ratelimit.CreateLocalMemoryRateLimiter(zap.NewNop())
 	logger := testutil.NewTestLogger(t)
 
-	server := BootstrapGatewayServer(cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger)
+	server := BootstrapGatewayServer(
+		cfg,
+		mockAuth,
+		mockSessions,
+		testRouter,
+		mockHealth,
+		registry,
+		mockRateLimiter,
+		logger,
+	)
 
 	// Start test server
 	testServer := httptest.NewServer(http.HandlerFunc(server.handleWebSocket))
@@ -222,14 +237,29 @@ func setupWildcardOriginTestServer(t *testing.T) (*GatewayServer, *httptest.Serv
 		},
 	}
 	mockDiscovery := &mockServiceDiscovery{}
-	testRouter := router.InitializeRequestRouter(context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), zap.NewNop())
+	testRouter := router.InitializeRequestRouter(
+		context.Background(),
+		routerCfg,
+		mockDiscovery,
+		testutil.CreateTestMetricsRegistry(),
+		zap.NewNop(),
+	)
 
 	mockHealth := health.CreateHealthMonitor(nil, zap.NewNop())
 	registry := testutil.CreateTestMetricsRegistry()
 	mockRateLimiter := ratelimit.CreateLocalMemoryRateLimiter(zap.NewNop())
 	logger := testutil.NewTestLogger(t)
 
-	server := BootstrapGatewayServer(cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger)
+	server := BootstrapGatewayServer(
+		cfg,
+		mockAuth,
+		mockSessions,
+		testRouter,
+		mockHealth,
+		registry,
+		mockRateLimiter,
+		logger,
+	)
 
 	// Start test server
 	testServer := httptest.NewServer(http.HandlerFunc(server.handleWebSocket))
