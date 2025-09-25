@@ -1,0 +1,53 @@
+version: 1
+
+# Disable direct mode for container testing
+direct:
+  max_connections: 0  # Set to 0 to disable direct mode
+
+# Gateway pool configuration for containerized router
+gateway_pool:
+  endpoints:
+    - url: wss://gateway:8443/ws
+      weight: 1
+      auth:
+        type: bearer
+        token_env: MCP_AUTH_TOKEN
+  tls:
+    ca_file: "/etc/mcp-gateway/tls/ca.crt"
+    verify: true
+    min_version: "1.2"
+  connection:
+    timeout_ms: 10000
+    keepalive_interval_ms: 10000
+    pool:
+      enabled: true
+      min_size: 2
+      max_size: 10
+      max_idle_time_ms: 30000
+      acquire_timeout_ms: 5000
+    reconnect:
+      initial_delay_ms: 100
+      max_delay_ms: 2000
+      multiplier: 2.0
+      max_attempts: 10
+
+# Local settings optimized for testing
+local:
+  read_buffer_size: 65536
+  write_buffer_size: 65536
+  request_timeout_ms: 10000
+  max_concurrent_requests: 50
+
+# Logging for test debugging
+logging:
+  level: debug
+  format: json
+  output: stderr
+  include_caller: true
+
+# Metrics enabled for health checks
+metrics:
+  enabled: true
+  endpoint: "0.0.0.0:9094"
+  labels:
+    environment: "e2e-test-container"

@@ -1,0 +1,234 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mcp-bridge-slo-rules
+  namespace: monitoring
+  labels:
+    app: mcp-bridge
+    prometheus: kube-prometheus
+spec:
+  groups:
+    - name: mcp_bridge_sli_calculations
+      interval: 30s
+      rules:
+        # Service Availability SLI
+        - record: sli:service_availability:ratio_rate5m
+          expr: |
+            1 - (
+              sum by (service) (rate(health_check_failures_total[5m])) /
+              (sum by (service) (rate(health_check_attempts_total[5m])) > 0)
+            ) or on() vector(1)
+          labels:
+            sli_type: "availability"
+            
+        # Request Success Rate SLI (excluding 4xx)
+        - record: sli:request_success_rate:ratio_rate5m
+          expr: |
+            (
+              sum by (service) (rate(http_requests_total{code!~"4.."}[5m])) -
+              sum by (service) (rate(http_requests_total{code=~"5.."}[5m]))
+            ) /
+            (sum by (service) (rate(http_requests_total{code!~"4.."}[5m])) > 0)
+            or on() vector(1)
+          labels:
+            sli_type: "success_rate"
+            
+        # API Request Success Rate (including 4xx as failures)
+        - record: sli:api_success_rate:ratio_rate5m
+          expr: |
+            sum by (service) (rate(http_requests_total{code=~"2.."}[5m])) /
+            (sum by (service) (rate(http_requests_total[5m])) > 0)
+            or on() vector(1)
+          labels:
+            sli_type: "api_success_rate"
+            
+        # Latency P50 SLI
+        - record: sli:latency_p50:seconds
+          expr: |
+            histogram_quantile(0.50,
+              sum by (service, le) (rate(http_request_duration_seconds_bucket[5m]))
+            )
+          labels:
+            sli_type: "latency"
+            percentile: "50"
+            
+        # Latency P95 SLI
+        - record: sli:latency_p95:seconds
+          expr: |
+            histogram_quantile(0.95,
+              sum by (service, le) (rate(http_request_duration_seconds_bucket[5m]))
+            )
+          labels:
+            sli_type: "latency"
+            percentile: "95"
+            
+        # Latency P99 SLI
+        - record: sli:latency_p99:seconds
+          expr: |
+            histogram_quantile(0.99,
+              sum by (service, le) (rate(http_request_duration_seconds_bucket[5m]))
+            )
+          labels:
+            sli_type: "latency"
+            percentile: "99"
+            
+        # Authentication Success Rate SLI
+        - record: sli:auth_success_rate:ratio_rate5m
+          expr: |
+            sum by (service) (rate(auth_attempts_total{result="success"}[5m])) /
+            (sum by (service) (rate(auth_attempts_total{reason!="invalid_credentials"}[5m])) > 0)
+            or on() vector(1)
+          labels:
+            sli_type: "auth_success"
+            
+        # Connection Stability SLI
+        - record: sli:connection_stability:ratio_rate5m
+          expr: |
+            1 - (
+              sum by (service) (rate(websocket_connections_closed_total{reason!~"client_disconnect|normal_closure"}[5m])) /
+              (sum by (service) (rate(websocket_connections_total[5m])) > 0)
+            ) or on() vector(1)
+          labels:
+            sli_type: "connection_stability"
+            
+        # Circuit Breaker Health SLI
+        - record: sli:circuit_breaker_health:ratio
+          expr: |
+            1 - avg by (service) (circuit_breaker_state == 2)  # 2 = open state
+          labels:
+            sli_type: "circuit_breaker_health"
+            
+        # MCP Protocol Success Rate
+        - record: sli:mcp_protocol_success:ratio_rate5m
+          expr: |
+            sum by (service) (rate(mcp_requests_total{status="success"}[5m])) /
+            (sum by (service) (rate(mcp_requests_total[5m])) > 0)
+            or on() vector(1)
+          labels:
+            sli_type: "mcp_success_rate"
+
+    - name: mcp_bridge_error_budget
+      interval: 1m
+      rules:
+        # Availability Error Budget
+        - record: slo:error_budget:availability:ratio
+          expr: |
+            (sli:service_availability:ratio_rate5m - 0.999) /
+            (1 - 0.999)
+          labels:
+            slo_name: "availability"
+            slo_target: "99.9%"
+            
+        # Success Rate Error Budget
+        - record: slo:error_budget:success_rate:ratio
+          expr: |
+            (sli:request_success_rate:ratio_rate5m - 0.999) /
+            (1 - 0.999)
+          labels:
+            slo_name: "success_rate"
+            slo_target: "99.9%"
+            
+        # Latency Error Budget (P95 < 200ms)
+        - record: slo:error_budget:latency_p95:ratio
+          expr: |
+            (0.2 - sli:latency_p95:seconds) / 0.2
+          labels:
+            slo_name: "latency_p95"
+            slo_target: "200ms"
+            
+        # Authentication Error Budget
+        - record: slo:error_budget:auth:ratio
+          expr: |
+            (sli:auth_success_rate:ratio_rate5m - 0.9995) /
+            (1 - 0.9995)
+          labels:
+            slo_name: "auth_success"
+            slo_target: "99.95%"
+            
+        # 1-hour burn rate
+        - record: slo:burn_rate:1h
+          expr: |
+            1 - (
+              (1 - avg_over_time(sli:service_availability:ratio_rate5m[1h])) /
+              (1 - 0.999)
+            )
+          labels:
+            window: "1h"
+            
+        # 6-hour burn rate
+        - record: slo:burn_rate:6h
+          expr: |
+            1 - (
+              (1 - avg_over_time(sli:service_availability:ratio_rate5m[6h])) /
+              (1 - 0.999)
+            )
+          labels:
+            window: "6h"
+            
+        # 24-hour burn rate
+        - record: slo:burn_rate:24h
+          expr: |
+            1 - (
+              (1 - avg_over_time(sli:service_availability:ratio_rate5m[24h])) /
+              (1 - 0.999)
+            )
+          labels:
+            window: "24h"
+            
+        # 7-day burn rate
+        - record: slo:burn_rate:7d
+          expr: |
+            1 - (
+              (1 - avg_over_time(sli:service_availability:ratio_rate5m[7d])) /
+              (1 - 0.999)
+            )
+          labels:
+            window: "7d"
+
+    - name: mcp_bridge_trace_based_slis
+      interval: 30s
+      rules:
+        # Trace-based latency P50
+        - record: sli:trace_latency_p50:milliseconds
+          expr: |
+            histogram_quantile(0.50,
+              sum by (service, le) (
+                rate(traces_spanmetrics_latency_bucket{
+                  span_kind="SPAN_KIND_SERVER"
+                }[5m])
+              )
+            )
+          labels:
+            sli_type: "trace_latency"
+            percentile: "50"
+            
+        # Trace-based latency P95
+        - record: sli:trace_latency_p95:milliseconds
+          expr: |
+            histogram_quantile(0.95,
+              sum by (service, le) (
+                rate(traces_spanmetrics_latency_bucket{
+                  span_kind="SPAN_KIND_SERVER"
+                }[5m])
+              )
+            )
+          labels:
+            sli_type: "trace_latency"
+            percentile: "95"
+            
+        # Trace-based error rate
+        - record: sli:trace_error_rate:ratio_rate5m
+          expr: |
+            sum by (service) (
+              rate(traces_spanmetrics_calls_total{
+                span_kind="SPAN_KIND_SERVER",
+                status_code="STATUS_CODE_ERROR"
+              }[5m])
+            ) /
+            (sum by (service) (
+              rate(traces_spanmetrics_calls_total{
+                span_kind="SPAN_KIND_SERVER"
+              }[5m])
+            ) > 0) or on() vector(0)
+          labels:
+            sli_type: "trace_error_rate"

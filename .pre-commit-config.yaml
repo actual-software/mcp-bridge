@@ -1,0 +1,77 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: detect-private-key
+
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      - id: go-vet-mod
+      - id: go-imports
+      - id: go-cyclo
+        args: [-over=15]
+      - id: go-mod-tidy
+      - id: go-unit-tests
+      - id: golangci-lint
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: shfmt
+        args: [-l, -i, '2', -ci]
+      - id: shellcheck
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        files: Dockerfile.*
+
+  - repo: https://github.com/TekWizely/pre-commit-golang
+    rev: v1.0.0-rc.1
+    hooks:
+      - id: my-cmd-go
+        name: go-build-gateway
+        entry: bash -c 'cd services/gateway && make build'
+        language: system
+        files: ^services/gateway/
+        pass_filenames: false
+      
+      - id: my-cmd-go
+        name: go-build-router  
+        entry: bash -c 'cd services/router && make build'
+        language: system
+        files: ^services/router/
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: security-check
+        name: Security Check
+        entry: bash -c 'if command -v gosec >/dev/null; then gosec ./...; else echo "gosec not installed, skipping security check"; fi'
+        language: system
+        files: \.go$
+        pass_filenames: false
+
+      - id: vulnerability-check
+        name: Vulnerability Check
+        entry: bash -c 'if command -v govulncheck >/dev/null; then govulncheck ./...; else echo "govulncheck not installed, skipping vulnerability check"; fi'
+        language: system
+        files: \.go$
+        pass_filenames: false
+
+      - id: test-coverage
+        name: Test Coverage Check
+        entry: bash -c 'cd services/gateway && make check-coverage && cd ../router && make check-coverage'
+        language: system
+        files: \.go$
+        pass_filenames: false

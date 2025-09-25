@@ -1,0 +1,332 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "MCP Bridge Security Dashboard",
+    "tags": ["security", "monitoring", "mcp"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "graphTooltip": 0,
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "refresh": "30s",
+    "version": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Authentication Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(mcp_gateway_auth_attempts_total{result=\"success\"}[5m]) / rate(mcp_gateway_auth_attempts_total[5m]) * 100",
+            "legendFormat": "Success Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 95},
+                {"color": "green", "value": 99}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Failed Authentication Attempts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mcp_gateway_auth_attempts_total{result=\"failure\"}[5m])",
+            "legendFormat": "Failed Attempts/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Attempts/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Rate Limiting Triggers",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(mcp_gateway_rate_limit_exceeded_total[1h])",
+            "legendFormat": "Rate Limits (1h)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 100}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "TLS Handshake Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(mcp_gateway_tls_handshake_total{result=\"success\"}[5m]) / rate(mcp_gateway_tls_handshake_total[5m]) * 100",
+            "legendFormat": "TLS Success Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 98},
+                {"color": "green", "value": 99.5}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Security Events Timeline",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mcp_gateway_security_events_total[5m])",
+            "legendFormat": "{{event_type}}"
+          }
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "gridPos": {"h": 8, "w": 18, "x": 6, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Connection Attempts by Source",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (source_ip) (rate(mcp_gateway_connections_total[5m])))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "basic"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "Certificate Expiration",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(mcp_gateway_cert_expiry_timestamp - time()) / 86400",
+            "legendFormat": "Days Until Expiry"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 7},
+                {"color": "green", "value": 30}
+              ]
+            },
+            "unit": "days"
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 16}
+      },
+      {
+        "id": 8,
+        "title": "Input Validation Failures",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(mcp_gateway_validation_failures_total[15m])",
+            "legendFormat": "Validation Failures (15m)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 20}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 16}
+      },
+      {
+        "id": 9,
+        "title": "Circuit Breaker Status",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "mcp_gateway_circuit_breaker_state",
+            "legendFormat": "{{service}} - {{state}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "State (0=Closed, 1=Open, 2=Half-Open)",
+            "min": 0,
+            "max": 2
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 10,
+        "title": "Resource Usage Security Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{container=~\"mcp-(gateway|router)\"}[5m]) * 100",
+            "legendFormat": "{{container}} CPU %"
+          },
+          {
+            "expr": "container_memory_usage_bytes{container=~\"mcp-(gateway|router)\"} / container_spec_memory_limit_bytes * 100",
+            "legendFormat": "{{container}} Memory %"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Usage %",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 11,
+        "title": "JWT Token Validation",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mcp_gateway_jwt_validation_total{result=\"success\"}[5m])",
+            "legendFormat": "Valid Tokens/sec"
+          },
+          {
+            "expr": "rate(mcp_gateway_jwt_validation_total{result=\"expired\"}[5m])",
+            "legendFormat": "Expired Tokens/sec"
+          },
+          {
+            "expr": "rate(mcp_gateway_jwt_validation_total{result=\"invalid\"}[5m])",
+            "legendFormat": "Invalid Tokens/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+      },
+      {
+        "id": 12,
+        "title": "Security Alert Summary",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{job=\"mcp-gateway\"} |= \"SECURITY\" | logfmt | level=\"ERROR\" or level=\"WARN\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": false,
+          "showCommonLabels": false,
+          "wrapLogMessage": true,
+          "sortOrder": "Descending"
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Security Events",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "changes(mcp_gateway_security_events_total[5m]) > 0",
+          "iconColor": "red",
+          "titleFormat": "Security Event",
+          "textFormat": "{{event_type}}: {{description}}"
+        },
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "changes(kube_deployment_status_replicas_updated[5m]) > 0",
+          "iconColor": "blue",
+          "titleFormat": "Deployment Update",
+          "textFormat": "{{deployment}} updated"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(mcp_gateway_info, environment)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": false
+        },
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(mcp_gateway_info{environment=~\"$environment\"}, instance)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    }
+  }
+}

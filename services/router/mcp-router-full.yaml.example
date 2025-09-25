@@ -1,0 +1,264 @@
+# MCP Router Full Configuration Example
+# This file demonstrates all available configuration options
+# Copy and modify for your needs
+
+version: 1
+
+# Gateway connection settings
+gateway:
+  # Gateway URL (required)
+  # Protocols: wss:// (WebSocket over TLS), ws:// (WebSocket), tcp:// (Binary TCP)
+  url: wss://mcp-gateway.example.com
+  
+  # Authentication configuration
+  auth:
+    # Authentication type: bearer, oauth2, or mtls
+    type: bearer
+    
+    # Bearer token authentication
+    # Option 1: Secure storage (recommended)
+    token_secure_key: "production-token"  # Reference to securely stored token
+    
+    # Option 2: Environment variable
+    # token_env: "MCP_AUTH_TOKEN"
+    
+    # Option 3: File path
+    # token_file: "/secure/path/to/token"
+    
+    # OAuth2 authentication
+    # type: oauth2
+    # client_id: "mcp-router-client"
+    # client_secret_secure_key: "oauth-client-secret"  # Stored securely
+    # client_secret_env: "OAUTH_CLIENT_SECRET"         # Alternative
+    # token_endpoint: "https://auth.example.com/oauth2/token"
+    # scopes: ["mcp:read", "mcp:write", "mcp:admin"]
+    # grant_type: "client_credentials"  # or "password" for user auth
+    # username: "user@example.com"      # For password grant
+    # password_secure_key: "user-password"  # For password grant
+    
+    # mTLS authentication (configured in TLS section)
+    # type: mtls
+  
+  # Connection configuration
+  connection:
+    # Connection timeout in milliseconds
+    timeout_ms: 5000
+    
+    # Keepalive interval in milliseconds
+    keepalive_interval_ms: 30000
+    
+    # Reconnection settings
+    reconnect:
+      # Initial reconnect delay in milliseconds
+      initial_delay_ms: 1000
+      
+      # Maximum reconnect delay in milliseconds
+      max_delay_ms: 60000
+      
+      # Backoff multiplier for exponential backoff
+      multiplier: 2.0
+      
+      # Maximum number of reconnect attempts (-1 for infinite)
+      max_attempts: -1
+      
+      # Jitter factor (0.0 to 1.0) to randomize delays
+      jitter: 0.1
+    
+    # Connection pooling (for high-throughput scenarios)
+    pool:
+      # Enable connection pooling
+      enabled: true
+      
+      # Minimum number of connections to maintain
+      min_size: 2
+      
+      # Maximum number of connections
+      max_size: 10
+      
+      # Maximum idle time before closing connection (milliseconds)
+      max_idle_time_ms: 300000  # 5 minutes
+      
+      # Maximum connection lifetime (milliseconds, 0 for no limit)
+      max_lifetime_ms: 1800000  # 30 minutes
+      
+      # Timeout for acquiring connection from pool (milliseconds)
+      acquire_timeout_ms: 5000
+      
+      # Health check interval for pooled connections (milliseconds)
+      health_check_interval_ms: 30000
+  
+  # TLS configuration
+  tls:
+    # Enable TLS verification
+    verify: true
+    
+    # CA certificate file path
+    ca_file: "/etc/ssl/certs/ca-certificates.crt"
+    
+    # Minimum TLS version (1.2 or 1.3)
+    min_version: "1.3"
+    
+    # Allowed cipher suites (empty for defaults)
+    cipher_suites:
+      - TLS_AES_128_GCM_SHA256
+      - TLS_AES_256_GCM_SHA384
+      - TLS_CHACHA20_POLY1305_SHA256
+    
+    # Client certificates for mTLS
+    # client_cert: "/path/to/client.crt"
+    # client_key: "/path/to/client.key"
+
+# Local router settings
+local:
+  # Buffer sizes for stdio communication
+  read_buffer_size: 65536   # 64KB
+  write_buffer_size: 65536  # 64KB
+  
+  # Request timeout in milliseconds
+  request_timeout_ms: 30000  # 30 seconds
+  
+  # Maximum concurrent requests
+  max_concurrent_requests: 100
+  
+  # Client-side rate limiting
+  rate_limit:
+    # Enable rate limiting
+    enabled: true
+    
+    # Requests per second
+    requests_per_sec: 100.0
+    
+    # Burst size
+    burst: 200
+
+# Logging configuration
+logging:
+  # Log level: debug, info, warn, error
+  level: info
+  
+  # Log format: json or text
+  format: json
+  
+  # Output destination: stdout, stderr, or file path
+  output: stderr
+  
+  # Include caller information in logs
+  include_caller: false
+  
+  # Log sampling (for high-volume scenarios)
+  sampling:
+    # Enable sampling
+    enabled: false
+    
+    # Log first N messages
+    initial: 100
+    
+    # Then log every Nth message
+    thereafter: 100
+
+# Metrics configuration
+metrics:
+  # Enable metrics endpoint
+  enabled: true
+  
+  # Metrics endpoint address
+  endpoint: "localhost:9091"
+  
+  # Additional labels for all metrics
+  labels:
+    environment: "production"
+    region: "us-east-1"
+    instance: "router-1"
+
+# Advanced configuration
+advanced:
+  # Protocol selection: websocket or tcp
+  protocol: "websocket"
+  
+  # TCP-specific settings (when protocol is "tcp")
+  # tcp_address: "gateway.example.com:8444"
+  # tcp_nodelay: true  # Disable Nagle's algorithm
+  
+  # Compression settings (mainly for binary protocol)
+  compression:
+    # Enable compression
+    enabled: true
+    
+    # Algorithm: gzip or zstd
+    algorithm: "gzip"
+    
+    # Compression level (1-9 for gzip, 1-22 for zstd)
+    level: 6
+  
+  # Circuit breaker configuration
+  circuit_breaker:
+    # Number of consecutive failures to open circuit
+    failure_threshold: 5
+    
+    # Number of consecutive successes to close circuit
+    success_threshold: 2
+    
+    # Timeout before attempting to close circuit (seconds)
+    timeout_seconds: 30
+    
+    # Maximum requests in half-open state
+    max_requests: 10
+    
+    # Evaluation interval (seconds)
+    interval_seconds: 60
+  
+  # Request deduplication
+  deduplication:
+    # Enable deduplication
+    enabled: true
+    
+    # Deduplication cache size
+    cache_size: 1000
+    
+    # Cache entry TTL in seconds
+    ttl_seconds: 60
+  
+  # Debug settings
+  debug:
+    # Log all frames (verbose)
+    log_frames: false
+    
+    # Save failed requests to disk
+    save_failures: false
+    
+    # Directory for failure dumps
+    failure_dir: "/tmp/mcp-failures"
+    
+    # Enable pprof endpoint
+    enable_pprof: false
+    
+    # pprof port
+    pprof_port: 6060
+  
+  # Secure storage configuration
+  secure_storage:
+    # Backend: auto, keychain, credential_manager, secret_service, file
+    backend: "auto"
+    
+    # File backend encryption (when backend is "file")
+    # file_path: "~/.config/mcp-router/tokens.enc"
+    # encryption_key_derive_from: "machine"  # machine, user, or custom
+    
+    # Custom backend command
+    # backend: "custom"
+    # custom_command: "/usr/local/bin/vault"
+    # custom_args: ["kv", "get", "-field=token", "secret/mcp/{name}"]
+
+# Feature flags (experimental features)
+features:
+  # Enable experimental binary protocol optimizations
+  binary_protocol_v2: false
+  
+  # Enable request prioritization
+  request_priorities: false
+  
+  # Enable adaptive rate limiting
+  adaptive_rate_limit: false
+  
+  # Enable connection multiplexing
+  connection_multiplexing: false

@@ -1,0 +1,126 @@
+name: Build Verification
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  GO_VERSION: "1.21"
+
+jobs:
+  verify-build-structure:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [gateway, router]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Verify main.go exists after build
+        working-directory: services/${{ matrix.service }}
+        run: |
+          echo "🔍 Checking initial state..."
+          ls -la cmd/ || echo "cmd/ directory not found initially"
+          
+          echo "🏗️ Running make build..."
+          make build
+          
+          echo "✅ Verifying cmd/mcp-${{ matrix.service }}/main.go exists..."
+          if [ ! -f "cmd/mcp-${{ matrix.service }}/main.go" ]; then
+            echo "❌ main.go not found at cmd/mcp-${{ matrix.service }}/main.go"
+            echo "Directory structure after build:"
+            find cmd/ -type f -name "*.go" || echo "No Go files found in cmd/"
+            exit 1
+          fi
+          
+          echo "✅ Verifying binary was created..."
+          if [ ! -f "bin/mcp-${{ matrix.service }}" ]; then
+            echo "❌ Binary not found at bin/mcp-${{ matrix.service }}"
+            ls -la bin/ || echo "bin/ directory not found"
+            exit 1
+          fi
+          
+          echo "✅ Build verification passed for ${{ matrix.service }}"
+          
+      - name: Test binary execution
+        working-directory: services/${{ matrix.service }}
+        run: |
+          echo "🧪 Testing binary execution..."
+          ./bin/mcp-${{ matrix.service }} --version || echo "Version flag not available"
+          ./bin/mcp-${{ matrix.service }} --help | head -10
+          echo "✅ Binary execution test passed"
+
+  verify-cross-compilation:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [gateway, router]
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Test cross-compilation
+        working-directory: services/${{ matrix.service }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          echo "🔧 Cross-compiling for ${{ matrix.goos }}/${{ matrix.goarch }}..."
+          
+          # Use make build first to ensure main.go exists
+          make build
+          
+          # Then cross-compile
+          BINARY_NAME="mcp-${{ matrix.service }}-${{ matrix.goos }}-${{ matrix.goarch }}"
+          if [ "${{ matrix.service }}" = "router" ]; then
+            go build -ldflags="-s -w" -o "${BINARY_NAME}" ./cmd/mcp-router
+          else
+            go build -ldflags="-s -w" -o "${BINARY_NAME}" ./cmd/mcp-${{ matrix.service }}
+          fi
+          
+          echo "✅ Cross-compilation successful for ${{ matrix.goos }}/${{ matrix.goarch }}"
+          ls -la "${BINARY_NAME}"
+
+  verify-make-targets:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [gateway, router]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Test essential make targets
+        working-directory: services/${{ matrix.service }}
+        run: |
+          echo "🎯 Testing make targets for ${{ matrix.service }}..."
+          
+          # Test build
+          make build
+          echo "✅ make build - passed"
+          
+          # Test clean
+          make clean
+          echo "✅ make clean - passed"
+          
+          # Test build again after clean
+          make build
+          echo "✅ make build (after clean) - passed"
+          
+          # Test version
+          make version
+          echo "✅ make version - passed"
+          
+          echo "🎉 All make targets working correctly"

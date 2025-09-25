@@ -1,0 +1,214 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-k8s-tools
+  namespace: mcp-servers
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-k8s-tools
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "nodes", "namespaces", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-k8s-tools
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-k8s-tools
+subjects:
+- kind: ServiceAccount
+  name: mcp-k8s-tools
+  namespace: mcp-servers
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-k8s-tools
+  namespace: mcp-servers
+  labels:
+    app: mcp-server-k8s-tools
+    mcp.bridge/namespace: k8s
+    mcp.bridge/version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mcp-server-k8s-tools
+  template:
+    metadata:
+      labels:
+        app: mcp-server-k8s-tools
+        mcp.bridge/namespace: k8s
+      annotations:
+        mcp.bridge/tools: |
+          ["getPods", "execPod", "getLogs", "describeResource", "listResources"]
+    spec:
+      serviceAccountName: mcp-k8s-tools
+      containers:
+      - name: mcp-server
+        image: ghcr.io/poiley/mcp-k8s-tools:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9000
+          name: mcp
+          protocol: TCP
+        env:
+        - name: MCP_SERVER_MODE
+          value: "network"
+        - name: MCP_BIND_ADDR
+          value: "0.0.0.0:9000"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-k8s-tools
+  namespace: mcp-servers
+  labels:
+    app: mcp-server-k8s-tools
+    mcp.bridge/enabled: "true"
+    mcp.bridge/namespace: "k8s"
+  annotations:
+    mcp.bridge/enabled: "true"
+    mcp.bridge/namespace: "k8s"
+    mcp.bridge/tools: |
+      [
+        {
+          "name": "getPods",
+          "description": "List pods in a namespace",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "description": "Kubernetes namespace"
+              },
+              "labelSelector": {
+                "type": "string",
+                "description": "Label selector (optional)"
+              }
+            },
+            "required": ["namespace"]
+          }
+        },
+        {
+          "name": "execPod",
+          "description": "Execute command in a pod",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "description": "Kubernetes namespace"
+              },
+              "pod": {
+                "type": "string",
+                "description": "Pod name"
+              },
+              "container": {
+                "type": "string",
+                "description": "Container name (optional)"
+              },
+              "command": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Command to execute"
+              }
+            },
+            "required": ["namespace", "pod", "command"]
+          }
+        },
+        {
+          "name": "getLogs",
+          "description": "Get pod logs",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "description": "Kubernetes namespace"
+              },
+              "pod": {
+                "type": "string",
+                "description": "Pod name"
+              },
+              "container": {
+                "type": "string",
+                "description": "Container name (optional)"
+              },
+              "lines": {
+                "type": "integer",
+                "description": "Number of lines to tail"
+              }
+            },
+            "required": ["namespace", "pod"]
+          }
+        }
+      ]
+    mcp.bridge/health-check-path: "/health"
+    mcp.bridge/health-check-interval: "30s"
+    mcp.bridge/weight: "100"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9000
+    targetPort: 9000
+    name: mcp
+    protocol: TCP
+  selector:
+    app: mcp-server-k8s-tools
+  sessionAffinity: None

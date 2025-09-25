@@ -1,0 +1,641 @@
+openapi: 3.0.3
+info:
+  title: MCP Bridge Gateway API
+  description: |
+    The MCP Bridge Gateway provides secure, scalable access to MCP servers with enterprise-grade
+    features including authentication, load balancing, rate limiting, and observability.
+  version: 1.0.0
+  contact:
+    name: MCP Bridge Team
+    url: https://github.com/poiley/mcp-bridge
+    email: support@mcp-bridge.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://gateway.mcp-bridge.io
+    description: Production server
+  - url: https://staging-gateway.mcp-bridge.io
+    description: Staging server
+  - url: https://localhost:8443
+    description: Local development server
+
+tags:
+  - name: Health
+    description: Health check and readiness endpoints
+  - name: MCP
+    description: Model Context Protocol operations
+  - name: Authentication
+    description: Authentication and authorization
+  - name: Admin
+    description: Administrative operations
+  - name: Metrics
+    description: Prometheus metrics endpoint
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the gateway service
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                version: 1.0.0
+                uptime: 3600
+                checks:
+                  database: healthy
+                  redis: healthy
+                  downstream: healthy
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness check endpoint
+      description: Indicates if the service is ready to accept traffic
+      operationId: getReady
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+
+  /metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Prometheus metrics endpoint
+      description: Returns Prometheus-formatted metrics for monitoring
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP mcp_gateway_requests_total Total number of requests
+                # TYPE mcp_gateway_requests_total counter
+                mcp_gateway_requests_total{method="POST",status="200"} 1234
+
+  /api/v1/execute:
+    post:
+      tags:
+        - MCP
+      summary: Execute MCP request
+      description: Executes an MCP protocol request and returns the response
+      operationId: executeMCPRequest
+      security:
+        - bearerAuth: []
+        - oauth2: [read, write]
+        - mtls: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MCPRequest'
+            examples:
+              toolCall:
+                summary: Tool call request
+                value:
+                  jsonrpc: "2.0"
+                  method: "tools/call"
+                  params:
+                    name: "calculator"
+                    arguments:
+                      operation: "add"
+                      a: 5
+                      b: 3
+                  id: "req-123"
+              resourceRead:
+                summary: Resource read request
+                value:
+                  jsonrpc: "2.0"
+                  method: "resources/read"
+                  params:
+                    uri: "file:///path/to/resource"
+                  id: "req-456"
+      responses:
+        '200':
+          description: Successful MCP response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MCPResponse'
+              examples:
+                toolResult:
+                  summary: Tool call result
+                  value:
+                    jsonrpc: "2.0"
+                    result:
+                      content:
+                        - type: "text"
+                          text: "8"
+                    id: "req-123"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/v1/stream:
+    get:
+      tags:
+        - MCP
+      summary: WebSocket endpoint for streaming MCP
+      description: Establishes a WebSocket connection for bidirectional MCP communication
+      operationId: streamMCP
+      security:
+        - bearerAuth: []
+        - oauth2: [read, write]
+      parameters:
+        - name: Upgrade
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [websocket]
+        - name: Connection
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [Upgrade]
+        - name: Sec-WebSocket-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: ["13"]
+        - name: Sec-WebSocket-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '101':
+          description: Switching Protocols to WebSocket
+          headers:
+            Upgrade:
+              schema:
+                type: string
+                enum: [websocket]
+            Connection:
+              schema:
+                type: string
+                enum: [Upgrade]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/sessions:
+    get:
+      tags:
+        - Admin
+      summary: List active sessions
+      description: Returns a list of active client sessions
+      operationId: listSessions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of sessions to return
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: List of active sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/sessions/{sessionId}:
+    delete:
+      tags:
+        - Admin
+      summary: Terminate a session
+      description: Forcefully terminates an active session
+      operationId: terminateSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session ID to terminate
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Session terminated successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/auth/validate:
+    post:
+      tags:
+        - Authentication
+      summary: Validate authentication token
+      description: Validates a bearer token and returns claims
+      operationId: validateToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenValidationRequest'
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenValidationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh authentication token
+      description: Exchanges a refresh token for a new access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+      responses:
+        '200':
+          description: New token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefreshResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token authentication
+    
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.mcp-bridge.io/oauth/authorize
+          tokenUrl: https://auth.mcp-bridge.io/oauth/token
+          scopes:
+            read: Read access to MCP resources
+            write: Write access to MCP resources
+            admin: Administrative access
+    
+    mtls:
+      type: mutualTLS
+      description: Mutual TLS authentication
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall health status
+        version:
+          type: string
+          description: Service version
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        checks:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [healthy, unhealthy]
+          description: Individual component health checks
+
+    ReadyResponse:
+      type: object
+      required:
+        - ready
+      properties:
+        ready:
+          type: boolean
+          description: Whether service is ready
+        message:
+          type: string
+          description: Additional information
+
+    MCPRequest:
+      type: object
+      required:
+        - jsonrpc
+        - method
+        - id
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+          description: JSON-RPC version
+        method:
+          type: string
+          description: MCP method to execute
+          example: "tools/call"
+        params:
+          type: object
+          description: Method parameters
+        id:
+          type: string
+          description: Request ID for correlation
+
+    MCPResponse:
+      type: object
+      required:
+        - jsonrpc
+        - id
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          type: object
+          description: Successful result
+        error:
+          $ref: '#/components/schemas/MCPError'
+        id:
+          type: string
+          description: Request ID for correlation
+
+    MCPError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        data:
+          type: object
+          description: Additional error data
+
+    SessionList:
+      type: object
+      required:
+        - sessions
+        - total
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+        total:
+          type: integer
+          description: Total number of sessions
+        limit:
+          type: integer
+          description: Pagination limit
+        offset:
+          type: integer
+          description: Pagination offset
+
+    Session:
+      type: object
+      required:
+        - id
+        - clientId
+        - createdAt
+        - lastActivity
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Session ID
+        clientId:
+          type: string
+          description: Client identifier
+        createdAt:
+          type: string
+          format: date-time
+          description: Session creation time
+        lastActivity:
+          type: string
+          format: date-time
+          description: Last activity timestamp
+        requestCount:
+          type: integer
+          description: Number of requests in session
+
+    TokenValidationRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: Token to validate
+
+    TokenValidationResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+          description: Whether token is valid
+        claims:
+          type: object
+          description: Token claims if valid
+        expiresAt:
+          type: string
+          format: date-time
+          description: Token expiration time
+
+    TokenRefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token
+
+    TokenRefreshResponse:
+      type: object
+      required:
+        - accessToken
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+          description: New access token
+        refreshToken:
+          type: string
+          description: New refresh token (if rotated)
+        expiresIn:
+          type: integer
+          description: Token lifetime in seconds
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: BAD_REQUEST
+            message: Invalid request parameters
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHORIZED
+            message: Missing or invalid authentication
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: FORBIDDEN
+            message: Insufficient permissions
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: Resource not found
+
+    TooManyRequests:
+      description: Too many requests
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per window
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests in window
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Time when limit resets (Unix timestamp)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: RATE_LIMITED
+            message: Rate limit exceeded
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: INTERNAL_ERROR
+            message: An internal error occurred
+
+    ServiceUnavailable:
+      description: Service unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: SERVICE_UNAVAILABLE
+            message: Service temporarily unavailable

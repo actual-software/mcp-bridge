@@ -1,0 +1,336 @@
+groups:
+  - name: security.alerts
+    interval: 30s
+    rules:
+      # Authentication Security Alerts
+      - alert: HighAuthenticationFailureRate
+        expr: |
+          rate(mcp_gateway_auth_attempts_total{result="failure"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          category: security
+          component: authentication
+        annotations:
+          summary: "High authentication failure rate detected"
+          description: "Authentication failure rate is {{ $value | humanize }} failures/sec over the last 5 minutes"
+          remediation: "Check for potential brute force attacks or credential issues"
+
+      - alert: CriticalAuthenticationFailureRate
+        expr: |
+          rate(mcp_gateway_auth_attempts_total{result="failure"}[5m]) > 20
+        for: 1m
+        labels:
+          severity: critical
+          category: security
+          component: authentication
+        annotations:
+          summary: "Critical authentication failure rate - possible attack"
+          description: "Authentication failure rate is {{ $value | humanize }} failures/sec - potential brute force attack"
+          remediation: "Immediate investigation required - consider rate limiting or blocking source IPs"
+
+      - alert: AuthenticationSuccessRateDropped
+        expr: |
+          (
+            rate(mcp_gateway_auth_attempts_total{result="success"}[5m]) /
+            rate(mcp_gateway_auth_attempts_total[5m])
+          ) * 100 < 95
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+          component: authentication
+        annotations:
+          summary: "Authentication success rate below threshold"
+          description: "Authentication success rate is {{ $value | printf \"%.1f\" }}% (threshold: 95%)"
+          remediation: "Investigate authentication system health and token validity"
+
+      # TLS Security Alerts
+      - alert: TLSHandshakeFailures
+        expr: |
+          rate(mcp_gateway_tls_handshake_total{result="failure"}[5m]) > 1
+        for: 3m
+        labels:
+          severity: warning
+          category: security
+          component: tls
+        annotations:
+          summary: "TLS handshake failures detected"
+          description: "TLS handshake failure rate: {{ $value | humanize }} failures/sec"
+          remediation: "Check certificate validity and TLS configuration"
+
+      - alert: CertificateExpiringSoon
+        expr: |
+          (mcp_gateway_cert_expiry_timestamp - time()) / 86400 < 30
+        for: 0s
+        labels:
+          severity: warning
+          category: security
+          component: certificates
+        annotations:
+          summary: "TLS certificate expiring soon"
+          description: "Certificate expires in {{ $value | printf \"%.0f\" }} days"
+          remediation: "Renew certificate before expiration"
+
+      - alert: CertificateExpiringCritical
+        expr: |
+          (mcp_gateway_cert_expiry_timestamp - time()) / 86400 < 7
+        for: 0s
+        labels:
+          severity: critical
+          category: security
+          component: certificates
+        annotations:
+          summary: "TLS certificate expiring within 7 days"
+          description: "Certificate expires in {{ $value | printf \"%.0f\" }} days"
+          remediation: "URGENT: Renew certificate immediately"
+
+      # Rate Limiting Alerts
+      - alert: RateLimitingTriggered
+        expr: |
+          increase(mcp_gateway_rate_limit_exceeded_total[15m]) > 100
+        for: 0s
+        labels:
+          severity: info
+          category: security
+          component: rate_limiting
+        annotations:
+          summary: "Rate limiting frequently triggered"
+          description: "{{ $value }} rate limit violations in the last 15 minutes"
+          remediation: "Monitor for potential DoS attacks or adjust rate limits if legitimate traffic"
+
+      - alert: SuspiciousRateLimitingPattern
+        expr: |
+          increase(mcp_gateway_rate_limit_exceeded_total[5m]) > 500
+        for: 0s
+        labels:
+          severity: critical
+          category: security
+          component: rate_limiting
+        annotations:
+          summary: "Suspicious rate limiting pattern - possible DoS attack"
+          description: "{{ $value }} rate limit violations in 5 minutes - potential DoS attack"
+          remediation: "Investigate source IPs and consider implementing additional DDoS protection"
+
+      # Input Validation Alerts
+      - alert: InputValidationFailures
+        expr: |
+          increase(mcp_gateway_validation_failures_total[15m]) > 50
+        for: 0s
+        labels:
+          severity: warning
+          category: security
+          component: input_validation
+        annotations:
+          summary: "High number of input validation failures"
+          description: "{{ $value }} validation failures in the last 15 minutes"
+          remediation: "Investigate potential malicious input or client configuration issues"
+
+      - alert: CriticalInputValidationFailures
+        expr: |
+          increase(mcp_gateway_validation_failures_total[5m]) > 100
+        for: 0s
+        labels:
+          severity: critical
+          category: security
+          component: input_validation
+        annotations:
+          summary: "Critical input validation failure rate - possible attack"
+          description: "{{ $value }} validation failures in 5 minutes - potential injection attack"
+          remediation: "Immediate investigation required - possible injection or malformed request attack"
+
+      # Circuit Breaker Security Alerts
+      - alert: CircuitBreakerOpen
+        expr: |
+          mcp_gateway_circuit_breaker_state == 1
+        for: 1m
+        labels:
+          severity: warning
+          category: security
+          component: circuit_breaker
+        annotations:
+          summary: "Circuit breaker is open for {{ $labels.service }}"
+          description: "Circuit breaker for {{ $labels.service }} has been open for over 1 minute"
+          remediation: "Investigate backend service health and potential security issues"
+
+      # Resource Usage Security Alerts
+      - alert: SuspiciousResourceUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{container=~"mcp-(gateway|router)"}[5m]) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+          component: resource_usage
+        annotations:
+          summary: "Suspicious CPU usage in {{ $labels.container }}"
+          description: "CPU usage is {{ $value | printf \"%.1f\" }}% for {{ $labels.container }}"
+          remediation: "Investigate potential resource exhaustion attack or performance issues"
+
+      - alert: MemoryUsageSpike
+        expr: |
+          (
+            container_memory_usage_bytes{container=~"mcp-(gateway|router)"} /
+            container_spec_memory_limit_bytes
+          ) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+          component: resource_usage
+        annotations:
+          summary: "High memory usage in {{ $labels.container }}"
+          description: "Memory usage is {{ $value | printf \"%.1f\" }}% for {{ $labels.container }}"
+          remediation: "Investigate potential memory leak or DoS attack"
+
+      # Connection Security Alerts
+      - alert: SuspiciousConnectionPattern
+        expr: |
+          increase(mcp_gateway_connections_total[5m]) > 1000
+        for: 0s
+        labels:
+          severity: warning
+          category: security
+          component: connections
+        annotations:
+          summary: "Suspicious connection pattern detected"
+          description: "{{ $value }} new connections in 5 minutes"
+          remediation: "Investigate connection sources and patterns for potential DDoS attack"
+
+      - alert: ConnectionsFromSingleSource
+        expr: |
+          sum by (source_ip) (increase(mcp_gateway_connections_total[5m])) > 100
+        for: 0s
+        labels:
+          severity: warning
+          category: security
+          component: connections
+        annotations:
+          summary: "High connection count from single source"
+          description: "{{ $value }} connections from {{ $labels.source_ip }} in 5 minutes"
+          remediation: "Investigate source IP {{ $labels.source_ip }} for potential abuse"
+
+      # JWT Token Security Alerts
+      - alert: HighExpiredTokenRate
+        expr: |
+          (
+            rate(mcp_gateway_jwt_validation_total{result="expired"}[5m]) /
+            rate(mcp_gateway_jwt_validation_total[5m])
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+          component: jwt
+        annotations:
+          summary: "High expired token rate"
+          description: "{{ $value | printf \"%.1f\" }}% of tokens are expired"
+          remediation: "Check token refresh mechanisms and client configurations"
+
+      - alert: InvalidTokenSpike
+        expr: |
+          rate(mcp_gateway_jwt_validation_total{result="invalid"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+          category: security
+          component: jwt
+        annotations:
+          summary: "Spike in invalid token attempts"
+          description: "{{ $value | humanize }} invalid tokens/sec - potential token manipulation attack"
+          remediation: "Investigate for token forgery or manipulation attempts"
+
+      # Service Health Security Implications
+      - alert: ServiceUnavailableSecurityImplication
+        expr: |
+          up{job=~"mcp-(gateway|router)"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: security
+          component: availability
+        annotations:
+          summary: "{{ $labels.job }} service is down"
+          description: "{{ $labels.job }} has been down for over 1 minute"
+          remediation: "Investigate potential DoS attack or service failure - check logs immediately"
+
+      # Log-based Security Alerts (if log metrics are available)
+      - alert: SecurityEventDetected
+        expr: |
+          increase(mcp_gateway_security_events_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: warning
+          category: security
+          component: events
+        annotations:
+          summary: "Security event detected: {{ $labels.event_type }}"
+          description: "Security event: {{ $labels.event_type }} - {{ $labels.description }}"
+          remediation: "Investigate security event details and take appropriate action"
+
+      # Network Security Alerts
+      - alert: UnusualGeographicAccess
+        expr: |
+          count by (country) (
+            count by (country, source_ip) (
+              increase(mcp_gateway_connections_total[1h])
+            ) > 10
+          ) > 5
+        for: 0s
+        labels:
+          severity: info
+          category: security
+          component: geographic
+        annotations:
+          summary: "Access from unusual geographic locations"
+          description: "{{ $value }} countries with significant access in the last hour"
+          remediation: "Review geographic access patterns for anomalies"
+
+  - name: security.recording_rules
+    interval: 30s
+    rules:
+      # Security metric recording rules for efficient querying
+      - record: mcp:auth_failure_rate
+        expr: |
+          rate(mcp_gateway_auth_attempts_total{result="failure"}[5m])
+
+      - record: mcp:auth_success_rate_percent
+        expr: |
+          (
+            rate(mcp_gateway_auth_attempts_total{result="success"}[5m]) /
+            rate(mcp_gateway_auth_attempts_total[5m])
+          ) * 100
+
+      - record: mcp:tls_success_rate_percent
+        expr: |
+          (
+            rate(mcp_gateway_tls_handshake_total{result="success"}[5m]) /
+            rate(mcp_gateway_tls_handshake_total[5m])
+          ) * 100
+
+      - record: mcp:rate_limit_violations_15m
+        expr: |
+          increase(mcp_gateway_rate_limit_exceeded_total[15m])
+
+      - record: mcp:validation_failures_15m
+        expr: |
+          increase(mcp_gateway_validation_failures_total[15m])
+
+      - record: mcp:connections_5m
+        expr: |
+          increase(mcp_gateway_connections_total[5m])
+
+      - record: mcp:cpu_usage_percent
+        expr: |
+          rate(container_cpu_usage_seconds_total{container=~"mcp-(gateway|router)"}[5m]) * 100
+
+      - record: mcp:memory_usage_percent
+        expr: |
+          (
+            container_memory_usage_bytes{container=~"mcp-(gateway|router)"} /
+            container_spec_memory_limit_bytes
+          ) * 100
+
+      - record: mcp:cert_days_until_expiry
+        expr: |
+          (mcp_gateway_cert_expiry_timestamp - time()) / 86400

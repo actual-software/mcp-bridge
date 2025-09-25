@@ -1,0 +1,299 @@
+groups:
+  - name: mcp-gateway
+    interval: 30s
+    rules:
+      # Service Health Alerts
+      - alert: MCPGatewayDown
+        expr: up{job="mcp-gateway"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp-gateway
+        annotations:
+          summary: "MCP Gateway is down"
+          description: "MCP Gateway instance {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-down"
+
+      - alert: MCPGatewayUnhealthy
+        expr: mcp_gateway_healthy == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mcp-gateway
+        annotations:
+          summary: "MCP Gateway is unhealthy"
+          description: "MCP Gateway instance {{ $labels.instance }} health check is failing."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-unhealthy"
+
+      # Connection Alerts
+      - alert: MCPGatewayHighConnectionRejections
+        expr: rate(mcp_gateway_connections_rejected_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp-gateway
+        annotations:
+          summary: "High connection rejection rate"
+          description: "MCP Gateway instance {{ $labels.instance }} is rejecting {{ $value }} connections per second."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-connection-limit"
+
+      - alert: MCPGatewayConnectionPoolExhausted
+        expr: mcp_gateway_connections_active / mcp_gateway_connections_max > 0.9
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp-gateway
+        annotations:
+          summary: "Connection pool nearly exhausted"
+          description: "MCP Gateway instance {{ $labels.instance }} is using {{ $value | humanizePercentage }} of connection pool capacity."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-connection-pool"
+
+      # Performance Alerts
+      - alert: MCPGatewayHighLatency
+        expr: histogram_quantile(0.95, rate(mcp_gateway_request_duration_seconds_bucket[5m])) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp-gateway
+        annotations:
+          summary: "High request latency"
+          description: "MCP Gateway instance {{ $labels.instance }} 95th percentile latency is {{ $value }}s."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-latency"
+
+      - alert: MCPGatewayLowSuccessRate
+        expr: rate(mcp_gateway_requests_success_total[5m]) / rate(mcp_gateway_requests_total[5m]) < 0.95
+        for: 3m
+        labels:
+          severity: warning
+          service: mcp-gateway
+        annotations:
+          summary: "Low request success rate"
+          description: "MCP Gateway instance {{ $labels.instance }} success rate is {{ $value | humanizePercentage }}."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-errors"
+
+      # Authentication Alerts
+      - alert: MCPGatewayHighAuthFailures
+        expr: rate(mcp_gateway_auth_failures_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp-gateway
+        annotations:
+          summary: "High authentication failure rate"
+          description: "MCP Gateway instance {{ $labels.instance }} is experiencing {{ $value }} auth failures per second."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-auth"
+
+      # Rate Limiting Alerts
+      - alert: MCPGatewayHighRateLimiting
+        expr: rate(mcp_gateway_rate_limited_total[5m]) > 20
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp-gateway
+        annotations:
+          summary: "High rate limiting activity"
+          description: "MCP Gateway instance {{ $labels.instance }} is rate limiting {{ $value }} requests per second."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-rate-limit"
+
+      # Backend Health Alerts
+      - alert: MCPGatewayBackendUnhealthy
+        expr: mcp_gateway_backend_healthy == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp-gateway
+        annotations:
+          summary: "Backend service unhealthy"
+          description: "Backend {{ $labels.backend }} in namespace {{ $labels.namespace }} is unhealthy."
+          runbook_url: "https://docs.example.com/runbooks/mcp-backend-unhealthy"
+
+      # Resource Alerts
+      - alert: MCPGatewayHighMemoryUsage
+        expr: process_resident_memory_bytes{job="mcp-gateway"} > 1e9  # 1GB
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp-gateway
+        annotations:
+          summary: "High memory usage"
+          description: "MCP Gateway instance {{ $labels.instance }} is using {{ $value | humanize1024 }}B of memory."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-memory"
+
+      - alert: MCPGatewayHighCPUUsage
+        expr: rate(process_cpu_seconds_total{job="mcp-gateway"}[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: mcp-gateway
+        annotations:
+          summary: "High CPU usage"
+          description: "MCP Gateway instance {{ $labels.instance }} CPU usage is {{ $value }}%."
+          runbook_url: "https://docs.example.com/runbooks/mcp-gateway-cpu"
+
+  - name: mcp-router
+    interval: 30s
+    rules:
+      # Service Health Alerts
+      - alert: MCPRouterDown
+        expr: up{job="mcp-router"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp-router
+        annotations:
+          summary: "MCP Router is down"
+          description: "MCP Router instance {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-down"
+
+      # Gateway Connection Alerts
+      - alert: MCPRouterGatewayConnectionFailed
+        expr: mcp_router_gateway_connections_active == 0 and on() mcp_router_gateway_connections_failed_total > 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mcp-router
+        annotations:
+          summary: "Router cannot connect to gateway"
+          description: "MCP Router instance {{ $labels.instance }} has no active gateway connections."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-gateway-connection"
+
+      - alert: MCPRouterFrequentReconnects
+        expr: rate(mcp_router_gateway_reconnects_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          service: mcp-router
+        annotations:
+          summary: "Frequent gateway reconnections"
+          description: "MCP Router instance {{ $labels.instance }} is reconnecting to gateway {{ $value }} times per second."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-reconnects"
+
+      # Connection Pool Alerts
+      - alert: MCPRouterPoolNearCapacity
+        expr: mcp_router_pool_connections_active / mcp_router_pool_connections_max > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp-router
+        annotations:
+          summary: "Connection pool near capacity"
+          description: "MCP Router instance {{ $labels.instance }} connection pool is {{ $value | humanizePercentage }} full."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-pool"
+
+      - alert: MCPRouterPoolExhausted
+        expr: mcp_router_pool_connections_active / mcp_router_pool_connections_max >= 1.0
+        for: 30s
+        labels:
+          severity: critical
+          service: mcp-router
+        annotations:
+          summary: "Connection pool exhausted"
+          description: "MCP Router instance {{ $labels.instance }} connection pool is at maximum capacity."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-pool-exhausted"
+
+      # Performance Alerts
+      - alert: MCPRouterHighRoutingLatency
+        expr: histogram_quantile(0.95, rate(mcp_router_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp-router
+        annotations:
+          summary: "High routing latency"
+          description: "MCP Router instance {{ $labels.instance }} 95th percentile routing latency is {{ $value }}s."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-latency"
+
+      - alert: MCPRouterLowRoutingSuccessRate
+        expr: rate(mcp_router_requests_success_total[5m]) / rate(mcp_router_requests_routed_total[5m]) < 0.95
+        for: 3m
+        labels:
+          severity: warning
+          service: mcp-router
+        annotations:
+          summary: "Low routing success rate"
+          description: "MCP Router instance {{ $labels.instance }} routing success rate is {{ $value | humanizePercentage }}."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-routing-errors"
+
+      # Authentication Cache Alerts
+      - alert: MCPRouterLowCacheHitRate
+        expr: rate(mcp_router_auth_cache_hits_total[5m]) / (rate(mcp_router_auth_cache_hits_total[5m]) + rate(mcp_router_auth_cache_misses_total[5m])) < 0.8
+        for: 10m
+        labels:
+          severity: info
+          service: mcp-router
+        annotations:
+          summary: "Low authentication cache hit rate"
+          description: "MCP Router instance {{ $labels.instance }} auth cache hit rate is {{ $value | humanizePercentage }}."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-cache"
+
+      # Token Storage Alerts
+      - alert: MCPRouterTokenStorageErrors
+        expr: rate(mcp_router_token_storage_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp-router
+        annotations:
+          summary: "Token storage errors"
+          description: "MCP Router instance {{ $labels.instance }} is experiencing {{ $value }} token storage errors per second."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-token-storage"
+
+      # Resource Alerts
+      - alert: MCPRouterHighMemoryUsage
+        expr: process_resident_memory_bytes{job="mcp-router"} > 5e8  # 500MB
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp-router
+        annotations:
+          summary: "High memory usage"
+          description: "MCP Router instance {{ $labels.instance }} is using {{ $value | humanize1024 }}B of memory."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-memory"
+
+      - alert: MCPRouterHighCPUUsage
+        expr: rate(process_cpu_seconds_total{job="mcp-router"}[5m]) * 100 > 70
+        for: 10m
+        labels:
+          severity: warning
+          service: mcp-router
+        annotations:
+          summary: "High CPU usage"
+          description: "MCP Router instance {{ $labels.instance }} CPU usage is {{ $value }}%."
+          runbook_url: "https://docs.example.com/runbooks/mcp-router-cpu"
+
+  - name: mcp-system
+    interval: 60s
+    rules:
+      # Cross-service alerts
+      - alert: MCPSystemDegraded
+        expr: up{job=~"mcp-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp-system
+        annotations:
+          summary: "MCP system component down"
+          description: "MCP system component {{ $labels.job }} instance {{ $labels.instance }} is down."
+          runbook_url: "https://docs.example.com/runbooks/mcp-system-degraded"
+
+      - alert: MCPEndToEndLatencyHigh
+        expr: histogram_quantile(0.95, rate(mcp_gateway_request_duration_seconds_bucket[5m])) + histogram_quantile(0.95, rate(mcp_router_request_duration_seconds_bucket[5m])) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp-system
+        annotations:
+          summary: "High end-to-end latency"
+          description: "MCP system end-to-end 95th percentile latency is {{ $value }}s."
+          runbook_url: "https://docs.example.com/runbooks/mcp-e2e-latency"
+
+      - alert: MCPThroughputDrop
+        expr: (rate(mcp_gateway_requests_total[5m]) + rate(mcp_router_requests_routed_total[5m])) / 2 < 10
+        for: 10m
+        labels:
+          severity: warning
+          service: mcp-system
+        annotations:
+          summary: "Low system throughput"
+          description: "MCP system average throughput is {{ $value }} requests per second."
+          runbook_url: "https://docs.example.com/runbooks/mcp-low-throughput"

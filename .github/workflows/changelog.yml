@@ -1,0 +1,280 @@
+name: Changelog Management
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to generate changelog for'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate-commit:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Validate commits
+        uses: wagoid/commitlint-github-action@v5
+        with:
+          configFile: .commitlintrc.json
+          
+      - name: Check for breaking changes
+        run: |
+          echo "🔍 Checking for breaking changes..."
+          git log --format=%s origin/main..HEAD | grep -E "^(.*!):|^BREAKING CHANGE:" || echo "No breaking changes detected"
+
+  generate-changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install changelog tools
+        run: |
+          npm install -g conventional-changelog-cli
+          npm install -g standard-version
+          npm install -g @commitlint/cli @commitlint/config-conventional
+          
+      - name: Generate changelog
+        run: |
+          echo "📝 Generating changelog..."
+          
+          # Generate changelog using conventional-changelog
+          conventional-changelog -p angular -i CHANGELOG.md -s -r 0
+          
+          # Format and clean up
+          sed -i 's/\*\*Note:\*\* Version bump only for package.*//' CHANGELOG.md || true
+          
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet CHANGELOG.md; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Commit changelog
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog [skip ci]"
+          git push
+
+  update-pr-changelog:
+    name: Update PR Changelog
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Generate PR changelog
+        id: changelog
+        run: |
+          echo "## Changes in this PR" > pr-changelog.md
+          echo "" >> pr-changelog.md
+          
+          # Get commits in this PR
+          git log --format="- %s (%h)" origin/main..HEAD >> pr-changelog.md
+          
+          # Categorize changes
+          echo "" >> pr-changelog.md
+          echo "### Change Summary" >> pr-changelog.md
+          
+          # Count different types of changes
+          FEATURES=$(git log --format=%s origin/main..HEAD | grep -c "^feat" || true)
+          FIXES=$(git log --format=%s origin/main..HEAD | grep -c "^fix" || true)
+          DOCS=$(git log --format=%s origin/main..HEAD | grep -c "^docs" || true)
+          BREAKING=$(git log --format=%s origin/main..HEAD | grep -cE "^(.*!):|BREAKING CHANGE:" || true)
+          
+          echo "- 🚀 Features: $FEATURES" >> pr-changelog.md
+          echo "- 🐛 Bug Fixes: $FIXES" >> pr-changelog.md
+          echo "- 📚 Documentation: $DOCS" >> pr-changelog.md
+          
+          if [ "$BREAKING" -gt 0 ]; then
+            echo "- ⚠️ **BREAKING CHANGES: $BREAKING**" >> pr-changelog.md
+          fi
+          
+          # Output for comment
+          {
+            echo 'changelog<<EOF'
+            cat pr-changelog.md
+            echo EOF
+          } >> $GITHUB_OUTPUT
+          
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changelog = `${{ steps.changelog.outputs.changelog }}`;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('## Changes in this PR')
+            );
+            
+            const body = `📋 **Changelog Preview**\n\n${changelog}`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+  release-changelog:
+    name: Release Changelog
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install tools
+        run: |
+          npm install -g conventional-changelog-cli
+          npm install -g standard-version
+          npm install -g conventional-recommended-bump
+          
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Auto-determine version based on commits
+            VERSION=$(conventional-recommended-bump -p angular)
+            echo "Auto-detected version bump: $VERSION"
+            
+            # Get current version from git tags
+            CURRENT=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            CURRENT=${CURRENT#v}
+            
+            # Calculate new version
+            IFS='.' read -ra PARTS <<< "$CURRENT"
+            MAJOR=${PARTS[0]:-0}
+            MINOR=${PARTS[1]:-0}
+            PATCH=${PARTS[2]:-0}
+            
+            case $VERSION in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+            
+            VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Version: $VERSION"
+          
+      - name: Generate release changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Create release notes
+          echo "# Release $VERSION" > release-notes.md
+          echo "" >> release-notes.md
+          echo "**Release Date:** $(date +%Y-%m-%d)" >> release-notes.md
+          echo "" >> release-notes.md
+          
+          # Generate changelog for this release
+          if [ -f CHANGELOG.md ]; then
+            # Extract changes since last tag
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -n "$LAST_TAG" ]; then
+              git log --format="- %s (%h)" $LAST_TAG..HEAD >> release-notes.md
+            else
+              git log --format="- %s (%h)" >> release-notes.md
+            fi
+          fi
+          
+          # Update main CHANGELOG.md
+          conventional-changelog -p angular -i CHANGELOG.md -s
+          
+      - name: Create release commit
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Commit changelog
+          git add CHANGELOG.md
+          git commit -m "chore(release): $VERSION [skip ci]" || true
+          
+          # Create tag
+          git tag -a "$VERSION" -m "Release $VERSION"
+          
+          # Push changes
+          git push origin main
+          git push origin "$VERSION"
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false

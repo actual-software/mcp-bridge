@@ -1,0 +1,31 @@
+version: 1
+server:
+  host: 0.0.0.0
+  port: 8443
+  protocol: websocket
+  tls:
+    enabled: false  # For quick start only
+
+auth:
+  type: bearer
+  per_message_auth: false
+
+discovery:
+  provider: static
+  static:
+    endpoints:
+      default:
+        - url: http://mcp-example:3000
+
+rate_limit:
+  enabled: true
+  requests_per_sec: 100
+  burst: 200
+
+metrics:
+  enabled: true
+  endpoint: "0.0.0.0:9090"
+
+logging:
+  level: info
+  format: json

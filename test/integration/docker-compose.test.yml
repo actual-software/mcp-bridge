@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Redis for session storage
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - test-network
+
+  # Gateway service
+  gateway:
+    build:
+      context: ../../
+      dockerfile: services/gateway/Dockerfile
+    ports:
+      - "8080:8080"
+      - "9090:9090"  # Metrics
+    environment:
+      - LOG_LEVEL=debug
+      - REDIS_URL=redis://redis:6379
+      - MCP_AUTH_TOKEN=test-token-12345
+      - JWT_SECRET_KEY=test-secret-key-for-integration-tests
+      - METRICS_ENABLED=true
+      - HEALTH_CHECK_ENABLED=true
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ../../configs/test/gateway.yaml:/etc/mcp-gateway/gateway.yaml:ro
+    networks:
+      - test-network
+
+  # Router service
+  router:
+    build:
+      context: ../../
+      dockerfile: services/router/Dockerfile
+    ports:
+      - "8081:8081"
+      - "9091:9091"  # Metrics
+    environment:
+      - LOG_LEVEL=debug
+      - GATEWAY_URL=ws://gateway:8080
+      - MCP_AUTH_TOKEN=test-token-12345
+      - METRICS_ENABLED=true
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ../../configs/test/router.yaml:/etc/mcp-router/router.yaml:ro
+    networks:
+      - test-network
+
+  # Test runner service that waits for all services to be ready
+  test-runner:
+    image: golang:1.23-alpine
+    working_dir: /workspace/test/integration
+    volumes:
+      - ../../:/workspace
+    environment:
+      - MCP_AUTH_TOKEN=test-token-12345
+      - GATEWAY_URL=http://gateway:8080
+      - ROUTER_URL=http://router:8081
+      - REDIS_URL=redis:6379
+      - CGO_ENABLED=0
+    depends_on:
+      redis:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      router:
+        condition: service_healthy
+    networks:
+      - test-network
+    command: ["sh", "-c", "apk add --no-cache git && go test -v -timeout 10m"]
+
+networks:
+  test-network:
+    driver: bridge

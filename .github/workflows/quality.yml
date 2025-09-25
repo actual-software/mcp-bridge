@@ -1,0 +1,229 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  GO_VERSION: "1.21"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run golangci-lint for Gateway
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: services/gateway
+          args: --timeout=5m --config=../../.golangci.yml
+
+      - name: Run golangci-lint for Router
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: services/router
+          args: --timeout=5m --config=../../.golangci.yml
+
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Check code formatting
+        run: |
+          # Check if code is properly formatted
+          if [ "$(gofmt -s -l services/ pkg/ | wc -l)" -gt 0 ]; then
+            echo "❌ Code is not properly formatted. Run 'make fmt' to fix:"
+            gofmt -s -l services/ pkg/
+            exit 1
+          fi
+          echo "✅ Code is properly formatted"
+
+  mod-tidy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Check go.mod and go.sum are tidy
+        run: |
+          # Check root module
+          go mod tidy
+          if [ "$(git status --porcelain go.mod go.sum | wc -l)" -gt 0 ]; then
+            echo "❌ go.mod or go.sum is not tidy in root"
+            git diff go.mod go.sum
+            exit 1
+          fi
+          
+          # Check gateway module
+          cd services/gateway
+          go mod tidy
+          if [ "$(git status --porcelain go.mod go.sum | wc -l)" -gt 0 ]; then
+            echo "❌ go.mod or go.sum is not tidy in gateway"
+            git diff go.mod go.sum
+            exit 1
+          fi
+          
+          # Check router module
+          cd ../router
+          go mod tidy
+          if [ "$(git status --porcelain go.mod go.sum | wc -l)" -gt 0 ]; then
+            echo "❌ go.mod or go.sum is not tidy in router"
+            git diff go.mod go.sum
+            exit 1
+          fi
+          
+          echo "✅ All go.mod and go.sum files are tidy"
+
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check license headers
+        run: |
+          echo "🔍 Checking for license headers..."
+          
+          # Look for license headers in Go files (this is optional but good practice)
+          missing_license=0
+          for file in $(find services/ -name "*.go" | head -10); do
+            if ! head -5 "$file" | grep -qi "license\|copyright"; then
+              echo "⚠️  No license header found in $file"
+              missing_license=$((missing_license + 1))
+            fi
+          done
+          
+          if [ $missing_license -gt 0 ]; then
+            echo "⚠️  $missing_license files missing license headers (optional)"
+          else
+            echo "✅ License headers check passed"
+          fi
+
+  documentation-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check documentation completeness
+        run: |
+          echo "📚 Checking documentation completeness..."
+          
+          # Check required documentation files
+          required_docs=(
+            "README.md"
+            "docs/SECURITY.md"
+            "services/gateway/README.md"
+            "services/router/README.md"
+          )
+          
+          for doc in "${required_docs[@]}"; do
+            if [ ! -f "$doc" ]; then
+              echo "❌ Required documentation missing: $doc"
+              exit 1
+            fi
+          done
+          
+          # Check that READMEs are not empty
+          for readme in services/*/README.md; do
+            if [ $(wc -l < "$readme") -lt 10 ]; then
+              echo "❌ README too short: $readme"
+              exit 1
+            fi
+          done
+          
+          echo "✅ Documentation completeness check passed"
+
+  api-documentation-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Check API documentation
+        run: |
+          echo "📖 Checking API documentation..."
+          
+          # Check for exported functions with comments
+          for service in gateway router; do
+            echo "Checking $service API documentation..."
+            
+            cd "services/$service"
+            
+            # Look for exported functions without comments
+            undocumented=$(go doc -all . 2>/dev/null | grep -c "^func [A-Z]" || echo "0")
+            if [ "$undocumented" -gt 0 ]; then
+              echo "⚠️  Found $undocumented potentially undocumented exported functions in $service"
+            fi
+            
+            cd ../..
+          done
+          
+          echo "✅ API documentation check completed"
+
+  code-complexity-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install gocyclo
+        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+
+      - name: Check cyclomatic complexity
+        run: |
+          echo "🔄 Checking cyclomatic complexity..."
+          
+          # Check for functions with high complexity (>15)
+          high_complexity=$(gocyclo -over 15 services/ || echo "")
+          
+          if [ -n "$high_complexity" ]; then
+            echo "⚠️  Found functions with high cyclomatic complexity:"
+            echo "$high_complexity"
+            echo "Consider refactoring functions with complexity > 15"
+          else
+            echo "✅ Cyclomatic complexity check passed"
+          fi
+
+  import-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Check import organization
+        run: |
+          echo "📦 Checking import organization..."
+          
+          # Install goimports
+          go install golang.org/x/tools/cmd/goimports@latest
+          
+          # Check if imports are properly organized
+          unorganized=$(goimports -l services/ pkg/ | wc -l)
+          
+          if [ "$unorganized" -gt 0 ]; then
+            echo "❌ Found $unorganized files with unorganized imports:"
+            goimports -l services/ pkg/
+            echo "Run 'goimports -w .' to fix"
+            exit 1
+          fi
+          
+          echo "✅ Import organization check passed"

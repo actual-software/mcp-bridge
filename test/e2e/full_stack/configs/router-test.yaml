@@ -1,0 +1,53 @@
+version: 1
+
+# Disable direct mode for E2E testing
+direct:
+  max_connections: 0  # Set to 0 to disable direct mode
+
+# Gateway pool configuration for E2E testing
+gateway_pool:
+  endpoints:
+    - url: wss://localhost:8443/ws
+      weight: 1
+      auth:
+        type: bearer
+        token_env: MCP_AUTH_TOKEN
+  tls:
+    ca_file: "certs/ca.crt"  # Use CA cert for proper validation  
+    verify: true  # Enable proper TLS verification
+    min_version: "1.2"
+  connection:
+    timeout_ms: 10000
+    keepalive_interval_ms: 10000  # Shorter for faster testing
+    pool:
+      enabled: true
+      min_size: 2
+      max_size: 10
+      max_idle_time_ms: 30000
+      acquire_timeout_ms: 5000
+    reconnect:
+      initial_delay_ms: 100
+      max_delay_ms: 2000
+      multiplier: 2.0
+      max_attempts: 10  # More attempts for test environment
+
+# Local settings optimized for testing
+local:
+  read_buffer_size: 65536
+  write_buffer_size: 65536
+  request_timeout_ms: 10000  # Shorter timeout for faster test feedback
+  max_concurrent_requests: 50
+
+# Logging for test debugging
+logging:
+  level: debug
+  format: json
+  output: stdout  # Use stdout for structured logs, stderr for errors only
+  include_caller: true
+
+# Metrics for monitoring test performance
+metrics:
+  enabled: false  # Disabled to avoid port conflicts in connection tests
+  endpoint: "localhost:9094"
+  labels:
+    environment: "e2e-test"

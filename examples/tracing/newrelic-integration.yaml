@@ -1,0 +1,548 @@
+# New Relic APM Integration for MCP Bridge
+# Complete observability platform integration with New Relic One
+
+# OpenTelemetry Collector configuration for New Relic
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - "http://*"
+            - "https://*"
+
+  # Prometheus receiver for metrics
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'mcp-gateway'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['mcp-gateway:9090']
+        - job_name: 'mcp-router'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['mcp-router:9091']
+
+processors:
+  # Batch processor
+  batch:
+    timeout: 5s
+    send_batch_size: 1000
+    send_batch_max_size: 2000
+
+  # Memory limiter
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1024
+    spike_limit_mib: 256
+
+  # Resource processor for New Relic attributes
+  resource:
+    attributes:
+      - key: service.name
+        value: mcp-bridge
+        action: upsert
+      - key: service.namespace
+        value: mcp
+        action: upsert
+      - key: deployment.environment
+        value: ${NEW_RELIC_ENV:production}
+        action: upsert
+      - key: service.instance.id
+        from_attribute: host.name
+        action: insert
+
+  # Attributes processor for New Relic specific fields
+  attributes:
+    actions:
+      - key: newrelic.source
+        value: "otel"
+        action: upsert
+      - key: entity.guid
+        value: ${NEW_RELIC_ENTITY_GUID}
+        action: upsert
+      - key: account.id
+        value: ${NEW_RELIC_ACCOUNT_ID}
+        action: upsert
+
+  # Transform processor for metric names
+  transform:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["environment"], "${NEW_RELIC_ENV:production}")
+          - set(attributes["cluster"], "${CLUSTER_NAME}")
+          - set(attributes["region"], "${AWS_REGION}")
+
+  # Filter processor for sampling
+  filter:
+    traces:
+      span:
+        - 'attributes["http.status_code"] >= 400'
+        - 'duration > 1s'
+        - 'attributes["sampling.priority"] == 1'
+
+exporters:
+  # New Relic exporter
+  otlphttp/newrelic:
+    endpoint: ${NEW_RELIC_OTLP_ENDPOINT:https://otlp.nr-data.net}
+    headers:
+      api-key: ${NEW_RELIC_API_KEY}
+    compression: gzip
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 1000
+
+  # New Relic Metrics API exporter
+  prometheusremotewrite:
+    endpoint: ${NEW_RELIC_METRICS_ENDPOINT:https://metric-api.newrelic.com/prometheus/v1/write}
+    headers:
+      X-License-Key: ${NEW_RELIC_LICENSE_KEY}
+    resource_to_telemetry_conversion:
+      enabled: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+
+  # New Relic Logs API exporter  
+  otlphttp/logs:
+    endpoint: ${NEW_RELIC_LOGS_ENDPOINT:https://log-api.newrelic.com/log/v1}
+    headers:
+      X-License-Key: ${NEW_RELIC_LICENSE_KEY}
+    compression: gzip
+
+  # Debug exporter
+  debug:
+    verbosity: normal
+    sampling_initial: 5
+    sampling_thereafter: 100
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: "/health"
+
+  pprof:
+    endpoint: 0.0.0.0:1777
+
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource, attributes, filter]
+      exporters: [otlphttp/newrelic, debug]
+    
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch, resource, transform]
+      exporters: [prometheusremotewrite]
+    
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource, attributes]
+      exporters: [otlphttp/logs]
+
+  telemetry:
+    logs:
+      level: info
+      development: false
+      encoding: json
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
+
+---
+# New Relic Agent Configuration (newrelic.yml)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: newrelic-agent-config
+  namespace: mcp-system
+data:
+  newrelic.yml: |
+    common: &default_settings
+      license_key: ${NEW_RELIC_LICENSE_KEY}
+      app_name: "MCP Bridge"
+      
+      # Distributed tracing
+      distributed_tracing:
+        enabled: true
+        exclude_newrelic_header: false
+        
+      # Span events
+      span_events:
+        enabled: true
+        max_samples_stored: 2000
+        
+      # Custom events
+      custom_insights_events:
+        enabled: true
+        max_samples_stored: 3000
+        
+      # Error collection
+      error_collector:
+        enabled: true
+        capture_events: true
+        max_event_samples_stored: 100
+        ignore_status_codes: 404
+        
+      # Transaction tracer
+      transaction_tracer:
+        enabled: true
+        transaction_threshold: apdex_f
+        record_sql: obfuscated
+        stack_trace_threshold: 500
+        explain_enabled: true
+        explain_threshold: 500
+        
+      # Thread profiler
+      thread_profiler:
+        enabled: true
+        
+      # Browser monitoring
+      browser_monitoring:
+        auto_instrument: true
+        
+      # Logging
+      log_level: info
+      audit_log:
+        enabled: false
+      
+      # Labels
+      labels: "environment:production;service:mcp-bridge;team:platform"
+    
+    production:
+      <<: *default_settings
+      app_name: "MCP Bridge (Production)"
+      high_security: true
+      
+    staging:
+      <<: *default_settings
+      app_name: "MCP Bridge (Staging)"
+      developer_mode: true
+
+---
+# Application Instrumentation (Go)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-newrelic-instrumentation
+  namespace: mcp-system
+data:
+  instrumentation.go: |
+    package main
+    
+    import (
+        "context"
+        "fmt"
+        "os"
+        
+        "github.com/newrelic/go-agent/v3/newrelic"
+        "github.com/newrelic/go-agent/v3/integrations/nrzap"
+    )
+    
+    func initNewRelic() (*newrelic.Application, error) {
+        app, err := newrelic.NewApplication(
+            newrelic.ConfigAppName("MCP Bridge"),
+            newrelic.ConfigLicense(os.Getenv("NEW_RELIC_LICENSE_KEY")),
+            newrelic.ConfigDistributedTracerEnabled(true),
+            newrelic.ConfigCodeLevelMetricsEnabled(true),
+            newrelic.ConfigAppLogForwardingEnabled(true),
+            newrelic.ConfigCustomInsightsEventsEnabled(true),
+            func(cfg *newrelic.Config) {
+                cfg.ErrorCollector.RecordPanics = true
+                cfg.TransactionEvents.MaxSamplesStored = 10000
+                cfg.CustomInsightsEvents.MaxSamplesStored = 10000
+                cfg.SpanEvents.Enabled = true
+                cfg.Labels = map[string]string{
+                    "environment": os.Getenv("NEW_RELIC_ENV"),
+                    "service":     "mcp-bridge",
+                    "version":     os.Getenv("SERVICE_VERSION"),
+                }
+            },
+        )
+        
+        if err != nil {
+            return nil, fmt.Errorf("failed to create New Relic app: %w", err)
+        }
+        
+        // Wait for connection
+        app.WaitForConnection(5 * time.Second)
+        
+        return app, nil
+    }
+    
+    // Instrumented handler example
+    func handleMCPRequest(app *newrelic.Application) http.HandlerFunc {
+        return func(w http.ResponseWriter, r *http.Request) {
+            // Start transaction
+            txn := app.StartTransaction("MCP.HandleRequest")
+            defer txn.End()
+            
+            // Add to context
+            ctx := newrelic.NewContext(r.Context(), txn)
+            r = r.WithContext(ctx)
+            
+            // Set transaction attributes
+            txn.AddAttribute("mcp.method", r.Header.Get("X-MCP-Method"))
+            txn.AddAttribute("mcp.namespace", r.Header.Get("X-MCP-Namespace"))
+            txn.AddAttribute("user.id", r.Header.Get("X-User-ID"))
+            
+            // Create segment for processing
+            segment := txn.StartSegment("ProcessRequest")
+            
+            // Process request
+            resp, err := processRequest(ctx, r)
+            
+            segment.End()
+            
+            if err != nil {
+                txn.NoticeError(err)
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+            }
+            
+            // Record custom event
+            app.RecordCustomEvent("MCPRequest", map[string]interface{}{
+                "method":    r.Header.Get("X-MCP-Method"),
+                "namespace": r.Header.Get("X-MCP-Namespace"),
+                "duration":  time.Since(start).Milliseconds(),
+                "success":   err == nil,
+            })
+            
+            // Send response
+            w.WriteHeader(http.StatusOK)
+            json.NewEncoder(w).Encode(resp)
+        }
+    }
+    
+    // Database segment example
+    func queryDatabase(ctx context.Context, query string) error {
+        txn := newrelic.FromContext(ctx)
+        segment := newrelic.DatastoreSegment{
+            StartTime:    txn.StartSegmentNow(),
+            Product:      newrelic.DatastorePostgres,
+            Collection:   "users",
+            Operation:    "SELECT",
+            DatabaseName: "mcp_db",
+            QueryParameters: map[string]interface{}{
+                "query": query,
+            },
+        }
+        defer segment.End()
+        
+        // Execute query...
+        return nil
+    }
+    
+    // External service call
+    func callExternalService(ctx context.Context, url string) error {
+        txn := newrelic.FromContext(ctx)
+        segment := newrelic.StartExternalSegment(txn, &http.Request{
+            URL:    url,
+            Method: "POST",
+        })
+        defer segment.End()
+        
+        // Make HTTP call...
+        return nil
+    }
+
+---
+# New Relic Dashboard Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: newrelic-dashboard
+  namespace: mcp-system
+data:
+  dashboard.json: |
+    {
+      "name": "MCP Bridge Performance Dashboard",
+      "description": "Real-time monitoring of MCP Bridge services",
+      "permissions": "PUBLIC_READ_WRITE",
+      "pages": [
+        {
+          "name": "Overview",
+          "description": "Service health and performance overview",
+          "widgets": [
+            {
+              "title": "Service Map",
+              "visualization": "service_map",
+              "configuration": {
+                "nrql": "FROM Span SELECT * WHERE service.name = 'mcp-bridge'"
+              }
+            },
+            {
+              "title": "Throughput",
+              "visualization": "line",
+              "configuration": {
+                "nrql": "SELECT rate(count(*), 1 minute) FROM Transaction WHERE appName = 'MCP Bridge' TIMESERIES"
+              }
+            },
+            {
+              "title": "Response Time",
+              "visualization": "line",
+              "configuration": {
+                "nrql": "SELECT average(duration) FROM Transaction WHERE appName = 'MCP Bridge' TIMESERIES"
+              }
+            },
+            {
+              "title": "Error Rate",
+              "visualization": "line",
+              "configuration": {
+                "nrql": "SELECT percentage(count(*), WHERE error IS true) FROM Transaction WHERE appName = 'MCP Bridge' TIMESERIES"
+              }
+            },
+            {
+              "title": "Apdex Score",
+              "visualization": "billboard",
+              "configuration": {
+                "nrql": "SELECT apdex(duration, 0.5) FROM Transaction WHERE appName = 'MCP Bridge'"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Distributed Tracing",
+          "widgets": [
+            {
+              "title": "Trace Summary",
+              "visualization": "table",
+              "configuration": {
+                "nrql": "SELECT count(*), average(duration), percentile(duration, 95) FROM Span WHERE service.name = 'mcp-bridge' FACET name LIMIT 20"
+              }
+            },
+            {
+              "title": "Span Duration Distribution",
+              "visualization": "histogram",
+              "configuration": {
+                "nrql": "SELECT histogram(duration, 50, 20) FROM Span WHERE service.name = 'mcp-bridge'"
+              }
+            },
+            {
+              "title": "Error Traces",
+              "visualization": "table",
+              "configuration": {
+                "nrql": "SELECT timestamp, name, error.message, duration FROM Span WHERE service.name = 'mcp-bridge' AND error IS true LIMIT 100"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Custom Events",
+          "widgets": [
+            {
+              "title": "MCP Request Methods",
+              "visualization": "pie",
+              "configuration": {
+                "nrql": "SELECT count(*) FROM MCPRequest FACET method LIMIT 10"
+              }
+            },
+            {
+              "title": "Request Success Rate",
+              "visualization": "billboard",
+              "configuration": {
+                "nrql": "SELECT percentage(count(*), WHERE success IS true) FROM MCPRequest"
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+---
+# New Relic Alerts Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: newrelic-alerts
+  namespace: mcp-system
+data:
+  alerts.yaml: |
+    policy:
+      name: "MCP Bridge Alert Policy"
+      incident_preference: "PER_CONDITION_AND_TARGET"
+      
+    conditions:
+      - name: "High Error Rate"
+        type: "nrql"
+        enabled: true
+        terms:
+          - duration: 5
+            priority: "CRITICAL"
+            threshold: 5
+            threshold_duration: 300
+            threshold_occurrences: "ALL"
+        nrql:
+          query: "SELECT percentage(count(*), WHERE error IS true) FROM Transaction WHERE appName = 'MCP Bridge'"
+        
+      - name: "High Response Time"
+        type: "nrql"
+        enabled: true
+        terms:
+          - duration: 5
+            priority: "WARNING"
+            threshold: 1000
+            threshold_duration: 300
+        nrql:
+          query: "SELECT average(duration) FROM Transaction WHERE appName = 'MCP Bridge'"
+        
+      - name: "Low Apdex Score"
+        type: "nrql"
+        enabled: true
+        terms:
+          - duration: 5
+            priority: "WARNING"
+            threshold: 0.85
+            threshold_duration: 300
+            operator: "BELOW"
+        nrql:
+          query: "SELECT apdex(duration, 0.5) FROM Transaction WHERE appName = 'MCP Bridge'"
+        
+      - name: "Database Query Slow"
+        type: "nrql"
+        enabled: true
+        terms:
+          - duration: 5
+            priority: "WARNING"
+            threshold: 500
+            threshold_duration: 300
+        nrql:
+          query: "SELECT average(duration) FROM Span WHERE db.statement IS NOT NULL AND service.name = 'mcp-bridge'"
+    
+    notification_channels:
+      - type: "email"
+        configuration:
+          recipients: "platform-team@example.com"
+          include_json: true
+          
+      - type: "slack"
+        configuration:
+          channel: "#platform-alerts"
+          webhook_url: "${SLACK_WEBHOOK_URL}"
+          
+      - type: "pagerduty"
+        configuration:
+          service_key: "${PAGERDUTY_SERVICE_KEY}"
+          
+      - type: "webhook"
+        configuration:
+          url: "${CUSTOM_WEBHOOK_URL}"
+          headers:
+            X-Auth-Token: "${WEBHOOK_AUTH_TOKEN}"

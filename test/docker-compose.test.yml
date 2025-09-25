@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # Redis for session storage
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - test-network
+
+  # Gateway service
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    ports:
+      - "18080:8080"
+      - "19090:9090"  # Metrics
+    environment:
+      - LOG_LEVEL=debug
+      - REDIS_URL=redis:6379
+      - AUTH_TOKEN=test-token-12345
+      - JWT_SECRET_KEY=test-secret-key-for-integration-tests
+      - METRICS_ENABLED=true
+      - HEALTH_CHECK_ENABLED=true
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./configs/test/gateway.yaml:/etc/mcp-gateway/gateway.yaml:ro
+    networks:
+      - test-network
+
+  # Router service
+  router:
+    build:
+      context: .
+      dockerfile: services/router/Dockerfile
+    ports:
+      - "18081:8081"
+      - "19091:9091"  # Metrics
+    environment:
+      - LOG_LEVEL=debug
+      - GATEWAY_URL=ws://gateway:8080
+      - MCP_AUTH_TOKEN=test-token-12345
+      - METRICS_ENABLED=true
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./configs/test/router.yaml:/etc/mcp-router/router.yaml:ro
+    networks:
+      - test-network
+
+  # Test runner container
+  test-runner:
+    build:
+      context: .
+      dockerfile: test/Dockerfile
+    environment:
+      - MCP_BASE_URL=http://gateway:8080
+      - MCP_AUTH_TOKEN=test-token-12345
+      - REDIS_URL=redis:6379
+      - CI=true
+      - TEST_LEVEL=${TEST_LEVEL:-standard}
+    depends_on:
+      gateway:
+        condition: service_healthy
+      router:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./test:/test
+      - ./reports:/reports
+    networks:
+      - test-network
+    command: ["/test/run-tests.sh", "-l", "${TEST_LEVEL:-standard}", "-t", "${TEST_TYPE:-all}"]
+
+networks:
+  test-network:
+    driver: bridge

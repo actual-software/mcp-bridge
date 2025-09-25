@@ -1,0 +1,522 @@
+# MCP Gateway - All-in-One Kubernetes Manifest
+# This file contains all resources needed to deploy MCP Gateway
+# 
+# To install:
+#   kubectl apply -f https://raw.githubusercontent.com/poiley/mcp-gateway/main/deploy/install.yaml
+#
+# To uninstall:
+#   kubectl delete -f https://raw.githubusercontent.com/poiley/mcp-gateway/main/deploy/install.yaml
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcp-system
+  labels:
+    name: mcp-system
+    app.kubernetes.io/name: mcp-system
+    app.kubernetes.io/part-of: mcp-remote-bridge
+
+---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  labels:
+    app: mcp-gateway
+
+---
+# ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-gateway
+  labels:
+    app: mcp-gateway
+rules:
+# Service discovery
+- apiGroups: [""]
+  resources: ["services", "endpoints", "pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+# For reading MCP server annotations
+- apiGroups: [""]
+  resources: ["services/status", "pods/status"]
+  verbs: ["get"]
+
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-gateway
+  labels:
+    app: mcp-gateway
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-gateway
+subjects:
+- kind: ServiceAccount
+  name: mcp-gateway
+  namespace: mcp-system
+
+---
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-gateway-config
+  namespace: mcp-system
+data:
+  gateway.yaml: |
+    version: 1
+    server:
+      port: 8443
+      metrics_port: 9090
+      max_connections: 50000
+      connection_buffer_size: 65536
+    
+    auth:
+      provider: jwt
+      jwt:
+        issuer: "mcp-gateway"
+        audience: "mcp-gateway"
+        secret_key_env: JWT_SECRET_KEY
+    
+    routing:
+      strategy: least_connections
+      health_check_interval: 30s
+      circuit_breaker:
+        failure_threshold: 5
+        success_threshold: 2
+        timeout: 30s
+    
+    service_discovery:
+      mode: kubernetes
+      namespace_selector:
+        - mcp-servers
+      label_selector:
+        mcp.bridge/enabled: "true"
+    
+    logging:
+      level: info
+      format: json
+      
+    metrics:
+      enabled: true
+      path: /metrics
+
+---
+# Secret - IMPORTANT: Update these values before deploying!
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mcp-gateway-secrets
+  namespace: mcp-system
+type: Opaque
+stringData:
+  # CHANGE THIS: Generate a secure JWT secret
+  # Example: openssl rand -base64 32
+  jwt-secret-key: "CHANGE_ME_TO_A_SECURE_RANDOM_KEY"
+  
+  # Redis connection for session storage
+  redis-url: "redis://redis.mcp-system.svc.cluster.local:6379/0"
+  
+  # TLS certificates - Replace with your actual certificates
+  # You can also use cert-manager for automatic certificate management
+  tls.crt: |
+    -----BEGIN CERTIFICATE-----
+    # Your TLS certificate here
+    -----END CERTIFICATE-----
+  
+  tls.key: |
+    -----BEGIN PRIVATE KEY-----
+    # Your TLS private key here
+    -----END PRIVATE KEY-----
+
+---
+# Redis StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: mcp-system
+  labels:
+    app: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  selector:
+    app: redis
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: mcp-system
+  labels:
+    app: redis
+spec:
+  serviceName: redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        command:
+        - redis-server
+        - --maxmemory
+        - "256mb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        - --save
+        - ""
+        - --appendonly
+        - "no"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          tcpSocket:
+            port: redis
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+---
+# Gateway Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  labels:
+    app: mcp-gateway
+    app.kubernetes.io/name: mcp-gateway
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: mcp-remote-bridge
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: mcp-gateway
+  template:
+    metadata:
+      labels:
+        app: mcp-gateway
+        app.kubernetes.io/name: mcp-gateway
+        app.kubernetes.io/component: gateway
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: mcp-gateway
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mcp-gateway
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: gateway
+        image: poiley/mcp-gateway:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8443
+          name: websocket
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        env:
+        - name: CONFIG_PATH
+          value: "/etc/mcp-gateway/gateway.yaml"
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-gateway-secrets
+              key: jwt-secret-key
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: mcp-gateway-secrets
+              key: redis-url
+        - name: LOG_LEVEL
+          value: "info"
+        - name: GOMAXPROCS
+          value: "2"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9090
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /etc/mcp-gateway
+          readOnly: true
+        - name: tls-certs
+          mountPath: /etc/tls
+          readOnly: true
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+      volumes:
+      - name: config
+        configMap:
+          name: mcp-gateway-config
+      - name: tls-certs
+        secret:
+          secretName: mcp-gateway-secrets
+          items:
+          - key: tls.crt
+            path: tls.crt
+          - key: tls.key
+            path: tls.key
+
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  labels:
+    app: mcp-gateway
+    app.kubernetes.io/name: mcp-gateway
+    app.kubernetes.io/component: gateway
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8443
+    targetPort: 8443
+    name: websocket
+    protocol: TCP
+  - port: 9090
+    targetPort: 9090
+    name: metrics
+    protocol: TCP
+  selector:
+    app: mcp-gateway
+  sessionAffinity: None
+
+---
+# External Service (LoadBalancer)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-gateway-external
+  namespace: mcp-system
+  labels:
+    app: mcp-gateway
+    app.kubernetes.io/name: mcp-gateway-external
+    app.kubernetes.io/component: gateway
+  annotations:
+    # Uncomment and configure based on your cloud provider
+    # AWS:
+    # service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    # service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+    # GCP:
+    # cloud.google.com/load-balancer-type: "Internal"
+    # Azure:
+    # service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 443
+    targetPort: 8443
+    name: websocket
+    protocol: TCP
+  selector:
+    app: mcp-gateway
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+
+---
+# HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  labels:
+    app: mcp-gateway
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mcp-gateway
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Min
+
+---
+# NetworkPolicy (optional - uncomment if you use network policies)
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: mcp-gateway-network-policy
+#   namespace: mcp-system
+#   labels:
+#     app: mcp-gateway
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: mcp-gateway
+#   policyTypes:
+#   - Ingress
+#   - Egress
+#   ingress:
+#   # Allow inbound WebSocket connections from anywhere
+#   - from:
+#     - ipBlock:
+#         cidr: 0.0.0.0/0
+#     ports:
+#     - protocol: TCP
+#       port: 8443
+#   # Allow Prometheus scraping
+#   - from:
+#     - namespaceSelector:
+#         matchLabels:
+#           name: monitoring
+#     ports:
+#     - protocol: TCP
+#       port: 9090
+#   egress:
+#   # Allow connections to MCP servers
+#   - to:
+#     - namespaceSelector:
+#         matchLabels:
+#           name: mcp-servers
+#     ports:
+#     - protocol: TCP
+#   # Allow Redis connections
+#   - to:
+#     - podSelector:
+#         matchLabels:
+#           app: redis
+#     ports:
+#     - protocol: TCP
+#       port: 6379
+#   # Allow DNS
+#   - to:
+#     - namespaceSelector: {}
+#       podSelector:
+#         matchLabels:
+#           k8s-app: kube-dns
+#     ports:
+#     - protocol: UDP
+#       port: 53
+#   # Allow access to Kubernetes API
+#   - to:
+#     - ipBlock:
+#         cidr: 0.0.0.0/0
+#     ports:
+#     - protocol: TCP
+#       port: 443
+#     - protocol: TCP
+#       port: 6443

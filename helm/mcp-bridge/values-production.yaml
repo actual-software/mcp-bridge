@@ -1,0 +1,179 @@
+# Production values for mcp-bridge
+# This values file configures MCP Bridge for production deployment
+
+# Gateway production configuration
+gateway:
+  enabled: true
+  replicaCount: 3
+  
+  # Production resource allocation
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 256Mi
+  
+  # Aggressive auto-scaling for production
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 70
+  
+  # Production ingress configuration
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    hosts:
+      - host: mcp-gateway.your-domain.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: mcp-gateway-tls
+        hosts:
+          - mcp-gateway.your-domain.com
+  
+  # Production environment variables
+  env:
+    MCP_ENV: production
+    MCP_LOG_LEVEL: warn
+    MCP_GATEWAY_PORT: "8443"
+    MCP_METRICS_PORT: "9090"
+  
+  # Node selection for production
+  nodeSelector:
+    node-type: compute
+  
+  # Anti-affinity for high availability
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - gateway
+            topologyKey: kubernetes.io/hostname
+
+# Router production configuration
+router:
+  enabled: true
+  replicaCount: 2
+  
+  # Production resource allocation
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 128Mi
+  
+  # Production environment variables
+  env:
+    MCP_ENV: production
+    MCP_LOG_LEVEL: warn
+  
+  # Node selection for production
+  nodeSelector:
+    node-type: compute
+
+# Redis production configuration
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    password: ""  # Will be auto-generated
+  master:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 256Mi
+    nodeSelector:
+      node-type: storage
+
+# Enable monitoring in production
+prometheus:
+  enabled: true
+  server:
+    retention: "30d"
+    persistentVolume:
+      enabled: true
+      size: 50Gi
+      storageClass: standard
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    nodeSelector:
+      node-type: monitoring
+
+grafana:
+  enabled: true
+  adminPassword: ""  # Set this in secrets
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  nodeSelector:
+    node-type: monitoring
+
+# Production security configuration
+networkPolicy:
+  enabled: true
+
+tls:
+  enabled: true
+  create: false  # Use cert-manager or provide your own certs
+
+secrets:
+  create: true
+  # In production, these should be set via external secret management
+  jwtSecretKey: ""  # Will be auto-generated if empty
+  mcpAuthToken: ""  # Will be auto-generated if empty
+  redisPassword: ""  # Will be auto-generated if empty
+
+# Production monitoring
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  scrapeTimeout: 10s
+
+podMonitor:
+  enabled: true
+  interval: 15s
+  scrapeTimeout: 10s
+
+# Production testing
+tests:
+  enabled: true

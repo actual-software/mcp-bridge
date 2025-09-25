@@ -1,0 +1,21 @@
+{{- if .Values.router.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mcp-bridge.fullname" . }}-router
+  labels:
+    {{- include "mcp-bridge.router.labels" . | nindent 4 }}
+  {{- with .Values.router.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.router.service.type }}
+  ports:
+    - port: {{ .Values.router.service.port }}
+      targetPort: {{ .Values.router.service.targetPort }}
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "mcp-bridge.router.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,77 @@
+# Build artifacts
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Compiled binaries (ignore all binaries in bin/ directories)
+*/bin/*
+bin/
+mcp-gateway
+mcp-router
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.iml
+
+# Dependency directories
+vendor/
+node_modules/
+
+# Go module cache
+go.sum.lock
+
+# Local development
+.env
+.env.local
+*.local
+
+# Logs
+*.log
+logs/
+
+# Security reports
+security-reports/
+*.sarif
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Distribution / build outputs
+dist/
+build/
+target/
+
+# IDE generated files
+.project
+.classpath
+.settings/
+
+# AI and MCP genrated files
+#.claude/
+.serena/
+.well-known/
+!.claude/agents/*.md
+
+# Go workspace file
+go.work.sum.lock

@@ -1,0 +1,11 @@
+{{- if .Values.gateway.config.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mcp-bridge.fullname" . }}-gateway-config
+  labels:
+    {{- include "mcp-bridge.gateway.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+{{ .Values.gateway.config.data | indent 4 }}
+{{- end }}

@@ -1,0 +1,39 @@
+# MCP Router configuration for Kubernetes deployment
+server:
+  host: 0.0.0.0
+  port: {{.RouterPort}}
+  read_timeout: {{.ReadTimeout}}
+  write_timeout: {{.WriteTimeout}}
+  tls:
+    enabled: true
+    cert_file: /etc/mcp-router/tls/tls.crt
+    key_file: /etc/mcp-router/tls/tls.key
+
+metrics:
+  enabled: true
+  port: {{.MetricsPort}}
+  path: /metrics
+
+discovery:
+  provider: kubernetes
+  namespace: {{.Namespace}}
+  label_selector: "component=mcp-server"
+
+routing:
+  algorithm: round_robin
+  health_check:
+    enabled: true
+    interval: {{.HealthCheckInterval}}
+    timeout: {{.HealthCheckTimeout}}
+    retries: {{.HealthCheckRetries}}
+
+circuit_breaker:
+  enabled: true
+  failure_threshold: {{.CircuitBreakerFailures}}
+  success_threshold: {{.CircuitBreakerSuccess}}
+  timeout: {{.CircuitBreakerTimeout}}
+
+logging:
+  level: {{.LogLevel}}
+  format: json
+  output: stdout

@@ -1,0 +1,145 @@
+# Example MCP Gateway Configuration
+version: 1
+
+server:
+  host: 0.0.0.0
+  port: 8443
+  metrics_port: 9090
+  max_connections: 50000
+  connection_buffer_size: 65536
+  protocol: websocket  # Options: websocket, tcp, both
+  # tcp_port: 9001     # TCP port for binary protocol (default: port + 1000)
+  # tcp_health_port: 9002  # Dedicated TCP health check port (optional)
+  
+  # WebSocket Origin Validation
+  # Configure allowed origins for CORS/CSRF protection
+  allowed_origins:
+    - https://app.example.com
+    - https://dashboard.example.com
+    - http://localhost:3000      # Development
+    # - "*"                      # WARNING: Wildcard allows any origin - insecure!
+  
+  # TLS Configuration
+  tls:
+    enabled: true
+    cert_file: /etc/mcp-gateway/tls/tls.crt
+    key_file: /etc/mcp-gateway/tls/tls.key
+    # ca_file: /etc/mcp-gateway/tls/ca.crt  # For mTLS client verification
+    min_version: "1.2"  # Options: "1.2", "1.3"
+    client_auth: none   # Options: "none", "request", "require"
+    # Custom cipher suites (optional - uses secure defaults if not specified)
+    # cipher_suites:
+    #   - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    #   - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+    #   - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+
+# Authentication configuration
+auth:
+  provider: jwt
+  jwt:
+    issuer: mcp-gateway
+    audience: mcp-services
+    secret_key_env: JWT_SECRET_KEY
+    # public_key_path: /etc/mcp-gateway/jwt-public.pem  # For RS256
+  
+  # Per-message authentication (optional)
+  # When enabled, clients can include auth tokens with each message
+  # for enhanced security. This prevents replay attacks and session hijacking.
+  per_message_auth: false         # Enable per-message authentication
+  per_message_auth_cache: 300     # Cache validated tokens for 5 minutes
+
+# OAuth2 authentication (alternative to JWT)
+# auth:
+#   provider: oauth2
+#   oauth2:
+#     client_id: mcp-gateway-client
+#     client_secret_env: OAUTH2_CLIENT_SECRET
+#     token_endpoint: https://auth.example.com/oauth/token
+#     introspect_endpoint: https://auth.example.com/oauth/introspect
+#     issuer: https://auth.example.com
+#     audience: mcp-gateway
+
+# Service discovery
+service_discovery:
+  provider: kubernetes
+  kubernetes:
+    in_cluster: true
+    namespace_pattern: mcp-*
+    service_labels:
+      mcp-enabled: "true"
+  refresh_rate: 30s
+
+# Routing configuration  
+routing:
+  strategy: least_connections  # Options: round_robin, least_connections, random
+  health_check_interval: 30s
+  circuit_breaker:
+    failure_threshold: 5
+    success_threshold: 2
+    timeout: 30
+
+# Session management configuration
+sessions:
+  provider: redis  # Options: redis, memory
+  ttl: 86400      # Session TTL in seconds (24 hours)
+  cleanup_interval: 300  # Cleanup interval in seconds (5 minutes)
+  
+  # Redis configuration for session storage
+  redis:
+    url: redis://localhost:6379/0
+    pool_size: 100
+    max_retries: 3
+  
+  # Memory configuration (when provider is "memory")
+  # memory:
+  #   cleanup_interval: 300  # Cleanup interval in seconds
+
+# Rate limiting configuration
+rate_limit:
+  enabled: true
+  provider: memory  # Options: memory, redis
+  window_size: 60   # Rate limit window in seconds
+  
+  # Redis configuration (when provider is "redis")
+  redis:
+    url: redis://localhost:6379/0
+    password: ""
+    pool_size: 10
+    max_retries: 3
+    dial_timeout: 5
+  
+  # Memory configuration (when provider is "memory")
+  memory:
+    cleanup_interval: 300  # Cleanup interval in seconds
+
+# Circuit breaker configuration
+circuit_breaker:
+  enabled: true
+  threshold: 5       # Failure threshold before opening circuit
+  timeout: 30        # Timeout in seconds before allowing retry
+  max_requests: 1    # Max requests allowed in half-open state
+  interval: 60       # Interval in seconds for collecting failure stats
+  success_ratio: 0.6 # Success ratio required to close circuit
+
+# Metrics configuration
+metrics:
+  enabled: true
+  path: /metrics
+  port: 9090
+
+# Logging configuration
+logging:
+  level: info  # Options: debug, info, warn, error
+  format: json
+
+# Distributed tracing (optional)
+tracing:
+  enabled: false
+  service_name: mcp-gateway
+  sampler_type: const
+  sampler_param: 1.0
+  agent_host: jaeger-agent
+  agent_port: 6831
+
+# TLS configuration
+certificates_path: /etc/mcp-gateway/certs

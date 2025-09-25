@@ -1,0 +1,54 @@
+# Example router configuration with OpenTelemetry tracing enabled
+version: 2
+
+# Gateway pool configuration for multi-gateway setup
+gateway_pool:
+  endpoints:
+    - url: "ws://localhost:3000"
+      auth:
+        type: bearer
+        token_env: MCP_AUTH_TOKEN
+      connection:
+        timeout_ms: 30000
+        keepalive_interval_ms: 30000
+      weight: 1
+      priority: 1
+
+  load_balancer:
+    strategy: round_robin
+    health_check_path: /health
+    failover_timeout: 5s
+    retry_count: 3
+
+# Local server configuration
+local:
+  stdio:
+    enabled: true
+
+# Distributed tracing configuration
+tracing:
+  enabled: true
+  service_name: "mcp-router"
+  service_version: "1.0.0"
+  environment: "production"
+  
+  # Sampling configuration
+  sampler_type: "traceidratio"    # Sample 10% of traces
+  sampler_param: 0.1
+  
+  # Export configuration
+  exporter_type: "otlp"            # Send to OpenTelemetry Collector
+  otlp_endpoint: "localhost:4317"
+  otlp_insecure: true
+
+# Metrics configuration
+metrics:
+  enabled: true
+  endpoint: ":9090"
+  path: "/metrics"
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  include_caller: false

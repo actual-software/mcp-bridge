@@ -1,0 +1,54 @@
+#compdef mcp-router
+
+_mcp_router() {
+    local -a commands
+    commands=(
+        'setup:Configure connection to MCP gateway'
+        'start:Start the MCP router'
+        'stop:Stop the MCP router'
+        'status:Show router status'
+        'version:Show version information'
+        'update-check:Check for updates'
+        'help:Show help information'
+    )
+    
+    local -a global_flags
+    global_flags=(
+        '--config[Path to configuration file]:config file:_files'
+        '--log-level[Log level]:level:(trace debug info warn error)'
+        '--verbose[Enable verbose output]'
+        '--help[Show help]'
+    )
+    
+    _arguments -C \
+        "${global_flags[@]}" \
+        '1: :->command' \
+        '*:: :->args'
+    
+    case $state in
+        command)
+            _describe 'command' commands
+            ;;
+        args)
+            case $words[1] in
+                setup)
+                    _arguments \
+                        '--gateway-url[MCP Gateway URL]:url:' \
+                        '--auth-token[Authentication token]:token:' \
+                        '--config-file[Config file path]:file:_files' \
+                        '--verbose[Enable verbose output]' \
+                        '--help[Show help]'
+                    ;;
+                start|stop|status)
+                    _arguments \
+                        '--verbose[Enable verbose output]' \
+                        '--help[Show help]'
+                    ;;
+                *)
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_mcp_router "$@"

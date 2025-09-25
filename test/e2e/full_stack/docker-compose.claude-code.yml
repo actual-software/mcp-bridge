@@ -1,0 +1,126 @@
+services:
+  # Redis for gateway session/rate limit storage
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 3
+    networks:
+      - e2e-network
+
+  # MCP Gateway
+  gateway:
+    build:
+      context: ../../..
+      dockerfile: services/gateway/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8443:8443"  # HTTPS/WebSocket with TLS
+      - "9091:9091"  # Metrics
+      - "9092:9092"  # Health
+    environment:
+      - MCP_AUTH_TOKEN=test-e2e-token-12345
+      - JWT_SECRET_KEY=test-jwt-secret-for-e2e-testing-only
+      - MCP_GATEWAY_REDIS_URL=redis://redis:6379/0
+      - MCP_GATEWAY_LOGGING_LEVEL=debug
+      - MCP_GATEWAY_SERVICE_DISCOVERY_PROVIDER=static
+      - MCP_GATEWAY_SESSIONS_PROVIDER=redis
+    depends_on:
+      redis:
+        condition: service_started
+      test-mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9092/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - ./configs/gateway-test.yaml:/etc/mcp-gateway/gateway.yaml:ro
+      - ./certs:/etc/mcp-gateway/tls:ro
+    networks:
+      - e2e-network
+
+  # Test MCP Server
+  test-mcp-server:
+    build: ./test-mcp-server
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - BACKEND_ID=test-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+    networks:
+      - e2e-network
+
+  # MCP Router Container - Fixed Docker build
+  router:
+    build:
+      context: ../../..
+      dockerfile: services/router/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      - MCP_AUTH_TOKEN=test-e2e-token-12345
+      - MCP_ROUTER_LOGGING_LEVEL=debug
+    volumes:
+      - ./configs/router-container.yaml:/etc/mcp-router/router.yaml:ro
+      - ./certs:/etc/mcp-gateway/tls:ro
+    networks:
+      - e2e-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9094/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # Claude Code Test Container
+  claude-code-container:
+    image: node:18-alpine
+    restart: unless-stopped
+    working_dir: /workspace
+    command: sh -c "echo 'Installing Claude Code CLI...' && npm install -g @anthropic-ai/claude-code && echo 'Claude Code installed successfully' && echo 'Setup complete' && tail -f /dev/null"
+    depends_on:
+      router:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-sk-ant-test-key-for-e2e-testing-purposes-only}
+      - MCP_AUTH_TOKEN=test-e2e-token-12345
+    volumes:
+      - claude-code-workspace:/workspace
+      - ./configs:/workspace/configs:ro
+    networks:
+      - e2e-network
+    healthcheck:
+      test: ["CMD", "claude", "--version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+
+networks:
+  e2e-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  claude-code-workspace:
+  redis-data:

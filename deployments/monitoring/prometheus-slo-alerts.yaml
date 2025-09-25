@@ -1,0 +1,227 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mcp-bridge-slo-alerts
+  namespace: monitoring
+  labels:
+    app: mcp-bridge
+    prometheus: kube-prometheus
+spec:
+  groups:
+    - name: mcp_bridge_slo_alerts
+      interval: 30s
+      rules:
+        # Multi-window multi-burn-rate alerts (following Google SRE practices)
+        
+        # Page Alert: 2% budget consumed in 1 hour OR 5% in 6 hours
+        - alert: SLOErrorBudgetBurnRateTooHigh
+          expr: |
+            (
+              slo:burn_rate:1h{service="mcp-gateway"} > 14.4
+              and
+              slo:burn_rate:6h{service="mcp-gateway"} > 6
+            )
+            or
+            (
+              slo:burn_rate:1h{service="mcp-router"} > 14.4
+              and
+              slo:burn_rate:6h{service="mcp-router"} > 6
+            )
+          for: 2m
+          labels:
+            severity: critical
+            team: platform
+            alert_type: page
+          annotations:
+            summary: "High error budget burn rate for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} is burning error budget too quickly.
+              Current 1h burn rate: {{ with printf "slo:burn_rate:1h{service='%s'}" $labels.service | query }}{{ . | first | value | humanize }}{{ end }}x
+              Current 6h burn rate: {{ with printf "slo:burn_rate:6h{service='%s'}" $labels.service | query }}{{ . | first | value | humanize }}{{ end }}x
+              At this rate, the monthly error budget will be exhausted in {{ $value | humanizeDuration }}.
+            runbook_url: "https://docs.mcp-bridge.io/runbooks/slo-burn-rate"
+            dashboard: "https://grafana.mcp-bridge.io/d/slo-overview"
+            
+        # Ticket Alert: 10% budget consumed in 24 hours OR 20% in 7 days
+        - alert: SLOErrorBudgetBurnRateHigh
+          expr: |
+            (
+              slo:burn_rate:24h{service="mcp-gateway"} > 3
+              and
+              slo:burn_rate:7d{service="mcp-gateway"} > 1.5
+            )
+            or
+            (
+              slo:burn_rate:24h{service="mcp-router"} > 3
+              and
+              slo:burn_rate:7d{service="mcp-router"} > 1.5
+            )
+          for: 15m
+          labels:
+            severity: warning
+            team: platform
+            alert_type: ticket
+          annotations:
+            summary: "Sustained error budget consumption for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} has been consuming error budget at an elevated rate.
+              24h burn rate: {{ with printf "slo:burn_rate:24h{service='%s'}" $labels.service | query }}{{ . | first | value | humanize }}{{ end }}x
+              7d burn rate: {{ with printf "slo:burn_rate:7d{service='%s'}" $labels.service | query }}{{ . | first | value | humanize }}{{ end }}x
+            runbook_url: "https://docs.mcp-bridge.io/runbooks/slo-burn-rate"
+            
+        # Availability SLO violation
+        - alert: ServiceAvailabilitySLOViolation
+          expr: |
+            sli:service_availability:ratio_rate5m < 0.999
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+            slo: availability
+          annotations:
+            summary: "Service availability below SLO for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} availability is {{ $value | humanizePercentage }} (SLO: 99.9%)
+              This represents {{ printf "%.2f" (mul (sub 1 $value) 100) }}% error rate.
+            dashboard: "https://grafana.mcp-bridge.io/d/slo-overview?var-service={{ $labels.service }}"
+            
+        # Latency SLO violations
+        - alert: LatencyP95SLOViolation
+          expr: |
+            sli:latency_p95:seconds > 0.2
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+            slo: latency_p95
+          annotations:
+            summary: "P95 latency exceeds SLO for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} P95 latency is {{ $value | humanizeDuration }} (SLO: 200ms)
+              Current P50: {{ with printf "sli:latency_p50:seconds{service='%s'}" $labels.service | query }}{{ . | first | value | humanizeDuration }}{{ end }}
+              Current P99: {{ with printf "sli:latency_p99:seconds{service='%s'}" $labels.service | query }}{{ . | first | value | humanizeDuration }}{{ end }}
+            dashboard: "https://grafana.mcp-bridge.io/d/latency-analysis?var-service={{ $labels.service }}"
+            
+        - alert: LatencyP99Critical
+          expr: |
+            sli:latency_p99:seconds > 0.5
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+            slo: latency_p99
+          annotations:
+            summary: "P99 latency critically high for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} P99 latency is {{ $value | humanizeDuration }} (SLO: 500ms)
+              This indicates severe performance degradation affecting 1% of requests.
+            dashboard: "https://grafana.mcp-bridge.io/d/latency-analysis?var-service={{ $labels.service }}"
+            
+        # Authentication SLO violation
+        - alert: AuthenticationSLOViolation
+          expr: |
+            sli:auth_success_rate:ratio_rate5m < 0.9995
+          for: 5m
+          labels:
+            severity: critical
+            team: security
+            slo: authentication
+          annotations:
+            summary: "Authentication success rate below SLO"
+            description: |
+              Authentication success rate is {{ $value | humanizePercentage }} (SLO: 99.95%)
+              This may indicate authentication service issues or potential security incidents.
+            runbook_url: "https://docs.mcp-bridge.io/runbooks/auth-failures"
+            dashboard: "https://grafana.mcp-bridge.io/d/auth-metrics"
+            
+        # Connection stability violation
+        - alert: ConnectionStabilitySLOViolation
+          expr: |
+            sli:connection_stability:ratio_rate5m < 0.995
+          for: 10m
+          labels:
+            severity: warning
+            team: platform
+            slo: connection_stability
+          annotations:
+            summary: "Connection stability below SLO for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} connection stability is {{ $value | humanizePercentage }} (SLO: 99.5%)
+              Connections are dropping unexpectedly, affecting user experience.
+            dashboard: "https://grafana.mcp-bridge.io/d/connection-metrics?var-service={{ $labels.service }}"
+            
+        # Circuit breaker health
+        - alert: CircuitBreakerOpen
+          expr: |
+            sli:circuit_breaker_health:ratio < 0.95
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "Circuit breakers open for {{ $labels.service }}"
+            description: |
+              {{ printf "%.0f" (mul (sub 1 $value) 100) }}% of circuit breakers are open for {{ $labels.service }}.
+              This indicates backend services are experiencing failures.
+            dashboard: "https://grafana.mcp-bridge.io/d/circuit-breakers?var-service={{ $labels.service }}"
+            
+        # Error budget exhaustion warnings
+        - alert: ErrorBudgetNearlyExhausted
+          expr: |
+            slo:error_budget:availability:ratio < 0.2
+          for: 30m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "Error budget nearly exhausted for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} has only {{ $value | humanizePercentage }} of its {{ $labels.slo_name }} error budget remaining.
+              Consider reducing deployment velocity and focusing on reliability improvements.
+            dashboard: "https://grafana.mcp-bridge.io/d/error-budget?var-service={{ $labels.service }}"
+            
+        - alert: ErrorBudgetExhausted
+          expr: |
+            slo:error_budget:availability:ratio <= 0
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Error budget exhausted for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} has exhausted its {{ $labels.slo_name }} error budget.
+              All non-emergency changes should be halted until reliability is restored.
+            runbook_url: "https://docs.mcp-bridge.io/runbooks/error-budget-exhausted"
+            
+        # Trace-based alerts
+        - alert: TraceErrorRateHigh
+          expr: |
+            sli:trace_error_rate:ratio_rate5m > 0.01
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High trace error rate for {{ $labels.service }}"
+            description: |
+              {{ $labels.service }} trace error rate is {{ $value | humanizePercentage }}.
+              Check distributed traces for root cause analysis.
+            dashboard: "https://grafana.mcp-bridge.io/d/traces?var-service={{ $labels.service }}"
+            trace_search: "https://jaeger.mcp-bridge.io/search?service={{ $labels.service }}&tags=%7B%22error%22%3A%22true%22%7D"
+            
+        # MCP Protocol specific alerts
+        - alert: MCPProtocolErrorsHigh
+          expr: |
+            sli:mcp_protocol_success:ratio_rate5m < 0.995
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+            protocol: mcp
+          annotations:
+            summary: "MCP protocol errors elevated for {{ $labels.service }}"
+            description: |
+              MCP protocol success rate is {{ $value | humanizePercentage }} (SLO: 99.5%).
+              This may indicate protocol implementation issues or incompatibilities.
+            dashboard: "https://grafana.mcp-bridge.io/d/mcp-protocol?var-service={{ $labels.service }}"

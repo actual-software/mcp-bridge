@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Jaeger All-in-One for trace storage and UI
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC receiver
+    networks:
+      - mcp-tracing
+
+  # OpenTelemetry Collector (optional, for advanced processing)
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4318:4317"    # OTLP gRPC receiver (alternative port)
+      - "8888:8888"    # Metrics for collector
+    depends_on:
+      - jaeger
+    networks:
+      - mcp-tracing
+
+  # MCP Gateway with tracing
+  mcp-gateway:
+    image: ghcr.io/poiley/mcp-gateway:latest
+    volumes:
+      - ./gateway-tracing.yaml:/config/gateway.yaml
+    environment:
+      - JWT_SECRET_KEY=your-secret-key
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    ports:
+      - "3000:3000"    # WebSocket endpoint
+      - "9091:9091"    # Metrics endpoint
+    depends_on:
+      - jaeger
+    networks:
+      - mcp-tracing
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - mcp-tracing
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+      - jaeger
+    networks:
+      - mcp-tracing
+
+networks:
+  mcp-tracing:
+    driver: bridge
+
+volumes:
+  grafana-storage:

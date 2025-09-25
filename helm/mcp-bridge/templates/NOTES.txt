@@ -1,0 +1,61 @@
+🚀 MCP Bridge has been deployed!
+
+{{- if .Values.gateway.enabled }}
+## Gateway Service
+{{- if .Values.gateway.ingress.enabled }}
+{{- range $host := .Values.gateway.ingress.hosts }}
+  {{- range .paths }}
+Gateway URL: https://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+{{- else }}
+Gateway URL: https://{{ include "mcp-bridge.fullname" . }}-gateway:{{ .Values.gateway.service.port }}
+{{- end }}
+
+To access the Gateway service from outside the cluster:
+  kubectl port-forward service/{{ include "mcp-bridge.fullname" . }}-gateway {{ .Values.gateway.service.port }}:{{ .Values.gateway.service.port }}
+  curl -k https://localhost:{{ .Values.gateway.service.port }}/health
+{{- end }}
+
+{{- if .Values.router.enabled }}
+## Router Service
+The Router is configured to connect to the Gateway automatically.
+Router metrics: http://{{ include "mcp-bridge.fullname" . }}-router:{{ .Values.router.service.port }}/metrics
+{{- end }}
+
+## Monitoring
+{{- if .Values.prometheus.enabled }}
+Prometheus: http://{{ .Release.Name }}-prometheus-server/
+{{- end }}
+{{- if .Values.grafana.enabled }}
+Grafana: http://{{ .Release.Name }}-grafana/
+  Username: admin
+  Password: {{ .Values.grafana.adminPassword }}
+{{- end }}
+
+## Health Checks
+Gateway health: 
+  kubectl exec -it deployment/{{ include "mcp-bridge.fullname" . }}-gateway -- /usr/local/bin/mcp-gateway health
+
+Router health:
+  kubectl exec -it deployment/{{ include "mcp-bridge.fullname" . }}-router -- /usr/local/bin/mcp-router health
+
+## Logs
+View Gateway logs:
+  kubectl logs -f deployment/{{ include "mcp-bridge.fullname" . }}-gateway
+
+View Router logs:
+  kubectl logs -f deployment/{{ include "mcp-bridge.fullname" . }}-router
+
+## Scaling
+Scale Gateway horizontally:
+  kubectl scale deployment {{ include "mcp-bridge.fullname" . }}-gateway --replicas=3
+
+## Configuration
+Update configuration:
+  kubectl edit configmap {{ include "mcp-bridge.fullname" . }}-gateway-config
+  kubectl edit configmap {{ include "mcp-bridge.fullname" . }}-router-config
+  kubectl rollout restart deployment/{{ include "mcp-bridge.fullname" . }}-gateway
+  kubectl rollout restart deployment/{{ include "mcp-bridge.fullname" . }}-router
+
+For more information, visit: https://github.com/poiley/mcp-bridge

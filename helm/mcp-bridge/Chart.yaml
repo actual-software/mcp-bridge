@@ -1,0 +1,34 @@
+apiVersion: v2
+name: mcp-bridge
+description: A Helm chart for MCP Bridge - Enterprise-grade Model Context Protocol Gateway and Router
+version: 1.0.0
+appVersion: "v1.0.0"
+keywords:
+  - mcp
+  - model-context-protocol
+  - gateway
+  - router
+  - api
+home: https://github.com/poiley/mcp-bridge
+sources:
+  - https://github.com/poiley/mcp-bridge
+icon: https://raw.githubusercontent.com/poiley/mcp-bridge/main/docs/assets/logo.png
+maintainers:
+  - name: MCP Bridge Contributors
+    email: maintainers@example.com
+dependencies:
+  - name: redis
+    version: 18.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: prometheus
+    version: 25.x.x
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled
+  - name: grafana
+    version: 7.x.x
+    repository: https://grafana.github.io/helm-charts
+    condition: grafana.enabled
+annotations:
+  category: Networking
+  licenses: MIT

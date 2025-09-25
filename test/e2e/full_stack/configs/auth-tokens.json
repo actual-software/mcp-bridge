@@ -1,0 +1,31 @@
+{
+  "test_tokens": {
+    "valid_token": "test-e2e-token-12345",
+    "expired_token": "expired-token-67890",
+    "invalid_token": "invalid-token-abcdef"
+  },
+  "jwt_config": {
+    "secret": "test-jwt-secret-for-e2e-testing-only",
+    "issuer": "mcp-gateway-e2e",
+    "audience": "mcp-clients",
+    "valid_duration_hours": 1
+  },
+  "test_claims": {
+    "basic_user": {
+      "sub": "test-user-1",
+      "scopes": ["mcp:read", "mcp:write"],
+      "rate_limit": {
+        "requests_per_minute": 1000,
+        "burst": 50
+      }
+    },
+    "limited_user": {
+      "sub": "test-user-2", 
+      "scopes": ["mcp:read"],
+      "rate_limit": {
+        "requests_per_minute": 10,
+        "burst": 2
+      }
+    }
+  }
+}

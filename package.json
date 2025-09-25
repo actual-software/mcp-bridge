@@ -1,0 +1,93 @@
+{
+  "name": "mcp-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP Bridge - Enterprise-grade Model Context Protocol gateway and router",
+  "scripts": {
+    "changelog": "./scripts/changelog.sh generate",
+    "release": "./scripts/changelog.sh release",
+    "version": "./scripts/changelog.sh version",
+    "validate-commits": "./scripts/changelog.sh validate",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/poiley/mcp-bridge.git"
+  },
+  "keywords": [
+    "mcp",
+    "gateway",
+    "router",
+    "golang",
+    "kubernetes"
+  ],
+  "author": "MCP Bridge Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/poiley/mcp-bridge/issues"
+  },
+  "homepage": "https://github.com/poiley/mcp-bridge#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^18.0.0",
+    "@commitlint/config-conventional": "^18.0.0",
+    "conventional-changelog-cli": "^4.0.0",
+    "husky": "^8.0.0",
+    "standard-version": "^9.5.0"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "standard-version": {
+    "types": [
+      {
+        "type": "feat",
+        "section": "✨ Features"
+      },
+      {
+        "type": "fix",
+        "section": "🐛 Bug Fixes"
+      },
+      {
+        "type": "perf",
+        "section": "🚀 Performance Improvements"
+      },
+      {
+        "type": "revert",
+        "section": "🗑 Reverts"
+      },
+      {
+        "type": "docs",
+        "section": "📚 Documentation"
+      },
+      {
+        "type": "style",
+        "section": "💎 Styles",
+        "hidden": true
+      },
+      {
+        "type": "chore",
+        "section": "♻️ Chores",
+        "hidden": true
+      },
+      {
+        "type": "refactor",
+        "section": "📦 Code Refactoring"
+      },
+      {
+        "type": "test",
+        "section": "🚨 Tests",
+        "hidden": true
+      },
+      {
+        "type": "build",
+        "section": "🛠 Build System"
+      },
+      {
+        "type": "ci",
+        "section": "⚙️ Continuous Integration"
+      }
+    ]
+  }
+}

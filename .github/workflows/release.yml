@@ -1,0 +1,224 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: "1.21"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if git describe --tags --abbrev=0 HEAD~1 >/dev/null 2>&1; then
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1)
+            echo "# Changelog" > changelog.md
+            echo "" >> changelog.md
+            git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD >> changelog.md
+          else
+            echo "# Changelog" > changelog.md
+            echo "" >> changelog.md
+            echo "Initial release" >> changelog.md
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.get_version.outputs.version }}
+          body_path: changelog.md
+          draft: false
+          prerelease: false
+
+  build-and-upload:
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        service: [gateway, router]
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build binary
+        working-directory: services/${{ matrix.service }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          BINARY_NAME="mcp-${{ matrix.service }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+          fi
+          
+          # Use make build to ensure proper build process
+          make build
+          
+          # Copy the built binary to the expected name for release
+          if [ "${{ matrix.service }}" = "router" ]; then
+            cp bin/mcp-router "${BINARY_NAME}"
+          else
+            cp bin/mcp-${{ matrix.service }} "${BINARY_NAME}"
+          fi
+
+      - name: Create archive
+        working-directory: services/${{ matrix.service }}
+        run: |
+          if [ "${{ matrix.service }}" = "router" ]; then
+            BINARY_NAME="mcp-router"
+            ARCHIVE_NAME="mcp-router-${{ needs.create-release.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
+          else
+            BINARY_NAME="mcp-${{ matrix.service }}"
+            ARCHIVE_NAME="mcp-${{ matrix.service }}-${{ needs.create-release.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
+          fi
+          
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+            ARCHIVE_NAME="${ARCHIVE_NAME}.zip"
+            zip "${ARCHIVE_NAME}" "${BINARY_NAME}"
+          else
+            ARCHIVE_NAME="${ARCHIVE_NAME}.tar.gz"
+            tar -czf "${ARCHIVE_NAME}" "${BINARY_NAME}"
+          fi
+          
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: services/${{ matrix.service }}/${{ env.ARCHIVE_NAME }}
+          asset_name: ${{ env.ARCHIVE_NAME }}
+          asset_content_type: application/octet-stream
+
+  docker-release:
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        service: [gateway, router]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}-${{ matrix.service }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: services/${{ matrix.service }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.create-release.outputs.version }}
+            BUILD_TIME=$(date +%FT%T%z)
+            GIT_COMMIT=${{ github.sha }}
+
+  create-install-script:
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-upload]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create install script
+        run: |
+          cat > install.sh << 'EOF'
+          #!/bin/bash
+          set -e
+
+          # MCP Bridge Installation Script
+          VERSION="${VERSION:-${{ needs.create-release.outputs.version }}}"
+          SERVICE="${SERVICE:-router}"
+          INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+
+          # Detect OS and architecture
+          OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          ARCH="$(uname -m)"
+
+          case "$ARCH" in
+            x86_64) ARCH="amd64" ;;
+            aarch64|arm64) ARCH="arm64" ;;
+            *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
+          esac
+
+          # Download URL
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/mcp-${SERVICE}-${VERSION}-${OS}-${ARCH}.tar.gz"
+
+          echo "Installing MCP ${SERVICE} ${VERSION} for ${OS}/${ARCH}..."
+
+          # Create temporary directory
+          TEMP_DIR="$(mktemp -d)"
+          trap "rm -rf '$TEMP_DIR'" EXIT
+
+          # Download and extract
+          curl -fsSL "$DOWNLOAD_URL" | tar -xz -C "$TEMP_DIR"
+
+          # Install binary
+          sudo mkdir -p "$INSTALL_DIR"
+          sudo mv "$TEMP_DIR/mcp-${SERVICE}" "$INSTALL_DIR/"
+          sudo chmod +x "$INSTALL_DIR/mcp-${SERVICE}"
+
+          echo "✅ MCP ${SERVICE} installed successfully to $INSTALL_DIR/mcp-${SERVICE}"
+          echo "🔧 Run 'mcp-${SERVICE} --help' to get started"
+          EOF
+
+          chmod +x install.sh
+
+      - name: Upload install script
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: install.sh
+          asset_name: install.sh
+          asset_content_type: application/x-sh

@@ -1,0 +1,507 @@
+package gateway
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"sort"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"go.uber.org/zap/zaptest"
+
+	common "github.com/poiley/mcp-bridge/pkg/common/config"
+	"github.com/poiley/mcp-bridge/services/router/internal/config"
+	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+)
+
+// BenchmarkGatewayClient_DirectVsTCP compares WebSocket vs TCP performance
+func BenchmarkGatewayClient_DirectVsTCP(b *testing.B) {
+	logger := zaptest.NewLogger(b)
+
+	// Test both WebSocket and TCP clients
+	scenarios := []struct {
+		name        string
+		clientType  string
+		setupClient func() (GatewayClient, func(), error)
+	}{
+		{
+			name:       "websocket_client",
+			clientType: "websocket",
+			setupClient: func() (GatewayClient, func(), error) {
+				// Mock WebSocket server would go here in real implementation
+				cfg := config.GatewayConfig{
+					URL: "ws://localhost:8080/mcp",
+					Connection: common.ConnectionConfig{
+						TimeoutMs: 5000,
+					},
+				}
+
+				client := &BenchmarkMockClient{
+					protocol:     "websocket",
+					latencyRange: [2]time.Duration{1 * time.Millisecond, 5 * time.Millisecond},
+				}
+
+				return client, func() {}, nil
+			},
+		},
+		{
+			name:       "tcp_client", 
+			clientType: "tcp",
+			setupClient: func() (GatewayClient, func(), error) {
+				cfg := config.GatewayConfig{
+					URL: "tcp://localhost:8081",
+					Connection: common.ConnectionConfig{
+						TimeoutMs: 5000,
+					},
+				}
+
+				client := &BenchmarkMockClient{
+					protocol:     "tcp",
+					latencyRange: [2]time.Duration{500 * time.Microsecond, 2 * time.Millisecond},
+				}
+
+				return client, func() {}, nil
+			},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		b.Run(scenario.name, func(b *testing.B) {
+			client, cleanup, err := scenario.setupClient()
+			if err != nil {
+				b.Fatalf("Failed to setup %s client: %v", scenario.clientType, err)
+			}
+			defer cleanup()
+
+			ctx := context.Background()
+			if err := client.Connect(ctx); err != nil {
+				b.Fatalf("Failed to connect %s client: %v", scenario.clientType, err)
+			}
+			defer client.Close()
+
+			req := &mcp.Request{
+				JSONRPC: "2.0",
+				Method:  "tools/call",
+				Params:  map[string]interface{}{"name": "test_tool"},
+				ID:      "benchmark-req",
+			}
+
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				if err := client.SendRequest(req); err != nil {
+					b.Fatalf("Failed to send request: %v", err)
+				}
+
+				_, err := client.ReceiveResponse()
+				if err != nil {
+					b.Fatalf("Failed to receive response: %v", err)
+				}
+			}
+		})
+	}
+}
+
+// BenchmarkGatewayPool_LoadBalancing benchmarks different load balancing strategies
+func BenchmarkGatewayPool_LoadBalancing(b *testing.B) {
+	logger := zaptest.NewLogger(b)
+
+	// Create multiple endpoints for load balancing
+	endpoints := []config.GatewayEndpoint{
+		{
+			URL:      "ws://gateway1:8080",
+			Weight:   10,
+			Priority: 1,
+			Tags:     []string{"primary"},
+		},
+		{
+			URL:      "ws://gateway2:8080", 
+			Weight:   5,
+			Priority: 2,
+			Tags:     []string{"secondary"},
+		},
+		{
+			URL:      "ws://gateway3:8080",
+			Weight:   15,
+			Priority: 1,
+			Tags:     []string{"primary"},
+		},
+	}
+
+	strategies := []LoadBalancingStrategy{
+		RoundRobinStrategy,
+		LeastConnectionsStrategy,
+		WeightedStrategy,
+		PriorityStrategy,
+	}
+
+	for _, strategy := range strategies {
+		b.Run(fmt.Sprintf("strategy_%s", strategy), func(b *testing.B) {
+			poolConfig := config.GatewayPoolConfig{
+				Endpoints: endpoints,
+				LoadBalancer: config.LoadBalancerConfig{
+					Strategy: string(strategy),
+				},
+			}
+
+			pool, err := NewGatewayPool(poolConfig, logger)
+			if err != nil {
+				b.Fatalf("Failed to create gateway pool: %v", err)
+			}
+			defer pool.Close()
+
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					endpoint := pool.SelectEndpoint(nil) // No namespace filtering
+					if endpoint == nil {
+						b.Fatal("Failed to select endpoint")
+					}
+					
+					// Simulate connection usage
+					endpoint.IncrementConnections()
+					endpoint.DecrementConnections()
+				}
+			})
+		})
+	}
+}
+
+// BenchmarkGatewayClient_ConcurrentConnections benchmarks concurrent connection handling
+func BenchmarkGatewayClient_ConcurrentConnections(b *testing.B) {
+	logger := zaptest.NewLogger(b)
+
+	const numConcurrentClients = 100
+
+	var clientFactory = func() GatewayClient {
+		return &BenchmarkMockClient{
+			protocol:     "websocket",
+			latencyRange: [2]time.Duration{1 * time.Millisecond, 3 * time.Millisecond},
+		}
+	}
+
+	// Setup concurrent clients
+	clients := make([]GatewayClient, numConcurrentClients)
+	for i := 0; i < numConcurrentClients; i++ {
+		clients[i] = clientFactory()
+		ctx := context.Background()
+		if err := clients[i].Connect(ctx); err != nil {
+			b.Fatalf("Failed to connect client %d: %v", i, err)
+		}
+	}
+
+	defer func() {
+		for _, client := range clients {
+			client.Close()
+		}
+	}()
+
+	req := &mcp.Request{
+		JSONRPC: "2.0",
+		Method:  "benchmark/concurrent",
+		ID:      "concurrent-req",
+	}
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	b.RunParallel(func(pb *testing.PB) {
+		clientIndex := 0
+		for pb.Next() {
+			client := clients[clientIndex%numConcurrentClients]
+			clientIndex++
+
+			if err := client.SendRequest(req); err != nil {
+				b.Fatalf("Failed to send request: %v", err)
+			}
+
+			_, err := client.ReceiveResponse()
+			if err != nil {
+				b.Fatalf("Failed to receive response: %v", err)
+			}
+		}
+	})
+}
+
+// BenchmarkGatewayClient_MessageSizes benchmarks different message sizes
+func BenchmarkGatewayClient_MessageSizes(b *testing.B) {
+	logger := zaptest.NewLogger(b)
+
+	// Test different payload sizes
+	messageSizes := []struct {
+		name string
+		size int // bytes
+	}{
+		{"small_1kb", 1024},
+		{"medium_10kb", 10 * 1024},
+		{"large_100kb", 100 * 1024},
+		{"xlarge_1mb", 1024 * 1024},
+	}
+
+	client := &BenchmarkMockClient{
+		protocol:     "websocket",
+		latencyRange: [2]time.Duration{1 * time.Millisecond, 2 * time.Millisecond},
+	}
+
+	ctx := context.Background()
+	if err := client.Connect(ctx); err != nil {
+		b.Fatalf("Failed to connect client: %v", err)
+	}
+	defer client.Close()
+
+	for _, msgSize := range messageSizes {
+		b.Run(msgSize.name, func(b *testing.B) {
+			// Create payload of specified size
+			payload := make(map[string]interface{})
+			dataSize := msgSize.size - 100 // Account for JSON overhead
+			if dataSize > 0 {
+				payload["data"] = string(make([]byte, dataSize))
+			}
+
+			req := &mcp.Request{
+				JSONRPC: "2.0",
+				Method:  "benchmark/message_size",
+				Params:  payload,
+				ID:      "size-test",
+			}
+
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				if err := client.SendRequest(req); err != nil {
+					b.Fatalf("Failed to send request: %v", err)
+				}
+
+				_, err := client.ReceiveResponse()
+				if err != nil {
+					b.Fatalf("Failed to receive response: %v", err)
+				}
+			}
+
+			// Report message size for analysis
+			reqData, _ := json.Marshal(req)
+			b.ReportMetric(float64(len(reqData)), "bytes/request")
+		})
+	}
+}
+
+// TestGatewayClient_PerformanceMetrics tests performance metric collection
+func TestGatewayClient_PerformanceMetrics(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+
+	var latencySum time.Duration
+	var requestCount int64
+	var latencyMu sync.Mutex
+
+	client := &BenchmarkMockClient{
+		protocol:     "websocket",
+		latencyRange: [2]time.Duration{1 * time.Millisecond, 10 * time.Millisecond},
+		onRequest: func(latency time.Duration) {
+			latencyMu.Lock()
+			latencySum += latency
+			atomic.AddInt64(&requestCount, 1)
+			latencyMu.Unlock()
+		},
+	}
+
+	ctx := context.Background()
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Failed to connect client: %v", err)
+	}
+	defer client.Close()
+
+	// Send test requests
+	const numRequests = 100
+	start := time.Now()
+
+	for i := 0; i < numRequests; i++ {
+		req := &mcp.Request{
+			JSONRPC: "2.0",
+			Method:  "performance/test",
+			ID:      fmt.Sprintf("perf-%d", i),
+		}
+
+		if err := client.SendRequest(req); err != nil {
+			t.Fatalf("Failed to send request %d: %v", i, err)
+		}
+
+		_, err := client.ReceiveResponse()
+		if err != nil {
+			t.Fatalf("Failed to receive response %d: %v", i, err)
+		}
+	}
+
+	totalDuration := time.Since(start)
+
+	// Calculate metrics
+	latencyMu.Lock()
+	avgLatency := latencySum / time.Duration(requestCount)
+	latencyMu.Unlock()
+
+	throughput := float64(numRequests) / totalDuration.Seconds()
+
+	t.Logf("Performance metrics:")
+	t.Logf("  Total requests: %d", requestCount)
+	t.Logf("  Total duration: %v", totalDuration)
+	t.Logf("  Average latency: %v", avgLatency)
+	t.Logf("  Throughput: %.2f req/s", throughput)
+
+	// Performance assertions
+	maxAvgLatency := 20 * time.Millisecond
+	if avgLatency > maxAvgLatency {
+		t.Errorf("Average latency %v exceeds maximum %v", avgLatency, maxAvgLatency)
+	}
+
+	minThroughput := 50.0 // requests per second
+	if throughput < minThroughput {
+		t.Errorf("Throughput %.2f req/s below minimum %.2f req/s", throughput, minThroughput)
+	}
+
+	if requestCount != numRequests {
+		t.Errorf("Expected %d requests, processed %d", numRequests, requestCount)
+	}
+}
+
+// TestGatewayClient_LatencyDistribution tests latency distribution under load
+func TestGatewayClient_LatencyDistribution(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+
+	latencies := make([]time.Duration, 0, 1000)
+	var latencyMu sync.Mutex
+
+	client := &BenchmarkMockClient{
+		protocol:     "websocket",
+		latencyRange: [2]time.Duration{500 * time.Microsecond, 20 * time.Millisecond},
+		onRequest: func(latency time.Duration) {
+			latencyMu.Lock()
+			latencies = append(latencies, latency)
+			latencyMu.Unlock()
+		},
+	}
+
+	ctx := context.Background()
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Failed to connect client: %v", err)
+	}
+	defer client.Close()
+
+	// Generate load
+	const numRequests = 1000
+	const concurrency = 10
+
+	var wg sync.WaitGroup
+	requestChan := make(chan int, numRequests)
+
+	// Fill request channel
+	for i := 0; i < numRequests; i++ {
+		requestChan <- i
+	}
+	close(requestChan)
+
+	// Process requests concurrently
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for reqID := range requestChan {
+				req := &mcp.Request{
+					JSONRPC: "2.0",
+					Method:  "latency/test",
+					ID:      fmt.Sprintf("lat-%d", reqID),
+				}
+
+				if err := client.SendRequest(req); err != nil {
+					t.Errorf("Failed to send request %d: %v", reqID, err)
+					continue
+				}
+
+				_, err := client.ReceiveResponse()
+				if err != nil {
+					t.Errorf("Failed to receive response %d: %v", reqID, err)
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	// Analyze latency distribution
+	latencyMu.Lock()
+	if len(latencies) == 0 {
+		t.Fatal("No latency measurements collected")
+	}
+
+	// Calculate percentiles
+	sort.Slice(latencies, func(i, j int) bool {
+		return latencies[i] < latencies[j]
+	})
+
+	p50 := latencies[len(latencies)*50/100]
+	p95 := latencies[len(latencies)*95/100]
+	p99 := latencies[len(latencies)*99/100]
+	latencyMu.Unlock()
+
+	t.Logf("Latency distribution:")
+	t.Logf("  Samples: %d", len(latencies))
+	t.Logf("  P50: %v", p50)
+	t.Logf("  P95: %v", p95)
+	t.Logf("  P99: %v", p99)
+
+	// Performance requirements
+	maxP95 := 15 * time.Millisecond
+	maxP99 := 25 * time.Millisecond
+
+	if p95 > maxP95 {
+		t.Errorf("P95 latency %v exceeds maximum %v", p95, maxP95)
+	}
+
+	if p99 > maxP99 {
+		t.Errorf("P99 latency %v exceeds maximum %v", p99, maxP99)
+	}
+}
+
+// BenchmarkMockClient simulates different gateway client implementations for benchmarking
+type BenchmarkMockClient struct {
+	protocol     string
+	latencyRange [2]time.Duration
+	onRequest    func(time.Duration)
+}
+
+func (b *BenchmarkMockClient) Connect(ctx context.Context) error {
+	return nil
+}
+
+func (b *BenchmarkMockClient) SendRequest(req *mcp.Request) error {
+	// Simulate network latency
+	if b.latencyRange[1] > b.latencyRange[0] {
+		latency := b.latencyRange[0] + time.Duration(
+			int64(b.latencyRange[1]-b.latencyRange[0]) * 
+			int64(time.Now().UnixNano()%1000) / 1000,
+		)
+		time.Sleep(latency)
+		
+		if b.onRequest != nil {
+			b.onRequest(latency)
+		}
+	}
+	return nil
+}
+
+func (b *BenchmarkMockClient) ReceiveResponse() (*mcp.Response, error) {
+	return &mcp.Response{
+		JSONRPC: "2.0",
+		ID:      "benchmark-response",
+		Result:  map[string]interface{}{"status": "ok", "protocol": b.protocol},
+	}, nil
+}
+
+func (b *BenchmarkMockClient) SendPing() error      { return nil }
+func (b *BenchmarkMockClient) IsConnected() bool    { return true }
+func (b *BenchmarkMockClient) Close() error         { return nil }

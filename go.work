@@ -1,0 +1,13 @@
+go 1.23.0
+
+toolchain go1.24.5
+
+use (
+	.
+	./services/gateway
+	./services/router
+	./test/e2e/full_stack
+	./test/e2e/full_stack/test-mcp-server
+	./test/e2e/k8s
+	./test/e2e/weather
+)

@@ -1,0 +1,59 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+  metrics_port: 9090
+  health_port: 9091
+  read_timeout: 30
+  write_timeout: 30
+  idle_timeout: 120
+  tls:
+    enabled: false
+
+logging:
+  level: debug
+  format: json
+
+metrics:
+  enabled: true
+  path: /metrics
+
+sessions:
+  provider: redis
+  ttl: 3600
+  redis:
+    url: redis://redis:6379
+    password: ""
+    db: 0
+    pool_size: 10
+    max_retries: 3
+    dial_timeout: 5
+
+auth:
+  provider: jwt
+  jwt:
+    issuer: mcp-gateway-test
+    audience: mcp-clients
+    secret_key_env: JWT_SECRET_KEY
+
+rate_limit:
+  enabled: true
+  requests_per_sec: 100
+  burst: 200
+
+circuit_breaker:
+  enabled: true
+  failure_threshold: 5
+  success_threshold: 3
+  timeout_seconds: 10
+
+service_discovery:
+  provider: static
+  static:
+    endpoints:
+      default: 
+        - name: test-mcp-server
+          url: ws://localhost:3000
+          healthy: true
+
+tracing:
+  enabled: false  # Disable for testing to reduce overhead

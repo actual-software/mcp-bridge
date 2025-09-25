@@ -1,0 +1,307 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "MCP Router",
+    "tags": ["mcp", "router", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Router Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"mcp-router\"}",
+            "legendFormat": "Router Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Gateway Connections",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mcp_router_gateway_connections_active",
+            "legendFormat": "Active Gateway Connections"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Requests Routed",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(mcp_router_requests_routed_total[5m])",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "unit": "reqps",
+            "decimals": 2
+          }
+        },
+        "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Connection Pool Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "mcp_router_pool_connections_active / mcp_router_pool_connections_max * 100",
+            "legendFormat": "Pool Utilization %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            },
+            "unit": "percent",
+            "decimals": 1
+          }
+        },
+        "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Request Routing Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(mcp_router_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(mcp_router_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(mcp_router_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p99"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Latency",
+            "unit": "s"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Connection Pool Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "mcp_router_pool_connections_active",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "mcp_router_pool_connections_idle",
+            "legendFormat": "Idle Connections"
+          },
+          {
+            "expr": "mcp_router_pool_connections_max",
+            "legendFormat": "Max Connections"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "Gateway Connection Health",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mcp_router_gateway_connections_established_total[5m])",
+            "legendFormat": "Connections Established/sec"
+          },
+          {
+            "expr": "rate(mcp_router_gateway_connections_failed_total[5m])",
+            "legendFormat": "Connection Failures/sec"
+          },
+          {
+            "expr": "rate(mcp_router_gateway_reconnects_total[5m])",
+            "legendFormat": "Reconnects/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Events/sec"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "Request Success Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mcp_router_requests_success_total[5m]) / rate(mcp_router_requests_routed_total[5m]) * 100",
+            "legendFormat": "Success Rate %"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Success Rate %",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 12}
+      },
+      {
+        "id": 9,
+        "title": "Authentication Cache",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mcp_router_auth_cache_hits_total[5m])",
+            "legendFormat": "Cache Hits/sec"
+          },
+          {
+            "expr": "rate(mcp_router_auth_cache_misses_total[5m])",
+            "legendFormat": "Cache Misses/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Cache Events/sec"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 12}
+      },
+      {
+        "id": 10,
+        "title": "Token Storage Operations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mcp_router_token_operations_total{operation=\"get\"}[5m])",
+            "legendFormat": "Token Gets/sec"
+          },
+          {
+            "expr": "rate(mcp_router_token_operations_total{operation=\"set\"}[5m])",
+            "legendFormat": "Token Sets/sec"
+          },
+          {
+            "expr": "rate(mcp_router_token_operations_total{operation=\"delete\"}[5m])",
+            "legendFormat": "Token Deletes/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Operations/sec"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 18}
+      },
+      {
+        "id": 11,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"mcp-router\"}",
+            "legendFormat": "Memory Usage"
+          },
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"mcp-router\"}[5m]) * 100",
+            "legendFormat": "CPU Usage %"
+          }
+        ],
+        "yAxes": [
+          {
+            "id": "left",
+            "label": "Memory",
+            "unit": "bytes"
+          },
+          {
+            "id": "right",
+            "label": "CPU %",
+            "unit": "percent"
+          }
+        ],
+        "seriesOverrides": [
+          {
+            "alias": "CPU Usage %",
+            "yAxis": 2
+          }
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 18}
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(up{job=\"mcp-router\"}, instance)",
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Router Restarts",
+          "datasource": "Prometheus",
+          "expr": "changes(mcp_router_build_info[5m]) > 0",
+          "iconColor": "blue"
+        }
+      ]
+    }
+  }
+}

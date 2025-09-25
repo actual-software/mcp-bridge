@@ -1,0 +1,94 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  labels:
+    app: mcp-gateway
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: mcp-gateway
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  labels:
+    app: mcp-gateway
+    prometheus: kube-prometheus
+spec:
+  groups:
+  - name: mcp-gateway.rules
+    interval: 30s
+    rules:
+    - alert: MCPGatewayHighErrorRate
+      expr: |
+        (
+          sum(rate(mcp_gateway_requests_total{status="error"}[5m])) by (job)
+          /
+          sum(rate(mcp_gateway_requests_total[5m])) by (job)
+        ) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        service: mcp-gateway
+      annotations:
+        summary: "High error rate on MCP Gateway ({{ $labels.job }})"
+        description: "MCP Gateway {{ $labels.job }} has error rate of {{ $value | humanizePercentage }} for the last 5 minutes"
+    
+    - alert: MCPGatewayConnectionSaturation
+      expr: |
+        (
+          mcp_gateway_connections_total{state="active"}
+          /
+          mcp_gateway_connections_limit
+        ) > 0.9
+      for: 5m
+      labels:
+        severity: critical
+        service: mcp-gateway
+      annotations:
+        summary: "MCP Gateway approaching connection limit"
+        description: "Gateway {{ $labels.instance }} is at {{ $value | humanizePercentage }} of connection capacity"
+    
+    - alert: MCPGatewayDown
+      expr: up{job="mcp-gateway"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        service: mcp-gateway
+      annotations:
+        summary: "MCP Gateway instance is down"
+        description: "MCP Gateway {{ $labels.instance }} has been down for more than 5 minutes"
+    
+    - alert: MCPGatewayHighLatency
+      expr: |
+        histogram_quantile(0.99, 
+          sum(rate(mcp_gateway_request_duration_seconds_bucket[5m])) by (le, method)
+        ) > 0.5
+      for: 10m
+      labels:
+        severity: warning
+        service: mcp-gateway
+      annotations:
+        summary: "High request latency on MCP Gateway"
+        description: "99th percentile latency for {{ $labels.method }} is {{ $value }}s"
+    
+    - alert: MCPServerUnavailable
+      expr: |
+        up{job=~"mcp-server.*"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        service: mcp-server
+      annotations:
+        summary: "MCP Server {{ $labels.job }} is down"
+        description: "MCP Server {{ $labels.instance }} has been down for more than 5 minutes"

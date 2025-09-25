@@ -1,0 +1,114 @@
+# Development values for mcp-bridge
+# This values file configures MCP Bridge for development/testing
+
+# Gateway development configuration
+gateway:
+  enabled: true
+  replicaCount: 1
+  
+  # Minimal resources for development
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+  
+  # Disable auto-scaling in development
+  autoscaling:
+    enabled: false
+  
+  # No ingress in development - use port-forward
+  ingress:
+    enabled: false
+  
+  # Development environment variables
+  env:
+    MCP_ENV: development
+    MCP_LOG_LEVEL: debug
+    MCP_GATEWAY_PORT: "8443"
+    MCP_METRICS_PORT: "9090"
+  
+  # No node selection in development
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+# Router development configuration
+router:
+  enabled: true
+  replicaCount: 1
+  
+  # Minimal resources for development
+  resources:
+    limits:
+      cpu: 250m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 32Mi
+  
+  # Development environment variables
+  env:
+    MCP_ENV: development
+    MCP_LOG_LEVEL: debug
+  
+  # No node selection in development
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+# Redis development configuration
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false  # Disable auth for easier development
+  master:
+    persistence:
+      enabled: false  # Use emptyDir for development
+    resources:
+      limits:
+        cpu: 250m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+
+# Disable monitoring in development to save resources
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+# Relaxed security for development
+networkPolicy:
+  enabled: false
+
+tls:
+  enabled: true
+  create: true  # Auto-generate self-signed certs
+
+secrets:
+  create: true
+  # Development secrets (not secure - for testing only)
+  jwtSecretKey: "dev-jwt-secret-key-not-secure"
+  mcpAuthToken: "dev-mcp-auth-token-12345"
+  redisPassword: ""
+
+# Monitoring for development debugging
+serviceMonitor:
+  enabled: false
+
+podMonitor:
+  enabled: false
+
+# Enable tests in development
+tests:
+  enabled: true
+
+# Development-specific image settings
+image:
+  pullPolicy: Always  # Always pull latest images in development

@@ -1,0 +1,68 @@
+# Documentation and markdown files
+**/*.md
+**/README*
+**/docs/
+**/doc/
+
+# Git and version control
+**/.git/
+**/.gitignore
+**/.github/
+
+# Test files (keep unit tests, exclude e2e)
+**/test/e2e/
+**/test/integration/
+**/*_test.go
+**/testdata/
+
+# Build artifacts and binaries
+**/bin/
+**/dist/
+**/build/
+**/*.exe
+**/*.dll
+**/*.so
+**/*.dylib
+
+# IDE and editor files
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/*~
+
+# Temporary and cache files
+**/tmp/
+**/temp/
+**/.tmp/
+**/.cache/
+**/node_modules/
+
+# OS generated files
+**/.DS_Store
+**/Thumbs.db
+
+# Log files
+**/*.log
+**/logs/
+
+# Coverage and profiling
+**/coverage.out
+**/profile.out
+**/*.prof
+**/*.out
+**/*.test
+
+# Audit and test results
+audit-results/
+**/audit-results/
+
+# Development tools
+**/scripts/dev/
+**/scripts/debug/
+**/tools/dev/
+
+# Docker files in subdirectories (avoid recursive builds)
+**/Dockerfile*
+**/docker-compose*
+**/.dockerignore

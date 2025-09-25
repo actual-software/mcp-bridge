@@ -1,0 +1,74 @@
+# Example gateway configuration with OpenTelemetry tracing enabled
+version: 2
+
+server:
+  host: "0.0.0.0"
+  port: 3000
+  max_connections: 1000
+  max_connections_per_ip: 10
+  protocol: "websocket"
+  allowed_origins:
+    - "*"
+
+auth:
+  provider: "jwt"
+  jwt:
+    issuer: "mcp-gateway"
+    audience: "mcp-clients"
+    secret_key_env: "JWT_SECRET_KEY"
+
+# Distributed tracing configuration
+tracing:
+  enabled: true
+  service_name: "mcp-gateway"
+  service_version: "1.0.0"
+  environment: "production"
+  
+  # Sampling configuration
+  sampler_type: "traceidratio"    # Sample 10% of traces
+  sampler_param: 0.1
+  
+  # Export configuration
+  exporter_type: "otlp"            # Send to OpenTelemetry Collector
+  otlp_endpoint: "localhost:4317"
+  otlp_insecure: true
+
+# Service discovery for backend MCP servers
+service_discovery:
+  provider: "static"
+  static:
+    services:
+      - name: "filesystem"
+        host: "localhost"
+        port: 8001
+        protocol: "stdio"
+        command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+      
+      - name: "github"  
+        host: "localhost"
+        port: 8002
+        protocol: "stdio"
+        command: ["npx", "-y", "@modelcontextprotocol/server-github"]
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: "${GITHUB_TOKEN}"
+
+# Routing configuration
+routing:
+  default_service: "filesystem"
+  rules:
+    - pattern: "github/*"
+      service: "github"
+    - pattern: "fs/*"
+      service: "filesystem"
+
+# Metrics configuration
+metrics:
+  enabled: true
+  endpoint: ":9091"
+  path: "/metrics"
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  include_caller: false

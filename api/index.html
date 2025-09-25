@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Bridge API Documentation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 0.5rem 0 0;
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+        .nav-tabs {
+            background: #f7f7f7;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .nav-tabs li {
+            margin: 0;
+        }
+        .nav-tabs button {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+        .nav-tabs button:hover {
+            background: #fff;
+            color: #333;
+        }
+        .nav-tabs button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #fff;
+        }
+        .api-container {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .api-container.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .info-banner {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 1rem 2rem;
+            margin: 2rem;
+            border-radius: 4px;
+        }
+        .info-banner h3 {
+            margin: 0 0 0.5rem;
+            color: #333;
+        }
+        .info-banner p {
+            margin: 0.5rem 0;
+            color: #666;
+            line-height: 1.6;
+        }
+        .info-banner a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .info-banner a:hover {
+            text-decoration: underline;
+        }
+        .footer {
+            background: #f7f7f7;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer p {
+            margin: 0.5rem 0;
+            color: #666;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .quick-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .quick-links a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        /* Swagger UI customizations */
+        .swagger-ui .topbar {
+            display: none;
+        }
+        .swagger-ui .info {
+            margin: 50px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌉 MCP Bridge API Documentation</h1>
+        <p>Enterprise-grade Model Context Protocol gateway and router system</p>
+    </div>
+
+    <ul class="nav-tabs">
+        <li><button class="active" onclick="showAPI('gateway')">Gateway API</button></li>
+        <li><button onclick="showAPI('router')">Router API</button></li>
+        <li><button onclick="showAPI('overview')">Overview</button></li>
+    </ul>
+
+    <div id="gateway-api" class="api-container active">
+        <div class="info-banner">
+            <h3>Gateway API</h3>
+            <p>The Gateway service provides the server-side component that routes MCP requests to backend servers.</p>
+            <p>Base URL: <code>https://gateway.mcp-bridge.io</code></p>
+            <p>Authentication: Bearer Token, OAuth2, or mTLS</p>
+            <p><a href="openapi/gateway.yaml" target="_blank">Download OpenAPI Spec →</a></p>
+        </div>
+        <div id="swagger-ui-gateway"></div>
+    </div>
+
+    <div id="router-api" class="api-container">
+        <div class="info-banner">
+            <h3>Router API</h3>
+            <p>The Router service provides the client-side bridge for connecting local MCP clients to remote gateways.</p>
+            <p>Base URL: <code>http://localhost:9091</code></p>
+            <p>Authentication: Local access only (no auth required)</p>
+            <p><a href="openapi/router.yaml" target="_blank">Download OpenAPI Spec →</a></p>
+        </div>
+        <div id="swagger-ui-router"></div>
+    </div>
+
+    <div id="overview-api" class="api-container">
+        <div style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+            <h2>API Overview</h2>
+            
+            <div class="info-banner">
+                <h3>🚀 Quick Start</h3>
+                <p>MCP Bridge provides two main APIs:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem; color: #666;">
+                    <li><strong>Gateway API</strong> - Server-side component for routing MCP requests</li>
+                    <li><strong>Router API</strong> - Client-side component for local MCP client bridging</li>
+                </ul>
+            </div>
+
+            <h3>Authentication Methods</h3>
+            <div class="info-banner">
+                <h4>Bearer Token</h4>
+                <p>Include the token in the Authorization header:</p>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+Authorization: Bearer YOUR_TOKEN_HERE</pre>
+            </div>
+
+            <div class="info-banner">
+                <h4>OAuth2</h4>
+                <p>Use the authorization code flow with these endpoints:</p>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+Authorization URL: https://auth.mcp-bridge.io/oauth/authorize
+Token URL: https://auth.mcp-bridge.io/oauth/token
+Scopes: read, write, admin</pre>
+            </div>
+
+            <div class="info-banner">
+                <h4>Mutual TLS (mTLS)</h4>
+                <p>Configure your client with a valid certificate signed by the CA.</p>
+            </div>
+
+            <h3>Common Use Cases</h3>
+            
+            <div class="info-banner">
+                <h4>1. Execute MCP Request</h4>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+POST /api/v1/execute
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "calculator",
+    "arguments": {
+      "operation": "add",
+      "a": 5,
+      "b": 3
+    }
+  },
+  "id": "req-123"
+}</pre>
+            </div>
+
+            <div class="info-banner">
+                <h4>2. WebSocket Streaming</h4>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+const ws = new WebSocket('wss://gateway.mcp-bridge.io/api/v1/stream');
+ws.on('open', () => {
+  ws.send(JSON.stringify({
+    jsonrpc: "2.0",
+    method: "initialize",
+    params: { version: "1.0.0" },
+    id: "init-1"
+  }));
+});</pre>
+            </div>
+
+            <div class="info-banner">
+                <h4>3. Health Monitoring</h4>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+# Gateway health check
+curl https://gateway.mcp-bridge.io/health
+
+# Router health check  
+curl http://localhost:9091/health
+
+# Prometheus metrics
+curl http://localhost:9091/metrics</pre>
+            </div>
+
+            <h3>Rate Limiting</h3>
+            <div class="info-banner">
+                <p>The Gateway API implements rate limiting to prevent abuse:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem; color: #666;">
+                    <li>Default: 100 requests per minute per IP</li>
+                    <li>Authenticated: 1000 requests per minute per user</li>
+                    <li>WebSocket: 10 messages per second per connection</li>
+                </ul>
+                <p>Rate limit headers are included in responses:</p>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1640995200</pre>
+            </div>
+
+            <h3>Error Handling</h3>
+            <div class="info-banner">
+                <p>All errors follow a consistent format:</p>
+                <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+{
+  "code": "RATE_LIMITED",
+  "message": "Rate limit exceeded",
+  "details": {
+    "retryAfter": 60
+  }
+}</pre>
+                <p>Common error codes:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem; color: #666;">
+                    <li><code>BAD_REQUEST</code> - Invalid request parameters</li>
+                    <li><code>UNAUTHORIZED</code> - Missing or invalid authentication</li>
+                    <li><code>FORBIDDEN</code> - Insufficient permissions</li>
+                    <li><code>NOT_FOUND</code> - Resource not found</li>
+                    <li><code>RATE_LIMITED</code> - Rate limit exceeded</li>
+                    <li><code>INTERNAL_ERROR</code> - Server error</li>
+                    <li><code>SERVICE_UNAVAILABLE</code> - Service temporarily down</li>
+                </ul>
+            </div>
+
+            <h3>SDK Support</h3>
+            <div class="info-banner">
+                <p>Official SDKs are available for:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem; color: #666;">
+                    <li><strong>Go</strong> - <code>go get github.com/poiley/mcp-bridge/sdk/go</code></li>
+                    <li><strong>Python</strong> - <code>pip install mcp-bridge</code></li>
+                    <li><strong>JavaScript/TypeScript</strong> - <code>npm install @mcp-bridge/client</code></li>
+                    <li><strong>Rust</strong> - <code>cargo add mcp-bridge</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>MCP Bridge v1.0.0 | Enterprise-grade Model Context Protocol Infrastructure</p>
+        <div class="quick-links">
+            <a href="https://github.com/poiley/mcp-bridge" target="_blank">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                GitHub
+            </a>
+            <a href="https://modelcontextprotocol.io" target="_blank">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                MCP Protocol
+            </a>
+            <a href="../docs/README.md" target="_blank">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Documentation
+            </a>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.9rem; color: #999;">
+            © 2024 MCP Bridge. Licensed under MIT.
+        </p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script>
+        let gatewayUI, routerUI;
+
+        function initSwaggerUI() {
+            // Initialize Gateway API
+            gatewayUI = SwaggerUIBundle({
+                url: "openapi/gateway.yaml",
+                dom_id: '#swagger-ui-gateway',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "BaseLayout",
+                defaultModelsExpandDepth: 0,
+                defaultModelExpandDepth: 1,
+                tryItOutEnabled: true,
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                onComplete: function() {
+                    console.log("Gateway API documentation loaded");
+                }
+            });
+
+            // Initialize Router API
+            routerUI = SwaggerUIBundle({
+                url: "openapi/router.yaml",
+                dom_id: '#swagger-ui-router',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "BaseLayout",
+                defaultModelsExpandDepth: 0,
+                defaultModelExpandDepth: 1,
+                tryItOutEnabled: true,
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
+                onComplete: function() {
+                    console.log("Router API documentation loaded");
+                }
+            });
+        }
+
+        function showAPI(api) {
+            // Update tabs
+            document.querySelectorAll('.nav-tabs button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.api-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.getElementById(api + '-api').classList.add('active');
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initSwaggerUI();
+        };
+    </script>
+</body>
+</html>

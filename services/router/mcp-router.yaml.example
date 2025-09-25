@@ -1,0 +1,192 @@
+# MCP Local Router Configuration Example
+# Copy this file to ~/.config/claude-cli/mcp-router.yaml and modify as needed
+
+version: 1
+
+# Direct server connection settings (optional - for direct connections bypassing gateway)
+# Uncomment and configure to enable direct server support
+# direct:
+#   # Default timeout for all direct connections
+#   default_timeout: 30s
+#   
+#   # Maximum number of concurrent direct connections  
+#   max_connections: 50
+#   
+#   # Auto-detection settings
+#   auto_detection:
+#     enabled: true
+#     timeout: 10s
+#     cache_results: true
+#     preferred_order: ["http", "websocket", "stdio", "sse"]
+#   
+#   # Protocol-specific settings
+#   stdio:
+#     process_timeout: 30s
+#     max_buffer_size: 4096
+#   websocket:
+#     ping_interval: 30s
+#     handshake_timeout: 10s
+#   http:
+#     request_timeout: 30s
+#     follow_redirects: true
+#   sse:
+#     request_timeout: 30s
+#     stream_timeout: 300s
+
+# Gateway connection settings
+gateway:
+  # WebSocket URL of the MCP gateway (required)
+  url: wss://mcp-gateway.example.com
+  
+  # Authentication configuration
+  auth:
+    # Authentication type: bearer, mtls, or oauth2
+    type: bearer
+    
+    # For bearer token authentication
+    token_env: MCP_AUTH_TOKEN        # Environment variable containing the token
+    # token_file: ~/.mcp/token       # Alternative: read token from file
+    
+    # For mTLS authentication
+    # client_cert: ~/.mcp/client.crt
+    # client_key: ~/.mcp/client.key
+    
+    # For OAuth2 authentication
+    # client_id: "mcp-client"
+    # client_secret_env: OAUTH_CLIENT_SECRET
+    # token_endpoint: "https://auth.example.com/token"
+    # scopes: ["mcp:read", "mcp:write"]
+  
+  # Connection behavior
+  connection:
+    # Connection timeout in milliseconds
+    timeout_ms: 5000
+    
+    # Keepalive interval in milliseconds
+    keepalive_interval_ms: 30000
+    
+    # Reconnection settings
+    reconnect:
+      # Initial delay before first reconnection attempt
+      initial_delay_ms: 1000
+      
+      # Maximum delay between attempts
+      max_delay_ms: 60000
+      
+      # Backoff multiplier
+      multiplier: 2
+      
+      # Maximum number of attempts (-1 for infinite)
+      max_attempts: -1
+      
+      # Jitter factor (0.0-1.0)
+      jitter: 0.1
+  
+  # TLS configuration
+  tls:
+    # Verify server certificate
+    verify: true
+    
+    # Custom CA certificate (optional)
+    # ca_cert_path: /etc/ssl/certs/ca-certificates.crt
+    
+    # Minimum TLS version (1.2 or 1.3)
+    min_version: "1.3"
+    
+    # Allowed cipher suites (optional)
+    # cipher_suites:
+    # - TLS_AES_256_GCM_SHA384
+    # - TLS_CHACHA20_POLY1305_SHA256
+
+# Local router behavior
+local:
+  # Buffer sizes
+  read_buffer_size: 65536
+  write_buffer_size: 65536
+  
+  # Request timeout in milliseconds
+  request_timeout_ms: 30000
+  
+  # Maximum concurrent requests
+  max_concurrent_requests: 100
+  
+  # Maximum queued requests when disconnected (v2.0+)
+  # Requests are queued when router is not connected to gateway
+  # Set to 0 to disable queueing
+  max_queued_requests: 100
+  
+  # Rate limiting (optional)
+  # rate_limit:
+  #   requests_per_second: 10.0
+  #   burst: 20
+
+# Logging configuration
+logging:
+  # Log level: trace, debug, info, warn, error
+  level: info
+  
+  # Output format: json or text
+  format: json
+  
+  # Output destination: stdout, stderr, or file path
+  output: stderr
+  
+  # Include caller information in logs
+  include_caller: false
+  
+  # Log sampling for high-volume scenarios
+  sampling:
+    enabled: false
+    initial: 100
+    thereafter: 100
+
+# Metrics configuration
+metrics:
+  # Enable metrics collection
+  enabled: true
+  
+  # Metrics endpoint for Prometheus scraping
+  endpoint: "localhost:9091"
+  
+  # Additional labels for all metrics
+  labels:
+    environment: "production"
+    region: "us-west-2"
+
+# Advanced settings
+advanced:
+  # Request/response compression
+  compression:
+    enabled: true
+    algorithm: gzip    # gzip or deflate
+    level: 6          # 1-9 (1=fastest, 9=best compression)
+  
+  # Circuit breaker per backend
+  circuit_breaker:
+    # Number of failures before opening circuit
+    failure_threshold: 5
+    
+    # Number of successes to close circuit
+    success_threshold: 2
+    
+    # Timeout before trying half-open state
+    timeout_seconds: 30
+  
+  # Request deduplication
+  deduplication:
+    enabled: true
+    cache_size: 1000
+    ttl_seconds: 60
+  
+  # Debug settings
+  debug:
+    # Log all WebSocket frames
+    log_frames: false
+    
+    # Save failed requests to disk
+    save_failures: false
+    failure_dir: "/tmp/mcp-failures"
+    
+    # Enable pprof debugging endpoint
+    enable_pprof: false
+    pprof_port: 6060

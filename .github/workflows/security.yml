@@ -1,0 +1,197 @@
+name: Security
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scans weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+env:
+  GO_VERSION: "1.21"
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run Gosec Security Scanner
+        uses: securecodewarrior/github-action-gosec@master
+        with:
+          args: '-fmt sarif -out gosec.sarif ./...'
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: gosec.sarif
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Check for known vulnerabilities
+        run: |
+          # Check both services
+          cd services/gateway && govulncheck ./...
+          cd ../router && govulncheck ./...
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  input-validation-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Verify input validation implementation
+        run: |
+          echo "🔍 Checking input validation coverage..."
+          
+          # Check for validation functions in gateway
+          if [ ! -f "services/gateway/internal/validation/validation.go" ]; then
+            echo "❌ Gateway validation module not found"
+            exit 1
+          fi
+          
+          # Verify key validation functions exist
+          grep -q "ValidateNamespace" services/gateway/internal/validation/validation.go || {
+            echo "❌ ValidateNamespace function not found"
+            exit 1
+          }
+          
+          grep -q "ValidateMethod" services/gateway/internal/validation/validation.go || {
+            echo "❌ ValidateMethod function not found"
+            exit 1
+          }
+          
+          grep -q "ValidateToken" services/gateway/internal/validation/validation.go || {
+            echo "❌ ValidateToken function not found"
+            exit 1
+          }
+          
+          echo "✅ Input validation functions present"
+          
+          # Check that validation is actually used
+          if ! grep -r "validation\." services/gateway/internal/ --include="*.go" | grep -v "_test.go" | grep -q "ValidateNamespace\|ValidateMethod\|ValidateToken"; then
+            echo "❌ Validation functions not being used in production code"
+            exit 1
+          fi
+          
+          echo "✅ Input validation is implemented and used"
+
+  security-headers-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check security headers implementation
+        run: |
+          echo "🔍 Checking security headers implementation..."
+          
+          # Check for security headers in gateway
+          if ! grep -r "X-Content-Type-Options\|X-Frame-Options\|Strict-Transport-Security" services/gateway/ --include="*.go"; then
+            echo "❌ Security headers not found in gateway implementation"
+            exit 1
+          fi
+          
+          echo "✅ Security headers implementation found"
+
+  tls-configuration-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify TLS configuration
+        run: |
+          echo "🔍 Checking TLS configuration..."
+          
+          # Check for TLS 1.3 configuration
+          if ! grep -r "tls\.VersionTLS13\|MinVersion.*1\.3" services/ --include="*.go"; then
+            echo "⚠️  TLS 1.3 configuration not explicitly found"
+          fi
+          
+          # Check for secure cipher suites
+          if ! grep -r "CipherSuites\|PreferServerCipherSuites" services/ --include="*.go"; then
+            echo "⚠️  Cipher suite configuration not explicitly found"
+          fi
+          
+          echo "✅ TLS configuration check completed"
+
+  authentication-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify authentication implementation
+        run: |
+          echo "🔍 Checking authentication implementation..."
+          
+          # Check for JWT validation
+          if ! grep -r "jwt\.Parse\|jwt\.Validate" services/gateway/ --include="*.go"; then
+            echo "❌ JWT validation not found"
+            exit 1
+          fi
+          
+          # Check for OAuth2 support
+          if ! grep -r "oauth2" services/gateway/ --include="*.go"; then
+            echo "⚠️  OAuth2 support not found"
+          fi
+          
+          # Check for mTLS support
+          if ! grep -r "ClientAuth\|VerifyClientCertificate" services/gateway/ --include="*.go"; then
+            echo "⚠️  mTLS support not explicitly found"
+          fi
+          
+          echo "✅ Authentication implementation verified"
+
+  rate-limiting-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify rate limiting implementation
+        run: |
+          echo "🔍 Checking rate limiting implementation..."
+          
+          # Check for rate limiting code
+          if ! grep -r "rate.*limit\|RateLimit" services/gateway/ --include="*.go" | grep -v "_test.go"; then
+            echo "❌ Rate limiting implementation not found"
+            exit 1
+          fi
+          
+          # Check for circuit breaker
+          if ! grep -r "circuit.*breaker\|CircuitBreaker" services/gateway/ --include="*.go"; then
+            echo "❌ Circuit breaker implementation not found"
+            exit 1
+          fi
+          
+          echo "✅ Rate limiting and circuit breaker implementation verified"

@@ -1,0 +1,42 @@
+{
+  "types": [
+    {"type": "feat", "section": "✨ Features"},
+    {"type": "fix", "section": "🐛 Bug Fixes"},
+    {"type": "perf", "section": "🚀 Performance Improvements"},
+    {"type": "revert", "section": "🗑 Reverts"},
+    {"type": "docs", "section": "📚 Documentation", "hidden": false},
+    {"type": "style", "section": "💎 Styles", "hidden": true},
+    {"type": "chore", "section": "♻️ Chores", "hidden": true},
+    {"type": "refactor", "section": "📦 Code Refactoring", "hidden": false},
+    {"type": "test", "section": "🚨 Tests", "hidden": true},
+    {"type": "build", "section": "🛠 Build System", "hidden": false},
+    {"type": "ci", "section": "⚙️ Continuous Integration", "hidden": false}
+  ],
+  "commitUrlFormat": "https://github.com/poiley/mcp-bridge/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/poiley/mcp-bridge/compare/{{previousTag}}...{{currentTag}}",
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+  "skip": {
+    "bump": false,
+    "changelog": false,
+    "commit": false,
+    "tag": false
+  },
+  "scripts": {
+    "postbump": "echo 'Version bumped to' $(cat VERSION)",
+    "postchangelog": "echo 'Changelog updated'"
+  },
+  "bumpFiles": [
+    {
+      "filename": "VERSION",
+      "type": "plain-text"
+    },
+    {
+      "filename": "services/gateway/version.go",
+      "updater": "scripts/update-version.js"
+    },
+    {
+      "filename": "services/router/version.go",
+      "updater": "scripts/update-version.js"
+    }
+  ]
+}

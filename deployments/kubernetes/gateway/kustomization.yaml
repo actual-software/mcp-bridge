@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mcp-system
+
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - redis.yaml
+  - deployment.yaml
+  - service.yaml
+  - hpa.yaml
+  - network-policy.yaml
+
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/part-of: mcp-remote-bridge
+      app.kubernetes.io/managed-by: kustomize
+
+images:
+  - name: ghcr.io/poiley/mcp-bridge-gateway
+    newTag: v1.0.0
+
+replicas:
+  - name: mcp-gateway
+    count: 3
+
+configMapGenerator:
+  - name: mcp-gateway-config
+    files:
+      - gateway.yaml
+
+secretGenerator:
+  - name: mcp-gateway-secrets
+    envs:
+      - secrets.env

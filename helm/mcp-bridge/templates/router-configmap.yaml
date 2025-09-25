@@ -1,0 +1,11 @@
+{{- if .Values.router.config.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mcp-bridge.fullname" . }}-router-config
+  labels:
+    {{- include "mcp-bridge.router.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+{{ .Values.router.config.data | indent 4 }}
+{{- end }}

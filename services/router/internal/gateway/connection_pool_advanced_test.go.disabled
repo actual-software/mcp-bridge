@@ -1,0 +1,586 @@
+package gateway
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"go.uber.org/zap/zaptest"
+
+	common "github.com/poiley/mcp-bridge/pkg/common/config"
+	"github.com/poiley/mcp-bridge/services/router/internal/config"
+	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+)
+
+// TestConnectionPool_LifecycleManagement tests connection pool creation, management, and cleanup
+func TestConnectionPool_LifecycleManagement(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+
+	// Create a pool configuration
+	poolConfig := PoolConfig{
+		Size:               5,
+		MaxIdleTime:        30 * time.Second,
+		ConnectionTimeout:  5 * time.Second,
+		HealthCheckEnabled: true,
+		HealthCheckInterval: 10 * time.Second,
+	}
+
+	gwConfig := config.GatewayConfig{
+		URL: "ws://localhost:8080/mcp",
+		Connection: common.ConnectionConfig{
+			TimeoutMs: 5000,
+		},
+	}
+
+	// Track pool lifecycle events
+	var createdConnections int64
+	var destroyedConnections int64
+
+	// Mock factory for creating connections
+	factory := func() (GatewayClient, error) {
+		atomic.AddInt64(&createdConnections, 1)
+		return &MockPoolClient{
+			connectFunc: func(ctx context.Context) error { return nil },
+			isConnectedFunc: func() bool { return true },
+			closeFunc: func() error {
+				atomic.AddInt64(&destroyedConnections, 1)
+				return nil
+			},
+		}, nil
+	}
+
+	// Create connection pool
+	pool, err := NewConnectionPool(poolConfig, factory, logger)
+	if err != nil {
+		t.Fatalf("Failed to create connection pool: %v", err)
+	}
+
+	// Test initial pool state
+	if pool.Size() != 0 {
+		t.Errorf("Expected initial pool size 0, got %d", pool.Size())
+	}
+
+	// Test acquiring connections
+	const numConnections = 3
+	clients := make([]GatewayClient, numConnections)
+
+	for i := 0; i < numConnections; i++ {
+		client, err := pool.Get()
+		if err != nil {
+			t.Fatalf("Failed to get connection %d: %v", i, err)
+		}
+		clients[i] = client
+	}
+
+	// Verify connections were created
+	if createdConnections != numConnections {
+		t.Errorf("Expected %d connections created, got %d", numConnections, createdConnections)
+	}
+
+	// Test returning connections to pool
+	for i, client := range clients {
+		err := pool.Put(client)
+		if err != nil {
+			t.Errorf("Failed to return connection %d: %v", i, err)
+		}
+	}
+
+	// Verify pool size
+	if pool.Size() != numConnections {
+		t.Errorf("Expected pool size %d after returning connections, got %d", numConnections, pool.Size())
+	}
+
+	// Test pool cleanup
+	err = pool.Close()
+	if err != nil {
+		t.Errorf("Failed to close pool: %v", err)
+	}
+
+	// Verify all connections were destroyed
+	if destroyedConnections != numConnections {
+		t.Errorf("Expected %d connections destroyed, got %d", numConnections, destroyedConnections)
+	}
+
+	// Verify pool is empty after close
+	if pool.Size() != 0 {
+		t.Errorf("Expected pool size 0 after close, got %d", pool.Size())
+	}
+}
+
+// TestConnectionPool_ConcurrentAccess tests thread safety of connection pool operations
+func TestConnectionPool_ConcurrentAccess(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+
+	poolConfig := PoolConfig{
+		Size:              10,
+		MaxIdleTime:       30 * time.Second,
+		ConnectionTimeout: 5 * time.Second,
+	}
+
+	var connectionCounter int64
+	factory := func() (GatewayClient, error) {
+		id := atomic.AddInt64(&connectionCounter, 1)
+		return &MockPoolClient{
+			id: id,
+			connectFunc: func(ctx context.Context) error { return nil },
+			isConnectedFunc: func() bool { return true },
+			closeFunc: func() error { return nil },
+		}, nil
+	}
+
+	pool, err := NewConnectionPool(poolConfig, factory, logger)
+	if err != nil {
+		t.Fatalf("Failed to create connection pool: %v", err)
+	}
+	defer pool.Close()
+
+	// Run concurrent operations
+	const numGoroutines = 50
+	const operationsPerGoroutine = 20
+
+	var wg sync.WaitGroup
+	var successfulGets int64
+	var successfulPuts int64
+	var errors int64
+
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(goroutineID int) {
+			defer wg.Done()
+
+			for j := 0; j < operationsPerGoroutine; j++ {
+				// Get connection
+				client, err := pool.Get()
+				if err != nil {
+					atomic.AddInt64(&errors, 1)
+					continue
+				}
+				atomic.AddInt64(&successfulGets, 1)
+
+				// Simulate some work
+				time.Sleep(time.Millisecond)
+
+				// Return connection
+				err = pool.Put(client)
+				if err != nil {
+					atomic.AddInt64(&errors, 1)
+					continue
+				}
+				atomic.AddInt64(&successfulPuts, 1)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	expectedOperations := int64(numGoroutines * operationsPerGoroutine)
+
+	t.Logf("Concurrent access test results:")
+	t.Logf("  Successful gets: %d", successfulGets)
+	t.Logf("  Successful puts: %d", successfulPuts)
+	t.Logf("  Errors: %d", errors)
+	t.Logf("  Pool size: %d", pool.Size())
+
+	// Verify operations completed successfully
+	if successfulGets != expectedOperations {
+		t.Errorf("Expected %d successful gets, got %d", expectedOperations, successfulGets)
+	}
+
+	if successfulPuts != expectedOperations {
+		t.Errorf("Expected %d successful puts, got %d", expectedOperations, successfulPuts)
+	}
+
+	if errors > 0 {
+		t.Errorf("Expected no errors, got %d", errors)
+	}
+
+	// Pool should have connections available after concurrent access
+	if pool.Size() == 0 {
+		t.Error("Expected pool to have connections after concurrent access")
+	}
+}
+
+// TestConnectionPool_HealthChecking tests connection health monitoring and cleanup
+func TestConnectionPool_HealthChecking(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+
+	poolConfig := PoolConfig{
+		Size:                5,
+		MaxIdleTime:         100 * time.Millisecond, // Short for testing
+		ConnectionTimeout:   5 * time.Second,
+		HealthCheckEnabled:  true,
+		HealthCheckInterval: 50 * time.Millisecond, // Frequent for testing
+	}
+
+	var healthCheckCalls int64
+	var connectionsClosed int64
+
+	factory := func() (GatewayClient, error) {
+		return &MockPoolClient{
+			connectFunc: func(ctx context.Context) error { return nil },
+			isConnectedFunc: func() bool {
+				// Simulate some connections becoming unhealthy
+				count := atomic.AddInt64(&healthCheckCalls, 1)
+				return count%3 != 0 // Every 3rd check fails
+			},
+			closeFunc: func() error {
+				atomic.AddInt64(&connectionsClosed, 1)
+				return nil
+			},
+			sendPingFunc: func() error {
+				// Ping is used for health checking
+				atomic.AddInt64(&healthCheckCalls, 1)
+				return nil
+			},
+		}, nil
+	}
+
+	pool, err := NewConnectionPool(poolConfig, factory, logger)
+	if err != nil {
+		t.Fatalf("Failed to create connection pool: %v", err)
+	}
+	defer pool.Close()
+
+	// Fill the pool with connections
+	clients := make([]GatewayClient, poolConfig.Size)
+	for i := 0; i < poolConfig.Size; i++ {
+		client, err := pool.Get()
+		if err != nil {
+			t.Fatalf("Failed to get connection %d: %v", i, err)
+		}
+		clients[i] = client
+	}
+
+	// Return connections to pool
+	for _, client := range clients {
+		err := pool.Put(client)
+		if err != nil {
+			t.Errorf("Failed to return connection: %v", err)
+		}
+	}
+
+	initialSize := pool.Size()
+
+	// Wait for health checks to run and potentially remove unhealthy connections
+	time.Sleep(200 * time.Millisecond)
+
+	finalSize := pool.Size()
+
+	t.Logf("Health check test results:")
+	t.Logf("  Initial pool size: %d", initialSize)
+	t.Logf("  Final pool size: %d", finalSize)
+	t.Logf("  Health check calls: %d", healthCheckCalls)
+	t.Logf("  Connections closed: %d", connectionsClosed)
+
+	// Verify health checking occurred
+	if healthCheckCalls == 0 {
+		t.Error("Expected health checks to be performed")
+	}
+
+	// Pool size may have changed due to unhealthy connections being removed
+	if finalSize > initialSize {
+		t.Errorf("Pool size should not increase: initial=%d, final=%d", initialSize, finalSize)
+	}
+}
+
+// TestConnectionPool_ResourceLimits tests pool size limits and resource management
+func TestConnectionPool_ResourceLimits(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+
+	const maxPoolSize = 3
+	poolConfig := PoolConfig{
+		Size:              maxPoolSize,
+		MaxIdleTime:       30 * time.Second,
+		ConnectionTimeout: 5 * time.Second,
+	}
+
+	var connectionsCreated int64
+	factory := func() (GatewayClient, error) {
+		atomic.AddInt64(&connectionsCreated, 1)
+		return &MockPoolClient{
+			connectFunc: func(ctx context.Context) error { return nil },
+			isConnectedFunc: func() bool { return true },
+			closeFunc: func() error { return nil },
+		}, nil
+	}
+
+	pool, err := NewConnectionPool(poolConfig, factory, logger)
+	if err != nil {
+		t.Fatalf("Failed to create connection pool: %v", err)
+	}
+	defer pool.Close()
+
+	// Try to get more connections than pool size
+	const numRequests = maxPoolSize + 2
+	clients := make([]GatewayClient, 0, numRequests)
+
+	for i := 0; i < numRequests; i++ {
+		client, err := pool.Get()
+		if err != nil {
+			t.Logf("Expected failure getting connection %d (pool exhausted): %v", i+1, err)
+			break
+		}
+		clients = append(clients, client)
+	}
+
+	// Should not create more connections than pool size allows
+	if connectionsCreated > maxPoolSize {
+		t.Errorf("Created %d connections, expected max %d", connectionsCreated, maxPoolSize)
+	}
+
+	// Pool should be at or near capacity
+	if len(clients) > maxPoolSize {
+		t.Errorf("Got %d clients, expected max %d", len(clients), maxPoolSize)
+	}
+
+	// Return connections
+	for _, client := range clients {
+		err := pool.Put(client)
+		if err != nil {
+			t.Errorf("Failed to return connection: %v", err)
+		}
+	}
+
+	// Verify pool respects size limits
+	if pool.Size() > maxPoolSize {
+		t.Errorf("Pool size %d exceeds limit %d", pool.Size(), maxPoolSize)
+	}
+}
+
+// TestConnectionPool_ErrorHandling tests error scenarios and recovery
+func TestConnectionPool_ErrorHandling(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+
+	poolConfig := PoolConfig{
+		Size:              5,
+		MaxIdleTime:       30 * time.Second,
+		ConnectionTimeout: 5 * time.Second,
+	}
+
+	var factoryCallCount int64
+	
+	tests := []struct {
+		name          string
+		factory       func() (GatewayClient, error)
+		expectError   bool
+		expectClients bool
+	}{
+		{
+			name: "factory_connection_errors",
+			factory: func() (GatewayClient, error) {
+				count := atomic.AddInt64(&factoryCallCount, 1)
+				if count <= 2 {
+					return nil, fmt.Errorf("connection failed %d", count)
+				}
+				return &MockPoolClient{
+					connectFunc: func(ctx context.Context) error { return nil },
+					isConnectedFunc: func() bool { return true },
+					closeFunc: func() error { return nil },
+				}, nil
+			},
+			expectError:   true, // First few attempts fail
+			expectClients: true, // Eventually succeeds
+		},
+		{
+			name: "factory_always_fails",
+			factory: func() (GatewayClient, error) {
+				atomic.AddInt64(&factoryCallCount, 1)
+				return nil, fmt.Errorf("persistent connection failure")
+			},
+			expectError:   true,
+			expectClients: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset counter
+			atomic.StoreInt64(&factoryCallCount, 0)
+
+			pool, err := NewConnectionPool(poolConfig, tt.factory, logger)
+			if err != nil {
+				t.Fatalf("Failed to create connection pool: %v", err)
+			}
+			defer pool.Close()
+
+			// Try to get connections
+			var clients []GatewayClient
+			var errors []error
+
+			for i := 0; i < 5; i++ {
+				client, err := pool.Get()
+				if err != nil {
+					errors = append(errors, err)
+					continue
+				}
+				clients = append(clients, client)
+			}
+
+			// Verify error expectations
+			if tt.expectError && len(errors) == 0 {
+				t.Error("Expected some connection errors but got none")
+			}
+
+			if !tt.expectError && len(errors) > 0 {
+				t.Errorf("Expected no errors but got %d: %v", len(errors), errors)
+			}
+
+			// Verify client expectations
+			if tt.expectClients && len(clients) == 0 {
+				t.Error("Expected to get some clients but got none")
+			}
+
+			if !tt.expectClients && len(clients) > 0 {
+				t.Errorf("Expected no clients but got %d", len(clients))
+			}
+
+			// Clean up clients
+			for _, client := range clients {
+				pool.Put(client)
+			}
+
+			t.Logf("Test %s: Factory calls=%d, Errors=%d, Clients=%d", 
+				tt.name, factoryCallCount, len(errors), len(clients))
+		})
+	}
+}
+
+// MockPoolClient for connection pool testing
+type MockPoolClient struct {
+	id              int64
+	connectFunc     func(context.Context) error
+	isConnectedFunc func() bool
+	closeFunc       func() error
+	sendPingFunc    func() error
+}
+
+func (m *MockPoolClient) Connect(ctx context.Context) error {
+	if m.connectFunc != nil {
+		return m.connectFunc(ctx)
+	}
+	return nil
+}
+
+func (m *MockPoolClient) SendRequest(req *mcp.Request) error {
+	return nil
+}
+
+func (m *MockPoolClient) ReceiveResponse() (*mcp.Response, error) {
+	return &mcp.Response{JSONRPC: "2.0", ID: "mock"}, nil
+}
+
+func (m *MockPoolClient) SendPing() error {
+	if m.sendPingFunc != nil {
+		return m.sendPingFunc()
+	}
+	return nil
+}
+
+func (m *MockPoolClient) IsConnected() bool {
+	if m.isConnectedFunc != nil {
+		return m.isConnectedFunc()
+	}
+	return true
+}
+
+func (m *MockPoolClient) Close() error {
+	if m.closeFunc != nil {
+		return m.closeFunc()
+	}
+	return nil
+}
+
+// BenchmarkConnectionPool_GetPut benchmarks pool get/put operations
+func BenchmarkConnectionPool_GetPut(b *testing.B) {
+	logger := zaptest.NewLogger(b)
+
+	poolConfig := PoolConfig{
+		Size:              10,
+		MaxIdleTime:       30 * time.Second,
+		ConnectionTimeout: 5 * time.Second,
+	}
+
+	factory := func() (GatewayClient, error) {
+		return &MockPoolClient{
+			connectFunc: func(ctx context.Context) error { return nil },
+			isConnectedFunc: func() bool { return true },
+			closeFunc: func() error { return nil },
+		}, nil
+	}
+
+	pool, err := NewConnectionPool(poolConfig, factory, logger)
+	if err != nil {
+		b.Fatalf("Failed to create connection pool: %v", err)
+	}
+	defer pool.Close()
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			client, err := pool.Get()
+			if err != nil {
+				b.Fatalf("Failed to get connection: %v", err)
+			}
+
+			err = pool.Put(client)
+			if err != nil {
+				b.Fatalf("Failed to put connection: %v", err)
+			}
+		}
+	})
+}
+
+// BenchmarkConnectionPool_ConcurrentOperations benchmarks concurrent pool operations
+func BenchmarkConnectionPool_ConcurrentOperations(b *testing.B) {
+	logger := zaptest.NewLogger(b)
+
+	poolConfig := PoolConfig{
+		Size:              5,
+		MaxIdleTime:       30 * time.Second,
+		ConnectionTimeout: 5 * time.Second,
+	}
+
+	var operationCount int64
+
+	factory := func() (GatewayClient, error) {
+		return &MockPoolClient{
+			connectFunc: func(ctx context.Context) error { return nil },
+			isConnectedFunc: func() bool { return true },
+			closeFunc: func() error { return nil },
+			sendPingFunc: func() error {
+				atomic.AddInt64(&operationCount, 1)
+				return nil
+			},
+		}, nil
+	}
+
+	pool, err := NewConnectionPool(poolConfig, factory, logger)
+	if err != nil {
+		b.Fatalf("Failed to create connection pool: %v", err)
+	}
+	defer pool.Close()
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			client, err := pool.Get()
+			if err != nil {
+				continue // Pool might be exhausted, skip
+			}
+
+			// Simulate work
+			client.SendPing()
+
+			pool.Put(client)
+		}
+	})
+
+	b.Logf("Total operations performed: %d", operationCount)
+}

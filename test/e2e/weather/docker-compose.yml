@@ -1,0 +1,166 @@
+version: '3.8'
+
+services:
+  # Weather MCP Server - The actual MCP server providing weather data
+  weather-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weather-mcp-server
+    ports:
+      - "8081:8080"  # HTTP/WebSocket port
+      - "9091:9090"  # Metrics port
+    environment:
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - METRICS_ENABLED=true
+      - RATE_LIMIT_ENABLED=true
+      - CIRCUIT_BREAKER_ENABLED=true
+    healthcheck:
+      test: ["CMD", "/weather-mcp-server", "health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # MCP Gateway - Routes MCP protocol to backend servers
+  mcp-gateway:
+    build:
+      context: ../../../services/gateway
+      dockerfile: Dockerfile
+    container_name: mcp-gateway
+    ports:
+      - "8080:8080"  # WebSocket port for Router connections
+      - "9090:9090"  # Metrics port
+    environment:
+      - CONFIG_FILE=/config/gateway-config.yaml
+      - LOG_LEVEL=info
+    volumes:
+      - ./configs/gateway-config.yaml:/config/gateway-config.yaml:ro
+    depends_on:
+      weather-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Redis for session management (optional, for Gateway)
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mcp-prometheus
+    ports:
+      - "9092:9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      - weather-server
+      - mcp-gateway
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Grafana for visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mcp-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./configs/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Test Runner - Runs the MCP Client Agent tests
+  test-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: mcp-test-agent
+    environment:
+      - E2E_TEST=true
+      - GATEWAY_URL=ws://mcp-gateway:8080
+      - LOG_LEVEL=debug
+      - MCP_AUTH_TOKEN=test-agent-token
+    volumes:
+      - ./test-results:/test-results
+      - ../../../services/router/bin/mcp-router:/usr/local/bin/mcp-router:ro
+    depends_on:
+      mcp-gateway:
+        condition: service_healthy
+    networks:
+      - mcp-network
+    profiles:
+      - test
+    command: ["go", "test", "-v", "-timeout", "10m", "-run", "TestMCPClientAgentEndToEnd"]
+
+  # Nginx for load balancing (optional, for production setup)
+  nginx:
+    image: nginx:alpine
+    container_name: mcp-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./configs/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - mcp-gateway
+    networks:
+      - mcp-network
+    profiles:
+      - production
+    restart: unless-stopped
+
+networks:
+  mcp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  redis-data:
+  prometheus-data:
+  grafana-data:

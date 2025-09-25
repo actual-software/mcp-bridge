@@ -1,0 +1,301 @@
+# Default values for mcp-bridge
+# This is a YAML-formatted file
+# Declare variables to be passed into your templates
+
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# Common configuration
+nameOverride: ""
+fullnameOverride: ""
+
+# Container images
+image:
+  repository: ghcr.io/poiley/mcp-bridge
+  pullPolicy: IfNotPresent
+  tag: "1.0.0-rc1"
+
+# Service account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+
+# Gateway configuration
+gateway:
+  enabled: true
+  name: gateway
+  
+  image:
+    repository: ghcr.io/poiley/mcp-bridge/gateway
+    tag: "1.0.0-rc1"
+  
+  replicaCount: 2
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8443
+    targetPort: 8443
+    annotations: {}
+  
+  # Ingress configuration
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: mcp-gateway.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+  
+  # Resource limits
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi
+  
+  # Auto-scaling
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  # Node selection
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  # Pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  
+  # Environment variables
+  env:
+    MCP_ENV: production
+    MCP_LOG_LEVEL: info
+    MCP_GATEWAY_PORT: "8443"
+    MCP_METRICS_PORT: "9090"
+  
+  # Configuration
+  config:
+    create: true
+    data: |
+      server:
+        port: 8443
+        tls:
+          enabled: true
+          cert_file: /etc/tls/tls.crt
+          key_file: /etc/tls/tls.key
+        cors:
+          allowed_origins: ["*"]
+          allowed_methods: ["GET", "POST", "OPTIONS"]
+          allowed_headers: ["Authorization", "Content-Type"]
+        rate_limiting:
+          enabled: true
+          requests_per_minute: 1000
+      
+      auth:
+        jwt:
+          secret_key_env: JWT_SECRET_KEY
+          expiry: 24h
+        bearer:
+          enabled: true
+      
+      monitoring:
+        metrics:
+          enabled: true
+          port: 9090
+          path: /metrics
+        health:
+          enabled: true
+          path: /health
+      
+      logging:
+        level: info
+        format: json
+        correlation_id: true
+
+# Router configuration
+router:
+  enabled: true
+  name: router
+  
+  image:
+    repository: ghcr.io/poiley/mcp-bridge/router
+    tag: "1.0.0-rc1"
+  
+  replicaCount: 1
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 9091
+    targetPort: 9091
+    annotations: {}
+  
+  # Resource limits
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+  
+  # Node selection
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  # Environment variables
+  env:
+    MCP_ENV: production
+    MCP_LOG_LEVEL: info
+  
+  # Configuration
+  config:
+    create: true
+    data: |
+      client:
+        gateway_url: wss://mcp-bridge-gateway:8443/ws
+        auth:
+          token_env: MCP_AUTH_TOKEN
+        connection:
+          timeout_ms: 30000
+          retry_attempts: 3
+          keepalive_interval: 30s
+      
+      monitoring:
+        metrics:
+          enabled: true
+          port: 9091
+          path: /metrics
+        health:
+          enabled: true
+      
+      logging:
+        level: info
+        format: json
+        correlation_id: true
+
+# Redis configuration (external dependency)
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    password: ""
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+# Prometheus configuration (external dependency)
+prometheus:
+  enabled: false
+  server:
+    retention: "15d"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 256Mi
+
+# Grafana configuration (external dependency)
+grafana:
+  enabled: false
+  adminPassword: admin
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+# Network policies
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+  egress:
+    enabled: true
+
+# TLS configuration
+tls:
+  enabled: true
+  secretName: mcp-bridge-tls
+  create: true
+  # If create is false, provide your own certificate
+  cert: ""
+  key: ""
+
+# Secrets management
+secrets:
+  create: true
+  # JWT secret for gateway authentication
+  jwtSecretKey: ""
+  # MCP auth token for router
+  mcpAuthToken: ""
+  # Redis password
+  redisPassword: ""
+
+# Pod monitoring
+podMonitor:
+  enabled: true
+  namespace: ""
+  interval: 30s
+  scrapeTimeout: 10s
+
+# Service monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  namespace: ""
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+
+# Tests
+tests:
+  enabled: true
+  image:
+    repository: curlimages/curl
+    tag: latest

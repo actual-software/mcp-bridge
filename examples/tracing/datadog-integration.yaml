@@ -1,0 +1,422 @@
+# DataDog APM Integration for MCP Bridge
+# This configuration enables distributed tracing with DataDog APM
+
+# OpenTelemetry Collector configuration for DataDog export
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - "http://*"
+            - "https://*"
+
+processors:
+  # Batch for efficiency
+  batch:
+    timeout: 10s
+    send_batch_size: 100
+    send_batch_max_size: 200
+
+  # Add DataDog-specific attributes
+  attributes:
+    actions:
+      - key: env
+        value: production
+        action: upsert
+      - key: service
+        value: mcp-bridge
+        action: upsert
+      - key: version
+        value: ${SERVICE_VERSION}
+        action: upsert
+
+  # Resource detection for cloud metadata
+  resourcedetection:
+    detectors: [env, system, docker, k8s]
+    timeout: 2s
+    override: false
+
+  # DataDog trace processor
+  datadog:
+    hostname: ${DD_HOSTNAME}
+    env: ${DD_ENV:production}
+    service: mcp-bridge
+    version: ${DD_VERSION:latest}
+    tags:
+      - "team:platform"
+      - "component:gateway"
+      - "deployment:${DEPLOYMENT_TYPE:kubernetes}"
+
+  # Tail sampling for cost control
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 100
+    expected_new_traces_per_sec: 10
+    policies:
+      - name: errors-policy
+        type: status_code
+        status_code: {status_codes: [ERROR]}
+      - name: latency-policy
+        type: latency
+        latency: {threshold_ms: 1000}
+      - name: probabilistic-policy
+        type: probabilistic
+        probabilistic: {sampling_percentage: 10}
+
+exporters:
+  # DataDog exporter
+  datadog:
+    api:
+      site: ${DD_SITE:datadoghq.com}
+      key: ${DD_API_KEY}
+      fail_on_invalid_key: true
+    
+    # Trace configuration
+    traces:
+      endpoint: ${DD_APM_ENDPOINT:https://trace.agent.datadoghq.com}
+      span_name_remappings:
+        mcp.request: "mcp-request"
+        mcp.response: "mcp-response"
+      span_name_as_resource_name: true
+      
+    # Metrics from traces
+    metrics:
+      enable: true
+      resource_attributes_as_tags: true
+      instrumentation_library_metadata_as_tags: true
+      
+    # Host metadata
+    hostname: ${DD_HOSTNAME:${HOSTNAME}}
+    env: ${DD_ENV:production}
+    service: mcp-bridge
+    version: ${DD_VERSION:latest}
+    
+    # Additional tags
+    tags:
+      - "cluster:${CLUSTER_NAME}"
+      - "region:${AWS_REGION}"
+      - "availability_zone:${AWS_AVAILABILITY_ZONE}"
+      
+    # Performance settings
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+  # Debug exporter for troubleshooting
+  debug:
+    verbosity: detailed
+    sampling_initial: 2
+    sampling_thereafter: 500
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: "/health"
+    
+  pprof:
+    endpoint: 0.0.0.0:1777
+    
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, attributes, resourcedetection, datadog, tail_sampling]
+      exporters: [datadog, debug]
+    
+    metrics:
+      receivers: [otlp]
+      processors: [batch, attributes, resourcedetection]
+      exporters: [datadog]
+      
+    logs:
+      receivers: [otlp]
+      processors: [batch, attributes]
+      exporters: [datadog]
+
+  telemetry:
+    logs:
+      level: info
+      initial_fields:
+        service: otel-collector
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
+
+---
+# DataDog Agent configuration (datadog-agent.yaml)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datadog-agent-config
+  namespace: mcp-system
+data:
+  datadog.yaml: |
+    api_key: ${DD_API_KEY}
+    site: datadoghq.com
+    
+    # APM configuration
+    apm_config:
+      enabled: true
+      apm_dd_url: https://trace.agent.datadoghq.com
+      env: production
+      extra_sample_rate: 1.0
+      max_traces_per_second: 100
+      
+    # Process monitoring
+    process_config:
+      enabled: true
+      
+    # Network monitoring
+    network_config:
+      enabled: true
+      
+    # Runtime security
+    runtime_security_config:
+      enabled: true
+      
+    # Logs
+    logs_enabled: true
+    logs_config:
+      container_collect_all: true
+      auto_multi_line_detection: true
+      
+    # Tags
+    tags:
+      - "service:mcp-bridge"
+      - "env:production"
+      - "version:${VERSION}"
+      
+    # Service discovery
+    listeners:
+      - name: docker
+      - name: kubernetes
+      
+    # Prometheus scraping
+    prometheus_scrape:
+      enabled: true
+      service_endpoints: true
+      
+---
+# Application instrumentation example (Go)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-datadog-instrumentation
+  namespace: mcp-system
+data:
+  instrumentation.go: |
+    package main
+    
+    import (
+        "context"
+        "os"
+        
+        "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+        "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
+        "gopkg.in/DataDog/dd-trace-go.v1/profiler"
+    )
+    
+    func initDataDog() {
+        // Start the tracer
+        tracer.Start(
+            tracer.WithService("mcp-gateway"),
+            tracer.WithEnv(os.Getenv("DD_ENV")),
+            tracer.WithServiceVersion(os.Getenv("DD_VERSION")),
+            tracer.WithGlobalTag("component", "gateway"),
+            tracer.WithRuntimeMetrics(),
+            tracer.WithAnalytics(true),
+            tracer.WithProfilerCodeHotspots(true),
+            tracer.WithProfilerEndpoints(true),
+            tracer.WithDebugMode(os.Getenv("DD_DEBUG") == "true"),
+        )
+        
+        // Start the profiler
+        err := profiler.Start(
+            profiler.WithService("mcp-gateway"),
+            profiler.WithEnv(os.Getenv("DD_ENV")),
+            profiler.WithVersion(os.Getenv("DD_VERSION")),
+            profiler.WithTags("component:gateway"),
+            profiler.WithProfileTypes(
+                profiler.CPUProfile,
+                profiler.HeapProfile,
+                profiler.BlockProfile,
+                profiler.MutexProfile,
+                profiler.GoroutineProfile,
+            ),
+        )
+        if err != nil {
+            log.Printf("Failed to start profiler: %v", err)
+        }
+    }
+    
+    // Example traced function
+    func handleMCPRequest(ctx context.Context, req *MCPRequest) (*MCPResponse, error) {
+        // Start a span
+        span, ctx := tracer.StartSpanFromContext(ctx, "mcp.handle_request",
+            tracer.ServiceName("mcp-gateway"),
+            tracer.ResourceName(req.Method),
+            tracer.Tag("mcp.namespace", req.Namespace),
+            tracer.Tag("mcp.method", req.Method),
+            tracer.Measured(),
+        )
+        defer span.Finish()
+        
+        // Add custom metrics
+        span.SetMetric("request.size", float64(len(req.Body)))
+        
+        // Process request...
+        resp, err := processRequest(ctx, req)
+        
+        if err != nil {
+            span.SetTag(ext.Error, err)
+            span.SetTag("error.type", fmt.Sprintf("%T", err))
+        }
+        
+        return resp, err
+    }
+
+---
+# DataDog Dashboard configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datadog-dashboard-config
+  namespace: mcp-system
+data:
+  dashboard.json: |
+    {
+      "title": "MCP Bridge APM Dashboard",
+      "widgets": [
+        {
+          "definition": {
+            "type": "trace_service",
+            "service": "mcp-gateway",
+            "env": "production",
+            "span_name": "mcp.handle_request",
+            "show_breakdown": true,
+            "show_distribution": true,
+            "show_errors": true,
+            "show_hits": true,
+            "show_latency": true,
+            "show_resource_list": true,
+            "size_format": "large",
+            "display_format": "three_column"
+          }
+        },
+        {
+          "definition": {
+            "type": "service_map",
+            "service": "mcp-gateway",
+            "env": "production",
+            "filters": ["env:production", "service:mcp-*"]
+          }
+        },
+        {
+          "definition": {
+            "type": "timeseries",
+            "requests": [
+              {
+                "q": "avg:trace.mcp.handle_request.duration{env:production} by {service}",
+                "display_type": "line"
+              }
+            ],
+            "title": "Request Duration by Service"
+          }
+        },
+        {
+          "definition": {
+            "type": "query_value",
+            "requests": [
+              {
+                "q": "avg:trace.mcp.handle_request.errors{env:production}.as_rate()",
+                "aggregator": "avg"
+              }
+            ],
+            "title": "Error Rate",
+            "precision": 2
+          }
+        },
+        {
+          "definition": {
+            "type": "toplist",
+            "requests": [
+              {
+                "q": "top(avg:trace.mcp.handle_request.duration{env:production} by {resource_name}, 10, 'mean', 'desc')"
+              }
+            ],
+            "title": "Slowest Operations"
+          }
+        }
+      ]
+    }
+
+---
+# DataDog Monitors configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datadog-monitors
+  namespace: mcp-system
+data:
+  monitors.yaml: |
+    monitors:
+      - name: "MCP Gateway High Error Rate"
+        type: "query alert"
+        query: "avg(last_5m):avg:trace.mcp.handle_request.errors{env:production,service:mcp-gateway}.as_rate() > 0.05"
+        message: |
+          MCP Gateway error rate is above 5%
+          Current value: {{value}}
+          
+          @pagerduty-platform @slack-platform-alerts
+        tags:
+          - "service:mcp-gateway"
+          - "team:platform"
+          - "severity:high"
+        options:
+          thresholds:
+            critical: 0.05
+            warning: 0.02
+          notify_no_data: true
+          no_data_timeframe: 10
+          
+      - name: "MCP Gateway High Latency"
+        type: "query alert"
+        query: "avg(last_5m):avg:trace.mcp.handle_request.duration{env:production,service:mcp-gateway} > 1000"
+        message: |
+          MCP Gateway latency is above 1 second
+          Current value: {{value}}ms
+          
+          @slack-platform-alerts
+        tags:
+          - "service:mcp-gateway"
+          - "team:platform"
+          - "severity:medium"
+        options:
+          thresholds:
+            critical: 1000
+            warning: 500
+            
+      - name: "MCP Service Map Anomaly"
+        type: "service map"
+        query: "service:mcp-gateway env:production"
+        message: |
+          Service topology anomaly detected in MCP Bridge
+          
+          @slack-platform-alerts
+        tags:
+          - "service:mcp-gateway"
+          - "team:platform"
+        options:
+          detection_method: "anomaly"
+          sensitivity: "medium"

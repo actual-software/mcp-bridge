@@ -1,0 +1,610 @@
+openapi: 3.0.3
+info:
+  title: MCP Bridge Router API
+  description: |
+    The MCP Bridge Router provides client-side bridging to connect local MCP clients
+    to remote MCP Gateway services with secure credential management and connection pooling.
+  version: 1.0.0
+  contact:
+    name: MCP Bridge Team
+    url: https://github.com/poiley/mcp-bridge
+    email: support@mcp-bridge.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:9091
+    description: Local router instance
+
+tags:
+  - name: Health
+    description: Health and status endpoints
+  - name: Configuration
+    description: Configuration management
+  - name: Connections
+    description: Connection management
+  - name: Credentials
+    description: Credential management
+  - name: Metrics
+    description: Prometheus metrics
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the router service
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /status:
+    get:
+      tags:
+        - Health
+      summary: Detailed status information
+      description: Returns detailed status including connection states
+      operationId: getStatus
+      responses:
+        '200':
+          description: Status information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+
+  /metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Prometheus metrics endpoint
+      description: Returns Prometheus-formatted metrics
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/v1/config:
+    get:
+      tags:
+        - Configuration
+      summary: Get current configuration
+      description: Returns the current router configuration (sensitive data redacted)
+      operationId: getConfig
+      responses:
+        '200':
+          description: Current configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+
+    put:
+      tags:
+        - Configuration
+      summary: Update configuration
+      description: Updates the router configuration
+      operationId: updateConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+      responses:
+        '200':
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/config/reload:
+    post:
+      tags:
+        - Configuration
+      summary: Reload configuration from disk
+      description: Reloads configuration from the configuration file
+      operationId: reloadConfig
+      responses:
+        '200':
+          description: Configuration reloaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Configuration reloaded successfully
+
+  /api/v1/connections:
+    get:
+      tags:
+        - Connections
+      summary: List active connections
+      description: Returns information about active gateway connections
+      operationId: listConnections
+      responses:
+        '200':
+          description: List of connections
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionList'
+
+  /api/v1/connections/{connectionId}:
+    get:
+      tags:
+        - Connections
+      summary: Get connection details
+      description: Returns detailed information about a specific connection
+      operationId: getConnection
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Connection details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Connections
+      summary: Close connection
+      description: Forcefully closes a connection
+      operationId: closeConnection
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Connection closed
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/connections/{connectionId}/reconnect:
+    post:
+      tags:
+        - Connections
+      summary: Reconnect to gateway
+      description: Forces a reconnection to the gateway
+      operationId: reconnect
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reconnection initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  connectionId:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/credentials:
+    get:
+      tags:
+        - Credentials
+      summary: List stored credentials
+      description: Returns a list of stored credential identifiers (no secrets)
+      operationId: listCredentials
+      responses:
+        '200':
+          description: List of credential identifiers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialList'
+
+    post:
+      tags:
+        - Credentials
+      summary: Store new credentials
+      description: Stores new credentials in the secure store
+      operationId: storeCredentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialCreate'
+      responses:
+        '201':
+          description: Credentials stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/credentials/{credentialId}:
+    get:
+      tags:
+        - Credentials
+      summary: Get credential info
+      description: Returns credential metadata (no secrets)
+      operationId: getCredential
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Credential information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Credentials
+      summary: Delete credentials
+      description: Removes credentials from the secure store
+      operationId: deleteCredentials
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Credentials deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/credentials/{credentialId}/rotate:
+    post:
+      tags:
+        - Credentials
+      summary: Rotate credentials
+      description: Rotates stored credentials
+      operationId: rotateCredentials
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialRotate'
+      responses:
+        '200':
+          description: Credentials rotated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        gateway:
+          type: object
+          properties:
+            connected:
+              type: boolean
+            lastSeen:
+              type: string
+              format: date-time
+
+    StatusResponse:
+      type: object
+      required:
+        - router
+        - connections
+      properties:
+        router:
+          type: object
+          properties:
+            version:
+              type: string
+            uptime:
+              type: integer
+            pid:
+              type: integer
+        connections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionStatus'
+        credentials:
+          type: object
+          properties:
+            store:
+              type: string
+              enum: [keychain, credential_manager, secret_service, file]
+            count:
+              type: integer
+
+    Configuration:
+      type: object
+      required:
+        - gateway
+      properties:
+        gateway:
+          type: object
+          required:
+            - url
+          properties:
+            url:
+              type: string
+              format: uri
+              example: wss://gateway.mcp-bridge.io
+            timeout:
+              type: string
+              example: 30s
+            reconnect:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+                interval:
+                  type: string
+                  example: 5s
+                maxRetries:
+                  type: integer
+                  default: 5
+        auth:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [bearer, oauth2, mtls]
+            tokenStore:
+              type: string
+              enum: [keychain, credential_manager, secret_service, file]
+        pool:
+          type: object
+          properties:
+            maxConnections:
+              type: integer
+              default: 10
+            minConnections:
+              type: integer
+              default: 1
+            idleTimeout:
+              type: string
+              example: 5m
+        logging:
+          type: object
+          properties:
+            level:
+              type: string
+              enum: [debug, info, warn, error]
+            format:
+              type: string
+              enum: [json, text]
+
+    ConnectionList:
+      type: object
+      required:
+        - connections
+      properties:
+        connections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
+        total:
+          type: integer
+
+    Connection:
+      type: object
+      required:
+        - id
+        - gateway
+        - state
+        - createdAt
+      properties:
+        id:
+          type: string
+        gateway:
+          type: string
+          format: uri
+        state:
+          type: string
+          enum: [connecting, connected, reconnecting, disconnected, failed]
+        createdAt:
+          type: string
+          format: date-time
+        connectedAt:
+          type: string
+          format: date-time
+        lastActivity:
+          type: string
+          format: date-time
+        requestCount:
+          type: integer
+        errorCount:
+          type: integer
+        latency:
+          type: object
+          properties:
+            p50:
+              type: number
+            p95:
+              type: number
+            p99:
+              type: number
+
+    ConnectionStatus:
+      type: object
+      required:
+        - id
+        - state
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+          enum: [connecting, connected, reconnecting, disconnected, failed]
+        healthy:
+          type: boolean
+
+    CredentialList:
+      type: object
+      required:
+        - credentials
+      properties:
+        credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/Credential'
+
+    Credential:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - createdAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [bearer, oauth2, mtls]
+        gateway:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    CredentialCreate:
+      type: object
+      required:
+        - name
+        - type
+        - gateway
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [bearer, oauth2, mtls]
+        gateway:
+          type: string
+          format: uri
+        token:
+          type: string
+          description: Bearer token (for bearer auth)
+        clientId:
+          type: string
+          description: OAuth2 client ID
+        clientSecret:
+          type: string
+          description: OAuth2 client secret
+        certificate:
+          type: string
+          description: Client certificate (PEM format)
+        privateKey:
+          type: string
+          description: Private key (PEM format)
+
+    CredentialRotate:
+      type: object
+      properties:
+        token:
+          type: string
+        clientSecret:
+          type: string
+        certificate:
+          type: string
+        privateKey:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

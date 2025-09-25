@@ -1,0 +1,57 @@
+router:
+  host: 0.0.0.0
+  port: 8081
+  connection_timeout: 30s
+  request_timeout: 60s
+
+gateway_pool:
+  endpoints:
+    - url: ws://gateway:8080
+      weight: 1
+      auth:
+        type: bearer
+        token: test-token-12345
+  reconnect:
+    enabled: true
+    initial_interval: 1s
+    max_interval: 30s
+    max_elapsed_time: 5m
+    multiplier: 1.5
+  health_check:
+    enabled: true
+    interval: 30s
+    timeout: 5s
+
+logging:
+  level: debug
+  format: json
+  output: stdout
+
+metrics:
+  enabled: true
+  endpoint: "0.0.0.0:9091"
+  path: /metrics
+
+connection_pool:
+  max_idle: 10
+  max_active: 100
+  idle_timeout: 30s
+  wait: true
+
+circuit_breaker:
+  enabled: true
+  timeout: 10s
+  max_concurrent_requests: 50
+  request_volume_threshold: 10
+  error_percent_threshold: 50
+  sleep_window: 5s
+
+message_buffer:
+  size: 1000
+  flush_interval: 100ms
+
+servers:
+  - name: test-server
+    command: ["echo", "test"]
+    args: []
+    env: {}

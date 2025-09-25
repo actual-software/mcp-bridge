@@ -1,0 +1,77 @@
+server:
+  port: 8443
+  bind_addr: "0.0.0.0:8443"
+  metrics_port: 9091
+  health_port: 9092
+  read_timeout: 30
+  write_timeout: 30
+  idle_timeout: 120
+  tls:
+    enabled: true
+    cert_file: "/etc/mcp-gateway/tls/tls.crt"
+    key_file: "/etc/mcp-gateway/tls/tls.key"
+    min_version: "1.2"
+
+auth:
+  provider: "jwt"
+  jwt:
+    secret_key_env: "JWT_SECRET_KEY"
+    issuer: "mcp-gateway-e2e"
+    audience: "mcp-clients"
+
+# Service discovery for test MCP servers
+service_discovery:
+  provider: "static"
+  static:
+    endpoints:
+      default:
+        - url: "http://test-mcp-server:3000/mcp"
+      system:
+        - url: "http://test-mcp-server:3000/mcp"
+      test:
+        - url: "http://test-mcp-server:3000/mcp"
+      calc:
+        - url: "http://test-mcp-server:3000/mcp"
+
+# Routing configuration for E2E testing
+routing:
+  strategy: "round_robin"
+  health_check_interval: "30s"
+  circuit_breaker:
+    failure_threshold: 3
+    success_threshold: 2
+    timeout: 10
+
+# Rate limiting for concurrent testing
+rate_limit:
+  requests_per_second: 1000
+  burst: 100
+
+# Connection limiting for resource management
+connection_limits:
+  max_concurrent_connections: 5
+  connection_timeout: 30
+  max_connections_per_ip: 3
+
+# Session management
+sessions:
+  provider: "redis"
+  ttl: 3600
+  cleanup_interval: 300
+  redis:
+    url: "redis://redis:6379/0"
+    pool_size: 10
+    max_retries: 3
+
+# Enhanced logging for debugging
+logging:
+  level: "debug"
+  format: "json"
+  output: "stderr"
+  include_caller: true
+
+# Metrics for test monitoring
+metrics:
+  enabled: true
+  bind_addr: "0.0.0.0:9091"
+  path: "/metrics"

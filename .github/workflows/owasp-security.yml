@@ -1,0 +1,303 @@
+name: OWASP Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'go.mod'
+      - 'go.sum'
+      - 'services/**/*.go'
+      - '.github/workflows/owasp-security.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'go.mod'
+      - 'go.sum'
+      - 'services/**/*.go'
+  schedule:
+    # Run OWASP scans daily at 3 AM UTC for continuous monitoring
+    - cron: '0 3 * * *'
+
+env:
+  GO_VERSION: "1.21"
+
+jobs:
+  dependency-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      id: dependency-check
+      with:
+        project: 'MCP Bridge'
+        path: '.'
+        format: 'ALL'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --failOnCVSS 7
+          --suppression owasp-suppressions.xml
+        
+    - name: Upload OWASP Dependency Check results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: reports/dependency-check-report.sarif
+
+    - name: Upload dependency check report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: dependency-check-report
+        path: reports/
+        retention-days: 30
+
+  govulncheck:
+    name: Go Vulnerability Check
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install govulncheck
+      run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+    - name: Run govulncheck on root
+      run: |
+        echo "🔍 Running govulncheck on root module..."
+        govulncheck -json ./... > govulncheck-root.json || echo "Issues found in root module"
+
+    - name: Run govulncheck on Gateway
+      run: |
+        echo "🔍 Running govulncheck on Gateway service..."
+        cd services/gateway
+        govulncheck -json ./... > ../../govulncheck-gateway.json || echo "Issues found in gateway"
+
+    - name: Run govulncheck on Router
+      run: |
+        echo "🔍 Running govulncheck on Router service..."
+        cd services/router
+        govulncheck -json ./... > ../../govulncheck-router.json || echo "Issues found in router"
+
+    - name: Process govulncheck results
+      run: |
+        echo "📊 Processing vulnerability scan results..."
+        
+        # Check for critical vulnerabilities
+        for file in govulncheck-*.json; do
+          if [ -f "$file" ]; then
+            echo "Processing $file..."
+            
+            # Extract vulnerabilities (if any)
+            if jq -e '.Vulns[]?' "$file" > /dev/null 2>&1; then
+              echo "❌ Vulnerabilities found in $file"
+              jq -r '.Vulns[] | "- \(.Symbol // "Unknown"): \(.PkgPath) (\(.OSV.id))"' "$file"
+            else
+              echo "✅ No vulnerabilities found in $file"
+            fi
+          fi
+        done
+
+    - name: Upload govulncheck results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: govulncheck-reports
+        path: govulncheck-*.json
+        retention-days: 30
+
+  nancy-check:
+    name: Nancy Vulnerability Scanner
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install Nancy
+      run: |
+        go install github.com/sonatypecommunity/nancy@latest
+
+    - name: Run Nancy scan
+      run: |
+        echo "🔍 Running Nancy vulnerability scan..."
+        
+        # Generate go.list for Nancy
+        go list -json -deps ./... > go.list
+        
+        # Run Nancy scan
+        nancy sleuth --loud < go.list > nancy-report.txt || echo "Nancy found issues"
+        
+        echo "📊 Nancy scan results:"
+        cat nancy-report.txt
+
+    - name: Upload Nancy results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: nancy-report
+        path: nancy-report.txt
+        retention-days: 30
+
+  trivy-fs-scan:
+    name: Trivy Filesystem Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Trivy scan with table output
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        severity: 'CRITICAL,HIGH'
+
+  semgrep-scan:
+    name: Semgrep SAST Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Semgrep
+      uses: semgrep/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/golang
+          p/owasp-top-ten
+          p/cwe-top-25
+        sarif_file: semgrep-results.sarif
+      env:
+        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+    - name: Upload Semgrep results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: semgrep-results.sarif
+
+  snyk-scan:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/golang@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=medium --sarif-file-output=snyk-results.sarif
+
+    - name: Upload Snyk results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: snyk-results.sarif
+
+  security-report:
+    name: Security Scan Summary
+    needs: [dependency-check, govulncheck, nancy-check, trivy-fs-scan, semgrep-scan, snyk-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Security scan summary
+      run: |
+        echo "## 🛡️ OWASP Security Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Scanned Components:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Root Module**: Go dependencies and code" >> $GITHUB_STEP_SUMMARY
+        echo "- **Gateway Service**: Server-side component" >> $GITHUB_STEP_SUMMARY
+        echo "- **Router Service**: Client-side component" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Security Tools Used:" >> $GITHUB_STEP_SUMMARY
+        echo "- **OWASP Dependency Check**: Known vulnerability database" >> $GITHUB_STEP_SUMMARY
+        echo "- **govulncheck**: Go-specific vulnerability scanner" >> $GITHUB_STEP_SUMMARY
+        echo "- **Nancy**: Sonatype vulnerability scanner" >> $GITHUB_STEP_SUMMARY
+        echo "- **Trivy**: Comprehensive vulnerability scanner" >> $GITHUB_STEP_SUMMARY
+        echo "- **Semgrep**: Static analysis security testing" >> $GITHUB_STEP_SUMMARY
+        echo "- **Snyk**: Developer-first security scanning" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Scan Status:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dependency Check**: ${{ needs.dependency-check.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **govulncheck**: ${{ needs.govulncheck.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Nancy**: ${{ needs.nancy-check.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Trivy**: ${{ needs.trivy-fs-scan.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Semgrep**: ${{ needs.semgrep-scan.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Snyk**: ${{ needs.snyk-scan.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Results:" >> $GITHUB_STEP_SUMMARY
+        echo "All scan results are uploaded to the Security tab for detailed analysis." >> $GITHUB_STEP_SUMMARY
+        echo "Download artifacts for detailed reports and remediation guidance." >> $GITHUB_STEP_SUMMARY

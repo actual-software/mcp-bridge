@@ -1,0 +1,152 @@
+# MCP Router Direct Server Configuration Example
+# This demonstrates direct server connections (bypassing gateway)
+# Copy this file to ~/.config/claude-cli/mcp-router.yaml and modify as needed
+
+version: 1
+
+# Gateway pool configuration (for fallback and hybrid mode)
+gateway_pool:
+  endpoints:
+    - url: wss://mcp-gateway.example.com
+      auth:
+        type: bearer
+        token_env: MCP_AUTH_TOKEN
+      weight: 1
+      priority: 1
+      tags: ["fallback", "default"]
+
+# Direct server connection settings
+direct:
+  # Default timeout for all direct connections
+  default_timeout: 30s
+  
+  # Maximum number of concurrent direct connections
+  max_connections: 100
+  
+  # Health check configuration
+  health_check:
+    enabled: true
+    interval: 30s      # How often to check health
+    timeout: 5s        # Timeout for health checks
+  
+  # Protocol auto-detection settings
+  auto_detection:
+    enabled: true
+    timeout: 10s              # Timeout for protocol detection
+    cache_results: true       # Cache detection results
+    cache_ttl: 5m            # Cache TTL
+    preferred_order:          # Order to try protocols
+      - http
+      - websocket
+      - stdio
+      - sse
+  
+  # Fallback configuration
+  fallback:
+    enabled: true             # Enable fallback to gateway on direct connection failures
+    direct_timeout: 10s       # Timeout for direct connection attempts
+    max_retries: 2           # Number of retries for direct connections before fallback
+    retry_delay: 1s          # Delay between direct connection retries
+    # Methods that should always use direct connections (no fallback to gateway)
+    direct_only_methods: []
+    # Methods that should never use direct connections (always use gateway)  
+    gateway_only_methods: 
+      - initialize
+      - initialized
+      - stdio
+      - sse
+  
+  # Stdio (command-line) server configuration
+  stdio:
+    process_timeout: 30s      # Timeout for process operations
+    max_buffer_size: 4096     # Buffer size for stdio communication
+    default_working_dir: ""   # Working directory for processes (empty = current)
+    default_env:              # Environment variables to pass
+      PYTHONUNBUFFERED: "1"
+      MCP_DEBUG: "false"
+  
+  # WebSocket server configuration
+  websocket:
+    handshake_timeout: 10s    # WebSocket handshake timeout
+    ping_interval: 30s        # WebSocket ping interval
+    pong_timeout: 10s         # Timeout waiting for pong
+    max_message_size: 1048576 # 1MB max message size
+    default_headers:
+      User-Agent: "MCP-Router-WebSocket-Client/1.0"
+  
+  # HTTP server configuration
+  http:
+    request_timeout: 30s      # Timeout for HTTP requests
+    max_idle_conns: 10        # Maximum idle connections
+    follow_redirects: true    # Follow HTTP redirects
+    default_headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+      User-Agent: "MCP-Router-HTTP-Client/1.0"
+  
+  # Server-Sent Events (SSE) configuration
+  sse:
+    request_timeout: 30s      # Timeout for HTTP requests
+    stream_timeout: 300s      # Timeout for SSE stream (5 minutes)
+    buffer_size: 4096         # Buffer size for SSE data
+    default_headers:
+      Accept: "text/event-stream"
+      Cache-Control: "no-cache"
+      User-Agent: "MCP-Router-SSE-Client/1.0"
+
+# Local router behavior
+local:
+  read_buffer_size: 65536
+  write_buffer_size: 65536
+  request_timeout_ms: 30000
+  max_concurrent_requests: 100
+  max_queued_requests: 100
+  
+  # Rate limiting (optional)
+  rate_limit:
+    enabled: false
+    requests_per_sec: 100.0
+    burst: 200
+
+# Logging configuration
+logging:
+  level: info
+  format: json
+  output: stderr
+  include_caller: false
+
+# Metrics configuration
+metrics:
+  enabled: true
+  endpoint: "localhost:9091"
+  labels:
+    environment: "production"
+    mode: "direct"
+
+# Advanced settings
+advanced:
+  # Compression settings
+  compression:
+    enabled: true
+    algorithm: gzip
+    level: 6
+  
+  # Circuit breaker configuration
+  circuit_breaker:
+    failure_threshold: 5
+    success_threshold: 2
+    timeout_seconds: 30
+  
+  # Request deduplication
+  deduplication:
+    enabled: true
+    cache_size: 1000
+    ttl_seconds: 60
+  
+  # Debug settings
+  debug:
+    log_frames: false
+    save_failures: false
+    failure_dir: "/tmp/mcp-failures"
+    enable_pprof: false
+    pprof_port: 6060

@@ -1,0 +1,2459 @@
+services/gateway/internal/backends/sse/backend.go:359:27: Non-inherited new context, use function like `context.WithXXX` instead (contextcheck)
+				if err := b.connectSSE(ctx); err != nil {
+				                      ^
+services/gateway/internal/backends/sse/backend.go:577:22: Non-inherited new context, use function like `context.WithXXX` instead (contextcheck)
+			if err := b.Health(ctx); err != nil {
+			                  ^
+services/gateway/internal/backends/stdio/backend.go:434:22: Non-inherited new context, use function like `context.WithXXX` instead (contextcheck)
+			if err := b.Health(ctx); err != nil {
+			                  ^
+services/gateway/internal/backends/websocket/backend.go:605:22: Non-inherited new context, use function like `context.WithXXX` instead (contextcheck)
+			if err := b.Health(ctx); err != nil {
+			                  ^
+services/gateway/internal/frontends/stdio/frontend.go:212:2: Function `acceptUnixConnections->handleConnection->handleRequest` should pass the context parameter (contextcheck)
+	go f.acceptUnixConnections(listener)
+	^
+services/gateway/internal/frontends/stdio/frontend.go:261:2: Function `handleConnection->handleRequest` should pass the context parameter (contextcheck)
+	go f.handleConnection(stdinStdout)
+	^
+services/gateway/internal/server/server.go:436:2: Function `handleClientRead->processClientMessage` should pass the context parameter (contextcheck)
+	go s.handleClientRead(clientConn, clientIP)
+	^
+services/gateway/cmd/mcp-gateway/main.go:55:1: calculated cyclomatic complexity for function run is 25, max is 10 (cyclop)
+func run(cmd *cobra.Command, args []string) error {
+^
+services/gateway/internal/auth/message_auth.go:55:1: calculated cyclomatic complexity for function ValidateMessageToken is 11, max is 10 (cyclop)
+func (ma *MessageAuthenticator) ValidateMessageToken(_ context.Context, token, sessionID string) error {
+^
+services/gateway/internal/auth/provider.go:110:1: calculated cyclomatic complexity for function ValidateToken is 20, max is 10 (cyclop)
+func (p *JWTProvider) ValidateToken(tokenString string) (*Claims, error) {
+^
+services/gateway/internal/backends/sse/backend.go:245:1: calculated cyclomatic complexity for function readSSEEvents is 11, max is 10 (cyclop)
+func (b *Backend) readSSEEvents() {
+^
+services/gateway/internal/backends/sse/backend.go:377:1: calculated cyclomatic complexity for function SendRequest is 13, max is 10 (cyclop)
+func (b *Backend) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
+^
+services/gateway/internal/backends/stdio/backend.go:288:1: calculated cyclomatic complexity for function SendRequest is 12, max is 10 (cyclop)
+func (b *Backend) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
+^
+services/gateway/internal/backends/stdio/backend.go:444:1: calculated cyclomatic complexity for function Stop is 13, max is 10 (cyclop)
+func (b *Backend) Stop(ctx context.Context) error {
+^
+services/gateway/internal/backends/websocket/backend.go:108:1: calculated cyclomatic complexity for function NewBackend is 12, max is 10 (cyclop)
+func NewBackend(name string, config Config, logger *zap.Logger) *Backend {
+^
+services/gateway/internal/backends/websocket/backend.go:366:1: calculated cyclomatic complexity for function sendRequestInternal is 12, max is 10 (cyclop)
+func (b *Backend) sendRequestInternal(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
+^
+services/gateway/internal/backends/websocket/backend.go:463:1: calculated cyclomatic complexity for function readResponses is 11, max is 10 (cyclop)
+func (b *Backend) readResponses(conn *Connection) {
+^
+services/gateway/internal/config/validation.go:11:1: calculated cyclomatic complexity for function ValidateConfig is 14, max is 10 (cyclop)
+func ValidateConfig(config *Config) error {
+^
+services/gateway/internal/config/validation.go:75:1: calculated cyclomatic complexity for function ValidateServerConfig is 23, max is 10 (cyclop)
+func ValidateServerConfig(config *ServerConfig) error {
+^
+services/gateway/internal/config/validation.go:319:1: calculated cyclomatic complexity for function ValidateServiceDiscoveryConfig is 11, max is 10 (cyclop)
+func ValidateServiceDiscoveryConfig(config *ServiceDiscoveryConfig) error {
+^
+services/gateway/internal/config/validation.go:586:1: calculated cyclomatic complexity for function ValidateTracingConfig is 14, max is 10 (cyclop)
+func ValidateTracingConfig(config *TracingConfig) error {
+^
+services/gateway/internal/discovery/consul.go:192:1: calculated cyclomatic complexity for function consulServiceToEndpoint is 13, max is 10 (cyclop)
+func (d *ConsulDiscovery) consulServiceToEndpoint(entry *consulapi.ServiceEntry, servicePrefix string) (*Endpoint, error) {
+^
+services/gateway/internal/frontends/stdio/frontend.go:136:1: calculated cyclomatic complexity for function Start is 12, max is 10 (cyclop)
+func (f *Frontend) Start(ctx context.Context) error {
+^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:378:1: calculated cyclomatic complexity for function TestStdioFrontend_HandleConnection is 11, max is 10 (cyclop)
+func TestStdioFrontend_HandleConnection(t *testing.T) {
+^
+services/gateway/internal/health/checker_test.go:461:1: calculated cyclomatic complexity for function TestServer_Handlers is 11, max is 10 (cyclop)
+func TestServer_Handlers(t *testing.T) {
+^
+services/gateway/internal/metrics/metrics_test.go:11:1: calculated cyclomatic complexity for function TestNewRegistry is 14, max is 10 (cyclop)
+func TestNewRegistry(t *testing.T) {
+^
+services/gateway/internal/router/router.go:203:1: calculated cyclomatic complexity for function forwardRequestWebSocket is 11, max is 10 (cyclop)
+func (r *Router) forwardRequestWebSocket(ctx context.Context, endpoint *discovery.Endpoint, req *mcp.Request, span opentracing.Span) (*mcp.Response, error) {
+^
+services/gateway/internal/router/router.go:289:1: calculated cyclomatic complexity for function forwardRequestHTTP is 13, max is 10 (cyclop)
+func (r *Router) forwardRequestHTTP(ctx context.Context, endpoint *discovery.Endpoint, req *mcp.Request, span opentracing.Span) (*mcp.Response, error) {
+^
+services/gateway/internal/router/router_test.go:298:1: calculated cyclomatic complexity for function TestRouter_RouteRequest is 12, max is 10 (cyclop)
+func TestRouter_RouteRequest(t *testing.T) {
+^
+services/gateway/internal/server/config_loader.go:152:1: calculated cyclomatic complexity for function validate is 13, max is 10 (cyclop)
+func validate(cfg *config.Config) error {
+^
+services/gateway/internal/server/config_test.go:14:1: calculated cyclomatic complexity for function TestLoadConfig is 16, max is 10 (cyclop)
+func TestLoadConfig(t *testing.T) {
+^
+services/gateway/internal/server/server.go:143:1: calculated cyclomatic complexity for function Start is 15, max is 10 (cyclop)
+func (s *GatewayServer) Start() error {
+^
+services/gateway/internal/server/server.go:593:1: calculated cyclomatic complexity for function processClientMessage is 16, max is 10 (cyclop)
+func (s *GatewayServer) processClientMessage(client *ClientConnection, data []byte) error {
+^
+services/gateway/internal/server/server.go:1034:1: calculated cyclomatic complexity for function createTLSConfig is 19, max is 10 (cyclop)
+func (s *GatewayServer) createTLSConfig() (*tls.Config, error) {
+^
+services/gateway/internal/server/server.go:1122:1: calculated cyclomatic complexity for function getCipherSuite is 13, max is 10 (cyclop)
+func getCipherSuite(name string) uint16 {
+^
+services/gateway/internal/server/server_test.go:243:1: calculated cyclomatic complexity for function TestGatewayServer_processClientMessage is 11, max is 10 (cyclop)
+func TestGatewayServer_processClientMessage(t *testing.T) {
+^
+services/gateway/internal/server/tcp_health.go:141:1: calculated cyclomatic complexity for function handleConnection is 14, max is 10 (cyclop)
+func (s *TCPHealthServer) handleConnection(conn net.Conn) {
+^
+services/gateway/internal/session/manager_test.go:242:1: calculated cyclomatic complexity for function TestRedisManager_GetSession is 13, max is 10 (cyclop)
+func TestRedisManager_GetSession(t *testing.T) {
+^
+services/gateway/internal/session/manager_test.go:569:1: calculated cyclomatic complexity for function TestRedisManager_ConcurrentAccess is 15, max is 10 (cyclop)
+func TestRedisManager_ConcurrentAccess(t *testing.T) {
+^
+services/gateway/internal/validation/validation.go:88:1: calculated cyclomatic complexity for function ValidateRequestID is 11, max is 10 (cyclop)
+func ValidateRequestID(id interface{}) error {
+^
+services/gateway/internal/validation/validation.go:209:1: calculated cyclomatic complexity for function isValidHostname is 11, max is 10 (cyclop)
+func isValidHostname(hostname string) bool {
+^
+services/gateway/internal/validation/validation_test.go:619:1: calculated cyclomatic complexity for function TestValidationConstants is 11, max is 10 (cyclop)
+func TestValidationConstants(t *testing.T) {
+^
+services/gateway/pkg/health/predictive.go:157:1: calculated cyclomatic complexity for function NewPredictiveHealthMonitor is 11, max is 10 (cyclop)
+func NewPredictiveHealthMonitor(logger *zap.Logger, config PredictiveConfig) *PredictiveHealthMonitor {
+^
+services/gateway/pkg/health/predictive.go:554:1: calculated cyclomatic complexity for function updateCircuitBreaker is 13, max is 10 (cyclop)
+func (m *PredictiveHealthMonitor) updateCircuitBreaker(endpointKey string, success bool, latency time.Duration) {
+^
+services/gateway/pkg/loadbalancer/hybrid.go:58:1: calculated cyclomatic complexity for function Next is 13, max is 10 (cyclop)
+func (h *HybridLoadBalancer) Next() *discovery.Endpoint {
+^
+services/gateway/pkg/loadbalancer/hybrid.go:168:1: calculated cyclomatic complexity for function nextWeighted is 12, max is 10 (cyclop)
+func (h *HybridLoadBalancer) nextWeighted(endpoints []*discovery.Endpoint) *discovery.Endpoint {
+^
+services/gateway/pkg/protocol/converter.go:144:1: calculated cyclomatic complexity for function directConvert is 11, max is 10 (cyclop)
+func (c *Converter) directConvert(message Message, targetProtocol string) (*Message, error) {
+^
+services/gateway/pkg/protocol/multiplexer.go:159:1: calculated cyclomatic complexity for function GetConnection is 11, max is 10 (cyclop)
+func (p *ConnectionPool) GetConnection(ctx context.Context) (*PooledConnection, error) {
+^
+services/gateway/pkg/wire/protocol.go:95:1: calculated cyclomatic complexity for function Decode is 11, max is 10 (cyclop)
+func Decode(r io.Reader) (*Frame, error) {
+^
+services/gateway/test/testutil/metrics_test.go:471:1: calculated cyclomatic complexity for function assertMetricVecName is 13, max is 10 (cyclop)
+func assertMetricVecName(t *testing.T, metricVec interface{}, expectedName string) {
+^
+services/gateway/test/testutil/metrics_test.go:523:1: calculated cyclomatic complexity for function assertMetricHasHelp is 15, max is 10 (cyclop)
+func assertMetricHasHelp(t *testing.T, metric interface{}) {
+^
+services/gateway/test/testutil/tls.go:23:1: calculated cyclomatic complexity for function CreateTestCertificates is 16, max is 10 (cyclop)
+func CreateTestCertificates(t *testing.T, dir string) (certFile, keyFile, caFile string) {
+^
+services/gateway/internal/auth/oauth2_test.go:66:14: Error return value of `os.Setenv` is not checked (errcheck)
+				os.Setenv(k, v)
+				         ^
+services/gateway/internal/auth/oauth2_test.go:67:22: Error return value of `os.Unsetenv` is not checked (errcheck)
+				defer os.Unsetenv(k)
+				                 ^
+services/gateway/internal/auth/oauth2_test.go:153:31: Error return value of `(*encoding/json.Encoder).Encode` is not checked (errcheck)
+					json.NewEncoder(w).Encode(introspectionResponse{
+					                         ^
+services/gateway/internal/auth/oauth2_test.go:167:31: Error return value of `(*encoding/json.Encoder).Encode` is not checked (errcheck)
+					json.NewEncoder(w).Encode(introspectionResponse{
+					                         ^
+services/gateway/internal/auth/oauth2_test.go:177:13: Error return value of `os.Setenv` is not checked (errcheck)
+			os.Setenv("TEST_CLIENT_SECRET", "secret123")
+			         ^
+services/gateway/internal/auth/oauth2_test.go:178:21: Error return value of `os.Unsetenv` is not checked (errcheck)
+			defer os.Unsetenv("TEST_CLIENT_SECRET")
+			                 ^
+services/gateway/internal/auth/oauth2_test.go:379:28: Error return value of `(*encoding/json.Encoder).Encode` is not checked (errcheck)
+		json.NewEncoder(w).Encode(introspectionResponse{
+		                         ^
+services/gateway/internal/auth/oauth2_test.go:393:11: Error return value of `os.Setenv` is not checked (errcheck)
+	os.Setenv("TEST_CLIENT_SECRET", "secret123")
+	         ^
+services/gateway/internal/auth/oauth2_test.go:394:19: Error return value of `os.Unsetenv` is not checked (errcheck)
+	defer os.Unsetenv("TEST_CLIENT_SECRET")
+	                 ^
+services/gateway/internal/auth/oauth2_test.go:503:12: Error return value of `w.Write` is not checked (errcheck)
+				w.Write([]byte("invalid json"))
+				       ^
+services/gateway/internal/auth/oauth2_test.go:512:12: Error return value of `w.Write` is not checked (errcheck)
+				w.Write([]byte(""))
+				       ^
+services/gateway/internal/auth/oauth2_test.go:577:28: Error return value of `(*encoding/json.Encoder).Encode` is not checked (errcheck)
+		json.NewEncoder(w).Encode(introspectionResponse{
+		                         ^
+services/gateway/internal/auth/oauth2_test.go:726:29: Error return value of `(*encoding/json.Encoder).Encode` is not checked (errcheck)
+			json.NewEncoder(w).Encode(introspectionResponse{
+			                         ^
+services/gateway/internal/auth/oauth2_test.go:745:11: Error return value of `os.Setenv` is not checked (errcheck)
+	os.Setenv("TEST_CLIENT_SECRET", "secret123")
+	         ^
+services/gateway/internal/auth/oauth2_test.go:746:19: Error return value of `os.Unsetenv` is not checked (errcheck)
+	defer os.Unsetenv("TEST_CLIENT_SECRET")
+	                 ^
+services/gateway/internal/auth/provider_test.go:36:14: Error return value of `os.Setenv` is not checked (errcheck)
+				os.Setenv("JWT_SECRET", "test-secret")
+				         ^
+services/gateway/internal/auth/provider_test.go:49:16: Error return value of `os.Unsetenv` is not checked (errcheck)
+				os.Unsetenv("JWT_SECRET_MISSING")
+				           ^
+services/gateway/internal/auth/provider_test.go:70:16: Error return value of `os.Unsetenv` is not checked (errcheck)
+				os.Unsetenv("JWT_SECRET")
+				           ^
+services/gateway/internal/auth/provider_test.go:71:16: Error return value of `os.Unsetenv` is not checked (errcheck)
+				os.Unsetenv("JWT_SECRET_MISSING")
+				           ^
+services/gateway/internal/auth/provider_test.go:114:17: Error return value of `os.Remove` is not checked (errcheck)
+	defer os.Remove(tmpFile.Name())
+	               ^
+services/gateway/internal/auth/provider_test.go:120:15: Error return value of `tmpFile.Close` is not checked (errcheck)
+	tmpFile.Close()
+	             ^
+services/gateway/internal/auth/provider_test.go:503:11: Error return value of `os.Setenv` is not checked (errcheck)
+	os.Setenv("TEST_JWT_SECRET", "integration-test-secret")
+	         ^
+services/gateway/internal/auth/provider_test.go:504:19: Error return value of `os.Unsetenv` is not checked (errcheck)
+	defer os.Unsetenv("TEST_JWT_SECRET")
+	                 ^
+services/gateway/internal/config/platform_security_test.go:629:14: Error return value of `os.Setenv` is not checked (errcheck)
+				os.Setenv(key, value)
+				         ^
+services/gateway/internal/config/platform_security_test.go:630:22: Error return value of `os.Unsetenv` is not checked (errcheck)
+				defer os.Unsetenv(key)
+				                 ^
+services/gateway/internal/config/security_test.go:695:21: Error return value of `certOut.Close` is not checked (errcheck)
+	defer certOut.Close()
+	                   ^
+services/gateway/internal/config/security_test.go:709:20: Error return value of `keyOut.Close` is not checked (errcheck)
+	defer keyOut.Close()
+	                  ^
+services/gateway/internal/discovery/connectivity_tests.go:40:11: Error return value of `w.Write` is not checked (errcheck)
+			w.Write([]byte("data: test event\n\n"))
+			       ^
+services/gateway/internal/discovery/connectivity_tests.go:67:11: Error return value of `w.Write` is not checked (errcheck)
+			w.Write([]byte("regular response"))
+			       ^
+services/gateway/internal/discovery/connectivity_tests.go:120:11: Error return value of `w.Write` is not checked (errcheck)
+			w.Write([]byte("healthy"))
+			       ^
+services/gateway/internal/discovery/connectivity_tests.go:137:11: Error return value of `w.Write` is not checked (errcheck)
+			w.Write([]byte("server error"))
+			       ^
+services/gateway/internal/discovery/consul_start_test.go:201:31: Error return value of `discovery.updateHealthStatus` is not checked (errcheck)
+		discovery.updateHealthStatus()
+		                            ^
+services/gateway/internal/discovery/kubernetes_test.go:525:31: Error return value of `discovery.discoverServices` is not checked (errcheck)
+				discovery.discoverServices()
+				                          ^
+services/gateway/internal/discovery/simple_coverage_test.go:112:19: Error return value of `sseBridge.Watch` is not checked (errcheck)
+			sseBridge.Watch(ctx)
+			               ^
+services/gateway/internal/discovery/simple_coverage_test.go:143:21: Error return value of `stdioBridge.Watch` is not checked (errcheck)
+			stdioBridge.Watch(ctx)
+			                 ^
+services/gateway/internal/discovery/simple_coverage_test.go:174:18: Error return value of `wsBridge.Watch` is not checked (errcheck)
+			wsBridge.Watch(ctx)
+			              ^
+services/gateway/internal/discovery/stop_methods_test.go:258:18: Error return value of `sseBridge.Watch` is not checked (errcheck)
+		sseBridge.Watch(ctx)
+		               ^
+services/gateway/internal/discovery/stop_methods_test.go:293:20: Error return value of `stdioBridge.Watch` is not checked (errcheck)
+		stdioBridge.Watch(ctx)
+		                 ^
+services/gateway/internal/discovery/stop_methods_test.go:328:17: Error return value of `wsBridge.Watch` is not checked (errcheck)
+		wsBridge.Watch(ctx)
+		              ^
+services/gateway/internal/discovery/websocket_discovery.go:258:24: Error return value of `resp.Body.Close` is not checked (errcheck)
+		defer resp.Body.Close()
+		                     ^
+services/gateway/internal/discovery/websocket_discovery.go:263:18: Error return value of `conn.Close` is not checked (errcheck)
+	defer conn.Close()
+	                ^
+services/gateway/test/integration/protocols_integration_test.go:97:20: Error return value of `backend.Stop` is not checked (errcheck)
+	defer backend.Stop(suite.ctx)
+	                  ^
+services/gateway/test/integration/protocols_integration_test.go:160:20: Error return value of `backend.Stop` is not checked (errcheck)
+	defer backend.Stop(suite.ctx)
+	                  ^
+services/gateway/test/integration/protocols_integration_test.go:229:20: Error return value of `backend.Stop` is not checked (errcheck)
+	defer backend.Stop(suite.ctx)
+	                  ^
+services/gateway/test/integration/protocols_integration_test.go:319:25: Error return value of `stdioBackend.Stop` is not checked (errcheck)
+	defer stdioBackend.Stop(suite.ctx)
+	                       ^
+services/gateway/test/integration/protocols_integration_test.go:338:30: Error return value of `wsBackendInstance.Stop` is not checked (errcheck)
+	defer wsBackendInstance.Stop(suite.ctx)
+	                            ^
+services/gateway/test/testutil/tls_test.go:283:25: Error return value of `serverConn.Close` is not checked (errcheck)
+		defer serverConn.Close()
+		                      ^
+services/gateway/test/testutil/tls_test.go:284:25: Error return value of `clientConn.Close` is not checked (errcheck)
+		defer clientConn.Close()
+		                      ^
+services/gateway/test/testutil/tls_test.go:296:24: Error return value of `tlsServerConn.Close` is not checked (errcheck)
+				tlsServerConn.Close()
+				                   ^
+services/gateway/test/testutil/tls_test.go:307:24: Error return value of `tlsClientConn.Close` is not checked (errcheck)
+				tlsClientConn.Close()
+				                   ^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:480:19: comparing with != will fail on wrapped errors. Use errors.Is to check for a specific error (errorlint)
+	if err != nil && err != io.EOF {
+	                 ^
+services/gateway/internal/discovery/kubernetes.go:315:4: missing cases in switch of type watch.EventType: watch.Bookmark, watch.Error (exhaustive)
+			switch event.Type {
+			^
+services/gateway/internal/server/tcp_handler.go:164:3: missing cases in switch of type wire.MessageType: wire.MessageTypeResponse, wire.MessageTypeError, wire.MessageTypeVersionAck (exhaustive)
+		switch msgType {
+		^
+services/gateway/pkg/circuit/breaker.go:93:2: missing cases in switch of type circuit.State: circuit.StateOpen (exhaustive)
+	switch cb.state {
+	^
+services/gateway/pkg/circuit/breaker.go:110:2: missing cases in switch of type circuit.State: circuit.StateClosed, circuit.StateOpen (exhaustive)
+	switch cb.state {
+	^
+services/gateway/internal/discovery/connectivity_tests.go:28:2: type assertion must be checked (forcetypeassert)
+	sseBridge := discovery.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/connectivity_tests.go:113:2: type assertion must be checked (forcetypeassert)
+	sseBridge := discovery.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/connectivity_tests.go:183:2: type assertion must be checked (forcetypeassert)
+	wsBridge := discovery.(*WebSocketDiscovery)
+	^
+services/gateway/internal/discovery/connectivity_tests.go:231:2: type assertion must be checked (forcetypeassert)
+	sseBridge := discovery.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/consul_test.go:28:9: type assertion must be checked (forcetypeassert)
+	return args.Get(0).(*consulapi.Agent)
+	       ^
+services/gateway/internal/discovery/consul_test.go:33:9: type assertion must be checked (forcetypeassert)
+	return args.Get(0).(*consulapi.Catalog)
+	       ^
+services/gateway/internal/discovery/consul_test.go:38:9: type assertion must be checked (forcetypeassert)
+	return args.Get(0).(*consulapi.Health)
+	       ^
+services/gateway/internal/discovery/consul_test.go:48:9: type assertion must be checked (forcetypeassert)
+	return args.Get(0).(map[string][]string), args.Get(1).(*consulapi.QueryMeta), args.Error(2)
+	       ^
+services/gateway/internal/discovery/consul_test.go:58:9: type assertion must be checked (forcetypeassert)
+	return args.Get(0).([]*consulapi.ServiceEntry), args.Get(1).(*consulapi.QueryMeta), args.Error(2)
+	       ^
+services/gateway/internal/discovery/simple_coverage_test.go:32:3: type assertion must be checked (forcetypeassert)
+		sseBridge := discovery.(*SSEDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:55:3: type assertion must be checked (forcetypeassert)
+		stdioBridge := discovery.(*StdioDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:78:3: type assertion must be checked (forcetypeassert)
+		wsBridge := discovery.(*WebSocketDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:105:3: type assertion must be checked (forcetypeassert)
+		sseBridge := discovery.(*SSEDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:136:3: type assertion must be checked (forcetypeassert)
+		stdioBridge := discovery.(*StdioDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:167:3: type assertion must be checked (forcetypeassert)
+		wsBridge := discovery.(*WebSocketDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:206:3: type assertion must be checked (forcetypeassert)
+		sseBridge := discovery.(*SSEDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:236:3: type assertion must be checked (forcetypeassert)
+		stdioBridge := discovery.(*StdioDiscovery)
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:266:3: type assertion must be checked (forcetypeassert)
+		wsBridge := discovery.(*WebSocketDiscovery)
+		^
+services/gateway/internal/discovery/sse_discovery_test.go:106:2: type assertion must be checked (forcetypeassert)
+	sseSD := sd.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/stdio_discovery_test.go:105:2: type assertion must be checked (forcetypeassert)
+	stdioSD := sd.(*StdioDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:115:2: type assertion must be checked (forcetypeassert)
+	sseBridge := discovery.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:151:2: type assertion must be checked (forcetypeassert)
+	stdioBridge := discovery.(*StdioDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:187:2: type assertion must be checked (forcetypeassert)
+	wsBridge := discovery.(*WebSocketDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:216:2: type assertion must be checked (forcetypeassert)
+	sseBridge := discovery.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:250:2: type assertion must be checked (forcetypeassert)
+	sseBridge := discovery.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:285:2: type assertion must be checked (forcetypeassert)
+	stdioBridge := discovery.(*StdioDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:320:2: type assertion must be checked (forcetypeassert)
+	wsBridge := discovery.(*WebSocketDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:358:2: type assertion must be checked (forcetypeassert)
+	sseBridge := discovery.(*SSEDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:399:2: type assertion must be checked (forcetypeassert)
+	stdioBridge := discovery.(*StdioDiscovery)
+	^
+services/gateway/internal/discovery/stop_methods_test.go:439:2: type assertion must be checked (forcetypeassert)
+	wsBridge := discovery.(*WebSocketDiscovery)
+	^
+services/gateway/internal/discovery/websocket_discovery_test.go:105:2: type assertion must be checked (forcetypeassert)
+	wsSD := sd.(*WebSocketDiscovery)
+	^
+services/gateway/internal/health/health_advanced_test.go:315:2: type assertion must be checked (forcetypeassert)
+	endpointCount1 := sdStatus1.Metrics["endpoint_count"].(int)
+	^
+services/gateway/internal/health/health_advanced_test.go:323:2: type assertion must be checked (forcetypeassert)
+	endpointCount2 := sdStatus2.Metrics["endpoint_count"].(int)
+	^
+services/gateway/internal/auth/message_auth_test.go:48:6: Function 'TestMessageAuthenticator_ValidateMessageToken' is too long (104 > 60) (funlen)
+func TestMessageAuthenticator_ValidateMessageToken(t *testing.T) {
+     ^
+services/gateway/internal/auth/oauth2_test.go:19:6: Function 'TestNewOAuth2Provider' is too long (64 > 60) (funlen)
+func TestNewOAuth2Provider(t *testing.T) {
+     ^
+services/gateway/internal/auth/oauth2_test.go:87:6: Function 'TestOAuth2Provider_Authenticate' is too long (113 > 60) (funlen)
+func TestOAuth2Provider_Authenticate(t *testing.T) {
+     ^
+services/gateway/internal/auth/oauth2_test.go:210:6: Function 'TestOAuth2Provider_IntrospectionToClaims' is too long (115 > 60) (funlen)
+func TestOAuth2Provider_IntrospectionToClaims(t *testing.T) {
+     ^
+services/gateway/internal/auth/oauth2_test.go:484:6: Function 'TestOAuth2Provider_IntrospectToken_ErrorHandling' is too long (66 > 60) (funlen)
+func TestOAuth2Provider_IntrospectToken_ErrorHandling(t *testing.T) {
+     ^
+services/gateway/internal/auth/oauth2_test.go:699:6: Function 'TestOAuth2Provider_ValidateToken_CompleteFlow' is too long (66 > 60) (funlen)
+func TestOAuth2Provider_ValidateToken_CompleteFlow(t *testing.T) {
+     ^
+services/gateway/internal/auth/oauth2_test.go:800:6: Function 'TestOAuth2Provider_IntrospectionToClaims_EdgeCases' is too long (63 > 60) (funlen)
+func TestOAuth2Provider_IntrospectionToClaims_EdgeCases(t *testing.T) {
+     ^
+services/gateway/internal/auth/provider_test.go:15:6: Function 'TestNewProvider' is too long (66 > 60) (funlen)
+func TestNewProvider(t *testing.T) {
+     ^
+services/gateway/internal/auth/provider_test.go:103:6: Function 'TestJWTProvider_ValidateToken' is too long (172 > 60) (funlen)
+func TestJWTProvider_ValidateToken(t *testing.T) {
+     ^
+services/gateway/internal/auth/provider_test.go:307:6: Function 'TestJWTProvider_Authenticate' is too long (79 > 60) (funlen)
+func TestJWTProvider_Authenticate(t *testing.T) {
+     ^
+services/gateway/internal/config/security_test.go:20:6: Function 'TestTLSConfig_SecurityValidation' is too long (107 > 60) (funlen)
+func TestTLSConfig_SecurityValidation(t *testing.T) {
+     ^
+services/gateway/internal/config/security_test.go:133:6: Function 'TestAuthConfig_SecurityValidation' is too long (95 > 60) (funlen)
+func TestAuthConfig_SecurityValidation(t *testing.T) {
+     ^
+services/gateway/internal/config/security_test.go:237:6: Function 'TestSecurityHeaders_Validation' is too long (77 > 60) (funlen)
+func TestSecurityHeaders_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/security_test.go:323:6: Function 'TestRateLimitConfig_SecurityValidation' is too long (79 > 60) (funlen)
+func TestRateLimitConfig_SecurityValidation(t *testing.T) {
+     ^
+services/gateway/internal/config/security_test.go:407:6: Function 'TestConfigSecurity_InjectionProtection' is too long (84 > 60) (funlen)
+func TestConfigSecurity_InjectionProtection(t *testing.T) {
+     ^
+services/gateway/internal/config/security_test.go:565:6: Function 'TestConfigSecurity_ResourceLimits' is too long (80 > 60) (funlen)
+func TestConfigSecurity_ResourceLimits(t *testing.T) {
+     ^
+services/gateway/internal/config/security_test.go:723:6: Function 'TestConfig_SecurityBestPractices' is too long (120 > 60) (funlen)
+func TestConfig_SecurityBestPractices(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:11:6: Function 'TestConfig_Validation' is too long (111 > 60) (funlen)
+func TestConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:125:6: Function 'TestServerConfig_Validation' is too long (85 > 60) (funlen)
+func TestServerConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:213:6: Function 'TestTLSConfig_Validation' is too long (79 > 60) (funlen)
+func TestTLSConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:295:6: Function 'TestAuthConfig_Validation' is too long (98 > 60) (funlen)
+func TestAuthConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:396:6: Function 'TestServiceDiscoveryConfig_Validation' is too long (90 > 60) (funlen)
+func TestServiceDiscoveryConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:489:6: Function 'TestCircuitBreakerConfig_Validation' is too long (72 > 60) (funlen)
+func TestCircuitBreakerConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:564:6: Function 'TestRateLimitConfig_Validation' is too long (81 > 60) (funlen)
+func TestRateLimitConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:648:6: Function 'TestMetricsConfig_Validation' is too long (68 > 60) (funlen)
+func TestMetricsConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:771:6: Function 'TestTracingConfig_Validation' is too long (90 > 60) (funlen)
+func TestTracingConfig_Validation(t *testing.T) {
+     ^
+services/gateway/internal/config/validation_test.go:879:6: Function 'createValidFullConfig' is too long (72 > 60) (funlen)
+func createValidFullConfig() *Config {
+     ^
+services/gateway/internal/discovery/connectivity_tests.go:18:6: Function 'TestSSEDiscovery_checkSSEEndpoint' is too long (77 > 60) (funlen)
+func TestSSEDiscovery_checkSSEEndpoint(t *testing.T) {
+     ^
+services/gateway/internal/discovery/connectivity_tests.go:103:6: Function 'TestSSEDiscovery_checkHTTPEndpoint_Enhanced' is too long (64 > 60) (funlen)
+func TestSSEDiscovery_checkHTTPEndpoint_Enhanced(t *testing.T) {
+     ^
+services/gateway/internal/discovery/consul.go:120:27: Function 'discoverServices' is too long (61 > 60) (funlen)
+func (d *ConsulDiscovery) discoverServices() error {
+                          ^
+services/gateway/internal/discovery/consul_advanced_test.go:279:6: Function 'TestConsulDiscovery_EdgeCases_Advanced' is too long (79 > 60) (funlen)
+func TestConsulDiscovery_EdgeCases_Advanced(t *testing.T) {
+     ^
+services/gateway/internal/discovery/consul_advanced_test.go:362:6: Function 'TestConsulDiscovery_ConsulServiceToEndpoint_Advanced' is too long (108 > 60) (funlen)
+func TestConsulDiscovery_ConsulServiceToEndpoint_Advanced(t *testing.T) {
+     ^
+services/gateway/internal/discovery/consul_advanced_test.go:476:6: Function 'TestConsulDiscovery_IsHealthy_Advanced' is too long (61 > 60) (funlen)
+func TestConsulDiscovery_IsHealthy_Advanced(t *testing.T) {
+     ^
+services/gateway/internal/discovery/consul_test.go:90:6: Function 'TestConsulDiscovery_consulServiceToEndpoint' is too long (175 > 60) (funlen)
+func TestConsulDiscovery_consulServiceToEndpoint(t *testing.T) {
+     ^
+services/gateway/internal/discovery/kubernetes_test.go:410:6: Function 'TestKubernetesDiscovery_WatchEvents' is too long (69 > 60) (funlen)
+func TestKubernetesDiscovery_WatchEvents(t *testing.T) {
+     ^
+services/gateway/internal/discovery/kubernetes_test.go:538:6: Function 'TestKubernetesDiscovery_StartStop' is too long (70 > 60) (funlen)
+func TestKubernetesDiscovery_StartStop(t *testing.T) {
+     ^
+services/gateway/internal/discovery/simple_coverage_test.go:14:6: Function 'TestStopMethodsCoverage' is too long (64 > 60) (funlen)
+func TestStopMethodsCoverage(t *testing.T) {
+     ^
+services/gateway/internal/discovery/simple_coverage_test.go:88:6: Function 'TestWatchMethodsCoverage' is too long (88 > 60) (funlen)
+func TestWatchMethodsCoverage(t *testing.T) {
+     ^
+services/gateway/internal/discovery/simple_coverage_test.go:186:6: Function 'TestHealthCheckMethodsCoverage' is too long (86 > 60) (funlen)
+func TestHealthCheckMethodsCoverage(t *testing.T) {
+     ^
+services/gateway/internal/discovery/sse_discovery_test.go:15:6: Function 'TestNewSSEDiscovery' is too long (69 > 60) (funlen)
+func TestNewSSEDiscovery(t *testing.T) {
+     ^
+services/gateway/internal/discovery/sse_discovery_test.go:465:6: Function 'TestSSEDiscovery_URLParsing' is too long (65 > 60) (funlen)
+func TestSSEDiscovery_URLParsing(t *testing.T) {
+     ^
+services/gateway/internal/discovery/static_test.go:14:6: Function 'TestNewStaticDiscovery' is too long (70 > 60) (funlen)
+func TestNewStaticDiscovery(t *testing.T) {
+     ^
+services/gateway/internal/discovery/static_test.go:87:6: Function 'TestStaticDiscovery_LoadEndpoints' is too long (72 > 60) (funlen)
+func TestStaticDiscovery_LoadEndpoints(t *testing.T) {
+     ^
+services/gateway/internal/discovery/static_test.go:370:6: Function 'TestStaticDiscovery_URLParsing' is too long (75 > 60) (funlen)
+func TestStaticDiscovery_URLParsing(t *testing.T) {
+     ^
+services/gateway/internal/discovery/stdio_discovery_test.go:15:6: Function 'TestNewStdioDiscovery' is too long (68 > 60) (funlen)
+func TestNewStdioDiscovery(t *testing.T) {
+     ^
+services/gateway/internal/discovery/websocket_discovery_test.go:15:6: Function 'TestNewWebSocketDiscovery' is too long (68 > 60) (funlen)
+func TestNewWebSocketDiscovery(t *testing.T) {
+     ^
+services/gateway/internal/discovery/websocket_discovery_test.go:467:6: Function 'TestWebSocketDiscovery_URLParsing' is too long (71 > 60) (funlen)
+func TestWebSocketDiscovery_URLParsing(t *testing.T) {
+     ^
+services/gateway/test/integration/protocols_integration_test.go:48:45: Function 'TestStdioBackendIntegration' is too long (78 > 60) (funlen)
+func (suite *ProtocolsIntegrationTestSuite) TestStdioBackendIntegration() {
+                                            ^
+services/gateway/test/integration/protocols_integration_test.go:191:45: Function 'TestStdioBackendPerformance' is too long (75 > 60) (funlen)
+func (suite *ProtocolsIntegrationTestSuite) TestStdioBackendPerformance() {
+                                            ^
+services/gateway/test/integration/protocols_integration_test.go:275:45: Function 'TestConcurrentMultiProtocolOperations' has too many statements (44 > 40) (funlen)
+func (suite *ProtocolsIntegrationTestSuite) TestConcurrentMultiProtocolOperations() {
+                                            ^
+services/gateway/internal/backends/sse/backend_test.go:498:1: cognitive complexity 32 of func `createTestSSEServer` is high (> 30) (gocognit)
+func createTestSSEServer(t *testing.T) *httptest.Server {
+^
+services/gateway/internal/discovery/kubernetes.go:168:1: cognitive complexity 38 of func `(*KubernetesDiscovery).discoverNamespaceServices` is high (> 30) (gocognit)
+func (d *KubernetesDiscovery) discoverNamespaceServices(namespace string) ([]Endpoint, error) {
+^
+services/gateway/internal/discovery/kubernetes_test.go:28:1: cognitive complexity 47 of func `TestKubernetesDiscovery_DiscoverNamespaceServices` is high (> 30) (gocognit)
+func TestKubernetesDiscovery_DiscoverNamespaceServices(t *testing.T) {
+^
+services/gateway/internal/frontends/factory.go:58:1: cognitive complexity 33 of func `(*DefaultFactory).createStdioFrontend` is high (> 30) (gocognit)
+func (f *DefaultFactory) createStdioFrontend(config FrontendConfig, router RequestRouter, auth AuthProvider, sessions SessionManager) (Frontend, error) {
+^
+services/gateway/internal/frontends/stdio/frontend.go:295:1: cognitive complexity 90 of func `(*Frontend).handleConnection` is high (> 30) (gocognit)
+func (f *Frontend) handleConnection(rawConn io.ReadWriteCloser) {
+^
+services/gateway/internal/server/server.go:246:1: cognitive complexity 35 of func `(*GatewayServer).Shutdown` is high (> 30) (gocognit)
+func (s *GatewayServer) Shutdown(ctx context.Context) error {
+^
+services/gateway/internal/server/server.go:501:1: cognitive complexity 49 of func `(*GatewayServer).handleClientWrite` is high (> 30) (gocognit)
+func (s *GatewayServer) handleClientWrite(client *ClientConnection) {
+^
+services/gateway/internal/server/server.go:802:1: cognitive complexity 31 of func `(*GatewayServer).acceptTCPConnections` is high (> 30) (gocognit)
+func (s *GatewayServer) acceptTCPConnections() {
+^
+services/gateway/internal/server/tcp_handler.go:55:1: cognitive complexity 130 of func `(*TCPHandler).HandleConnection` is high (> 30) (gocognit)
+func (h *TCPHandler) HandleConnection(ctx context.Context, conn net.Conn) {
+^
+services/gateway/internal/backends/sse/backend_test.go:369:20: string `/sse` has 3 occurrences, make it a constant (goconst)
+		if r.URL.Path == "/sse" {
+		                 ^
+services/gateway/internal/config/validation.go:208:20: string `unix_socket` has 4 occurrences, make it a constant (goconst)
+	if config.Type == "unix_socket" && config.Path == "" {
+	                  ^
+services/gateway/internal/config/validation_test.go:970:25: string `invalid` has 5 occurrences, make it a constant (goconst)
+	config.Auth.Provider = "invalid"
+	                       ^
+services/gateway/internal/discovery/consul.go:65:25: string `https` has 5 occurrences, make it a constant (goconst)
+		clientConfig.Scheme = "https"
+		                      ^
+services/gateway/internal/discovery/consul.go:122:19: string `mcp/` has 4 occurrences, make it a constant (goconst)
+	servicePrefix := "mcp/"
+	                 ^
+services/gateway/internal/discovery/consul.go:202:19: string `default` has 4 occurrences, make it a constant (goconst)
+			mcpNamespace = "default"
+			               ^
+services/gateway/internal/discovery/consul.go:207:12: string `http` has 4 occurrences, make it a constant (goconst)
+	scheme := "http"
+	          ^
+services/gateway/internal/discovery/consul.go:215:13: string `wss` has 3 occurrences, make it a constant (goconst)
+			scheme = "wss"
+			         ^
+services/gateway/internal/discovery/consul.go:411:8: string `websocket` has 4 occurrences, make it a constant (goconst)
+		case "websocket", "ws":
+		     ^
+services/gateway/internal/discovery/consul.go:413:8: string `sse` has 4 occurrences, make it a constant (goconst)
+		case "sse", "server-sent-events":
+		     ^
+services/gateway/internal/discovery/consul.go:415:8: string `stdio` has 4 occurrences, make it a constant (goconst)
+		case "stdio", "process":
+		     ^
+services/gateway/internal/discovery/sse_discovery_test.go:183:33: string `service1` has 3 occurrences, make it a constant (goconst)
+		if ns1Endpoints[i].Service == "service1" {
+		                              ^
+services/gateway/internal/ratelimit/ratelimit_test.go:24:9: string `test-user` has 3 occurrences, make it a constant (goconst)
+	key := "test-user"
+	       ^
+services/gateway/internal/router/router.go:186:13: string `wss` has 3 occurrences, make it a constant (goconst)
+	case "ws", "wss":
+	           ^
+services/gateway/internal/router/router.go:189:7: string `http` has 3 occurrences, make it a constant (goconst)
+	case "http", "https":
+	     ^
+services/gateway/internal/server/tcp_handler_test.go:178:20: string `test-user` has 4 occurrences, make it a constant (goconst)
+		claims.Subject = "test-user"
+		                 ^
+services/gateway/internal/session/memory_manager_test.go:141:28: string `value` has 3 occurrences, make it a constant (goconst)
+	session.Metadata["key"] = "value"
+	                          ^
+services/gateway/pkg/loadbalancer/hybrid.go:77:8: string `least_connections` has 4 occurrences, make it a constant (goconst)
+		case "least_connections":
+		     ^
+services/gateway/pkg/loadbalancer/hybrid.go:264:7: string `http` has 3 occurrences, make it a constant (goconst)
+	case "http", "https":
+	     ^
+services/gateway/pkg/loadbalancer/hybrid.go:271:7: string `stdio` has 3 occurrences, make it a constant (goconst)
+	case "stdio":
+	     ^
+services/gateway/pkg/protocol/converter.go:167:56: string `websocket` has 3 occurrences, make it a constant (goconst)
+	case message.Protocol == "stdio" && targetProtocol == "websocket":
+	                                                      ^
+services/gateway/pkg/protocol/converter.go:169:60: string `http` has 6 occurrences, make it a constant (goconst)
+	case message.Protocol == "websocket" && targetProtocol == "http":
+	                                                          ^
+services/gateway/pkg/protocol/converter.go:171:55: string `sse` has 3 occurrences, make it a constant (goconst)
+	case message.Protocol == "http" && targetProtocol == "sse":
+	                                                     ^
+services/gateway/pkg/protocol/converter.go:219:34: string `true` has 3 occurrences, make it a constant (goconst)
+		message.Metadata["sse_data"] = "true"
+		                               ^
+services/gateway/internal/discovery/consul_advanced_test.go:334:4: ifElseChain: rewrite if-else to switch statement (gocritic)
+			if tt.expectNil {
+			^
+services/gateway/internal/discovery/kubernetes_test.go:235:15: appendAssign: append result not assigned to the same slice (gocritic)
+			objects := append(tt.services, tt.endpoints...)
+			           ^
+services/gateway/internal/health/checker.go:305:2: ifElseChain: rewrite if-else to switch statement (gocritic)
+	if !allHealthy {
+	^
+services/gateway/internal/health/health_advanced_test.go:446:4: dupBranchBody: both branches in if statement have same body (gocritic)
+			if tt.expectStart {
+			^
+services/gateway/internal/router/router_test.go:426:12: elseif: can replace 'else {if cond {}}' with 'else if cond {}' (gocritic)
+				} else {
+				       ^
+services/gateway/pkg/health/predictive.go:638:3: ifElseChain: rewrite if-else to switch statement (gocritic)
+		if overallErrorRate < 0.01 {
+		^
+services/gateway/test/testutil/testutil.go:233:9: elseif: can replace 'else {if cond {}}' with 'else if cond {}' (gocritic)
+	} else {
+	       ^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:75:1: Comment should end in a period (godot)
+// blockingReader provides data once and then blocks until done channel is closed
+^
+services/gateway/go.mod:36:1: local replacement are not allowed: github.com/poiley/mcp-bridge (gomoddirectives)
+replace github.com/poiley/mcp-bridge => ../..
+^
+services/gateway/go.mod:126:1: local replacement are not allowed: github.com/poiley/mcp-bridge/services/router (gomoddirectives)
+replace github.com/poiley/mcp-bridge/services/router => ../router
+^
+services/gateway/cmd/mcp-gateway/main.go:177:20: G112: Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server (gosec)
+	metricsServer := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Server.MetricsPort),
+		Handler: promhttp.Handler(),
+	}
+services/gateway/cmd/mcp-gateway/main_test.go:148:10: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+		err := os.WriteFile(configFile, []byte(configContent), 0o644)
+		       ^
+services/gateway/internal/backends/stdio/backend.go:165:10: G204: Subprocess launched with a potential tainted input or cmd arguments (gosec)
+	b.cmd = exec.CommandContext(ctx, b.config.Command[0], b.config.Command[1:]...)
+	        ^
+services/gateway/internal/backends/stdio/backend_test.go:353:9: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	err := os.WriteFile(scriptPath, []byte(content), 0o755)
+	       ^
+services/gateway/internal/backends/websocket/backend.go:357:12: G115: integer overflow conversion uint64 -> int (gosec)
+	return int(atomic.AddUint64(&b.requestID, 1) % uint64(len(b.config.Endpoints)))
+	          ^
+services/gateway/internal/config/security_test.go:690:18: G304: Potential file inclusion via variable (gosec)
+	certOut, err := os.Create(certFile)
+	                ^
+services/gateway/internal/config/security_test.go:704:17: G304: Potential file inclusion via variable (gosec)
+	keyOut, err := os.Create(keyFile)
+	               ^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:1167:15: G304: Potential file inclusion via variable (gosec)
+	file, err := os.Create(socketPath)
+	             ^
+services/gateway/internal/server/config_test.go:57:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
+	          ^
+services/gateway/internal/server/config_test.go:154:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
+	          ^
+services/gateway/internal/server/config_test.go:467:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
+	          ^
+services/gateway/internal/server/http_handlers_test.go:196:51: G103: Use of unsafe calls should be audited (gosec)
+		statusField = reflect.NewAt(statusField.Type(), unsafe.Pointer(statusField.UnsafeAddr())).Elem()
+		                                                ^
+services/gateway/internal/server/server.go:1062:16: G402: TLS MinVersion too low. (gosec)
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   uint16(minVersion),
+	}
+services/gateway/internal/server/server.go:1064:23: G115: integer overflow conversion int -> uint16 (gosec)
+		MinVersion:   uint16(minVersion),
+		                    ^
+services/gateway/internal/server/server_test.go:581:12: G112: Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server (gosec)
+		server: &http.Server{
+			Addr: ":0",
+		},
+services/gateway/internal/tracing/tracing_test.go:151:17: G115: integer overflow conversion int -> uint64 (gosec)
+			return uint64(mockCtx.SpanID)
+			             ^
+services/gateway/internal/tracing/tracing_test.go:155:13: G115: integer overflow conversion int -> uint64 (gosec)
+	}(), uint64(childRecord.ParentID))
+	           ^
+services/gateway/internal/tracing/tracing_test.go:256:26: G115: integer overflow conversion int -> uint16 (gosec)
+			assert.Equal(t, uint16(tt.expectedStatus), requestSpan.Tag("http.status_code"))
+			                      ^
+services/gateway/internal/tracing/tracing_test.go:369:27: G115: integer overflow conversion int -> uint16 (gosec)
+				assert.Equal(t, uint16(resp.StatusCode), clientSpan.Tag("http.status_code"))
+				                      ^
+services/gateway/internal/validation/validation_test.go:704:2: G101: Potential hardcoded credentials (gosec)
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+	^
+services/gateway/pkg/circuit/breaker_test.go:298:21: G115: integer overflow conversion int -> int32 (gosec)
+	totalCalls := int32(numGoroutines * callsPerGoroutine)
+	                   ^
+services/gateway/pkg/wire/auth_message_test.go:409:3: G101: Potential hardcoded credentials (gosec)
+		authToken := "roundtrip-resp-token"
+		^
+services/gateway/pkg/wire/protocol_test.go:79:26: G115: integer overflow conversion int -> uint32 (gosec)
+			assert.Equal(t, uint32(len(tt.frame.Payload)), payloadLen)
+			                      ^
+services/gateway/pkg/wire/protocol_test.go:105:52: G115: integer overflow conversion int -> uint32 (gosec)
+				_ = binary.Write(&buf, binary.BigEndian, uint32(len(payload))) //nolint:errcheck // Test data generation - writing to buffer never fails
+				                                               ^
+services/gateway/test/integration/protocols_integration_test.go:412:9: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	err := os.WriteFile(scriptPath, []byte(content), 0o755)
+	       ^
+services/gateway/test/testutil/tls_test.go:56:21: G304: Potential file inclusion via variable (gosec)
+		caCertPEM, err := os.ReadFile(caFile)
+		                  ^
+services/gateway/test/testutil/tls_test.go:89:25: G304: Potential file inclusion via variable (gosec)
+		serverCertPEM, err := os.ReadFile(certFile)
+		                      ^
+services/gateway/test/testutil/tls_test.go:132:21: G304: Potential file inclusion via variable (gosec)
+		caCertPEM, err := os.ReadFile(caFile)
+		                  ^
+services/gateway/test/testutil/tls_test.go:151:24: G304: Potential file inclusion via variable (gosec)
+		serverKeyPEM, err := os.ReadFile(keyFile)
+		                     ^
+services/gateway/test/testutil/tls_test.go:188:25: G304: Potential file inclusion via variable (gosec)
+		serverCertPEM, err := os.ReadFile(certFile)
+		                      ^
+services/gateway/test/testutil/tls_test.go:198:21: G304: Potential file inclusion via variable (gosec)
+		caCertPEM, err := os.ReadFile(caFile)
+		                  ^
+services/gateway/test/testutil/tls_test.go:224:10: G301: Expect directory permissions to be 0750 or less (gosec)
+		err := os.MkdirAll(subDir, 0o755)
+		       ^
+services/gateway/test/testutil/tls_test.go:265:21: G304: Potential file inclusion via variable (gosec)
+		caCertPEM, err := os.ReadFile(caFile)
+		                  ^
+services/gateway/test/testutil/tls_test.go:272:20: G402: TLS MinVersion too low. (gosec)
+		serverConfig := &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+		}
+services/gateway/test/testutil/tls_test.go:276:20: G402: TLS MinVersion too low. (gosec)
+		clientConfig := &tls.Config{
+			RootCAs:    caPool,
+			ServerName: "localhost", // Must match certificate DNS name
+		}
+services/gateway/test/testutil/tls_test.go:336:20: G402: TLS MinVersion too low. (gosec)
+		serverConfig := &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+		}
+services/gateway/test/testutil/tls_test.go:340:20: G402: TLS MinVersion too low. (gosec)
+		clientConfig := &tls.Config{
+			ServerName: "localhost",
+			// No RootCAs set, so certificate should be rejected
+		}
+services/gateway/test/testutil/tls_test.go:383:21: G304: Potential file inclusion via variable (gosec)
+		caCertPEM, err := os.ReadFile(caFile)
+		                  ^
+services/gateway/test/testutil/tls_test.go:402:21: G304: Potential file inclusion via variable (gosec)
+		caCertPEM, err := os.ReadFile(caFile)
+		                  ^
+services/gateway/test/testutil/tls_test.go:409:25: G304: Potential file inclusion via variable (gosec)
+		serverCertPEM, err := os.ReadFile(certFile)
+		                      ^
+services/gateway/test/testutil/tls_test.go:427:21: G304: Potential file inclusion via variable (gosec)
+		caCertPEM, err := os.ReadFile(caFile)
+		                  ^
+services/gateway/test/testutil/tls_test.go:439:25: G304: Potential file inclusion via variable (gosec)
+		serverCertPEM, err := os.ReadFile(certFile)
+		                      ^
+services/gateway/test/testutil/tls_test.go:488:20: G304: Potential file inclusion via variable (gosec)
+		cert1PEM, err := os.ReadFile(certFile1)
+		                 ^
+services/gateway/test/testutil/tls_test.go:490:20: G304: Potential file inclusion via variable (gosec)
+		cert2PEM, err := os.ReadFile(certFile2)
+		                 ^
+services/gateway/test/testutil/tls_test.go:493:18: G304: Potential file inclusion via variable (gosec)
+		ca1PEM, err := os.ReadFile(caFile1)
+		               ^
+services/gateway/test/testutil/tls_test.go:495:18: G304: Potential file inclusion via variable (gosec)
+		ca2PEM, err := os.ReadFile(caFile2)
+		               ^
+services/gateway/test/testutil/tls_test.go:530:9: G301: Expect directory permissions to be 0750 or less (gosec)
+		err = os.MkdirAll(testDir, 0o755)
+		      ^
+services/gateway/test/testutil/tls_test.go:546:10: G301: Expect directory permissions to be 0750 or less (gosec)
+		err := os.Mkdir(spacedDir, 0o755)
+		       ^
+services/gateway/test/testutil/tls_test.go:565:10: G301: Expect directory permissions to be 0750 or less (gosec)
+		err := os.MkdirAll(deepDir, 0o755)
+		       ^
+services/gateway/internal/server/tcp_handler_metrics_test.go:143:14: ineffectual assignment to msg (ineffassign)
+				msgType, msg, err = transport.ReceiveMessage()
+				         ^
+services/gateway/internal/server/tcp_handler_metrics_test.go:205:14: ineffectual assignment to msg (ineffassign)
+				msgType, msg, err := transport.ReceiveMessage()
+				         ^
+services/gateway/internal/server/tcp_handler_test.go:453:12: ineffectual assignment to msg (ineffassign)
+		msgType, msg, err = clientTransport.ReceiveMessage()
+		         ^
+services/gateway/internal/backends/factory_test.go:574:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/backends/factory_test.go:598:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/backends/factory_test.go:622:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/backends/sse/backend_test.go:458:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < numRequests; i++ {
+	^
+services/gateway/internal/backends/sse/backend_test.go:482:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < numRequests; i++ {
+	^
+services/gateway/internal/config/security_test.go:852:3: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+		for i := 0; i < b.N; i++ {
+		^
+services/gateway/internal/config/security_test.go:858:3: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+		for i := 0; i < b.N; i++ {
+		^
+services/gateway/internal/config/security_test.go:864:3: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+		for i := 0; i < b.N; i++ {
+		^
+services/gateway/internal/config/security_test.go:873:3: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+		for i := 0; i < b.N; i++ {
+		^
+services/gateway/internal/discovery/consul_advanced_test.go:256:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 10; i++ {
+	^
+services/gateway/internal/discovery/consul_advanced_test.go:273:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 10; i++ {
+	^
+services/gateway/internal/frontends/factory_test.go:466:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:1246:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:1290:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/metrics/metrics_test.go:382:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 10; i++ {
+	^
+services/gateway/internal/metrics/metrics_test.go:384:4: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+			for j := 0; j < 100; j++ {
+			^
+services/gateway/internal/metrics/metrics_test.go:397:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 10; i++ {
+	^
+services/gateway/internal/metrics/metrics_test.go:461:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/metrics/metrics_test.go:472:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/metrics/metrics_test.go:483:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/session/manager_test.go:470:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 100; i++ {
+	^
+services/gateway/internal/session/manager_test.go:606:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 10; i++ {
+	^
+services/gateway/internal/session/manager_test.go:608:4: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+			for j := 0; j < 100; j++ {
+			^
+services/gateway/internal/session/manager_test.go:619:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 5; i++ {
+	^
+services/gateway/internal/session/manager_test.go:621:4: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+			for j := 0; j < 50; j++ {
+			^
+services/gateway/internal/session/manager_test.go:639:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 15; i++ {
+	^
+services/gateway/internal/session/manager_test.go:760:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/session/manager_test.go:801:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/session/memory_manager_test.go:226:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 3; i++ {
+	^
+services/gateway/internal/session/memory_manager_test.go:238:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 2; i++ {
+	^
+services/gateway/pkg/health/predictive_test.go:152:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 3; i++ {
+	^
+services/gateway/pkg/health/predictive_test.go:160:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 5; i++ {
+	^
+services/gateway/pkg/health/predictive_test.go:264:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 10; i++ {
+	^
+services/gateway/pkg/health/predictive_test.go:281:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < config.SuccessThreshold; i++ {
+	^
+services/gateway/pkg/health/predictive_test.go:325:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < 5; i++ {
+	^
+services/gateway/test/integration/protocols_integration_test.go:239:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < numRequests; i++ {
+	^
+services/gateway/test/integration/protocols_integration_test.go:256:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < numRequests; i++ {
+	^
+services/gateway/test/integration/protocols_integration_test.go:349:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < numRequests; i++ {
+	^
+services/gateway/test/integration/protocols_integration_test.go:364:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < numRequests; i++ {
+	^
+services/gateway/test/integration/protocols_integration_test.go:382:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < numRequests; i++ {
+	^
+services/gateway/test/testutil/metrics_test.go:187:3: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+		for i := 0; i < 5; i++ {
+		^
+services/gateway/test/testutil/metrics_test.go:230:4: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+			for i := 0; i < tc.increments; i++ {
+			^
+services/gateway/test/testutil/metrics_test.go:271:3: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+		for i := 0; i < 3; i++ {
+		^
+services/gateway/test/testutil/metrics_test.go:307:4: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+			for i := 0; i < increments; i++ {
+			^
+services/gateway/test/testutil/metrics_test.go:443:4: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+			for i := 0; i < 100; i++ {
+			^
+services/gateway/test/testutil/metrics_test.go:454:4: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+			for i := 0; i < 1000; i++ {
+			^
+services/gateway/test/testutil/testutil_test.go:473:3: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+		for i := 0; i < 100; i++ {
+		^
+services/gateway/test/testutil/testutil_test.go:514:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/test/testutil/testutil_test.go:528:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/test/testutil/testutil_test.go:540:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
+	for i := 0; i < b.N; i++ {
+	^
+services/gateway/internal/backends/factory.go:80:1: CreateBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+func (f *DefaultFactory) CreateBackend(config BackendConfig) (Backend, error) {
+^
+services/gateway/internal/backends/factory.go:99:1: createStdioBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+func (f *DefaultFactory) createStdioBackend(config BackendConfig) (Backend, error) {
+^
+services/gateway/internal/backends/factory.go:171:1: createWebSocketBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+func (f *DefaultFactory) createWebSocketBackend(config BackendConfig) (Backend, error) {
+^
+services/gateway/internal/backends/factory.go:259:1: createSSEBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+func (f *DefaultFactory) createSSEBackend(config BackendConfig) (Backend, error) {
+^
+services/gateway/internal/discovery/factory.go:13:1: NewServiceDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+func NewServiceDiscovery(cfg config.ServiceDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
+^
+services/gateway/internal/discovery/sse_discovery.go:26:1: NewSSEDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+func NewSSEDiscovery(cfg config.SSEDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
+^
+services/gateway/internal/discovery/stdio_discovery.go:24:1: NewStdioDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+func NewStdioDiscovery(cfg config.StdioDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
+^
+services/gateway/internal/discovery/websocket_discovery.go:26:1: NewWebSocketDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+func NewWebSocketDiscovery(cfg config.WebSocketDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
+^
+services/gateway/internal/router/router.go:404:1: getLoadBalancer returns interface (github.com/poiley/mcp-bridge/services/gateway/pkg/loadbalancer.LoadBalancer) (ireturn)
+func (r *Router) getLoadBalancer(namespace string) loadbalancer.LoadBalancer {
+^
+services/gateway/internal/auth/message_auth.go:1:1: The line is 128 characters long, which exceeds the maximum of 120 characters. (lll)
+// Package auth provides authentication and authorization functionality including JWT validation and per-message authentication.
+^
+services/gateway/internal/auth/oauth2.go:137:1: The line is 132 characters long, which exceeds the maximum of 120 characters. (lll)
+	req, err := http.NewRequestWithContext(context.Background(), "POST", p.config.IntrospectEndpoint, strings.NewReader(data.Encode()))
+^
+services/gateway/internal/backends/stdio/backend.go:130:1: The line is 127 characters long, which exceeds the maximum of 120 characters. (lll)
+		return errors.NewBackendError("LIFECYCLE_ERROR", "backend already running", b.name, "stdio", errors.ErrBackendAlreadyRunning)
+^
+services/gateway/internal/backends/stdio/backend.go:292:1: The line is 124 characters long, which exceeds the maximum of 120 characters. (lll)
+		return nil, errors.NewBackendError("LIFECYCLE_ERROR", "backend not running", b.name, "stdio", errors.ErrBackendNotRunning)
+^
+services/gateway/internal/backends/websocket/backend.go:173:1: The line is 131 characters long, which exceeds the maximum of 120 characters. (lll)
+		return errors.NewBackendError("LIFECYCLE_ERROR", "backend already running", b.name, "websocket", errors.ErrBackendAlreadyRunning)
+^
+services/gateway/internal/config/validation.go:535:1: The line is 134 characters long, which exceeds the maximum of 120 characters. (lll)
+		return fmt.Errorf("burst should be at least equal to requests per second, got burst=%d rps=%d", config.Burst, config.RequestsPerSec)
+^
+services/gateway/internal/discovery/consul.go:47:1: The line is 130 characters long, which exceeds the maximum of 120 characters. (lll)
+func NewConsulDiscovery(cfg config.ServiceDiscoveryConfig, consulCfg ConsulConfig, logger *zap.Logger) (*ConsulDiscovery, error) {
+^
+services/gateway/internal/discovery/consul_advanced_test.go:86:1: The line is 131 characters long, which exceeds the maximum of 120 characters. (lll)
+			assert.Equal(t, tt.expectedMatch, result, "Service %s with tags %v should match: %v", tt.serviceName, tt.tags, tt.expectedMatch)
+^
+services/gateway/internal/discovery/consul_advanced_test.go:139:1: The line is 151 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Service: "weather-1", Namespace: "weather", Address: "127.0.0.1", Port: 8080, Healthy: true, Metadata: map[string]string{"consul_id": "weather-1"}},
+^
+services/gateway/internal/discovery/consul_advanced_test.go:140:1: The line is 152 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Service: "weather-2", Namespace: "weather", Address: "127.0.0.2", Port: 8080, Healthy: false, Metadata: map[string]string{"consul_id": "weather-2"}},
+^
+services/gateway/internal/discovery/consul_advanced_test.go:141:1: The line is 151 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Service: "weather-3", Namespace: "weather", Address: "127.0.0.3", Port: 8080, Healthy: true, Metadata: map[string]string{"consul_id": "weather-3"}},
+^
+services/gateway/internal/discovery/consul_test.go:56:1: The line is 156 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *MockHealth) Service(service, tag string, passingOnly bool, opts *consulapi.QueryOptions) ([]*consulapi.ServiceEntry, *consulapi.QueryMeta, error) {
+^
+services/gateway/internal/discovery/sse_discovery.go:297:1: The line is 122 characters long, which exceeds the maximum of 120 characters. (lll)
+func (s *SSEDiscovery) checkHTTPEndpoint(ctx context.Context, requestURL string, service *config.SSEServiceConfig) error {
+^
+services/gateway/internal/discovery/websocket_discovery.go:235:1: The line is 143 characters long, which exceeds the maximum of 120 characters. (lll)
+func (w *WebSocketDiscovery) checkEndpointConnectivity(ctx context.Context, endpointURL string, service *config.WebSocketServiceConfig) error {
+^
+services/gateway/internal/discovery/websocket_discovery.go:275:1: The line is 123 characters long, which exceeds the maximum of 120 characters. (lll)
+func (w *WebSocketDiscovery) createMetadata(service *config.WebSocketServiceConfig, endpointURL string) map[string]string {
+^
+services/gateway/internal/errors/backend_errors.go:128:1: The line is 124 characters long, which exceeds the maximum of 120 characters. (lll)
+	return NewBackendError(ErrTypeTimeout, fmt.Sprintf("operation timed out after %v", timeout), backendName, protocol, cause).
+^
+services/gateway/internal/errors/backend_errors_test.go:213:1: The line is 126 characters long, which exceeds the maximum of 120 characters. (lll)
+		err := NewBackendError(ErrTypeConnection, "test", "backend", "ws", ErrConnectionFailed) // Connection errors default to true
+^
+services/gateway/internal/frontends/factory.go:43:1: The line is 148 characters long, which exceeds the maximum of 120 characters. (lll)
+func (f *DefaultFactory) CreateFrontend(config FrontendConfig, router RequestRouter, auth AuthProvider, sessions SessionManager) (Frontend, error) {
+^
+services/gateway/internal/frontends/factory_test.go:19:1: The line is 128 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *mockRequestRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+^
+services/gateway/internal/frontends/factory_test.go:35:1: The line is 124 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *mockAuthProvider) GetUserInfo(ctx context.Context, credentials map[string]string) (map[string]interface{}, error) {
+^
+services/gateway/internal/frontends/interface.go:63:1: The line is 122 characters long, which exceeds the maximum of 120 characters. (lll)
+	CreateFrontend(config FrontendConfig, router RequestRouter, auth AuthProvider, sessions SessionManager) (Frontend, error)
+^
+services/gateway/internal/frontends/stdio/frontend.go:110:1: The line is 142 characters long, which exceeds the maximum of 120 characters. (lll)
+func NewFrontend(name string, config Config, router RequestRouter, auth AuthProvider, sessions SessionManager, logger *zap.Logger) *Frontend {
+^
+services/gateway/internal/frontends/stdio/frontend.go:355:1: The line is 144 characters long, which exceeds the maximum of 120 characters. (lll)
+			_ = netConn.SetReadDeadline(time.Now().Add(f.config.Process.ClientTimeout)) //nolint:errcheck // Timeout setting - not critical for operation
+^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:31:1: The line is 137 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *MockRequestRouterWithError) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:56:1: The line is 133 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *MockAuthProviderWithError) GetUserInfo(ctx context.Context, credentials map[string]string) (map[string]interface{}, error) {
+^
+services/gateway/internal/frontends/stdio/frontend_test.go:18:1: The line is 128 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *MockRequestRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+^
+services/gateway/internal/frontends/stdio/frontend_test.go:32:1: The line is 124 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *MockAuthProvider) GetUserInfo(ctx context.Context, credentials map[string]string) (map[string]interface{}, error) {
+^
+services/gateway/internal/server/server.go:216:1: The line is 123 characters long, which exceeds the maximum of 120 characters. (lll)
+	if s.config.Server.Protocol == "websocket" || s.config.Server.Protocol == ProtocolBoth || s.config.Server.Protocol == "" {
+^
+services/gateway/internal/server/server.go:1161:1: The line is 151 characters long, which exceeds the maximum of 120 characters. (lll)
+		w.Header().Set("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()")
+^
+services/gateway/internal/server/server.go:1169:1: The line is 127 characters long, which exceeds the maximum of 120 characters. (lll)
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';")
+^
+services/gateway/internal/server/server_test.go:739:1: The line is 121 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *mockRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+^
+services/gateway/internal/server/tcp_handler_metrics_test.go:39:1: The line is 122 characters long, which exceeds the maximum of 120 characters. (lll)
+			setupHandler: func(t *testing.T) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
+^
+services/gateway/internal/server/tcp_handler_metrics_test.go:169:1: The line is 122 characters long, which exceeds the maximum of 120 characters. (lll)
+			setupHandler: func(t *testing.T) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
+^
+services/gateway/internal/server/tcp_handler_test.go:61:1: The line is 121 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *MockRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+^
+services/gateway/internal/server/tcp_health.go:33:1: The line is 124 characters long, which exceeds the maximum of 120 characters. (lll)
+func NewTCPHealthServer(port int, checker *health.Checker, metrics *metrics.Registry, logger *zap.Logger) *TCPHealthServer {
+^
+services/gateway/pkg/circuit/breaker_test.go:162:1: The line is 122 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return nil }) //nolint:errcheck // Test intentionally ignores error - focusing on state change
+^
+services/gateway/pkg/circuit/breaker_test.go:185:1: The line is 129 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return testErr }) //nolint:errcheck // Test intentionally ignores error to focus on state transitions
+^
+services/gateway/pkg/circuit/breaker_test.go:329:1: The line is 125 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return nil }) //nolint:errcheck // Test intentionally ignores error to focus on state transitions
+^
+services/gateway/pkg/circuit/breaker_test.go:334:1: The line is 141 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return errors.New("error") }) //nolint:errcheck // Test intentionally ignores error to focus on state transitions
+^
+services/gateway/pkg/circuit/breaker_test.go:339:1: The line is 141 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return errors.New("error") }) //nolint:errcheck // Test intentionally ignores error to focus on state transitions
+^
+services/gateway/pkg/circuit/breaker_test.go:359:1: The line is 125 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return nil }) //nolint:errcheck // Test intentionally ignores error to focus on state transitions
+^
+services/gateway/pkg/circuit/breaker_test.go:364:1: The line is 125 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return nil }) //nolint:errcheck // Test intentionally ignores error to focus on state transitions
+^
+services/gateway/pkg/circuit/breaker_test.go:388:1: The line is 124 characters long, which exceeds the maximum of 120 characters. (lll)
+	_ = cb.Call(func() error { return errors.New("error") }) //nolint:errcheck // Benchmark setup - error intentionally ignored
+^
+services/gateway/pkg/health/predictive.go:457:1: The line is 123 characters long, which exceeds the maximum of 120 characters. (lll)
+func (m *PredictiveHealthMonitor) addToHistory(history []time.Duration, value time.Duration, maxSize int) []time.Duration {
+^
+services/gateway/pkg/loadbalancer/hybrid_test.go:131:1: The line is 128 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Weight: 1, Metadata: map[string]string{"protocol": "http"}},
+^
+services/gateway/pkg/loadbalancer/hybrid_test.go:132:1: The line is 128 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Healthy: true, Weight: 3, Metadata: map[string]string{"protocol": "http"}},
+^
+services/gateway/pkg/loadbalancer/hybrid_test.go:245:1: The line is 128 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Weight: 2, Metadata: map[string]string{"protocol": "http"}},
+^
+services/gateway/pkg/loadbalancer/hybrid_test.go:246:1: The line is 129 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Healthy: false, Weight: 1, Metadata: map[string]string{"protocol": "http"}},
+^
+services/gateway/pkg/loadbalancer/hybrid_test.go:247:1: The line is 131 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: true, Weight: 1, Metadata: map[string]string{"protocol": "websocket"}},
+^
+services/gateway/pkg/loadbalancer/hybrid_test.go:248:1: The line is 127 characters long, which exceeds the maximum of 120 characters. (lll)
+		{Address: "localhost", Port: 0, Scheme: "stdio", Healthy: true, Weight: 1, Metadata: map[string]string{"protocol": "stdio"}},
+^
+services/gateway/cmd/mcp-gateway/admin.go:127:25: Magic number: 1000, in <assign> detected (mnd)
+					RequestsPerMinute: 1000,
+					                   ^
+services/gateway/cmd/mcp-gateway/admin.go:128:25: Magic number: 50, in <assign> detected (mnd)
+					Burst:             50,
+					                   ^
+services/gateway/cmd/mcp-gateway/admin.go:231:17: Magic number: 3, in <assign> detected (mnd)
+					Endpoints: 3,
+					           ^
+services/gateway/cmd/mcp-gateway/admin.go:238:17: Magic number: 2, in <assign> detected (mnd)
+					Endpoints: 2,
+					           ^
+services/gateway/cmd/mcp-gateway/admin.go:344:24: Magic number: 32, in <argument> detected (mnd)
+	bytes := make([]byte, 32)
+	                      ^
+services/gateway/cmd/mcp-gateway/admin.go:355:24: Magic number: 12, in <argument> detected (mnd)
+	bytes := make([]byte, 12)
+	                      ^
+services/gateway/cmd/mcp-gateway/main.go:146:32: Magic number: 1000, in <operation> detected (mnd)
+			tcpPort = cfg.Server.Port + 1000
+			                            ^
+services/gateway/cmd/mcp-gateway/main.go:227:75: Magic number: 30, in <argument> detected (mnd)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	                                                                         ^
+services/gateway/internal/auth/oauth2.go:66:13: Magic number: 10, in <assign> detected (mnd)
+			Timeout: 10 * time.Second,
+			         ^
+services/gateway/internal/auth/oauth2.go:86:43: Magic number: 2, in <argument> detected (mnd)
+	parts := strings.SplitN(authHeader, " ", 2)
+	                                         ^
+services/gateway/internal/auth/oauth2.go:192:23: Magic number: 1000, in <assign> detected (mnd)
+			RequestsPerMinute: 1000, // Default rate limit
+			                   ^
+services/gateway/internal/auth/oauth2.go:193:23: Magic number: 50, in <assign> detected (mnd)
+			Burst:             50,
+			                   ^
+services/gateway/internal/auth/oauth2.go:207:21: Magic number: 3, in <condition> detected (mnd)
+			if len(parts) == 3 {
+			                 ^
+services/gateway/internal/auth/oauth2.go:245:30: Magic number: 5, in <argument> detected (mnd)
+	expiresAt := time.Now().Add(5 * time.Minute)
+	                            ^
+services/gateway/internal/auth/provider.go:99:43: Magic number: 2, in <argument> detected (mnd)
+	parts := strings.SplitN(authHeader, " ", 2)
+	                                         ^
+services/gateway/internal/backends/sse/backend.go:98:20: Magic number: 30, in <operation> detected (mnd)
+		config.Timeout = 30 * time.Second
+		                 ^
+services/gateway/internal/backends/sse/backend.go:102:27: Magic number: 5, in <operation> detected (mnd)
+		config.ReconnectDelay = 5 * time.Second
+		                        ^
+services/gateway/internal/backends/sse/backend.go:110:23: Magic number: 64, in <operation> detected (mnd)
+		config.BufferSize = 64 * 1024 // 64KB
+		                    ^
+services/gateway/internal/backends/sse/backend.go:114:29: Magic number: 60, in <operation> detected (mnd)
+		config.KeepAliveTimeout = 60 * time.Second
+		                          ^
+services/gateway/internal/backends/sse/backend.go:126:33: Magic number: 30, in <operation> detected (mnd)
+		config.HealthCheck.Interval = 30 * time.Second
+		                              ^
+services/gateway/internal/backends/sse/backend.go:130:32: Magic number: 5, in <operation> detected (mnd)
+		config.HealthCheck.Timeout = 5 * time.Second
+		                             ^
+services/gateway/internal/backends/sse/backend.go:258:15: Magic number: 100, in <argument> detected (mnd)
+			time.Sleep(100 * time.Millisecond)
+			           ^
+services/gateway/internal/backends/sse/backend.go:339:27: Magic number: 5, in <argument> detected (mnd)
+	ticker := time.NewTicker(5 * time.Second)
+	                         ^
+services/gateway/internal/backends/sse/backend.go:358:62: Magic number: 30, in <argument> detected (mnd)
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				                                                         ^
+services/gateway/internal/backends/sse/backend.go:619:20: Magic number: 10, in <argument> detected (mnd)
+	case <-time.After(10 * time.Second):
+	                  ^
+services/gateway/internal/discovery/connectivity_tests.go:83:15: Magic number: 100, in <argument> detected (mnd)
+			time.Sleep(100 * time.Millisecond)
+			           ^
+services/gateway/internal/discovery/connectivity_tests.go:94:50: Magic number: 50, in <argument> detected (mnd)
+		timeoutCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
+		                                               ^
+services/gateway/internal/discovery/consul.go:274:18: Magic number: 10, in <operation> detected (mnd)
+	watchTimeout := 10 * time.Minute
+	                ^
+services/gateway/internal/discovery/consul.go:292:15: Magic number: 5, in <argument> detected (mnd)
+			time.Sleep(5 * time.Second) // Back off on error
+			           ^
+services/gateway/internal/discovery/consul.go:315:27: Magic number: 30, in <argument> detected (mnd)
+	ticker := time.NewTicker(30 * time.Second)
+	                         ^
+services/gateway/internal/discovery/kubernetes.go:233:18: Magic number: 100, in <assign> detected (mnd)
+						Weight:    100, // Default weight
+						           ^
+services/gateway/internal/discovery/kubernetes.go:387:27: Magic number: 5, in <argument> detected (mnd)
+	ticker := time.NewTicker(5 * time.Minute)
+	                         ^
+services/gateway/internal/discovery/kubernetes.go:411:32: Magic number: 5, in <argument> detected (mnd)
+						time.Sleep(time.Duration(5<<uint(retryCount-1)) * time.Second) // #nosec G115 - retryCount is bounded
+						                         ^
+services/gateway/internal/discovery/sse_discovery.go:50:22: Magic number: 10, in <operation> detected (mnd)
+			service.Timeout = 10 * time.Second
+			                  ^
+services/gateway/internal/discovery/sse_discovery.go:54:35: Magic number: 30, in <operation> detected (mnd)
+			service.HealthCheck.Interval = 30 * time.Second
+			                               ^
+services/gateway/internal/discovery/sse_discovery.go:58:34: Magic number: 5, in <operation> detected (mnd)
+			service.HealthCheck.Timeout = 5 * time.Second
+			                              ^
+services/gateway/internal/discovery/sse_discovery.go:66:12: Magic number: 10, in <assign> detected (mnd)
+		Timeout: 10 * time.Second,
+		         ^
+services/gateway/internal/discovery/sse_discovery.go:184:28: Magic number: 30, in <argument> detected (mnd)
+		ticker := time.NewTicker(30 * time.Second)
+		                         ^
+services/gateway/internal/discovery/static.go:112:14: Magic number: 100, in <assign> detected (mnd)
+		Weight:    100,              // Default weight
+		           ^
+services/gateway/internal/discovery/stdio_discovery.go:40:35: Magic number: 30, in <operation> detected (mnd)
+			service.HealthCheck.Interval = 30 * time.Second
+			                               ^
+services/gateway/internal/discovery/stdio_discovery.go:44:34: Magic number: 5, in <operation> detected (mnd)
+			service.HealthCheck.Timeout = 5 * time.Second
+			                              ^
+services/gateway/internal/discovery/stdio_discovery.go:132:28: Magic number: 30, in <argument> detected (mnd)
+		ticker := time.NewTicker(30 * time.Second)
+		                         ^
+services/gateway/internal/discovery/websocket_discovery.go:42:35: Magic number: 30, in <operation> detected (mnd)
+			service.HealthCheck.Interval = 30 * time.Second
+			                               ^
+services/gateway/internal/discovery/websocket_discovery.go:46:34: Magic number: 5, in <operation> detected (mnd)
+			service.HealthCheck.Timeout = 5 * time.Second
+			                              ^
+services/gateway/internal/discovery/websocket_discovery.go:178:28: Magic number: 30, in <argument> detected (mnd)
+		ticker := time.NewTicker(30 * time.Second)
+		                         ^
+services/gateway/internal/discovery/websocket_discovery.go:242:21: Magic number: 10, in <assign> detected (mnd)
+		HandshakeTimeout: 10 * time.Second,
+		                  ^
+services/gateway/internal/discovery/websocket_discovery.go:266:78: Magic number: 5, in <argument> detected (mnd)
+	if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(5*time.Second)); err != nil {
+	                                                                            ^
+services/gateway/test/testutil/testutil.go:168:27: Magic number: 100, in <assign> detected (mnd)
+			"requests_per_minute": 100,
+			                       ^
+services/gateway/test/testutil/testutil.go:169:27: Magic number: 10, in <assign> detected (mnd)
+			"burst":               10,
+			                       ^
+services/gateway/test/testutil/tls.go:76:28: Magic number: 2, in <argument> detected (mnd)
+		SerialNumber: big.NewInt(2),
+		                         ^
+services/gateway/internal/auth/oauth2.go:204:1: `if strings.HasPrefix(scope, "rate_limit:")` has complex nested blocks (complexity: 5) (nestif)
+		if strings.HasPrefix(scope, "rate_limit:") {
+^
+services/gateway/internal/backends/factory.go:136:1: `if ok` has complex nested blocks (complexity: 7) (nestif)
+	if healthCheck, ok := config.Config["health_check"].(map[string]interface{}); ok {
+^
+services/gateway/internal/backends/factory.go:214:1: `if ok` has complex nested blocks (complexity: 8) (nestif)
+	if connectionPool, ok := config.Config["connection_pool"].(map[string]interface{}); ok {
+^
+services/gateway/internal/backends/factory.go:237:1: `if ok` has complex nested blocks (complexity: 7) (nestif)
+	if healthCheck, ok := config.Config["health_check"].(map[string]interface{}); ok {
+^
+services/gateway/internal/backends/factory.go:302:1: `if ok` has complex nested blocks (complexity: 7) (nestif)
+	if healthCheck, ok := config.Config["health_check"].(map[string]interface{}); ok {
+^
+services/gateway/internal/backends/sse/backend_test.go:505:1: `if r.URL.Path == "/sse"` has complex nested blocks (complexity: 5) (nestif)
+		if r.URL.Path == "/sse" {
+^
+services/gateway/internal/frontends/factory.go:67:1: `if ok` has complex nested blocks (complexity: 9) (nestif)
+	if modes, ok := config.Config["modes"].([]interface{}); ok {
+^
+services/gateway/internal/frontends/factory.go:96:1: `if ok` has complex nested blocks (complexity: 5) (nestif)
+	if processMgmt, ok := config.Config["process_management"].(map[string]interface{}); ok {
+^
+services/gateway/internal/frontends/stdio/frontend.go:379:1: `if f.config.Process.AuthRequired` has complex nested blocks (complexity: 40) (nestif)
+		if f.config.Process.AuthRequired {
+^
+services/gateway/internal/router/router.go:378:1: `if req.Method == "tools/call"` has complex nested blocks (complexity: 6) (nestif)
+	if req.Method == "tools/call" {
+^
+services/gateway/internal/router/router_test.go:413:1: `if tt.wantError` has complex nested blocks (complexity: 8) (nestif)
+			if tt.wantError {
+^
+services/gateway/internal/server/server.go:182:1: `if s.config.Server.Protocol == ProtocolTCP || s.config.Server.Protocol == ProtocolBoth` has complex nested blocks (complexity: 5) (nestif)
+	if s.config.Server.Protocol == ProtocolTCP || s.config.Server.Protocol == ProtocolBoth {
+^
+services/gateway/internal/server/server.go:272:1: `if ok` has complex nested blocks (complexity: 5) (nestif)
+		if conn, ok := value.(net.Conn); ok {
+^
+services/gateway/internal/server/server_test.go:365:1: `if tt.wantError` has complex nested blocks (complexity: 5) (nestif)
+			if tt.wantError {
+^
+services/gateway/internal/server/tcp_handler.go:109:1: `if err != nil` has complex nested blocks (complexity: 6) (nestif)
+		if err != nil {
+^
+services/gateway/internal/server/tcp_handler.go:254:1: `if !authenticated` has complex nested blocks (complexity: 7) (nestif)
+			if !authenticated {
+^
+services/gateway/internal/session/manager_test.go:154:1: `if tt.wantError` has complex nested blocks (complexity: 6) (nestif)
+			if tt.wantError {
+^
+services/gateway/test/testutil/testutil.go:220:1: `if shouldError` has complex nested blocks (complexity: 7) (nestif)
+	if shouldError {
+^
+services/gateway/internal/server/server_test.go:723:2: return both a `nil` error and an invalid value: use a sentinel error instead (nilnil)
+	return nil, nil
+	^
+services/gateway/internal/backends/sse/backend.go:222:3: return with no blank line before (nlreturn)
+		return fmt.Errorf("SSE stream returned status %d", resp.StatusCode)
+		^
+services/gateway/internal/backends/sse/backend.go:229:3: return with no blank line before (nlreturn)
+		return fmt.Errorf("invalid content type: %s", contentType)
+		^
+services/gateway/internal/backends/sse/backend.go:381:3: return with no blank line before (nlreturn)
+		return nil, fmt.Errorf("backend %s not running", b.name)
+		^
+services/gateway/internal/backends/sse/backend.go:389:3: return with no blank line before (nlreturn)
+		return nil, fmt.Errorf("SSE stream not connected")
+		^
+services/gateway/internal/backends/sse/backend.go:506:3: return with no blank line before (nlreturn)
+		return fmt.Errorf("HTTP request failed with status %d: %s", resp.StatusCode, string(body))
+		^
+services/gateway/internal/backends/sse/backend.go:517:3: return with no blank line before (nlreturn)
+		return fmt.Errorf("backend %s not running", b.name)
+		^
+services/gateway/internal/backends/sse/backend_test.go:373:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/backends/sse/backend_test.go:384:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/backends/sse/backend_test.go:514:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/backends/sse/backend_test.go:571:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/backends/sse/backend_test.go:599:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/backends/stdio/backend.go:190:3: return with no blank line before (nlreturn)
+		return fmt.Errorf("failed to create stdout pipe: %w", err)
+		^
+services/gateway/internal/backends/stdio/backend.go:238:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/backends/stdio/backend.go:383:3: return with no blank line before (nlreturn)
+		return fmt.Errorf("backend %s not running", b.name)
+		^
+services/gateway/internal/config/security_test.go:424:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:438:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:451:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:460:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:475:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:517:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:532:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:546:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:589:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:600:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:612:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:624:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/config/security_test.go:634:5: return with no blank line before (nlreturn)
+				return c
+				^
+services/gateway/internal/discovery/consul.go:362:6: break with no blank line before (nlreturn)
+					break
+					^
+services/gateway/internal/discovery/consul_advanced_test.go:218:4: break with no blank line before (nlreturn)
+			break
+			^
+services/gateway/internal/discovery/consul_advanced_test.go:462:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/discovery/consul_start_test.go:35:4: return with no blank line before (nlreturn)
+			return
+			^
+services/gateway/internal/discovery/consul_test.go:23:2: return with no blank line before (nlreturn)
+	return args.String(0)
+	^
+services/gateway/internal/discovery/consul_test.go:248:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/discovery/sse_discovery_test.go:185:4: break with no blank line before (nlreturn)
+			break
+			^
+services/gateway/internal/discovery/stdio_discovery_test.go:181:4: break with no blank line before (nlreturn)
+			break
+			^
+services/gateway/internal/discovery/websocket_discovery_test.go:181:4: break with no blank line before (nlreturn)
+			break
+			^
+services/gateway/internal/frontends/stdio/frontend.go:146:3: return with no blank line before (nlreturn)
+		return nil
+		^
+services/gateway/internal/frontends/stdio/frontend.go:204:4: return with no blank line before (nlreturn)
+			return fmt.Errorf("failed to set socket permissions: %w", err)
+			^
+services/gateway/internal/frontends/stdio/frontend.go:242:5: continue with no blank line before (nlreturn)
+				continue
+				^
+services/gateway/internal/frontends/stdio/frontend.go:362:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:53:2: return with no blank line before (nlreturn)
+	return !m.shouldAuthFail, nil
+	^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:91:4: return with no blank line before (nlreturn)
+			return 0, io.EOF
+			^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:102:2: return with no blank line before (nlreturn)
+	return n, nil
+	^
+services/gateway/test/integration/protocols_integration_test.go:429:4: return with no blank line before (nlreturn)
+			return
+			^
+services/gateway/test/integration/protocols_integration_test.go:450:6: continue with no blank line before (nlreturn)
+					continue
+					^
+services/gateway/test/integration/protocols_integration_test.go:468:6: continue with no blank line before (nlreturn)
+					continue
+					^
+services/gateway/test/integration/protocols_integration_test.go:473:6: break with no blank line before (nlreturn)
+					break
+					^
+services/gateway/test/testutil/metrics_test.go:517:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/test/testutil/metrics_test.go:569:5: return with no blank line before (nlreturn)
+				return
+				^
+services/gateway/test/testutil/tls_test.go:121:5: break with no blank line before (nlreturn)
+				break
+				^
+services/gateway/internal/auth/provider_test.go:335:30: net/http.NewRequest must not be called. use net/http.NewRequestWithContext (noctx)
+				req, _ := http.NewRequest("GET", "/test", nil)
+				                         ^
+services/gateway/internal/auth/provider_test.go:345:30: net/http.NewRequest must not be called. use net/http.NewRequestWithContext (noctx)
+				req, _ := http.NewRequest("GET", "/test", nil)
+				                         ^
+services/gateway/internal/auth/provider_test.go:355:30: net/http.NewRequest must not be called. use net/http.NewRequestWithContext (noctx)
+				req, _ := http.NewRequest("GET", "/test", nil)
+				                         ^
+services/gateway/internal/auth/provider_test.go:366:30: net/http.NewRequest must not be called. use net/http.NewRequestWithContext (noctx)
+				req, _ := http.NewRequest("GET", "/test", nil)
+				                         ^
+services/gateway/internal/auth/provider_test.go:539:27: net/http.NewRequest must not be called. use net/http.NewRequestWithContext (noctx)
+	req, _ := http.NewRequest("GET", "/api/test", nil)
+	                         ^
+services/gateway/internal/frontends/stdio/frontend.go:195:29: net.Listen must not be called. use (*net.ListenConfig).Listen (noctx)
+	listener, err := net.Listen("unix", mode.Path)
+	                           ^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:260:23: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn, err := net.Dial("unix", socketPath)
+	                     ^
+services/gateway/internal/server/per_ip_limit_test.go:156:29: net.Listen must not be called. use (*net.ListenConfig).Listen (noctx)
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	                           ^
+services/gateway/internal/server/per_ip_limit_test.go:185:24: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+		conn, err := net.Dial("tcp", serverAddr)
+		                     ^
+services/gateway/internal/server/per_ip_limit_test.go:197:24: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn4, err := net.Dial("tcp", serverAddr)
+	                      ^
+services/gateway/internal/server/per_ip_limit_test.go:218:24: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn5, err := net.Dial("tcp", serverAddr)
+	                      ^
+services/gateway/internal/server/server.go:190:34: net.Listen must not be called. use (*net.ListenConfig).Listen (noctx)
+		s.tcpListener, err = net.Listen("tcp", fmt.Sprintf(":%d", tcpPort))
+		                               ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:282:29: net.LookupPort must not be called. use (*net.Resolver).LookupPort with a context (noctx)
+	if p, err := net.LookupPort("tcp", port); err == nil {
+	                           ^
+services/gateway/internal/server/tcp_health.go:59:30: net.Listen must not be called. use (*net.ListenConfig).Listen (noctx)
+	s.listener, err = net.Listen("tcp", fmt.Sprintf(":%d", s.port))
+	                            ^
+services/gateway/internal/server/tcp_health_test.go:84:23: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn, err := net.Dial("tcp", addr.String())
+	                     ^
+services/gateway/internal/server/tcp_health_test.go:94:19: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	_, err = net.Dial("tcp", addr.String())
+	                 ^
+services/gateway/internal/server/tcp_health_test.go:127:23: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn, err := net.Dial("tcp", addr.String())
+	                     ^
+services/gateway/internal/server/tcp_health_test.go:205:23: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn, err := net.Dial("tcp", addr.String())
+	                     ^
+services/gateway/internal/server/tcp_health_test.go:266:23: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn, err := net.Dial("tcp", addr.String())
+	                     ^
+services/gateway/internal/server/tcp_health_test.go:314:23: net.Dial must not be called. use (*net.Dialer).DialContext (noctx)
+	conn, err := net.Dial("tcp", addr.String())
+	                     ^
+services/gateway/test/testutil/tls_test.go:292:34: (*crypto/tls.Conn).Handshake must not be called. use (*crypto/tls.Conn).HandshakeContext (noctx)
+			err := tlsServerConn.Handshake()
+			                              ^
+services/gateway/test/testutil/tls_test.go:303:34: (*crypto/tls.Conn).Handshake must not be called. use (*crypto/tls.Conn).HandshakeContext (noctx)
+			err := tlsClientConn.Handshake()
+			                              ^
+services/gateway/test/testutil/tls_test.go:361:34: (*crypto/tls.Conn).Handshake must not be called. use (*crypto/tls.Conn).HandshakeContext (noctx)
+			err := tlsClientConn.Handshake()
+			                              ^
+services/gateway/internal/auth/message_auth.go:57:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("missing authentication token")
+		       ^
+services/gateway/internal/auth/message_auth.go:75:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("authentication token expired")
+		       ^
+services/gateway/internal/auth/message_auth.go:80:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("token session mismatch")
+		       ^
+services/gateway/internal/auth/oauth2.go:82:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("missing Authorization header")
+		            ^
+services/gateway/internal/auth/oauth2.go:88:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("invalid Authorization header format")
+		            ^
+services/gateway/internal/auth/oauth2.go:119:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("token is not active")
+		            ^
+services/gateway/internal/auth/oauth2.go:174:14: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+	return nil, fmt.Errorf("JWKS validation not implemented")
+	            ^
+services/gateway/internal/auth/provider.go:95:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("missing Authorization header")
+		            ^
+services/gateway/internal/auth/provider.go:101:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("invalid Authorization header format")
+		            ^
+services/gateway/internal/auth/provider.go:117:17: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+				return nil, fmt.Errorf("HMAC key not configured")
+				            ^
+services/gateway/internal/auth/provider.go:123:17: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+				return nil, fmt.Errorf("RSA public key not configured")
+				            ^
+services/gateway/internal/auth/provider.go:136:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("invalid token")
+		            ^
+services/gateway/internal/auth/provider.go:141:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("invalid token claims")
+		            ^
+services/gateway/internal/auth/provider.go:149:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("token expired")
+		            ^
+services/gateway/internal/auth/provider.go:154:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("token not yet valid")
+		            ^
+services/gateway/internal/auth/provider.go:175:16: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+			return nil, fmt.Errorf("invalid audience")
+			            ^
+services/gateway/internal/config/validation.go:13:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("config cannot be nil")
+		       ^
+services/gateway/internal/config/validation.go:77:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("host cannot be empty")
+		       ^
+services/gateway/internal/config/validation.go:150:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("cert file required when TLS is enabled")
+		       ^
+services/gateway/internal/config/validation.go:154:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("key file required when TLS is enabled")
+		       ^
+services/gateway/internal/config/validation.go:191:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("max concurrent clients cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:195:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("client timeout cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:209:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("path required for unix_socket mode")
+		       ^
+services/gateway/internal/config/validation.go:213:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("path required for named_pipes mode")
+		       ^
+services/gateway/internal/config/validation.go:239:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("JWT issuer required")
+		       ^
+services/gateway/internal/config/validation.go:243:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("JWT audience required")
+		       ^
+services/gateway/internal/config/validation.go:247:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("either public key path or secret key env variable required")
+		       ^
+services/gateway/internal/config/validation.go:256:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("OAuth2 client ID required")
+		       ^
+services/gateway/internal/config/validation.go:290:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("session TTL cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:294:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("cleanup interval cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:335:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("refresh rate cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:357:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("static discovery requires at least one endpoint")
+		       ^
+services/gateway/internal/config/validation.go:362:11: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+			return fmt.Errorf("service name cannot be empty")
+			       ^
+services/gateway/internal/config/validation.go:382:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("either in-cluster mode must be enabled or config path must be provided")
+		       ^
+services/gateway/internal/config/validation.go:402:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("service name cannot be empty")
+		       ^
+services/gateway/internal/config/validation.go:406:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("command cannot be empty")
+		       ^
+services/gateway/internal/config/validation.go:410:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("weight cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:430:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("service name cannot be empty")
+		       ^
+services/gateway/internal/config/validation.go:434:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("at least one endpoint required")
+		       ^
+services/gateway/internal/config/validation.go:444:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("weight cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:464:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("service name cannot be empty")
+		       ^
+services/gateway/internal/config/validation.go:468:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("base URL cannot be empty")
+		       ^
+services/gateway/internal/config/validation.go:476:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("weight cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:480:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("timeout cannot be negative")
+		       ^
+services/gateway/internal/config/validation.go:552:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("endpoint required when metrics enabled")
+		       ^
+services/gateway/internal/config/validation.go:556:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("path required when metrics enabled")
+		       ^
+services/gateway/internal/config/validation.go:592:10: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return fmt.Errorf("service name required when tracing enabled")
+		       ^
+services/gateway/internal/config/validation.go:610:11: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+			return fmt.Errorf("OTLP endpoint must be a complete URL with scheme and host")
+			       ^
+services/gateway/internal/discovery/static.go:26:15: error-format: fmt.Errorf can be replaced with errors.New (perfsprint)
+		return nil, fmt.Errorf("static endpoints configuration is required")
+		            ^
+services/gateway/internal/discovery/static.go:106:14: string-format: fmt.Sprintf can be replaced with string concatenation (perfsprint)
+		Service:   fmt.Sprintf("%s-service", namespace), // Generate service name
+		           ^
+services/gateway/internal/discovery/sse_discovery.go:79:2: Consider pre-allocating `endpoints` (prealloc)
+	var endpoints []Endpoint
+	^
+services/gateway/internal/discovery/sse_discovery.go:406:2: Consider pre-allocating `result` (prealloc)
+	var result []string
+	^
+services/gateway/internal/discovery/stdio_discovery.go:59:2: Consider pre-allocating `endpoints` (prealloc)
+	var endpoints []Endpoint
+	^
+services/gateway/internal/discovery/stdio_discovery.go:267:2: Consider pre-allocating `result` (prealloc)
+	var result []string
+	^
+services/gateway/internal/discovery/websocket_discovery.go:358:2: Consider pre-allocating `result` (prealloc)
+	var result []string
+	^
+services/gateway/pkg/protocol/converter.go:462:2: Consider pre-allocating `batchers` (prealloc)
+	var batchers []*MessageBatcher
+	^
+services/gateway/internal/auth/oauth2.go:246:49: QF1008: could remove embedded field "Time" from selector (staticcheck)
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(expiresAt) {
+	                                               ^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:558:3: SA2000: should call frontend.wg.Add(1) before starting the goroutine to avoid a race (staticcheck)
+		frontend.wg.Add(1)
+		^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:609:3: SA2000: should call frontend.wg.Add(1) before starting the goroutine to avoid a race (staticcheck)
+		frontend.wg.Add(1)
+		^
+services/gateway/internal/router/router_test.go:495:49: SA1029: should not use built-in type string as key for value; define your own type to avoid collisions (staticcheck)
+	ctx := context.WithValue(context.Background(), "session", sess)
+	                                               ^
+services/gateway/internal/server/server.go:673:39: SA1029: should not use built-in type string as key for value; define your own type to avoid collisions (staticcheck)
+	ctx := context.WithValue(client.ctx, "session", client.Session)
+	                                     ^
+services/gateway/internal/server/tcp_handler.go:488:31: SA1029: should not use built-in type string as key for value; define your own type to avoid collisions (staticcheck)
+	ctx = context.WithValue(ctx, "session", session)
+	                             ^
+services/gateway/internal/session/manager_test.go:494:6: QF1001: could apply De Morgan's law (staticcheck)
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+		   ^
+services/gateway/pkg/protocol/converter_test.go:270:14: SA4010: this result of append is never used, except maybe in other appends (staticcheck)
+		messages = append(messages, converted)
+		           ^
+services/gateway/test/testutil/testutil_test.go:111:38: QF1008: could remove embedded field "PublicKey" from selector (staticcheck)
+		assert.Equal(t, originalPrivateKey.PublicKey.N, rsaPublicKey.N)
+		                                   ^
+services/gateway/test/testutil/testutil_test.go:112:38: QF1008: could remove embedded field "PublicKey" from selector (staticcheck)
+		assert.Equal(t, originalPrivateKey.PublicKey.E, rsaPublicKey.E)
+		                                   ^
+services/gateway/internal/discovery/consul.go:37:23: tag is not aligned, should be: mapstructure:"address"         yaml:"address" (tagalign)
+	Address       string `mapstructure:"address" yaml:"address"`
+	                     ^
+services/gateway/internal/discovery/consul.go:38:23: tag is not aligned, should be: mapstructure:"service_prefix"  yaml:"service_prefix" (tagalign)
+	ServicePrefix string `mapstructure:"service_prefix" yaml:"service_prefix"`
+	                     ^
+services/gateway/internal/discovery/consul.go:39:23: tag is not aligned, should be: mapstructure:"datacenter"      yaml:"datacenter" (tagalign)
+	Datacenter    string `mapstructure:"datacenter" yaml:"datacenter"`
+	                     ^
+services/gateway/internal/discovery/consul.go:40:23: tag is not aligned, should be: mapstructure:"token"           yaml:"token" (tagalign)
+	Token         string `mapstructure:"token" yaml:"token"`
+	                     ^
+services/gateway/internal/discovery/consul.go:41:23: tag is not aligned, should be: mapstructure:"tls_enabled"     yaml:"tls_enabled" (tagalign)
+	TLSEnabled    bool   `mapstructure:"tls_enabled" yaml:"tls_enabled"`
+	                     ^
+services/gateway/internal/discovery/consul.go:43:23: tag is not aligned, should be: mapstructure:"watch_timeout"   yaml:"watch_timeout" (tagalign)
+	WatchTimeout  string `mapstructure:"watch_timeout" yaml:"watch_timeout"`
+	                     ^
+services/gateway/internal/auth/oauth2_test.go:74:5: require-error: for error assertions use require (testifylint)
+				assert.Error(t, err)
+				^
+services/gateway/internal/auth/oauth2_test.go:80:5: require-error: for error assertions use require (testifylint)
+				assert.NoError(t, err)
+				^
+services/gateway/internal/auth/oauth2_test.go:146:5: go-require: do not use require in http handlers (testifylint)
+				require.NoError(t, err)
+				^
+services/gateway/internal/auth/oauth2_test.go:195:5: require-error: for error assertions use require (testifylint)
+				assert.Error(t, err)
+				^
+services/gateway/internal/auth/oauth2_test.go:201:5: require-error: for error assertions use require (testifylint)
+				assert.NoError(t, err)
+				^
+services/gateway/internal/auth/oauth2_test.go:405:2: require-error: for error assertions use require (testifylint)
+	assert.NoError(t, err)
+	^
+services/gateway/internal/auth/oauth2_test.go:411:2: require-error: for error assertions use require (testifylint)
+	assert.NoError(t, err)
+	^
+services/gateway/internal/auth/oauth2_test.go:417:2: require-error: for error assertions use require (testifylint)
+	assert.NoError(t, err)
+	^
+services/gateway/internal/auth/oauth2_test.go:461:2: len: use assert.Len (testifylint)
+	assert.Equal(t, 1, len(provider.cache))
+	^
+services/gateway/internal/auth/oauth2_test.go:479:2: require-error: for error assertions use require (testifylint)
+	assert.Error(t, err)
+	^
+services/gateway/internal/auth/oauth2_test.go:542:5: require-error: for error assertions use require (testifylint)
+				assert.Error(t, err)
+				^
+services/gateway/internal/auth/oauth2_test.go:549:5: require-error: for error assertions use require (testifylint)
+				assert.NoError(t, err)
+				^
+services/gateway/internal/auth/oauth2_test.go:616:2: require-error: for error assertions use require (testifylint)
+	assert.Error(t, err)
+	^
+services/gateway/internal/auth/oauth2_test.go:662:2: len: use assert.Len (testifylint)
+	assert.Equal(t, 1, len(provider.cache))
+	^
+services/gateway/internal/auth/oauth2_test.go:719:3: go-require: do not use require in http handlers (testifylint)
+		require.NoError(t, err)
+		^
+services/gateway/internal/auth/oauth2_test.go:795:2: require-error: for error assertions use require (testifylint)
+	assert.Error(t, err)
+	^
+services/gateway/internal/auth/oauth2_test.go:896:2: len: use assert.Len (testifylint)
+	assert.Equal(t, 1, len(provider.cache))
+	^
+services/gateway/internal/auth/oauth2_test.go:918:2: len: use assert.Len (testifylint)
+	assert.Equal(t, 1, len(provider.cache))
+	^
+services/gateway/test/integration/protocols_integration_test.go:96:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:104:2: suite-dont-use-pkg: use suite.NoError (testifylint)
+	assert.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:117:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:118:2: suite-dont-use-pkg: use suite.NotNil (testifylint)
+	assert.NotNil(suite.T(), response)
+	^
+services/gateway/test/integration/protocols_integration_test.go:119:2: suite-dont-use-pkg: use suite.Equal (testifylint)
+	assert.Equal(suite.T(), "integration-test-1", response.ID)
+	^
+services/gateway/test/integration/protocols_integration_test.go:123:2: suite-dont-use-pkg: use suite.Require().True (testifylint)
+	require.True(suite.T(), ok)
+	^
+services/gateway/test/integration/protocols_integration_test.go:126:2: suite-dont-use-pkg: use suite.Require().True (testifylint)
+	require.True(suite.T(), ok)
+	^
+services/gateway/test/integration/protocols_integration_test.go:127:2: suite-dont-use-pkg: use suite.Equal (testifylint)
+	assert.Equal(suite.T(), "test/echo", echo["method"])
+	^
+services/gateway/test/integration/protocols_integration_test.go:128:2: suite-dont-use-pkg: use suite.Equal (testifylint)
+	assert.Equal(suite.T(), "integration-test-1", echo["id"])
+	^
+services/gateway/test/integration/protocols_integration_test.go:132:2: suite-dont-use-pkg: use suite.True (testifylint)
+	assert.True(suite.T(), metrics.IsHealthy)
+	^
+services/gateway/test/integration/protocols_integration_test.go:133:2: negative-positive: use assert.Positive (testifylint)
+	assert.Greater(suite.T(), metrics.RequestCount, uint64(0))
+	^
+services/gateway/test/integration/protocols_integration_test.go:159:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:167:2: suite-dont-use-pkg: use suite.NoError (testifylint)
+	assert.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:180:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:181:2: suite-dont-use-pkg: use suite.NotNil (testifylint)
+	assert.NotNil(suite.T(), response)
+	^
+services/gateway/test/integration/protocols_integration_test.go:182:2: suite-dont-use-pkg: use suite.Equal (testifylint)
+	assert.Equal(suite.T(), "ws-integration-1", response.ID)
+	^
+services/gateway/test/integration/protocols_integration_test.go:186:2: suite-dont-use-pkg: use suite.True (testifylint)
+	assert.True(suite.T(), metrics.IsHealthy)
+	^
+services/gateway/test/integration/protocols_integration_test.go:187:2: negative-positive: use assert.Positive (testifylint)
+	assert.Greater(suite.T(), metrics.RequestCount, uint64(0))
+	^
+services/gateway/test/integration/protocols_integration_test.go:228:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:265:2: suite-dont-use-pkg: use suite.Equal (testifylint)
+	assert.Equal(suite.T(), 0, errors, "All requests should succeed")
+	^
+services/gateway/test/integration/protocols_integration_test.go:266:2: suite-dont-use-pkg: use suite.Less (testifylint)
+	assert.Less(suite.T(), duration, 5*time.Second, "Requests should complete quickly")
+	^
+services/gateway/test/integration/protocols_integration_test.go:270:2: suite-dont-use-pkg: use suite.True (testifylint)
+	assert.True(suite.T(), metrics.IsHealthy)
+	^
+services/gateway/test/integration/protocols_integration_test.go:271:2: suite-dont-use-pkg: use suite.Equal (testifylint)
+	assert.Equal(suite.T(), uint64(numRequests), metrics.RequestCount)
+	^
+services/gateway/test/integration/protocols_integration_test.go:318:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:337:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/test/integration/protocols_integration_test.go:393:2: suite-dont-use-pkg: use suite.LessOrEqual (testifylint)
+	assert.LessOrEqual(suite.T(), stdioErrors, numRequests/2, "Too many stdio errors")
+	^
+services/gateway/test/integration/protocols_integration_test.go:394:2: suite-dont-use-pkg: use suite.LessOrEqual (testifylint)
+	assert.LessOrEqual(suite.T(), wsErrors, numRequests/2, "Too many WebSocket errors")
+	^
+services/gateway/test/integration/protocols_integration_test.go:400:2: suite-dont-use-pkg: use suite.True (testifylint)
+	assert.True(suite.T(), stdioMetrics.IsHealthy)
+	^
+services/gateway/test/integration/protocols_integration_test.go:401:2: suite-dont-use-pkg: use suite.True (testifylint)
+	assert.True(suite.T(), wsMetrics.IsHealthy)
+	^
+services/gateway/test/integration/protocols_integration_test.go:402:2: negative-positive: use assert.Positive (testifylint)
+	assert.Greater(suite.T(), stdioMetrics.RequestCount, uint64(0))
+	^
+services/gateway/test/integration/protocols_integration_test.go:403:2: negative-positive: use assert.Positive (testifylint)
+	assert.Greater(suite.T(), wsMetrics.RequestCount, uint64(0))
+	^
+services/gateway/test/integration/protocols_integration_test.go:413:2: suite-dont-use-pkg: use suite.Require().NoError (testifylint)
+	require.NoError(suite.T(), err)
+	^
+services/gateway/internal/backends/sse/backend_test.go:588:6: test helper function should start from t.Helper() (thelper)
+func createNonResponsiveSSEServer(t *testing.T) *httptest.Server {
+     ^
+services/gateway/internal/backends/stdio/backend_test.go:349:6: test helper function should start from t.Helper() (thelper)
+func createTestScript(t *testing.T, content string) string {
+     ^
+services/gateway/internal/backends/websocket/backend_test.go:446:6: test helper function should start from t.Helper() (thelper)
+func createTestWebSocketServer(t *testing.T) *httptest.Server {
+     ^
+services/gateway/internal/config/platform_security_test.go:55:6: test helper function should start from t.Helper() (thelper)
+func testWindowsSecurityValidation(t *testing.T) {
+     ^
+services/gateway/internal/config/platform_security_test.go:89:6: test helper function should start from t.Helper() (thelper)
+func testLinuxSecurityValidation(t *testing.T) {
+     ^
+services/gateway/internal/config/platform_security_test.go:123:6: test helper function should start from t.Helper() (thelper)
+func testMacOSSecurityValidation(t *testing.T) {
+     ^
+services/gateway/internal/config/platform_security_test.go:157:6: test helper function should start from t.Helper() (thelper)
+func testUnixLikeSecurityValidation(t *testing.T) {
+     ^
+services/gateway/internal/config/platform_security_test.go:240:6: test helper function should start from t.Helper() (thelper)
+func checkWindowsPaths(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:253:6: test helper function should start from t.Helper() (thelper)
+func checkWindowsServiceSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:265:6: test helper function should start from t.Helper() (thelper)
+func checkWindowsNamedPipesSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:318:6: test helper function should start from t.Helper() (thelper)
+func checkLinuxFilePermissions(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:330:6: test helper function should start from t.Helper() (thelper)
+func checkLinuxSystemdSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:335:6: test helper function should start from t.Helper() (thelper)
+func checkLinuxUnixSocketSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:394:6: test helper function should start from t.Helper() (thelper)
+func checkMacOSKeychainSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:401:6: test helper function should start from t.Helper() (thelper)
+func checkMacOSBundleSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:413:6: test helper function should start from t.Helper() (thelper)
+func checkMacOSSystemSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:471:6: test helper function should start from t.Helper() (thelper)
+func checkUnixSocketPermissions(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:487:6: test helper function should start from t.Helper() (thelper)
+func checkUnixProcessSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:504:6: test helper function should start from t.Helper() (thelper)
+func checkUnixFileSystemSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:699:6: test helper function should start from t.Helper() (thelper)
+func checkDevelopmentSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:707:6: test helper function should start from t.Helper() (thelper)
+func checkStagingSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/config/platform_security_test.go:714:6: test helper function should start from t.Helper() (thelper)
+func checkProductionSecurity(t *testing.T, config *Config) {
+     ^
+services/gateway/internal/discovery/consul_advanced_test.go:398:18: test helper function should start from t.Helper() (thelper)
+			validateFunc: func(t *testing.T, endpoint *Endpoint) {
+			              ^
+services/gateway/internal/discovery/consul_advanced_test.go:430:18: test helper function should start from t.Helper() (thelper)
+			validateFunc: func(t *testing.T, endpoint *Endpoint) {
+			              ^
+services/gateway/internal/discovery/consul_advanced_test.go:450:18: test helper function should start from t.Helper() (thelper)
+			validateFunc: func(t *testing.T, endpoint *Endpoint) {
+			              ^
+services/gateway/pkg/loadbalancer/lb_advanced_test.go:420:14: test helper function should start from t.Helper() (thelper)
+			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
+			          ^
+services/gateway/pkg/loadbalancer/lb_advanced_test.go:431:14: test helper function should start from t.Helper() (thelper)
+			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
+			          ^
+services/gateway/pkg/loadbalancer/lb_advanced_test.go:445:14: test helper function should start from t.Helper() (thelper)
+			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
+			          ^
+services/gateway/internal/discovery/factory_test.go:129:6: TestNewServiceDiscovery_WebSocketAliases's subtests should call t.Parallel (tparallel)
+func TestNewServiceDiscovery_WebSocketAliases(t *testing.T) {
+     ^
+services/gateway/internal/discovery/factory_test.go:164:6: TestNewServiceDiscovery_SSEAliases's subtests should call t.Parallel (tparallel)
+func TestNewServiceDiscovery_SSEAliases(t *testing.T) {
+     ^
+services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:69:2: field shouldClose is unused (unused)
+	shouldClose  bool
+	^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:20:6: type mockTransport is unused (unused)
+type mockTransport struct {
+     ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:24:25: func (*mockTransport).SendHealthCheck is unused (unused)
+func (m *mockTransport) SendHealthCheck() error {
+                        ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:30:25: func (*mockTransport).SendResponse is unused (unused)
+func (m *mockTransport) SendResponse(resp interface{}) error {
+                        ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:36:25: func (*mockTransport).SendControl is unused (unused)
+func (m *mockTransport) SendControl(msg interface{}) error {
+                        ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:42:25: func (*mockTransport).ReceiveMessage is unused (unused)
+func (m *mockTransport) ReceiveMessage() (wire.MessageType, interface{}, error) {
+                        ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:53:25: func (*mockTransport).SetReadDeadline is unused (unused)
+func (m *mockTransport) SetReadDeadline(t time.Time) error {
+                        ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:59:25: func (*mockTransport).Close is unused (unused)
+func (m *mockTransport) Close() error {
+                        ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:66:6: type mockNetError is unused (unused)
+type mockNetError struct {
+     ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:71:24: func (*mockNetError).Error is unused (unused)
+func (e *mockNetError) Error() string   { return "mock network error" }
+                       ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:72:24: func (*mockNetError).Timeout is unused (unused)
+func (e *mockNetError) Timeout() bool   { return e.timeout }
+                       ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:73:24: func (*mockNetError).Temporary is unused (unused)
+func (e *mockNetError) Temporary() bool { return e.temporary }
+                       ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:263:6: type mockConn is unused (unused)
+type mockConn struct {
+     ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:267:20: func (*mockConn).Read is unused (unused)
+func (m *mockConn) Read(b []byte) (n int, err error)  { return 0, nil }
+                   ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:268:20: func (*mockConn).Write is unused (unused)
+func (m *mockConn) Write(b []byte) (n int, err error) { return len(b), nil }
+                   ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:269:20: func (*mockConn).Close is unused (unused)
+func (m *mockConn) Close() error                      { return nil }
+                   ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:270:20: func (*mockConn).LocalAddr is unused (unused)
+func (m *mockConn) LocalAddr() net.Addr               { return &net.TCPAddr{} }
+                   ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:271:20: func (*mockConn).RemoteAddr is unused (unused)
+func (m *mockConn) RemoteAddr() net.Addr {
+                   ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:288:20: func (*mockConn).SetDeadline is unused (unused)
+func (m *mockConn) SetDeadline(t time.Time) error      { return nil }
+                   ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:289:20: func (*mockConn).SetReadDeadline is unused (unused)
+func (m *mockConn) SetReadDeadline(t time.Time) error  { return nil }
+                   ^
+services/gateway/internal/server/tcp_handler_error_recovery_test.go:290:20: func (*mockConn).SetWriteDeadline is unused (unused)
+func (m *mockConn) SetWriteDeadline(t time.Time) error { return nil }
+                   ^
+services/gateway/internal/auth/oauth2_test.go:187:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+			req := httptest.NewRequest("GET", "/test", nil)
+			                           ^
+services/gateway/internal/backends/sse/backend.go:198:46: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req, err := http.NewRequestWithContext(ctx, "GET", streamURL, nil)
+	                                            ^
+services/gateway/internal/backends/sse/backend.go:481:50: "POST" can be replaced by http.MethodPost (usestdlibvars)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", requestURL, bytes.NewBuffer(jsonData))
+	                                                ^
+services/gateway/internal/backends/sse/backend_test.go:566:25: "POST" can be replaced by http.MethodPost (usestdlibvars)
+		} else if r.Method == "POST" {
+		                      ^
+services/gateway/internal/backends/sse/backend_test.go:620:25: "POST" can be replaced by http.MethodPost (usestdlibvars)
+		} else if r.Method == "POST" {
+		                      ^
+services/gateway/internal/discovery/sse_discovery.go:257:46: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req, err := http.NewRequestWithContext(ctx, "GET", streamURL, nil)
+	                                            ^
+services/gateway/internal/discovery/sse_discovery.go:299:46: "HEAD" can be replaced by http.MethodHead (usestdlibvars)
+	req, err := http.NewRequestWithContext(ctx, "HEAD", requestURL, nil)
+	                                            ^
+services/gateway/internal/health/checker_test.go:542:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+			req := httptest.NewRequest("GET", tt.endpoint, nil)
+			                           ^
+services/gateway/internal/router/router.go:313:50: "POST" can be replaced by http.MethodPost (usestdlibvars)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
+	                                                ^
+services/gateway/internal/router/router.go:546:46: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	                                            ^
+services/gateway/internal/router/router_test.go:306:18: "POST" can be replaced by http.MethodPost (usestdlibvars)
+		if r.Method != "POST" {
+		               ^
+services/gateway/internal/server/coverage_improvement_test.go:20:29: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req := httptest.NewRequest("GET", "/.well-known/security.txt", nil)
+	                           ^
+services/gateway/internal/server/http_handlers_test.go:41:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/test", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:56:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/test", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:66:30: "OPTIONS" can be replaced by http.MethodOptions (usestdlibvars)
+		req := httptest.NewRequest("OPTIONS", "/test", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:76:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/test", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:133:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/.well-known/security.txt", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:153:30: "POST" can be replaced by http.MethodPost (usestdlibvars)
+		req := httptest.NewRequest("POST", "/.well-known/security.txt", strings.NewReader("test"))
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:163:30: "PUT" can be replaced by http.MethodPut (usestdlibvars)
+		req := httptest.NewRequest("PUT", "/.well-known/security.txt", strings.NewReader("test"))
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:172:30: "DELETE" can be replaced by http.MethodDelete (usestdlibvars)
+		req := httptest.NewRequest("DELETE", "/.well-known/security.txt", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:223:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/health", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:245:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/health", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:272:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/healthz", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:289:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/healthz", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:311:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/ready", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:328:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/ready", nil)
+		                           ^
+services/gateway/internal/server/http_handlers_test.go:346:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req1 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:350:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req2 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:355:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req3 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:359:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req4 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:368:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req1 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:372:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req2 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:382:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req1 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:386:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req2 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:390:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req3 := httptest.NewRequest("GET", "/", nil)
+		                            ^
+services/gateway/internal/server/http_handlers_test.go:399:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/", nil)
+		                           ^
+services/gateway/internal/server/origin_test.go:96:31: "GET" can be replaced by http.MethodGet (usestdlibvars)
+			req := httptest.NewRequest("GET", "/", nil)
+			                           ^
+services/gateway/internal/server/origin_test.go:124:29: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req := httptest.NewRequest("GET", "/", nil)
+	                           ^
+services/gateway/internal/server/server.go:1180:18: "OPTIONS" can be replaced by http.MethodOptions (usestdlibvars)
+		if r.Method == "OPTIONS" {
+		               ^
+services/gateway/internal/server/server_test.go:117:29: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req := httptest.NewRequest("GET", "/", nil)
+	                           ^
+services/gateway/internal/server/server_test.go:152:29: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req := httptest.NewRequest("GET", "/", nil)
+	                           ^
+services/gateway/internal/tracing/otel_test.go:173:30: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req := httptest.NewRequest("GET", "/test", nil)
+		                           ^
+services/gateway/internal/tracing/otel_test.go:198:51: "GET" can be replaced by http.MethodGet (usestdlibvars)
+		req, err := http.NewRequestWithContext(spanCtx, "GET", server.URL, nil)
+		                                                ^
+services/gateway/internal/tracing/otel_test.go:268:29: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req := httptest.NewRequest("GET", "/", nil)
+	                           ^
+services/gateway/internal/tracing/tracing_test.go:130:29: "GET" can be replaced by http.MethodGet (usestdlibvars)
+	req := httptest.NewRequest("GET", "/test", nil)
+	                           ^
+services/gateway/internal/tracing/tracing_test.go:339:48: "GET" can be replaced by http.MethodGet (usestdlibvars)
+			req, err := http.NewRequestWithContext(ctx, "GET", server.URL+tt.path, nil)
+			                                            ^
+services/gateway/internal/auth/oauth2_test.go:458:2: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+	provider.cacheMutex.Unlock()
+	^
+services/gateway/internal/auth/oauth2_test.go:657:2: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+	provider.cacheMutex.Unlock()
+	^
+services/gateway/internal/backends/sse/backend.go:177:2: missing whitespace above this line (invalid statement above go) (wsl_v5)
+	go b.readSSEEvents()
+	^
+services/gateway/internal/backends/sse/backend.go:180:2: missing whitespace above this line (invalid statement above go) (wsl_v5)
+	go b.connectionMonitor(ctx)
+	^
+services/gateway/internal/backends/sse/backend.go:184:3: missing whitespace above this line (invalid statement above go) (wsl_v5)
+		go b.healthCheckLoop(ctx)
+		^
+services/gateway/internal/backends/sse/backend.go:256:3: missing whitespace above this line (invalid statement above if) (wsl_v5)
+		if !b.connected || b.sseReader == nil {
+		^
+services/gateway/internal/backends/sse/backend.go:280:4: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+			b.connMu.Unlock()
+			^
+services/gateway/internal/backends/sse/backend.go:319:2: missing whitespace above this line (invalid statement above if) (wsl_v5)
+	if responseID, ok := response.ID.(string); ok {
+	^
+services/gateway/internal/backends/sse/backend.go:330:2: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+	b.corrMu.RUnlock()
+	^
+services/gateway/internal/backends/sse/backend.go:379:2: missing whitespace above this line (invalid statement above if) (wsl_v5)
+	if !b.running {
+	^
+services/gateway/internal/backends/sse/backend.go:383:2: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+	b.mu.RUnlock()
+	^
+services/gateway/internal/backends/sse/backend.go:387:2: missing whitespace above this line (invalid statement above if) (wsl_v5)
+	if !b.connected {
+	^
+services/gateway/internal/backends/sse/backend.go:391:2: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+	b.connMu.RUnlock()
+	^
+services/gateway/internal/backends/sse/backend.go:400:3: missing whitespace above this line (invalid statement above assign) (wsl_v5)
+		requestID, ok = req.ID.(string)
+		^
+services/gateway/internal/backends/sse/backend.go:515:2: missing whitespace above this line (invalid statement above if) (wsl_v5)
+	if !b.running {
+	^
+services/gateway/internal/backends/sse/backend.go:519:2: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+	b.mu.RUnlock()
+	^
+services/gateway/internal/backends/sse/backend.go:602:2: missing whitespace above this line (invalid statement above if) (wsl_v5)
+	if b.sseConn != nil {
+	^
+services/gateway/internal/backends/sse/backend.go:612:2: missing whitespace above this line (no shared variables above go) (wsl_v5)
+	go func() {
+	^
+services/gateway/internal/backends/sse/backend_test.go:455:2: missing whitespace above this line (invalid statement above assign) (wsl_v5)
+	responses := make(chan *mcp.Response, numRequests)
+	^
+services/gateway/internal/backends/sse/backend_test.go:533:6: missing whitespace above this line (invalid statement above range) (wsl_v5)
+					for reqID, req := range pendingRequests {
+					^
+services/gateway/internal/backends/sse/backend_test.go:556:6: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+					requestsMu.Unlock()
+					^
+services/gateway/internal/backends/sse/backend_test.go:576:4: missing whitespace above this line (invalid statement above assign) (wsl_v5)
+			requestID := fmt.Sprintf("%v", request.ID)
+			^
+services/gateway/internal/backends/sse/backend_test.go:578:4: missing whitespace above this line (no shared variables above expr) (wsl_v5)
+			requestsMu.Unlock()
+			^
+services/gateway/internal/discovery/consul.go:99:2: missing whitespace above this line (invalid statement above go) (wsl_v5)
+	go d.watchServices()
+	^
+services/gateway/internal/discovery/consul.go:103:2: missing whitespace above this line (invalid statement above go) (wsl_v5)
+	go d.periodicHealthCheck()
+	^
+services/gateway/internal/discovery/consul_advanced_test.go:48:2: missing whitespace above this line (invalid statement above select) (wsl_v5)
+	select {
+	^
+services/gateway/internal/discovery/consul_advanced_test.go:122:2: missing whitespace above this line (invalid statement above select) (wsl_v5)
+	select {
+	^
+services/gateway/internal/discovery/consul_start_test.go:134:3: missing whitespace above this line (no shared variables above go) (wsl_v5)
+		go func() {
+		^
+services/gateway/internal/discovery/consul_start_test.go:172:3: missing whitespace above this line (no shared variables above go) (wsl_v5)
+		go func() {
+		^
+services/gateway/internal/discovery/consul_start_test.go:174:4: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+			discovery.periodicHealthCheck()
+			^
+services/gateway/internal/discovery/kubernetes.go:83:2: missing whitespace above this line (invalid statement above go) (wsl_v5)
+	go d.periodicResync()
+	^
+services/gateway/internal/discovery/kubernetes.go:288:3: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+		d.handleServiceEvents(namespace, serviceWatcher.ResultChan())
+		^
+services/gateway/internal/discovery/kubernetes.go:296:3: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+		d.handleEndpointEvents(namespace, endpointWatcher.ResultChan())
+		^
+services/gateway/internal/discovery/kubernetes.go:329:5: missing whitespace above this line (invalid statement above if) (wsl_v5)
+				if len(endpoints) > 0 {
+				^
+services/gateway/internal/discovery/kubernetes.go:334:5: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+				d.mu.Unlock()
+				^
+services/gateway/internal/discovery/kubernetes.go:372:5: missing whitespace above this line (invalid statement above if) (wsl_v5)
+				if len(endpoints) > 0 {
+				^
+services/gateway/internal/discovery/kubernetes.go:377:5: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+				d.mu.Unlock()
+				^
+services/gateway/internal/discovery/kubernetes_test.go:441:3: missing whitespace above this line (invalid statement above expr) (wsl_v5)
+		discovery.handleServiceEvents("test-namespace", eventChan)
+		^
+services/gateway/internal/discovery/kubernetes_test.go:468:2: missing whitespace above this line (too many statements above send) (wsl_v5)
+	modifiedService.Annotations["mcp.bridge/weight"] = "200"
+	^
+services/gateway/internal/discovery/kubernetes_test.go:694:2: missing whitespace above this line (invalid statement above assign) (wsl_v5)
+	m.stopped = true
+	^
+services/gateway/internal/discovery/kubernetes_test.go:731:2: missing whitespace above this line (invalid statement above assign) (wsl_v5)
+	m.endpoints[namespace] = append(m.endpoints[namespace], endpoint)
+	^
+services/gateway/internal/discovery/simple_coverage_test.go:110:3: missing whitespace above this line (no shared variables above go) (wsl_v5)
+		go func() {
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:141:3: missing whitespace above this line (no shared variables above go) (wsl_v5)
+		go func() {
+		^
+services/gateway/internal/discovery/simple_coverage_test.go:172:3: missing whitespace above this line (no shared variables above go) (wsl_v5)
+		go func() {
+		^
+services/gateway/internal/discovery/stop_methods_test.go:256:2: missing whitespace above this line (no shared variables above go) (wsl_v5)
+	go func() {
+	^
+services/gateway/internal/discovery/stop_methods_test.go:291:2: missing whitespace above this line (no shared variables above go) (wsl_v5)
+	go func() {
+	^
+services/gateway/internal/discovery/stop_methods_test.go:326:2: missing whitespace above this line (no shared variables above go) (wsl_v5)
+	go func() {
+	^
+services/gateway/internal/discovery/websocket_discovery.go:260:2: missing whitespace above this line (invalid statement above if) (wsl_v5)
+	if err != nil {
+	^
+services/gateway/test/integration/protocols_integration_test.go:235:2: missing whitespace above this line (invalid statement above assign) (wsl_v5)
+	results := make(chan error, numRequests)
+	^
+services/gateway/test/integration/protocols_integration_test.go:345:2: missing whitespace above this line (invalid statement above assign) (wsl_v5)
+	stdioResults := make(chan error, numRequests)
+	^
+805 issues:
+* contextcheck: 7
+* cyclop: 45
+* errcheck: 50
+* errorlint: 1
+* exhaustive: 4
+* forcetypeassert: 33
+* funlen: 50
+* gocognit: 9
+* goconst: 24
+* gocritic: 7
+* godot: 1
+* gomoddirectives: 2
+* gosec: 49
+* ineffassign: 3
+* intrange: 50
+* ireturn: 9
+* lll: 50
+* mnd: 50
+* nestif: 18
+* nilnil: 1
+* nlreturn: 50
+* noctx: 23
+* perfsprint: 50
+* prealloc: 6
+* staticcheck: 10
+* tagalign: 6
+* testifylint: 50
+* thelper: 28
+* tparallel: 2
+* unused: 21
+* usestdlibvars: 46
+* wsl_v5: 50
