@@ -107,6 +107,11 @@ func NewRouterController(t *testing.T, gatewayURL string) *RouterController {
 
 // BuildRouter builds the router binary from source.
 func (rc *RouterController) BuildRouter() error {
+	return rc.BuildRouterWithContext(context.Background())
+}
+
+// BuildRouterWithContext builds the router binary from source with a context.
+func (rc *RouterController) BuildRouterWithContext(ctx context.Context) error {
 	rc.logger.Info("Building router binary")
 
 	// Find project root using shared infrastructure
@@ -124,7 +129,7 @@ func (rc *RouterController) BuildRouter() error {
 	rc.binaryPath = filepath.Join(binaryDir, "mcp-router")
 
 	//nolint:gosec // Test build command
-	buildCmd := exec.CommandContext(context.Background(), "go", "build",
+	buildCmd := exec.CommandContext(ctx, "go", "build",
 		"-o", rc.binaryPath,
 		filepath.Join(projectRoot, "services", "router", "cmd", "mcp-router"))
 	buildCmd.Dir = projectRoot

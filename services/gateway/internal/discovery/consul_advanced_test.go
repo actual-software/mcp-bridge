@@ -140,9 +140,18 @@ func TestConsulDiscovery_HealthCheckLogic_Advanced(t *testing.T) {
 
 	// Set up test endpoints with mixed health states
 	testEndpoints := []Endpoint{
-		{Service: "weather-1", Namespace: "weather", Address: "127.0.0.1", Port: 8080, Healthy: true, Metadata: map[string]string{"consul_id": "weather-1"}},
-		{Service: "weather-2", Namespace: "weather", Address: "127.0.0.2", Port: 8080, Healthy: false, Metadata: map[string]string{"consul_id": "weather-2"}},
-		{Service: "weather-3", Namespace: "weather", Address: "127.0.0.3", Port: 8080, Healthy: true, Metadata: map[string]string{"consul_id": "weather-3"}},
+		{
+			Service: "weather-1", Namespace: "weather", Address: "127.0.0.1", Port: 8080, 
+			Healthy: true, Metadata: map[string]string{"consul_id": "weather-1"},
+		},
+		{
+			Service: "weather-2", Namespace: "weather", Address: "127.0.0.2", Port: 8080,
+			Healthy: false, Metadata: map[string]string{"consul_id": "weather-2"},
+		},
+		{
+			Service: "weather-3", Namespace: "weather", Address: "127.0.0.3", Port: 8080,
+			Healthy: true, Metadata: map[string]string{"consul_id": "weather-3"},
+		},
 	}
 	discovery.endpoints["weather"] = testEndpoints
 

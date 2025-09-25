@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -100,7 +99,7 @@ func setupKubernetesInfrastructure(
 	testSuite := e2e.NewTestSuite(t, config)
 	defer testSuite.Teardown()
 	
-	err = testSuite.Setup()
+	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
 	
 	client := testSuite.GetClient()
@@ -448,7 +447,9 @@ func TestKubernetesPerformance(t *testing.T) {
 	}
 
 	logger, _ := zap.NewDevelopment()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+
 	defer cancel()
 
 	// Setup and validate cluster for performance testing
@@ -463,22 +464,24 @@ func setupPerformanceTestCluster(
 	t *testing.T, ctx context.Context, logger *zap.Logger,
 ) (*KubernetesStack, *e2e.MCPClient, *ClusterConfig) {
 	t.Helper()
-	
+
 	logger.Info("Starting Kubernetes stack for performance testing")
+
 	stack := NewKubernetesStack(t)
-	
+
 	err := stack.Start(ctx)
 	require.NoError(t, err, "Failed to start Kubernetes stack")
-	
+
 	// Detect and validate cluster configuration
 	clusterConfig, err := detectClusterConfiguration(ctx, stack, logger)
 	require.NoError(t, err, "Failed to detect cluster configuration")
-	
+
 	err = validateClusterReadiness(ctx, stack, clusterConfig, logger)
 	require.NoError(t, err, "Cluster is not ready for testing")
-	
+
 	// Wait for services with adaptive timeout
 	logger.Info("Waiting for services to be ready")
+
 	readinessCtx, readinessCancel := context.WithTimeout(ctx, clusterConfig.TestTimeout)
 	defer readinessCancel()
 	
@@ -494,7 +497,7 @@ func setupPerformanceTestCluster(
 	testSuite := e2e.NewTestSuite(t, config)
 	defer testSuite.Teardown()
 	
-	err = testSuite.Setup()
+	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
 	
 	client := testSuite.GetClient()
@@ -553,6 +556,7 @@ func TestKubernetesFailover(t *testing.T) {
 
 	logger, _ := zap.NewDevelopment()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+
 	defer cancel()
 
 	// Setup and validate cluster for failover testing
@@ -567,28 +571,30 @@ func setupFailoverTestCluster(
 	t *testing.T, ctx context.Context, logger *zap.Logger,
 ) (*KubernetesStack, *e2e.MCPClient, *ClusterConfig) {
 	t.Helper()
-	
+
 	logger.Info("Starting Kubernetes stack for failover testing")
+
 	stack := NewKubernetesStack(t)
-	
+
 	err := stack.Start(ctx)
 	require.NoError(t, err, "Failed to start Kubernetes stack")
-	
+
 	// Detect and validate cluster configuration
 	clusterConfig, err := detectClusterConfiguration(ctx, stack, logger)
 	require.NoError(t, err, "Failed to detect cluster configuration")
-	
+
 	err = validateClusterReadiness(ctx, stack, clusterConfig, logger)
 	require.NoError(t, err, "Cluster is not ready for testing")
-	
+
 	// Wait for services with adaptive timeout
 	logger.Info("Waiting for services to be ready")
+
 	readinessCtx, readinessCancel := context.WithTimeout(ctx, clusterConfig.TestTimeout)
 	defer readinessCancel()
-	
+
 	err = stack.WaitForHTTPEndpoint(readinessCtx, stack.GetGatewayHTTPURL()+"/healthz")
 	require.NoError(t, err, "Gateway HTTPS health check failed")
-	
+
 	// Setup and initialize test client
 	config := &e2e.TestConfig{
 		GatewayURL:  stack.GetGatewayURL(),
@@ -598,7 +604,7 @@ func setupFailoverTestCluster(
 	testSuite := e2e.NewTestSuite(t, config)
 	defer testSuite.Teardown()
 	
-	err = testSuite.Setup()
+	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
 	
 	client := testSuite.GetClient()
@@ -904,13 +910,16 @@ func executeDiagnosticCommands(ctx context.Context, diagnostics []struct {
 	file string
 }, logsDir string, logger *zap.Logger) (int, []string) {
 	var errors []string
+
 	successCount := 0
 
 	for _, diag := range diagnostics {
 		err := executeSingleDiagnostic(ctx, diag, logsDir, logger)
 		if err != nil {
 			errMsg := fmt.Sprintf("failed to save %s: %v", diag.name, err)
+
 			errors = append(errors, errMsg)
+
 			logger.Warn("Failed to save diagnostic", zap.String("type", diag.name), zap.Error(err))
 		} else {
 			successCount++
@@ -1038,6 +1047,7 @@ func parseMetricsContent(content string) (*MetricsData, error) {
 		if shouldSkipLine(line) {
 			continue
 		}
+
 		parseMetricLine(line, data)
 	}
 
@@ -1200,8 +1210,10 @@ func collectPodResourceLimits(
 			}
 
 			parts := strings.Split(line, ":")
+
 			if len(parts) == 2 {
 				podName := parts[0]
+
 				limits := strings.Split(parts[1], ",")
 				if len(limits) >= 2 {
 					resourceData.PodCPULimits[podName] = limits[0]
@@ -1306,15 +1318,19 @@ func identifyClusterFromNodeNames(nodeNames string) string {
 	if strings.Contains(nodeNames, "kind") {
 		return "kind"
 	}
+
 	if strings.Contains(nodeNames, "minikube") {
 		return "minikube"
 	}
+
 	if strings.Contains(nodeNames, "gke") {
 		return "gke"
 	}
+
 	if strings.Contains(nodeNames, "eks") {
 		return "eks"
 	}
+
 	if strings.Contains(nodeNames, "aks") {
 		return "aks"
 	}
@@ -1575,7 +1591,7 @@ func cleanupNetworkPolicy(stack *KubernetesStack, logger *zap.Logger) error {
 	if err := deleteCmd.Run(); err != nil {
 		return err
 	}
-	
+
 	// Wait for network to recover
 	time.Sleep(5 * time.Second)
 
@@ -1584,6 +1600,7 @@ func cleanupNetworkPolicy(stack *KubernetesStack, logger *zap.Logger) error {
 
 func verifyNetworkRecovery(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
+
 	response, err := client.CallTool("echo", map[string]interface{}{
 		"message": "recovery test",
 	})
@@ -1612,7 +1629,9 @@ func testIptablesPartition(
 	logger *zap.Logger,
 ) error {
 	t.Helper()
+
 	ctx := context.Background()
+
 	logger.Info("Testing network partition using iptables manipulation")
 
 	podName, err := getGatewayPodName(ctx, stack)
@@ -1728,7 +1747,10 @@ func verifyIptablesRecovery(
 func getPodNames(namespace string) ([]string, error) {
 	ctx := context.Background()
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", namespace, "-l", "app=test-mcp-server", "-o", "jsonpath={.items[*].metadata.name}") 
+	cmd := exec.CommandContext(
+		ctx, "kubectl", "get", "pods", "-n", namespace,
+		"-l", "app=test-mcp-server", "-o", "jsonpath={.items[*].metadata.name}",
+	)
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -1751,7 +1773,10 @@ func deletePods(podNames []string, namespace string, logger *zap.Logger) {
 
 	for i := 0; i < halfCount && i < len(podNames); i++ {
 	// #nosec G204 - command with controlled test inputs
-	deleteCmd := exec.CommandContext(ctx, "kubectl", "delete", "pod", podNames[i], "-n", namespace, "--force", "--grace-period=0") 
+	deleteCmd := exec.CommandContext(
+		ctx, "kubectl", "delete", "pod", podNames[i], "-n", namespace,
+		"--force", "--grace-period=0",
+	)
 		if err := deleteCmd.Run(); err != nil {
 			logger.Warn("Failed to delete pod", zap.String("pod", podNames[i]), zap.Error(err))
 		} else {
@@ -1884,7 +1909,11 @@ type ClusterConfig struct {
 }
 
 // detectClusterConfiguration detects cluster capabilities and adjusts test parameters.
-func detectClusterConfiguration(ctx context.Context, stack *KubernetesStack, logger *zap.Logger) (*ClusterConfig, error) {
+func detectClusterConfiguration(
+	ctx context.Context,
+	stack *KubernetesStack,
+	logger *zap.Logger,
+) (*ClusterConfig, error) {
 	config := &ClusterConfig{
 		NodeCount:             1,
 		TotalCPU:              2.0,
@@ -1981,7 +2010,10 @@ func detectClusterBasics(ctx context.Context, config *ClusterConfig, logger *zap
 func detectClusterFeatures(ctx context.Context, config *ClusterConfig, logger *zap.Logger) error {
 	// Check for metrics-server
 	// #nosec G204 - command with controlled test inputs
-	metricsCmd := exec.CommandContext(ctx, "kubectl", "get", "apiservices", "v1beta1.metrics.k8s.io", "-o", "jsonpath={.status.conditions[0].status}") 
+	metricsCmd := exec.CommandContext(
+		ctx, "kubectl", "get", "apiservices", "v1beta1.metrics.k8s.io",
+		"-o", "jsonpath={.status.conditions[0].status}",
+	)
 	if output, err := metricsCmd.Output(); err == nil && strings.TrimSpace(string(output)) == "True" {
 		config.SupportsMetricsServer = true
 
@@ -2156,19 +2188,24 @@ func adaptTestForCluster(config *ClusterConfig, testName string, logger *zap.Log
 
 // validateClusterReadiness validates that the cluster is ready for testing.
 
-func validateClusterReadiness(ctx context.Context, stack *KubernetesStack, config *ClusterConfig, logger *zap.Logger) error {
+func validateClusterReadiness(
+	ctx context.Context,
+	stack *KubernetesStack,
+	config *ClusterConfig,
+	logger *zap.Logger,
+) error {
 	logger.Info("Validating cluster readiness for testing")
 	
 	if err := validateNodeReadiness(ctx, config, logger); err != nil {
 		return err
 	}
 	
-	if err := validateNamespaceExists(stack, logger); err != nil {
+	if err := validateNamespaceExists(ctx, stack, logger); err != nil {
 		return err
 	}
 	
 	validateResourceConstraints(config, logger)
-	validateDNSFunctionality(stack, logger)
+	validateDNSFunctionality(ctx, stack, logger)
 	
 	logger.Info("Cluster readiness validation completed")
 
@@ -2178,7 +2215,10 @@ func validateClusterReadiness(ctx context.Context, stack *KubernetesStack, confi
 func validateNodeReadiness(ctx context.Context, config *ClusterConfig, logger *zap.Logger) error {
 	// Check that all nodes are ready
 	// #nosec G204 - command with controlled test inputs
-	readyNodesCmd := exec.CommandContext(ctx, "kubectl", "get", "nodes", "-o", "jsonpath={.items[?(@.status.conditions[?(@.type==\\\"Ready\\\")].status==\\\"True\\\")].metadata.name}")
+	readyNodesCmd := exec.CommandContext(
+		ctx, "kubectl", "get", "nodes", "-o",
+		"jsonpath={.items[?(@.status.conditions[?(@.type==\\\"Ready\\\")].status==\\\"True\\\")].metadata.name}",
+	)
 	
 	output, err := readyNodesCmd.Output()
 	if err != nil {
@@ -2190,17 +2230,19 @@ func validateNodeReadiness(ctx context.Context, config *ClusterConfig, logger *z
 		return fmt.Errorf("only %d/%d nodes are ready", len(readyNodes), config.NodeCount)
 	}
 	
-	logger.Info("Node readiness validated", zap.Int("ready_nodes", len(readyNodes)), zap.Int("total_nodes", config.NodeCount))
+	logger.Info("Node readiness validated",
+		zap.Int("ready_nodes", len(readyNodes)),
+		zap.Int("total_nodes", config.NodeCount),
+	)
 
 	return nil
 }
 
-func validateNamespaceExists(stack *KubernetesStack, logger *zap.Logger) error {
+func validateNamespaceExists(ctx context.Context, stack *KubernetesStack, logger *zap.Logger) error {
 	if stack.namespace == "" {
 		return nil
 	}
 	
-	ctx := context.Background()
 	// #nosec G204 - command with controlled test inputs
 	nsCmd := exec.CommandContext(ctx, "kubectl", "get", "namespace", stack.namespace)
 	if err := nsCmd.Run(); err != nil {
@@ -2218,9 +2260,7 @@ func validateResourceConstraints(config *ClusterConfig, logger *zap.Logger) {
 	}
 }
 
-func validateDNSFunctionality(stack *KubernetesStack, logger *zap.Logger) {
-	ctx := context.Background()
-	
+func validateDNSFunctionality(ctx context.Context, stack *KubernetesStack, logger *zap.Logger) {
 	// Validate DNS is working
 	dnsTestPod := fmt.Sprintf(`
 apiVersion: v1
@@ -2264,12 +2304,23 @@ func checkDNSTestResults(ctx context.Context, stack *KubernetesStack, logger *za
 
 func cleanupDNSTestPod(ctx context.Context, stack *KubernetesStack) {
 	// #nosec G204 - command with controlled test inputs
-	deleteCmd := exec.CommandContext(ctx, "kubectl", "delete", "pod", "dns-test", "-n", stack.namespace, "--force", "--grace-period=0")
+	deleteCmd := exec.CommandContext(
+		ctx, "kubectl", "delete", "pod", "dns-test", "-n", stack.namespace,
+		"--force", "--grace-period=0",
+	)
 	_ = deleteCmd.Run()
 }
 
 // testKubernetesHighThroughputAdaptive runs high throughput tests with adaptive parameters.
-func testKubernetesHighThroughputAdaptive(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, adaptations map[string]interface{}) {
+func testKubernetesHighThroughputAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+) {
+	t.Helper()
+
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes high throughput performance (adaptive)")
 
@@ -2280,7 +2331,13 @@ func testKubernetesHighThroughputAdaptive(t *testing.T, client *e2e.MCPClient, s
 	verifyAdaptiveLoadBalancing(t, logger, clusterConfig, backendHits)
 }
 
-func configureAdaptivePerformanceTest(t *testing.T, clusterConfig *ClusterConfig, adaptations map[string]interface{}, logger *zap.Logger) *PerformanceConfig {
+func configureAdaptivePerformanceTest(
+	t *testing.T,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+	logger *zap.Logger,
+) *PerformanceConfig {
+	t.Helper()
 	perfConfig := NewPerformanceConfig(t)
 
 	// Override with cluster-specific adaptations
@@ -2307,9 +2364,17 @@ func configureAdaptivePerformanceTest(t *testing.T, clusterConfig *ClusterConfig
 	return perfConfig
 }
 
-func executeAdaptiveHighThroughputTest(t *testing.T, client *e2e.MCPClient, perfConfig *PerformanceConfig) (int64, int64, *sync.Map, time.Duration) {
+func executeAdaptiveHighThroughputTest(
+	t *testing.T,
+	client *e2e.MCPClient,
+	perfConfig *PerformanceConfig,
+) (int64, int64, *sync.Map, time.Duration) {
+	t.Helper()
+
 	var wg sync.WaitGroup
+	
 	var successCount, errorCount int64
+
 	backendHits := &sync.Map{}
 
 	startTime := time.Now()
@@ -2318,6 +2383,7 @@ func executeAdaptiveHighThroughputTest(t *testing.T, client *e2e.MCPClient, perf
 	// Start concurrent workers
 	for i := 0; i < perfConfig.ConcurrentWorkers; i++ {
 		wg.Add(1)
+
 		go processAdaptiveHighThroughputWorker(&wg, i, client, requestChan, &successCount, &errorCount, backendHits)
 	}
 
@@ -2331,19 +2397,26 @@ func createAdaptiveRequestChannel(requestCount int) chan int {
 	for i := 0; i < requestCount; i++ {
 		requestChan <- i
 	}
+	
 	close(requestChan)
 
 	return requestChan
 }
 
-func processAdaptiveHighThroughputWorker(wg *sync.WaitGroup, workerID int, client *e2e.MCPClient, requestChan chan int, successCount, errorCount *int64, backendHits *sync.Map) {
+func processAdaptiveHighThroughputWorker(
+	wg *sync.WaitGroup,
+	workerID int,
+	client *e2e.MCPClient,
+	requestChan chan int,
+	successCount, errorCount *int64,
+	backendHits *sync.Map,
+) {
 	defer wg.Done()
 
 	for reqID := range requestChan {
 		response, err := client.CallTool("echo", map[string]interface{}{
 			"message": fmt.Sprintf("adaptive throughput test req %d from worker %d", reqID, workerID),
 		})
-		
 		if err != nil {
 			atomic.AddInt64(errorCount, 1)
 
@@ -2386,7 +2459,16 @@ func trackAdaptiveBackendHit(response *e2e.MCPResponse, backendHits *sync.Map) {
 	}
 }
 
-func verifyAdaptiveHighThroughputResults(t *testing.T, logger *zap.Logger, perfConfig *PerformanceConfig, clusterConfig *ClusterConfig, successCount, errorCount int64, duration time.Duration) {
+func verifyAdaptiveHighThroughputResults(
+	t *testing.T,
+	logger *zap.Logger,
+	perfConfig *PerformanceConfig,
+	clusterConfig *ClusterConfig,
+	successCount, errorCount int64,
+	duration time.Duration,
+) {
+	t.Helper()
+	
 	totalRequests := successCount + errorCount
 	successRate := float64(successCount) / float64(totalRequests) * 100
 	throughput := float64(successCount) / duration.Seconds()
@@ -2411,7 +2493,14 @@ func verifyAdaptiveHighThroughputResults(t *testing.T, logger *zap.Logger, perfC
 		throughput, perfConfig.MinThroughputRPS)
 }
 
-func verifyAdaptiveLoadBalancing(t *testing.T, logger *zap.Logger, clusterConfig *ClusterConfig, backendHits *sync.Map) {
+func verifyAdaptiveLoadBalancing(
+	t *testing.T,
+	logger *zap.Logger,
+	clusterConfig *ClusterConfig,
+	backendHits *sync.Map,
+) {
+	t.Helper()
+	
 	backendCount := 0
 
 	backendHits.Range(func(key, value interface{}) bool {
@@ -2431,7 +2520,14 @@ func verifyAdaptiveLoadBalancing(t *testing.T, logger *zap.Logger, clusterConfig
 }
 
 // testKubernetesResourceMonitoringAdaptive runs resource monitoring with adaptive validation.
-func testKubernetesResourceMonitoringAdaptive(t *testing.T, stack *KubernetesStack, clusterConfig *ClusterConfig, adaptations map[string]interface{}) {
+func testKubernetesResourceMonitoringAdaptive(
+	t *testing.T,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+) {
+	t.Helper()
+	
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes resource utilization monitoring (adaptive)")
 
@@ -2475,7 +2571,15 @@ func testKubernetesResourceMonitoringAdaptive(t *testing.T, stack *KubernetesSta
 }
 
 // testKubernetesScalingAdaptive runs scaling tests with adaptive parameters.
-func testKubernetesScalingAdaptive(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, adaptations map[string]interface{}) {
+func testKubernetesScalingAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+) {
+	t.Helper()
+	
 	ctx := context.Background()
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes scaling behavior (adaptive)")
@@ -2498,7 +2602,11 @@ type adaptiveScalingConfig struct {
 	scaleTimeout    time.Duration
 }
 
-func configureAdaptiveScalingTest(clusterConfig *ClusterConfig, adaptations map[string]interface{}, logger *zap.Logger) *adaptiveScalingConfig {
+func configureAdaptiveScalingTest(
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+	logger *zap.Logger,
+) *adaptiveScalingConfig {
 	config := &adaptiveScalingConfig{
 		initialReplicas: clusterConfig.ReplicaCount,
 		maxReplicas:     clusterConfig.ReplicaCount + 1,
@@ -2528,7 +2636,10 @@ func configureAdaptiveScalingTest(clusterConfig *ClusterConfig, adaptations map[
 func getCurrentReplicaCount(t *testing.T, ctx context.Context, stack *KubernetesStack, logger *zap.Logger) string {
 	t.Helper()
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "get", "deployment", "test-mcp-server", "-n", stack.namespace, "-o", "jsonpath={.spec.replicas}")
+	cmd := exec.CommandContext(
+		ctx, "kubectl", "get", "deployment", "test-mcp-server", "-n", stack.namespace,
+		"-o", "jsonpath={.spec.replicas}",
+	)
 	output, err := cmd.Output()
 	require.NoError(t, err, "Should be able to get current replica count")
 
@@ -2542,7 +2653,15 @@ func shouldPerformScaling(scalingConfig *adaptiveScalingConfig, clusterConfig *C
 	return scalingConfig.maxReplicas > scalingConfig.initialReplicas && !clusterConfig.ResourceConstraints
 }
 
-func performAdaptiveScalingTest(t *testing.T, ctx context.Context, client *e2e.MCPClient, stack *KubernetesStack, scalingConfig *adaptiveScalingConfig, currentReplicas string) {
+func performAdaptiveScalingTest(
+	t *testing.T,
+	ctx context.Context,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	scalingConfig *adaptiveScalingConfig,
+	currentReplicas string,
+) {
+	t.Helper()
 	scaleUpDeployment(t, ctx, stack, scalingConfig)
 	waitForScaleUpCompletion(t, ctx, stack, scalingConfig)
 	
@@ -2553,21 +2672,46 @@ func performAdaptiveScalingTest(t *testing.T, ctx context.Context, client *e2e.M
 	waitForScaleDownCompletion(t, ctx, stack, scalingConfig)
 }
 
-func scaleUpDeployment(t *testing.T, ctx context.Context, stack *KubernetesStack, scalingConfig *adaptiveScalingConfig) {
+func scaleUpDeployment(
+	t *testing.T,
+	ctx context.Context,
+	stack *KubernetesStack,
+	scalingConfig *adaptiveScalingConfig,
+) {
+	t.Helper()
 	// #nosec G204 - command with controlled test inputs
-	scaleCmd := exec.CommandContext(ctx, "kubectl", "scale", "deployment", "test-mcp-server", fmt.Sprintf("--replicas=%d", scalingConfig.maxReplicas), "-n", stack.namespace)
+	scaleCmd := exec.CommandContext(
+		ctx, "kubectl", "scale", "deployment", "test-mcp-server",
+		fmt.Sprintf("--replicas=%d", scalingConfig.maxReplicas), "-n", stack.namespace,
+	)
 	err := scaleCmd.Run()
 	require.NoError(t, err, "Should be able to scale up deployment")
 }
 
-func waitForScaleUpCompletion(t *testing.T, ctx context.Context, stack *KubernetesStack, scalingConfig *adaptiveScalingConfig) {
+func waitForScaleUpCompletion(
+	t *testing.T,
+	ctx context.Context,
+	stack *KubernetesStack,
+	scalingConfig *adaptiveScalingConfig,
+) {
+	t.Helper()
 	// #nosec G204 - command with controlled test inputs
-	rolloutCmd := exec.CommandContext(ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server", "-n", stack.namespace, fmt.Sprintf("--timeout=%v", scalingConfig.scaleTimeout))
+	rolloutCmd := exec.CommandContext(
+		ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server",
+		"-n", stack.namespace, fmt.Sprintf("--timeout=%v", scalingConfig.scaleTimeout),
+	)
 	err := rolloutCmd.Run()
-	require.NoError(t, err, "Deployment rollout should complete successfully within adaptive timeout")
+	require.NoError(t, err,
+		"Deployment rollout should complete successfully within adaptive timeout")
 }
 
-func testLoadDistributionAfterScaling(t *testing.T, client *e2e.MCPClient, scalingConfig *adaptiveScalingConfig) map[string]int {
+func testLoadDistributionAfterScaling(
+	t *testing.T,
+	client *e2e.MCPClient,
+	scalingConfig *adaptiveScalingConfig,
+) map[string]int {
+	t.Helper()
+	
 	backendHits := make(map[string]int)
 	numTestRequests := 20
 
@@ -2601,14 +2745,27 @@ func verifyScalingResults(t *testing.T, scalingConfig *adaptiveScalingConfig, ba
 func scaleDownDeployment(t *testing.T, ctx context.Context, stack *KubernetesStack, currentReplicas string) {
 	t.Helper()
 	// #nosec G204 - command with controlled test inputs
-	scaleBackCmd := exec.CommandContext(ctx, "kubectl", "scale", "deployment", "test-mcp-server", "--replicas="+currentReplicas, "-n", stack.namespace)
+	scaleBackCmd := exec.CommandContext(
+		ctx, "kubectl", "scale", "deployment", "test-mcp-server",
+		"--replicas="+currentReplicas, "-n", stack.namespace,
+	)
 	err := scaleBackCmd.Run()
-	require.NoError(t, err, "Should be able to scale back to original replica count")
+	require.NoError(t, err,
+		"Should be able to scale back to original replica count")
 }
 
-func waitForScaleDownCompletion(t *testing.T, ctx context.Context, stack *KubernetesStack, scalingConfig *adaptiveScalingConfig) {
+func waitForScaleDownCompletion(
+	t *testing.T,
+	ctx context.Context,
+	stack *KubernetesStack,
+	scalingConfig *adaptiveScalingConfig,
+) {
+	t.Helper()
 	// #nosec G204 - command with controlled test inputs
-	rolloutBackCmd := exec.CommandContext(ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server", "-n", stack.namespace, fmt.Sprintf("--timeout=%v", scalingConfig.scaleTimeout))
+	rolloutBackCmd := exec.CommandContext(
+		ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server",
+		"-n", stack.namespace, fmt.Sprintf("--timeout=%v", scalingConfig.scaleTimeout),
+	)
 	err := rolloutBackCmd.Run()
 	require.NoError(t, err, "Scale-down rollout should complete successfully")
 }
@@ -2626,8 +2783,17 @@ func performScalingVerificationTest(t *testing.T, client *e2e.MCPClient, logger 
 }
 
 // testKubernetesPodFailoverAdaptive runs pod failover tests with adaptive parameters.
-func testKubernetesPodFailoverAdaptive(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, adaptations map[string]interface{}) {
+func testKubernetesPodFailoverAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+) {
+	t.Helper()
+
 	logger, _ := zap.NewDevelopment()
+
 	logger.Info("Testing Kubernetes pod failure and recovery (adaptive)")
 
 	// Get adaptive parameters
@@ -2671,6 +2837,7 @@ func getAdaptiveParameters(adaptations map[string]interface{}) (time.Duration, i
 
 func verifySystemWorking(t *testing.T, client *e2e.MCPClient, message string) {
 	t.Helper()
+	
 	response, err := client.CallTool("echo", map[string]interface{}{
 		"message": message,
 	})
@@ -2678,13 +2845,20 @@ func verifySystemWorking(t *testing.T, client *e2e.MCPClient, message string) {
 	require.NotNil(t, response, "Response should not be nil")
 }
 
-func getAndDeleteTargetPod(t *testing.T, stack *KubernetesStack, logger *zap.Logger) string {
+func getAndDeleteTargetPod(
+	t *testing.T,
+	stack *KubernetesStack,
+	logger *zap.Logger,
+) string {
 	t.Helper()
 
 	ctx := context.Background()
 	// Get list of test-mcp-server pods
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", stack.namespace, "-l", "app=test-mcp-server", "-o", "jsonpath={.items[*].metadata.name}") 
+	cmd := exec.CommandContext(
+		ctx, "kubectl", "get", "pods", "-n", stack.namespace, "-l", "app=test-mcp-server",
+		"-o", "jsonpath={.items[*].metadata.name}",
+	) 
 	output, err := cmd.Output()
 	require.NoError(t, err, "Should be able to get pod list")
 
@@ -2696,7 +2870,9 @@ func getAndDeleteTargetPod(t *testing.T, stack *KubernetesStack, logger *zap.Log
 
 	// Delete the pod to simulate failure
 	// #nosec G204 - command with controlled test inputs
-	deleteCmd := exec.CommandContext(ctx, "kubectl", "delete", "pod", targetPod, "-n", stack.namespace, "--grace-period=0", "--force") 
+	deleteCmd := exec.CommandContext(
+		ctx, "kubectl", "delete", "pod", targetPod, "-n", stack.namespace, "--grace-period=0", "--force",
+	) 
 	err = deleteCmd.Run()
 	require.NoError(t, err, "Should be able to delete pod")
 
@@ -2778,29 +2954,62 @@ func testSystemRecovery(t *testing.T, client *e2e.MCPClient, maxRecoveryAttempts
 		time.Sleep(2 * time.Second)
 	}
 
-	t.Fatalf("System should recover functionality after pod failure within %d attempts (adapted for cluster)", maxRecoveryAttempts)
+	t.Fatalf(
+		"System should recover functionality after pod failure within %d attempts (adapted for cluster)",
+		maxRecoveryAttempts,
+	)
 }
 
 // testKubernetesServiceEndpointsAdaptive runs service endpoint tests with adaptive parameters.
-func testKubernetesServiceEndpointsAdaptive(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, adaptations map[string]interface{}) {
+func testKubernetesServiceEndpointsAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+) {
+	t.Helper()
+	
 	ctx := context.Background()
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes service endpoint updates (adaptive)")
 
-	// Monitor endpoints before restart
+	// Get initial state
+	beforeOutput := getEndpointsBeforeRestart(t, ctx, stack)
+
+	// Perform restart operations
+	performServiceRestart(t, ctx, stack, clusterConfig)
+
+	// Get post-restart state
+	afterOutput := getEndpointsAfterRestart(t, ctx, stack)
+
+	// Verify and test new endpoints
+	verifyEndpointsUpdated(t, client, stack, clusterConfig, beforeOutput, afterOutput, logger)
+}
+
+func getEndpointsBeforeRestart(t *testing.T, ctx context.Context, stack *KubernetesStack) []byte {
+	t.Helper()
+	
 	// #nosec G204 - command with controlled test inputs
 	endpointsCmd := exec.CommandContext(ctx, "kubectl", "get", "endpoints", "test-mcp-server", 
 		"-n", stack.namespace, "-o", "yaml") 
 	beforeOutput, err := endpointsCmd.Output()
 	require.NoError(t, err, "Should be able to get endpoints before restart")
 
+	logger, _ := zap.NewDevelopment()
 	logger.Info("Endpoints before restart", zap.String("endpoints", string(beforeOutput)))
+	
+	return beforeOutput
+}
 
-	// Restart all pods by scaling down and up
+func performServiceRestart(t *testing.T, ctx context.Context, stack *KubernetesStack, clusterConfig *ClusterConfig) {
+	t.Helper()
+	
+	// Scale down deployment
 	// #nosec G204 - command with controlled test inputs
 	scaleDownCmd := exec.CommandContext(ctx, "kubectl", "scale", "deployment", "test-mcp-server", 
 		"--replicas=0", "-n", stack.namespace) 
-	err = scaleDownCmd.Run()
+	err := scaleDownCmd.Run()
 	require.NoError(t, err, "Should be able to scale down deployment")
 
 	// Wait for pods to be terminated (adaptive)
@@ -2813,22 +3022,48 @@ func testKubernetesServiceEndpointsAdaptive(t *testing.T, client *e2e.MCPClient,
 
 	// Scale back up to original replica count
 	// #nosec G204 - command with controlled test inputs
-	scaleUpCmd := exec.CommandContext(ctx, "kubectl", "scale", "deployment", "test-mcp-server", fmt.Sprintf("--replicas=%d", clusterConfig.ReplicaCount), "-n", stack.namespace) 
+	scaleUpCmd := exec.CommandContext(
+		ctx, "kubectl", "scale", "deployment", "test-mcp-server",
+		fmt.Sprintf("--replicas=%d", clusterConfig.ReplicaCount), "-n", stack.namespace,
+	) 
 	err = scaleUpCmd.Run()
 	require.NoError(t, err, "Should be able to scale up deployment")
 
 	// Wait for rollout to complete (with adaptive timeout)
 	// #nosec G204 - command with controlled test inputs
-	rolloutCmd := exec.CommandContext(ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server", "-n", stack.namespace, fmt.Sprintf("--timeout=%v", clusterConfig.ScaleTimeout*2)) 
+	rolloutCmd := exec.CommandContext(
+		ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server", "-n", stack.namespace,
+		fmt.Sprintf("--timeout=%v", clusterConfig.ScaleTimeout*2),
+	) 
 	err = rolloutCmd.Run()
 	require.NoError(t, err, "Deployment rollout should complete successfully")
+}
 
-	// Monitor endpoints after restart
+func getEndpointsAfterRestart(t *testing.T, ctx context.Context, stack *KubernetesStack) []byte {
+	t.Helper()
+	
+	// #nosec G204 - command with controlled test inputs
+	endpointsCmd := exec.CommandContext(ctx, "kubectl", "get", "endpoints", "test-mcp-server", 
+		"-n", stack.namespace, "-o", "yaml")
 	afterOutput, err := endpointsCmd.Output()
 	require.NoError(t, err, "Should be able to get endpoints after restart")
 
+	logger, _ := zap.NewDevelopment()
 	logger.Info("Endpoints after restart", zap.String("endpoints", string(afterOutput)))
+	
+	return afterOutput
+}
 
+func verifyEndpointsUpdated(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	beforeOutput, afterOutput []byte,
+	logger *zap.Logger,
+) {
+	t.Helper()
+	
 	// Verify service endpoints have been updated (different pod IPs)
 	require.NotEqual(t, string(beforeOutput), string(afterOutput), "Endpoints should be different after pod restart")
 
@@ -2844,15 +3079,27 @@ func testKubernetesServiceEndpointsAdaptive(t *testing.T, client *e2e.MCPClient,
 	response, err := client.CallTool("echo", map[string]interface{}{
 		"message": "endpoint update test",
 	})
-	require.NoError(t, err, "Service should be accessible with updated endpoints")
+	require.NoError(
+		t, err, "Service should be accessible with updated endpoints",
+	)
 	require.NotNil(t, response, "Response should not be nil")
 
-	logger.Info("Adaptive service endpoint update test completed successfully")
+	logger.Info(
+		"Adaptive service endpoint update test completed successfully",
+	)
 }
 
 // testKubernetesRollingUpdateAdaptive runs rolling update tests with adaptive parameters.
 
-func testKubernetesRollingUpdateAdaptive(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, adaptations map[string]interface{}) {
+func testKubernetesRollingUpdateAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+) {
+	t.Helper()
+	
 	ctx := context.Background()
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes rolling update (adaptive)")
@@ -2871,43 +3118,75 @@ func testKubernetesRollingUpdateAdaptive(t *testing.T, client *e2e.MCPClient, st
 func getCurrentDeploymentImage(t *testing.T, ctx context.Context, stack *KubernetesStack, logger *zap.Logger) string {
 	t.Helper()
 	// #nosec G204 - kubectl command with controlled test inputs
-	imageCmd := exec.CommandContext(ctx, "kubectl", "get", "deployment", "test-mcp-server", "-n", stack.namespace,
-		"-o", "jsonpath={.spec.template.spec.containers[0].image}")
+	imageCmd := exec.CommandContext(
+		ctx, "kubectl", "get", "deployment", "test-mcp-server", "-n", stack.namespace,
+		"-o", "jsonpath={.spec.template.spec.containers[0].image}",
+	)
 	currentImageOutput, err := imageCmd.Output()
-	require.NoError(t, err, "Should be able to get current image")
+	require.NoError(
+		t, err, "Should be able to get current image",
+	)
 
 	currentImage := strings.TrimSpace(string(currentImageOutput))
-	logger.Info("Current image", zap.String("image", currentImage))
+	logger.Info(
+		"Current image", zap.String("image", currentImage),
+	)
 
 	return currentImage
 }
 
 func triggerAdaptiveRollingUpdate(t *testing.T, ctx context.Context, stack *KubernetesStack, logger *zap.Logger) {
 	t.Helper()
-	// Trigger rolling update by updating a label (this will restart pods without changing functionality)
+	// Trigger rolling update by updating a label
+	// (this will restart pods without changing functionality)
 	// #nosec G204 - kubectl command with controlled test inputs
-	updateCmd := exec.CommandContext(ctx, "kubectl", "patch", "deployment", "test-mcp-server", "-n", stack.namespace,
-		"-p", `{"spec":{"template":{"metadata":{"labels":{"rolling-update":"test-`+strconv.FormatInt(time.Now().Unix(), 10)+`"}}}}}`)
+	updateCmd := exec.CommandContext(
+		ctx, "kubectl", "patch", "deployment", "test-mcp-server", "-n", stack.namespace,
+		"-p", fmt.Sprintf(
+			`{"spec":{"template":{"metadata":{"labels":{"rolling-update":"test-%d"}}}}}`,
+			time.Now().Unix(),
+		),
+	)
 	err := updateCmd.Run()
-	require.NoError(t, err, "Should be able to trigger rolling update")
+	require.NoError(
+		t, err, "Should be able to trigger rolling update",
+	)
 
-	logger.Info("Rolling update triggered, monitoring progress")
+	logger.Info(
+		"Rolling update triggered, monitoring progress",
+	)
 }
 
-func waitForRollingUpdateCompletion(t *testing.T, ctx context.Context, stack *KubernetesStack, clusterConfig *ClusterConfig) {
+func waitForRollingUpdateCompletion(
+	t *testing.T,
+	ctx context.Context,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+) {
+	t.Helper()
 	// Monitor rolling update progress (with adaptive timeout)
 	progressTimeout := clusterConfig.ScaleTimeout * 2
 	if clusterConfig.ResourceConstraints {
 		progressTimeout = clusterConfig.ScaleTimeout * 3
+		// Extra time for constrained clusters
 	}
 
 	// #nosec G204 - command with controlled test inputs
-	progressCmd := exec.CommandContext(ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server", "-n", stack.namespace, fmt.Sprintf("--timeout=%v", progressTimeout))
+	progressCmd := exec.CommandContext(
+		ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server", "-n", stack.namespace,
+		fmt.Sprintf("--timeout=%v", progressTimeout),
+	)
 	err := progressCmd.Run()
 	require.NoError(t, err, "Rolling update should complete successfully")
 }
 
-func testServiceDuringRollingUpdate(t *testing.T, client *e2e.MCPClient, clusterConfig *ClusterConfig, logger *zap.Logger) (int, int) {
+func testServiceDuringRollingUpdate(
+	t *testing.T,
+	client *e2e.MCPClient,
+	clusterConfig *ClusterConfig,
+	logger *zap.Logger,
+) (int, int) {
+	t.Helper()
 	// Test service availability during and after rolling update
 	// Make multiple requests to ensure continuous availability (adaptive count)
 	requestCount := 20
@@ -2926,6 +3205,7 @@ func testServiceDuringRollingUpdate(t *testing.T, client *e2e.MCPClient, cluster
 			successfulRequests++
 		} else {
 			failedRequests++
+
 			logger.Warn("Request failed during rolling update", zap.Int("request", i), zap.Error(err))
 		}
 
@@ -2935,7 +3215,13 @@ func testServiceDuringRollingUpdate(t *testing.T, client *e2e.MCPClient, cluster
 	return successfulRequests, failedRequests
 }
 
-func verifyAdaptiveRollingUpdateResults(t *testing.T, logger *zap.Logger, clusterConfig *ClusterConfig, successfulRequests, failedRequests int) {
+func verifyAdaptiveRollingUpdateResults(
+	t *testing.T,
+	logger *zap.Logger,
+	clusterConfig *ClusterConfig,
+	successfulRequests, failedRequests int,
+) {
+	t.Helper()
 	logger.Info("Adaptive rolling update test results",
 		zap.Int("successful_requests", successfulRequests),
 		zap.Int("failed_requests", failedRequests),
@@ -2948,13 +3234,24 @@ func verifyAdaptiveRollingUpdateResults(t *testing.T, logger *zap.Logger, cluste
 	}
 
 	successRate := float64(successfulRequests) / float64(successfulRequests+failedRequests) * 100
-	require.GreaterOrEqual(t, successRate, minSuccessRate, "At least %.1f%% of requests should succeed during rolling update (adapted for cluster)", minSuccessRate)
+	require.GreaterOrEqual(
+		t, successRate, minSuccessRate,
+		"At least %.1f%% of requests should succeed during rolling update (adapted for cluster)", minSuccessRate,
+	)
 
 	logger.Info("Rolling update verification completed", zap.Float64("success_rate", successRate))
 }
 
 // testKubernetesNetworkPartitionAdaptive runs network partition tests with adaptive methods.
-func testKubernetesNetworkPartitionAdaptive(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, adaptations map[string]interface{}) {
+func testKubernetesNetworkPartitionAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	adaptations map[string]interface{},
+) {
+	t.Helper()
+	
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes network partition handling (adaptive)")
 
@@ -2974,7 +3271,9 @@ func testKubernetesNetworkPartitionAdaptive(t *testing.T, client *e2e.MCPClient,
 	require.NoError(t, err, "Should be able to detect network capabilities")
 
 	// Choose the best network partition simulation method based on capabilities and adaptations
-	partitionMethod := selectPartitionMethodAdaptive(netCapabilities, clusterConfig, enableNetworkPolicies, enablePodDisruption, logger)
+	partitionMethod := selectPartitionMethodAdaptive(
+		netCapabilities, clusterConfig, enableNetworkPolicies, enablePodDisruption, logger,
+	)
 
 	// Execute network partition test based on available method and cluster capabilities
 	switch partitionMethod {
@@ -3008,7 +3307,12 @@ func testKubernetesNetworkPartitionAdaptive(t *testing.T, client *e2e.MCPClient,
 }
 
 // selectPartitionMethodAdaptive selects partition method considering cluster constraints.
-func selectPartitionMethodAdaptive(capabilities *NetworkCapabilities, clusterConfig *ClusterConfig, enableNetworkPolicies, enablePodDisruption bool, logger *zap.Logger) string {
+func selectPartitionMethodAdaptive(
+	capabilities *NetworkCapabilities,
+	clusterConfig *ClusterConfig,
+	enableNetworkPolicies, enablePodDisruption bool,
+	logger *zap.Logger,
+) string {
 	// In resource-constrained environments, prefer less disruptive methods
 	if clusterConfig.ResourceConstraints {
 		logger.Info("Resource constraints detected, using less disruptive partition simulation")
@@ -3018,30 +3322,45 @@ func selectPartitionMethodAdaptive(capabilities *NetworkCapabilities, clusterCon
 
 	// Check adaptations and capabilities
 	if enableNetworkPolicies && capabilities.SupportsNetworkPolicies {
-		logger.Info("Using NetworkPolicy-based partition simulation (adaptive)")
+		logger.Info(
+			"Using NetworkPolicy-based partition simulation (adaptive)",
+		)
 
 		return "networkpolicy"
 	}
 
 	if capabilities.HasIptablesAccess && !clusterConfig.IsCI {
-		logger.Info("Using iptables-based partition simulation (adaptive)")
+		logger.Info(
+			"Using iptables-based partition simulation (adaptive)",
+		)
 
 		return "iptables"
 	}
 
 	if enablePodDisruption && clusterConfig.ReplicaCount > 1 {
-		logger.Info("Using pod disruption-based partition simulation (adaptive)")
+		logger.Info(
+			"Using pod disruption-based partition simulation (adaptive)",
+		)
 
 		return "pod-disruption"
 	}
 
-	logger.Info("Using resilience testing (adaptive - no disruptive methods available/suitable)")
+	logger.Info(
+		"Using resilience testing (adaptive - no disruptive methods available/suitable)",
+	)
 
 	return "resilience"
 }
 
 // Additional adaptive helper functions.
-func testPodDisruptionPartitionAdaptive(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, logger *zap.Logger) error {
+func testPodDisruptionPartitionAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	logger *zap.Logger,
+) error {
+	t.Helper()
 	// Similar to testPodDisruptionPartition but with adaptive timeouts and expectations
 	logger.Info("Testing network partition using pod disruption (adaptive)")
 
@@ -3056,7 +3375,13 @@ func testPodDisruptionPartitionAdaptive(t *testing.T, client *e2e.MCPClient, sta
 	return testPodDisruptionPartition(t, client, stack, logger)
 }
 
-func testNetworkResilienceAdaptive(t *testing.T, client *e2e.MCPClient, clusterConfig *ClusterConfig, logger *zap.Logger) error {
+func testNetworkResilienceAdaptive(
+	t *testing.T,
+	client *e2e.MCPClient,
+	clusterConfig *ClusterConfig,
+	logger *zap.Logger,
+) error {
+	t.Helper()
 	logger.Info("Testing network resilience with rapid requests (adaptive)")
 
 	var successfulRequests, failedRequests int
@@ -3081,16 +3406,19 @@ func testNetworkResilienceAdaptive(t *testing.T, client *e2e.MCPClient, clusterC
 		// Adaptive delay based on cluster capabilities
 		delay := 50 * time.Millisecond
 		if clusterConfig.ResourceConstraints {
-			delay = 100 * time.Millisecond // Slower in constrained environments
+			delay = 100 * time.Millisecond
+			// Slower in constrained environments
 		}
 
 		time.Sleep(delay)
 	}
 
-	logger.Info("Adaptive network resilience test results",
+	logger.Info(
+		"Adaptive network resilience test results",
 		zap.Int("successful_requests", successfulRequests),
 		zap.Int("failed_requests", failedRequests),
-		zap.Bool("resource_constrained", clusterConfig.ResourceConstraints))
+		zap.Bool("resource_constrained", clusterConfig.ResourceConstraints),
+	)
 
 	// Adaptive success rate expectations
 	minSuccessRate := 90.0
@@ -3099,13 +3427,20 @@ func testNetworkResilienceAdaptive(t *testing.T, client *e2e.MCPClient, clusterC
 	}
 
 	successRate := float64(successfulRequests) / float64(numRequests) * 100
-	require.GreaterOrEqual(t, successRate, minSuccessRate, "Network resilience test should achieve %.1f%% success rate (adapted for cluster)", minSuccessRate)
+	require.GreaterOrEqual(
+		t, successRate, minSuccessRate,
+		"Network resilience test should achieve %.1f%% success rate (adapted for cluster)", minSuccessRate,
+	)
 
 	return nil
 }
 
 // Additional adaptive helper functions for resource monitoring.
-func validatePerformanceMetricsAdaptive(data *MetricsData, clusterConfig *ClusterConfig, logger *zap.Logger) error {
+func validatePerformanceMetricsAdaptive(
+	data *MetricsData,
+	clusterConfig *ClusterConfig,
+	logger *zap.Logger,
+) error {
 	var validationErrors []string
 
 	// Adaptive memory limits based on cluster type
@@ -3117,9 +3452,11 @@ func validatePerformanceMetricsAdaptive(data *MetricsData, clusterConfig *Cluste
 	// Validate memory usage with adaptive thresholds
 	if memUsage, exists := data.MemoryUsage["gateway"]; exists {
 		if memUsage > maxMemoryBytes {
-			validationErrors = append(validationErrors,
+			validationErrors = append(
+				validationErrors,
 				fmt.Sprintf("gateway memory usage %.2fMB exceeds adaptive maximum %.2fMB",
-					memUsage/(1024*1024), maxMemoryBytes/(1024*1024)))
+					memUsage/(1024*1024), maxMemoryBytes/(1024*1024)),
+			)
 		}
 
 		logger.Info("Adaptive memory usage validation",
@@ -3131,14 +3468,17 @@ func validatePerformanceMetricsAdaptive(data *MetricsData, clusterConfig *Cluste
 	// Adaptive goroutine limits
 	maxGoroutines := float64(200)
 	if clusterConfig.ResourceConstraints {
-		maxGoroutines = float64(300) // More lenient in constrained environments
+		maxGoroutines = float64(300)
+		// More lenient in constrained environments
 	}
 
 	if goroutines, exists := data.GoroutineCount["gateway"]; exists {
 		if goroutines > maxGoroutines {
-			validationErrors = append(validationErrors,
+			validationErrors = append(
+				validationErrors,
 				fmt.Sprintf("gateway goroutine count %.0f exceeds adaptive maximum %.0f",
-					goroutines, maxGoroutines))
+					goroutines, maxGoroutines),
+			)
 		}
 
 		logger.Info("Adaptive goroutine count validation",
@@ -3147,19 +3487,27 @@ func validatePerformanceMetricsAdaptive(data *MetricsData, clusterConfig *Cluste
 	}
 
 	if len(validationErrors) > 0 {
-		return fmt.Errorf("adaptive performance validation failed: %s", strings.Join(validationErrors, "; "))
+		return fmt.Errorf(
+			"adaptive performance validation failed: %s", strings.Join(validationErrors, "; "),
+		)
 	}
 
 	return nil
 }
 
 
-func validatePodResourceUsageAdaptive(stack *KubernetesStack, clusterConfig *ClusterConfig, logger *zap.Logger) (*ResourceData, error) {
+func validatePodResourceUsageAdaptive(
+	stack *KubernetesStack,
+	clusterConfig *ClusterConfig,
+	logger *zap.Logger,
+) (*ResourceData, error) {
 	// Call the original function but with adaptive error handling
 	resourceData, err := validatePodResourceUsage(stack, logger)
 	if err != nil && !clusterConfig.SupportsMetricsServer {
 		// Don't fail if metrics server is not available
-		logger.Warn("Pod resource usage validation skipped - metrics server not available")
+		logger.Warn(
+			"Pod resource usage validation skipped - metrics server not available",
+		)
 
 		return &ResourceData{
 			PodCPUUsage:     make(map[string]string),
@@ -3172,7 +3520,12 @@ func validatePodResourceUsageAdaptive(stack *KubernetesStack, clusterConfig *Clu
 	return resourceData, err
 }
 
-func validateResourceConsumptionAdaptive(stack *KubernetesStack, data *ResourceData, clusterConfig *ClusterConfig, logger *zap.Logger) error {
+func validateResourceConsumptionAdaptive(
+	stack *KubernetesStack,
+	data *ResourceData,
+	clusterConfig *ClusterConfig,
+	logger *zap.Logger,
+) error {
 	// More lenient validation in resource-constrained environments
 	if clusterConfig.ResourceConstraints {
 		logger.Info("Lenient resource consumption validation for constrained environment")
@@ -3190,7 +3543,13 @@ func validateResourceConsumptionAdaptive(stack *KubernetesStack, data *ResourceD
 	return validateResourceConsumption(stack, data, logger)
 }
 
-func validateResourceEfficiencyAdaptive(stack *KubernetesStack, metricsData *MetricsData, resourceData *ResourceData, clusterConfig *ClusterConfig, logger *zap.Logger) error {
+func validateResourceEfficiencyAdaptive(
+	stack *KubernetesStack,
+	metricsData *MetricsData,
+	resourceData *ResourceData,
+	clusterConfig *ClusterConfig,
+	logger *zap.Logger,
+) error {
 	// Adaptive efficiency validation based on cluster capabilities
 	if len(resourceData.PodCPUUsage) == 0 && !clusterConfig.SupportsMetricsServer {
 		logger.Info("Resource efficiency validation skipped - no metrics available")

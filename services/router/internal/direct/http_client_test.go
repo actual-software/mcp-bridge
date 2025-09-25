@@ -977,7 +977,11 @@ func closeConcurrentHTTPClient(t *testing.T, client *HTTPClient) {
 	require.NoError(t, err)
 }
 
-func runConcurrentHTTPOperations(t *testing.T, client *HTTPClient, numGoroutines, requestsPerGoroutine int) ([]error, []*mcp.Response) {
+func runConcurrentHTTPOperations(
+	t *testing.T,
+	client *HTTPClient,
+	numGoroutines, requestsPerGoroutine int,
+) ([]error, []*mcp.Response) {
 	t.Helper()
 	
 	var wg sync.WaitGroup

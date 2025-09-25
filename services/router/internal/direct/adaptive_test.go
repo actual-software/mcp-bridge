@@ -742,7 +742,11 @@ func simulateRecoveryPerformance(t *testing.T, adaptive *AdaptiveTimeout) time.D
 	return adaptive.GetTimeout(context.Background())
 }
 
-func verifyAdaptiveBehavior(t *testing.T, adaptive *AdaptiveTimeout, initialTimeout, peakTimeout, finalTimeout time.Duration) {
+func verifyAdaptiveBehavior(
+	t *testing.T,
+	adaptive *AdaptiveTimeout,
+	initialTimeout, peakTimeout, finalTimeout time.Duration,
+) {
 	t.Helper()
 	
 	config := AdaptiveTimeoutConfig{

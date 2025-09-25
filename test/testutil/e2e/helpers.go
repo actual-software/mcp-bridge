@@ -415,11 +415,16 @@ func NewTestSuite(t *testing.T, config *TestConfig) *TestSuite {
 
 // Setup initializes the test suite and creates the MCP client.
 func (ts *TestSuite) Setup() error {
+	return ts.SetupWithContext(context.Background())
+}
+
+// SetupWithContext initializes the test suite and creates the MCP client with context.
+func (ts *TestSuite) SetupWithContext(ctx context.Context) error {
 	// Create RouterController to manage the router process
 	ts.router = NewRouterController(ts.t, ts.env.Config.GatewayURL)
 
 	// Build and start the router
-	if err := ts.router.BuildRouter(); err != nil {
+	if err := ts.router.BuildRouterWithContext(ctx); err != nil {
 		return fmt.Errorf("failed to build router: %w", err)
 	}
 

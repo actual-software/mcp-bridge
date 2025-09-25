@@ -34,6 +34,7 @@ type KubernetesStack struct {
 	namespace   string
 	services    map[string]string
 	cleanup     []func()
+	cleanupCtx  context.Context
 }
 
 // NewKubernetesStack creates a new Kubernetes stack manager.
@@ -55,6 +56,9 @@ func NewKubernetesStack(t *testing.T) *KubernetesStack {
 // Start creates the cluster and deploys all services.
 func (ks *KubernetesStack) Start(ctx context.Context) error {
 	ks.logger.Info("Starting Kubernetes test environment")
+	
+	// Store context for cleanup operations
+	ks.cleanupCtx = ctx
 
 	// SAFETY CHECK: Verify we're not on a production cluster before creating KinD cluster
 	if err := ks.verifyKubernetesContext(ctx); err != nil {
@@ -144,6 +148,7 @@ func (ks *KubernetesStack) createCluster(ctx context.Context) error {
 func (ks *KubernetesStack) cleanupExistingCluster(ctx context.Context) error {
 	// #nosec G204 - command with controlled test inputs
 	checkCmd := exec.CommandContext(ctx, "kind", "get", "clusters")
+	
 	output, err := checkCmd.Output()
 	if err == nil && strings.Contains(string(output), ks.clusterName) {
 		ks.logger.Info("Cluster already exists, deleting it first")
@@ -206,7 +211,7 @@ func (ks *KubernetesStack) executeClusterCreation(ctx context.Context, configPat
 	}
 
 	ks.cleanup = append(ks.cleanup, func() {
-		ks.destroyCluster()
+		ks.destroyCluster(ks.cleanupCtx)
 	})
 
 	return nil
@@ -221,12 +226,14 @@ func (ks *KubernetesStack) setupKubectlContext(ctx context.Context) error {
 
 	// #nosec G204 - command with controlled test inputs
 	verifyCmd := exec.CommandContext(ctx, "kubectl", "config", "current-context")
+	
 	currentContext, err := verifyCmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to verify kubectl context: %w", err)
 	}
 
 	expectedContext := "kind-" + ks.clusterName
+	
 	actualContext := strings.TrimSpace(string(currentContext))
 	if actualContext != expectedContext {
 		return fmt.Errorf("kubectl context verification failed: expected '%s', got '%s'", expectedContext, actualContext)
@@ -261,13 +268,18 @@ func (ks *KubernetesStack) checkDocker(ctx context.Context) error {
 }
 
 // buildAndLoadSingleImage builds and loads a single Docker image.
-func (ks *KubernetesStack) buildAndLoadSingleImage(ctx context.Context, projectRoot, imageName, dockerfilePath, contextPath string) error {
+func (ks *KubernetesStack) buildAndLoadSingleImage(
+	ctx context.Context,
+	projectRoot, imageName, dockerfilePath, contextPath string,
+) error {
 	// Build the image
 	// #nosec G204 - docker build command with controlled test inputs
-	buildCmd := exec.CommandContext(ctx, "docker", "build", 
+	buildCmd := exec.CommandContext(
+		ctx, "docker", "build",
 		"-f", filepath.Join(projectRoot, dockerfilePath),
 		"-t", imageName,
-		filepath.Join(projectRoot, contextPath))
+		filepath.Join(projectRoot, contextPath),
+	)
 	buildCmd.Stdout = os.Stdout
 	buildCmd.Stderr = os.Stderr
 
@@ -429,7 +441,12 @@ func (ks *KubernetesStack) createHTTPClient() *http.Client {
 }
 
 // checkHTTPEndpointOnce checks the HTTP endpoint once.
-func (ks *KubernetesStack) checkHTTPEndpointOnce(ctx context.Context, client *http.Client, url string, attemptNum int) error {
+func (ks *KubernetesStack) checkHTTPEndpointOnce(
+	ctx context.Context,
+	client *http.Client,
+	url string,
+	attemptNum int,
+) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -459,13 +476,12 @@ func (ks *KubernetesStack) checkHTTPEndpointOnce(ctx context.Context, client *ht
 }
 
 // logFinalDiagnostics logs diagnostics when endpoint check fails.
-func (ks *KubernetesStack) logFinalDiagnostics(url string) { 
+func (ks *KubernetesStack) logFinalDiagnostics(ctx context.Context, url string) { 
 	ks.logger.Error("HTTP endpoint did not become ready",
 		zap.String("url", url),
 		zap.String("suggestion", "Check pod status with: kubectl get pods -n "+ks.namespace))
 
 	// Try to get pod status for debugging
-	ctx := context.Background()
 	// #nosec G204 - kubectl command with controlled test inputs
 	if statusOutput, err := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", ks.namespace).Output(); err == nil { 
 		ks.logger.Info("Current pod status", zap.String("pods", string(statusOutput)))
@@ -491,7 +507,7 @@ func (ks *KubernetesStack) WaitForHTTPEndpoint(ctx context.Context, url string) 
 		}
 	}
 
-	ks.logFinalDiagnostics(url)
+	ks.logFinalDiagnostics(ctx, url)
 
 	return fmt.Errorf("HTTP endpoint %s did not become ready", url)
 }
@@ -566,7 +582,11 @@ func (ks *KubernetesStack) verifyKubernetesContext(ctx context.Context) error {
 				zap.String("context", contextStr),
 				zap.String("matched_pattern", pattern))
 
-			return fmt.Errorf("refusing to run tests: current kubectl context '%s' appears to be a production or important cluster. Please switch to a safe context or unset the current context", contextStr)
+			return fmt.Errorf(
+				"refusing to run tests: current kubectl context '%s' appears to be a production or important cluster. "+
+					"Please switch to a safe context or unset the current context",
+				contextStr,
+			)
 		}
 	}
 
@@ -585,9 +605,7 @@ func (ks *KubernetesStack) verifyKubernetesContext(ctx context.Context) error {
 }
 
 // destroyCluster destroys the KinD cluster.
-func (ks *KubernetesStack) destroyCluster() {
-	ctx := context.Background()
-
+func (ks *KubernetesStack) destroyCluster(ctx context.Context) {
 	ks.logger.Info("Destroying cluster", zap.String("name", ks.clusterName))
 
 	// #nosec G204 - command with controlled test inputs
@@ -616,16 +634,21 @@ func (ks *KubernetesStack) generateTLSCertificates(ctx context.Context) error {
 
 	// Generate private key
 	// #nosec G204 - openssl command with controlled test inputs
-	keyCmd := exec.CommandContext(ctx, "openssl", "genrsa", "-out", keyPath, "2048") 
+	keyCmd := exec.CommandContext(
+		ctx, "openssl", "genrsa", "-out", keyPath, "2048",
+	) 
 	if err := keyCmd.Run(); err != nil {
 		return fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	// Generate certificate
 	// #nosec G204 - openssl command with controlled test inputs
-	certCmd := exec.CommandContext(ctx, "openssl", "req", "-new", "-x509", "-key", keyPath, 
+	certCmd := exec.CommandContext(
+		ctx, "openssl", "req", "-new", "-x509", "-key", keyPath,
 		"-out", certPath, "-days", "365", "-subj", "/CN=mcp-gateway/O=mcp-e2e-test",
-		"-addext", "subjectAltName=DNS:mcp-gateway,DNS:mcp-gateway."+ks.namespace+".svc.cluster.local,DNS:localhost,IP:127.0.0.1")
+		"-addext", "subjectAltName=DNS:mcp-gateway,DNS:mcp-gateway."+ks.namespace+
+			".svc.cluster.local,DNS:localhost,IP:127.0.0.1",
+	)
 	if err := certCmd.Run(); err != nil {
 		return fmt.Errorf("failed to generate certificate: %w", err)
 	}
