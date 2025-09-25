@@ -487,7 +487,10 @@ func runConcurrentDetectionTest(t *testing.T, manager *DirectClientManager, serv
 
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
-		go runConcurrentDetectionWorker(t, &wg, manager, serverURLs, ctx, i, detectionsPerWorker, &successfulDetections, &errors)
+		go runConcurrentDetectionWorker(
+			t, &wg, manager, serverURLs, ctx, i, detectionsPerWorker,
+			&successfulDetections, &errors,
+		)
 	}
 
 	wg.Wait()
@@ -520,7 +523,12 @@ func runConcurrentDetectionWorker(t *testing.T, wg *sync.WaitGroup, manager *Dir
 	}
 }
 
-func verifyConcurrentDetectionResults(t *testing.T, manager *DirectClientManager, numWorkers, detectionsPerWorker int, successfulDetections, errors int64) {
+func verifyConcurrentDetectionResults(
+	t *testing.T,
+	manager *DirectClientManager,
+	numWorkers, detectionsPerWorker int,
+	successfulDetections, errors int64,
+) {
 	t.Helper()
 	totalDetections := int64(numWorkers * detectionsPerWorker)
 	successRate := float64(successfulDetections) / float64(totalDetections)
@@ -713,7 +721,12 @@ func determineTestURL(t *testing.T, tt failureScenarioTest) string {
 	return tt.serverURL
 }
 
-func runProtocolDetectionTest(t *testing.T, manager *DirectClientManager, ctx context.Context, testURL, expectedError string) {
+func runProtocolDetectionTest(
+	t *testing.T,
+	manager *DirectClientManager,
+	ctx context.Context,
+	testURL, expectedError string,
+) {
 	t.Helper()
 	
 	// Test protocol detection failure
@@ -722,7 +735,13 @@ func runProtocolDetectionTest(t *testing.T, manager *DirectClientManager, ctx co
 	assert.Contains(t, err.Error(), expectedError, "Error message should contain expected text")
 }
 
-func verifyNoCacheForFailures(t *testing.T, manager *DirectClientManager, ctx context.Context, testURL string, config DirectConfig) {
+func verifyNoCacheForFailures(
+	t *testing.T,
+	manager *DirectClientManager,
+	ctx context.Context,
+	testURL string,
+	config DirectConfig,
+) {
 	t.Helper()
 	
 	// Verify that cache doesn't contain failed entries
@@ -780,7 +799,13 @@ func setupEdgeCaseTestManager(t *testing.T, config DirectConfig, logger *zap.Log
 	return manager
 }
 
-func runEdgeCaseTests(t *testing.T, manager *DirectClientManager, ctx context.Context, config DirectConfig, logger *zap.Logger) {
+func runEdgeCaseTests(
+	t *testing.T,
+	manager *DirectClientManager,
+	ctx context.Context,
+	config DirectConfig,
+	logger *zap.Logger,
+) {
 	t.Helper()
 	
 	t.Run("cache_expiration", func(t *testing.T) {
@@ -1006,7 +1031,15 @@ func runDetectionPerformanceTest(t *testing.T, manager *DirectClientManager, ser
 		numDetections, totalTime, avgTime, successCount)
 }
 
-func runSingleDetection(t *testing.T, wg *sync.WaitGroup, manager *DirectClientManager, ctx context.Context, serverURL string, i int, successCount *int64) {
+func runSingleDetection(
+	t *testing.T,
+	wg *sync.WaitGroup,
+	manager *DirectClientManager,
+	ctx context.Context,
+	serverURL string,
+	i int,
+	successCount *int64,
+) {
 	defer wg.Done()
 
 	testURL := fmt.Sprintf("%s?test=%d", serverURL, i%10)

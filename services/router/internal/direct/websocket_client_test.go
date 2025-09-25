@@ -900,7 +900,11 @@ func TestWebSocketClientConcurrentOperations(t *testing.T) {
 	runWebSocketConcurrentOperations(t, client)
 }
 
-func setupWebSocketConcurrentClient(t *testing.T, logger *zap.Logger, mockServer *mockWebSocketServer) *WebSocketClient {
+func setupWebSocketConcurrentClient(
+	t *testing.T,
+	logger *zap.Logger,
+	mockServer *mockWebSocketServer,
+) *WebSocketClient {
 	config := WebSocketClientConfig{
 		URL:     mockServer.getWebSocketURL(),
 		Timeout: 10 * time.Second,
@@ -954,7 +958,13 @@ func setupWebSocketConcurrentChannels(numGoroutines, requestsPerGoroutine int) (
 	return errChan, responseChan
 }
 
-func executeWebSocketConcurrentRequests(t *testing.T, client *WebSocketClient, numGoroutines, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
+func executeWebSocketConcurrentRequests(
+	t *testing.T,
+	client *WebSocketClient,
+	numGoroutines, requestsPerGoroutine int,
+	errChan chan error,
+	responseChan chan *mcp.Response,
+) {
 	var wg sync.WaitGroup
 	ctx := context.Background()
 
@@ -970,7 +980,13 @@ func executeWebSocketConcurrentRequests(t *testing.T, client *WebSocketClient, n
 	waitForWebSocketConcurrentCompletion(t, &wg)
 }
 
-func executeWebSocketConcurrentGoroutine(ctx context.Context, client *WebSocketClient, goroutineID, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
+func executeWebSocketConcurrentGoroutine(
+	ctx context.Context,
+	client *WebSocketClient,
+	goroutineID, requestsPerGoroutine int,
+	errChan chan error,
+	responseChan chan *mcp.Response,
+) {
 	for r := 0; r < requestsPerGoroutine; r++ {
 		req := &mcp.Request{
 			JSONRPC: constants.TestJSONRPCVersion,
@@ -1002,7 +1018,11 @@ func waitForWebSocketConcurrentCompletion(t *testing.T, wg *sync.WaitGroup) {
 	}
 }
 
-func collectWebSocketConcurrentResults(errChan chan error, responseChan chan *mcp.Response, numGoroutines, requestsPerGoroutine int) ([]error, []*mcp.Response) {
+func collectWebSocketConcurrentResults(
+	errChan chan error,
+	responseChan chan *mcp.Response,
+	numGoroutines, requestsPerGoroutine int,
+) ([]error, []*mcp.Response) {
 	close(errChan)
 	close(responseChan)
 
@@ -1019,7 +1039,13 @@ func collectWebSocketConcurrentResults(errChan chan error, responseChan chan *mc
 	return errors, responses
 }
 
-func verifyWebSocketConcurrentResults(t *testing.T, client *WebSocketClient, errors []error, responses []*mcp.Response, numGoroutines, requestsPerGoroutine int) {
+func verifyWebSocketConcurrentResults(
+	t *testing.T,
+	client *WebSocketClient,
+	errors []error,
+	responses []*mcp.Response,
+	numGoroutines, requestsPerGoroutine int,
+) {
 	assert.Empty(t, errors, "No errors should occur during concurrent operations")
 	assert.Len(t, responses, numGoroutines*requestsPerGoroutine, "All requests should receive responses")
 
@@ -1274,7 +1300,12 @@ func runWebSocketPerformanceTest(t *testing.T, logger *zap.Logger, tc webSocketP
 	verifyWebSocketPerformanceResults(t, tc.name, connectTime, requestTimes)
 }
 
-func setupWebSocketPerformanceClient(t *testing.T, logger *zap.Logger, mockServer *mockWebSocketServer, perfConfig WebSocketPerformanceConfig) (*WebSocketClient, time.Duration) {
+func setupWebSocketPerformanceClient(
+	t *testing.T,
+	logger *zap.Logger,
+	mockServer *mockWebSocketServer,
+	perfConfig WebSocketPerformanceConfig,
+) (*WebSocketClient, time.Duration) {
 	config := WebSocketClientConfig{
 		URL:         mockServer.getWebSocketURL(),
 		Timeout:     5 * time.Second,
@@ -1329,7 +1360,12 @@ func executeWebSocketPerformanceRequests(t *testing.T, client *WebSocketClient) 
 	return requestTimes
 }
 
-func verifyWebSocketPerformanceResults(t *testing.T, testName string, connectTime time.Duration, requestTimes []time.Duration) {
+func verifyWebSocketPerformanceResults(
+	t *testing.T,
+	testName string,
+	connectTime time.Duration,
+	requestTimes []time.Duration,
+) {
 	assert.Less(t, connectTime, 2*time.Second, "Connection should be fast: %v", connectTime)
 
 	var totalRequestTime time.Duration
@@ -1440,7 +1476,12 @@ func sendWebSocketFrameResponse(t *testing.T, conn *websocket.Conn, resp mcp.Res
 	}
 }
 
-func setupWebSocketFrameHandlingClient(t *testing.T, logger *zap.Logger, server *httptest.Server, tc webSocketFrameTestCase) *WebSocketClient {
+func setupWebSocketFrameHandlingClient(
+	t *testing.T,
+	logger *zap.Logger,
+	server *httptest.Server,
+	tc webSocketFrameTestCase,
+) *WebSocketClient {
 	config := WebSocketClientConfig{
 		URL:            "ws" + strings.TrimPrefix(server.URL, "http"),
 		Timeout:        10 * time.Second,

@@ -1267,7 +1267,12 @@ func createAdditionalProtocolTestCases() []protocolDetectionTestCase {
 	}
 }
 
-func runConcreteProtocolDetectionTests(t *testing.T, manager *DirectClientManager, ctx context.Context, testCases []protocolDetectionTestCase) {
+func runConcreteProtocolDetectionTests(
+	t *testing.T,
+	manager *DirectClientManager,
+	ctx context.Context,
+	testCases []protocolDetectionTestCase,
+) {
 	t.Helper()
 	
 	for _, tc := range testCases {
@@ -1516,7 +1521,12 @@ func createErrorHandlingTestCases() []errorHandlingTestCase {
 	}
 }
 
-func runErrorHandlingTests(t *testing.T, manager DirectClientManagerInterface, ctx context.Context, testCases []errorHandlingTestCase) {
+func runErrorHandlingTests(
+	t *testing.T,
+	manager DirectClientManagerInterface,
+	ctx context.Context,
+	testCases []errorHandlingTestCase,
+) {
 	t.Helper()
 	
 	for _, tc := range testCases {

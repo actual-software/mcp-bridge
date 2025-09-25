@@ -287,7 +287,8 @@ func decodeAndValidateLength(s string) ([]byte, error) {
 	// hex-encode long data, and long hex strings are very likely legitimate tokens
 	decoded, err := hex.DecodeString(s)
 	if err != nil || len(decoded) > 64 {
-		return nil, fmt.Errorf("decode failed or too long") // Conservative limit: anything longer is probably a real hex token
+		// Conservative limit: anything longer is probably a real hex token
+		return nil, fmt.Errorf("decode failed or too long")
 	}
 	return decoded, nil
 }

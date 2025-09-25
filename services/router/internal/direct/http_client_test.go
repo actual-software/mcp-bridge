@@ -1047,7 +1047,13 @@ func runConcurrentHTTPOperations(
 	return errors, responses
 }
 
-func verifyConcurrentHTTPResults(t *testing.T, client *HTTPClient, errors []error, responses []*mcp.Response, numGoroutines, requestsPerGoroutine int) {
+func verifyConcurrentHTTPResults(
+	t *testing.T,
+	client *HTTPClient,
+	errors []error,
+	responses []*mcp.Response,
+	numGoroutines, requestsPerGoroutine int,
+) {
 	t.Helper()
 	
 	assert.Empty(t, errors, "No errors should occur during concurrent operations")

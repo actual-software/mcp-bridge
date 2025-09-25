@@ -1079,7 +1079,12 @@ if __name__ == "__main__":
 	return scriptPath
 }
 
-func setupStdioPerformanceClient(t *testing.T, logger *zap.Logger, scriptPath string, perfConfig StdioPerformanceConfig) *StdioClient {
+func setupStdioPerformanceClient(
+	t *testing.T,
+	logger *zap.Logger,
+	scriptPath string,
+	perfConfig StdioPerformanceConfig,
+) *StdioClient {
 	t.Helper()
 	config := StdioClientConfig{
 		Command:     []string{"python3", scriptPath},
@@ -1135,7 +1140,12 @@ func measureStdioRequestPerformance(t *testing.T, client *StdioClient) []time.Du
 	return requestTimes
 }
 
-func analyzeStdioPerformanceResults(t *testing.T, testName string, connectTime time.Duration, requestTimes []time.Duration) {
+func analyzeStdioPerformanceResults(
+	t *testing.T,
+	testName string,
+	connectTime time.Duration,
+	requestTimes []time.Duration,
+) {
 	t.Helper()
 	assert.Less(t, connectTime, 3*time.Second, "Connection should be reasonably fast: %v", connectTime)
 
@@ -1969,7 +1979,12 @@ func createStdioMemoryBenchScript(b *testing.B) string {
 	return scriptPath
 }
 
-func setupStdioMemoryBenchClient(b *testing.B, logger *zap.Logger, scriptPath string, memoryOptimizer *MemoryOptimizer) *StdioClient {
+func setupStdioMemoryBenchClient(
+	b *testing.B,
+	logger *zap.Logger,
+	scriptPath string,
+	memoryOptimizer *MemoryOptimizer,
+) *StdioClient {
 	b.Helper()
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},

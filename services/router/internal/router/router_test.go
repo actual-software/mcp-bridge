@@ -124,7 +124,12 @@ func runNewRouterTest(t *testing.T, tt struct {
 	validateNewRouterInitialization(t, router, tt.config, tt.logger)
 }
 
-func validateNewRouterInitialization(t *testing.T, router *LocalRouter, expectedConfig *config.Config, expectedLogger *zap.Logger) {
+func validateNewRouterInitialization(
+	t *testing.T,
+	router *LocalRouter,
+	expectedConfig *config.Config,
+	expectedLogger *zap.Logger,
+) {
 	t.Helper()
 	
 	// Verify initialization.
@@ -259,7 +264,10 @@ func createMessageProcessingMockServer(t *testing.T) *httptest.Server {
 	})
 }
 
-func setupMessageProcessingRouter(t *testing.T, mockServer *httptest.Server) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
+func setupMessageProcessingRouter(
+	t *testing.T,
+	mockServer *httptest.Server,
+) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
 	t.Helper()
 	
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
@@ -618,7 +626,10 @@ func createInitializationMockServer(t *testing.T, initReceived chan bool) *httpt
 	})
 }
 
-func setupInitializationRouter(t *testing.T, mockServer *httptest.Server) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
+func setupInitializationRouter(
+	t *testing.T,
+	mockServer *httptest.Server,
+) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
 	t.Helper()
 	
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
@@ -876,7 +887,10 @@ func createBenchmarkMockServer() *httptest.Server {
 	}))
 }
 
-func setupBenchmarkRouter(b *testing.B, mockServer *httptest.Server) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
+func setupBenchmarkRouter(
+	b *testing.B,
+	mockServer *httptest.Server,
+) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1052,7 +1066,13 @@ func startRouterForCorrelation(t *testing.T, router *LocalRouter, ctx context.Co
 	}()
 }
 
-func monitorCorrelationResponses(t *testing.T, router *LocalRouter, ctx context.Context, receivedResponses map[string]bool, responseMu *sync.Mutex) {
+func monitorCorrelationResponses(
+	t *testing.T,
+	router *LocalRouter,
+	ctx context.Context,
+	receivedResponses map[string]bool,
+	responseMu *sync.Mutex,
+) {
 	t.Helper()
 	
 	// Monitor responses in a separate goroutine.
@@ -1107,7 +1127,12 @@ func sendConcurrentRequests(t *testing.T, router *LocalRouter, requestIDs []stri
 	wg.Wait()
 }
 
-func verifyAllResponsesReceived(t *testing.T, requestIDs []string, receivedResponses map[string]bool, responseMu *sync.Mutex) {
+func verifyAllResponsesReceived(
+	t *testing.T,
+	requestIDs []string,
+	receivedResponses map[string]bool,
+	responseMu *sync.Mutex,
+) {
 	t.Helper()
 	
 	// Wait for all responses with polling instead of channels.
@@ -1485,7 +1510,9 @@ func sendBulkConcurrentRequests(router *LocalRouter, numRequests, numWorkers int
 			defer wg.Done()
 
 			for reqID := range requestChan {
-				req := fmt.Sprintf(`{"jsonrpc":"2.0","method":"test.concurrent","params":{"worker_id":%d},"id":"%s"}`, workerID, reqID)
+				req := fmt.Sprintf(
+					`{"jsonrpc":"2.0","method":"test.concurrent","params":{"worker_id":%d},"id":"%s"}`,
+					workerID, reqID)
 				router.GetStdinChan() <- []byte(req)
 
 				time.Sleep(5 * time.Millisecond) // Slight delay between requests
@@ -2037,7 +2064,12 @@ func setupQueueLifecycleRouter(t *testing.T, serverURL string) *LocalRouter {
 	return router
 }
 
-func monitorQueueLifecycleResponses(ctx context.Context, router *LocalRouter, responsesReceived *map[string]bool, responseMu *sync.Mutex) {
+func monitorQueueLifecycleResponses(
+	ctx context.Context,
+	router *LocalRouter,
+	responsesReceived *map[string]bool,
+	responseMu *sync.Mutex,
+) {
 	for {
 		select {
 		case data := <-router.GetStdoutChan():
@@ -2061,12 +2093,18 @@ func processQueueLifecycleResponse(data []byte, responsesReceived *map[string]bo
 
 func sendQueuedRequests(router *LocalRouter, queuedRequestIDs []string) {
 	for _, id := range queuedRequestIDs {
-		req := fmt.Sprintf(`{"jsonrpc":"2.0","method":"test.queued","params":{},"id":"%s"}`, id)
+		req := fmt.Sprintf(
+			`{"jsonrpc":"2.0","method":"test.queued","params":{},"id":"%s"}`, id)
 		router.GetStdinChan() <- []byte(req)
 	}
 }
 
-func waitForAllQueuedResponses(t *testing.T, queuedRequestIDs []string, responsesReceived *map[string]bool, responseMu *sync.Mutex) {
+func waitForAllQueuedResponses(
+	t *testing.T,
+	queuedRequestIDs []string,
+	responsesReceived *map[string]bool,
+	responseMu *sync.Mutex,
+) {
 	t.Helper()
 	
 	assert.Eventually(t, func() bool {
@@ -2082,7 +2120,12 @@ func waitForAllQueuedResponses(t *testing.T, queuedRequestIDs []string, response
 	}, 5*time.Second, 100*time.Millisecond, "All queued requests should be processed")
 }
 
-func verifyQueuedResponsesReceived(t *testing.T, queuedRequestIDs []string, responsesReceived *map[string]bool, responseMu *sync.Mutex) {
+func verifyQueuedResponsesReceived(
+	t *testing.T,
+	queuedRequestIDs []string,
+	responsesReceived *map[string]bool,
+	responseMu *sync.Mutex,
+) {
 	t.Helper()
 	
 	responseMu.Lock()
@@ -2683,7 +2726,12 @@ func createRoutingTestRouter(t *testing.T, serverURL string, tt routingDecisionT
 	return router
 }
 
-func monitorRoutingDecisions(ctx context.Context, router *LocalRouter, routingDecisions map[string]int32, decisionMu *sync.Mutex) {
+func monitorRoutingDecisions(
+	ctx context.Context,
+	router *LocalRouter,
+	routingDecisions map[string]int32,
+	decisionMu *sync.Mutex,
+) {
 	for {
 		select {
 		case data := <-router.GetStdoutChan():
@@ -2695,11 +2743,19 @@ func monitorRoutingDecisions(ctx context.Context, router *LocalRouter, routingDe
 }
 
 func sendRoutingTestRequest(router *LocalRouter, method string) {
-	req := fmt.Sprintf(`{"jsonrpc":"2.0","method":"%s","params":{},"id":"route-test"}`, method)
+	req := fmt.Sprintf(
+		`{"jsonrpc":"2.0","method":"%s","params":{},"id":"route-test"}`, method)
 	router.GetStdinChan() <- []byte(req)
 }
 
-func validateRoutingDecision(t *testing.T, tt routingDecisionTest, gatewayRequests *int32, routingDecisions map[string]int32, decisionMu *sync.Mutex, router *LocalRouter) {
+func validateRoutingDecision(
+	t *testing.T,
+	tt routingDecisionTest,
+	gatewayRequests *int32,
+	routingDecisions map[string]int32,
+	decisionMu *sync.Mutex,
+	router *LocalRouter,
+) {
 	t.Helper()
 	
 	decisionMu.Lock()
@@ -2780,7 +2836,11 @@ func TestProtocolNegotiation(t *testing.T) {
 	validateProtocolMetrics(t, router, protocolMethods)
 }
 
-func setupProtocolNegotiationServer(t *testing.T, protocolResponses *map[string]int32, protocolMu *sync.Mutex) *httptest.Server {
+func setupProtocolNegotiationServer(
+	t *testing.T,
+	protocolResponses *map[string]int32,
+	protocolMu *sync.Mutex,
+) *httptest.Server {
 	t.Helper()
 	
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
@@ -2788,7 +2848,12 @@ func setupProtocolNegotiationServer(t *testing.T, protocolResponses *map[string]
 	})
 }
 
-func handleProtocolNegotiationRequests(t *testing.T, conn *websocket.Conn, protocolResponses *map[string]int32, protocolMu *sync.Mutex) {
+func handleProtocolNegotiationRequests(
+	t *testing.T,
+	conn *websocket.Conn,
+	protocolResponses *map[string]int32,
+	protocolMu *sync.Mutex,
+) {
 	t.Helper()
 	
 	for {
@@ -2872,7 +2937,12 @@ func sendProtocolRequests(router *LocalRouter, protocolMethods []string) {
 	}
 }
 
-func validateProtocolResponses(t *testing.T, protocolMethods []string, protocolResponses *map[string]int32, protocolMu *sync.Mutex) {
+func validateProtocolResponses(
+	t *testing.T,
+	protocolMethods []string,
+	protocolResponses *map[string]int32,
+	protocolMu *sync.Mutex,
+) {
 	t.Helper()
 	
 	protocolMu.Lock()

@@ -631,7 +631,11 @@ func (m *DirectClientManager) getOrCreateClient(
 	return pooledConn.Client, nil
 }
 
-func (m *DirectClientManager) createClientConnectionFunc(ctx context.Context, serverURL string, protocol ClientType) func() (DirectClient, error) {
+func (m *DirectClientManager) createClientConnectionFunc(
+	ctx context.Context,
+	serverURL string,
+	protocol ClientType,
+) func() (DirectClient, error) {
 	return func() (DirectClient, error) {
 		// Create new client based on protocol.
 		client, err := m.createClient(serverURL, protocol) 
@@ -658,7 +662,12 @@ func (m *DirectClientManager) createClientConnectionFunc(ctx context.Context, se
 	}
 }
 
-func (m *DirectClientManager) recordConnectionFailure(serverURL string, protocol ClientType, startTime time.Time, err error) {
+func (m *DirectClientManager) recordConnectionFailure(
+	serverURL string,
+	protocol ClientType,
+	startTime time.Time,
+	err error,
+) {
 	m.updateMetrics(func(metrics *ManagerMetrics) {
 		metrics.FailedConnections++
 	})

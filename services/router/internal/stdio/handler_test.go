@@ -135,13 +135,20 @@ func setupStdinHandler(logger *zap.Logger, stdinChan chan []byte, input string) 
 	}
 }
 
-func runStdinHandlerTest(t *testing.T, ctx context.Context, cancel context.CancelFunc, handler *Handler, stdinChan chan []byte, tt struct {
-	name      string
-	input     string
-	expected  []string
-	ctxCancel bool
-	cancelAt  int
-}) []string {
+func runStdinHandlerTest(
+	t *testing.T,
+	ctx context.Context,
+	cancel context.CancelFunc,
+	handler *Handler,
+	stdinChan chan []byte,
+	tt struct {
+		name      string
+		input     string
+		expected  []string
+		ctxCancel bool
+		cancelAt  int
+	},
+) []string {
 	t.Helper()
 
 	wg := &sync.WaitGroup{}

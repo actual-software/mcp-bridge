@@ -353,7 +353,12 @@ func TestMemoryOptimizer_ConcurrentAccess(t *testing.T) {
 	assert.Positive(t, stats.Alloc)
 }
 
-func runConcurrentBufferOperations(t *testing.T, wg *sync.WaitGroup, optimizer *MemoryOptimizer, numGoroutines, operationsPerGoroutine int) {
+func runConcurrentBufferOperations(
+	t *testing.T,
+	wg *sync.WaitGroup,
+	optimizer *MemoryOptimizer,
+	numGoroutines, operationsPerGoroutine int,
+) {
 	t.Helper()
 	
 	// Test concurrent buffer operations
@@ -372,7 +377,12 @@ func runConcurrentBufferOperations(t *testing.T, wg *sync.WaitGroup, optimizer *
 	}
 }
 
-func runConcurrentJSONOperations(t *testing.T, wg *sync.WaitGroup, optimizer *MemoryOptimizer, numGoroutines, operationsPerGoroutine int) {
+func runConcurrentJSONOperations(
+	t *testing.T,
+	wg *sync.WaitGroup,
+	optimizer *MemoryOptimizer,
+	numGoroutines, operationsPerGoroutine int,
+) {
 	t.Helper()
 	
 	// Test concurrent JSON operations
@@ -402,7 +412,12 @@ func runConcurrentJSONOperations(t *testing.T, wg *sync.WaitGroup, optimizer *Me
 	}
 }
 
-func runConcurrentStatsAccess(t *testing.T, wg *sync.WaitGroup, optimizer *MemoryOptimizer, numGoroutines, operationsPerGoroutine int) {
+func runConcurrentStatsAccess(
+	t *testing.T,
+	wg *sync.WaitGroup,
+	optimizer *MemoryOptimizer,
+	numGoroutines, operationsPerGoroutine int,
+) {
 	t.Helper()
 	
 	// Test concurrent stats access

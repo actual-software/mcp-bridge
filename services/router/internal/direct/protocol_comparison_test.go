@@ -662,7 +662,13 @@ func runSinglePayloadBenchmark(b *testing.B, protocol protocolBenchmarkConfig, p
 	runPayloadBenchmarkLoop(b, client, ctx, protocol.name, payload)
 }
 
-func runPayloadBenchmarkLoop(b *testing.B, client DirectClient, ctx context.Context, protocolName string, payload string) {
+func runPayloadBenchmarkLoop(
+	b *testing.B,
+	client DirectClient,
+	ctx context.Context,
+	protocolName string,
+	payload string,
+) {
 	for i := 0; i < b.N; i++ {
 		req := &mcp.Request{
 			JSONRPC: constants.TestJSONRPCVersion,

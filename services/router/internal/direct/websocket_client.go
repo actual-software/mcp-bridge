@@ -200,7 +200,11 @@ func (c *WebSocketClient) prepareHeaders() http.Header {
 	return headers
 }
 
-func (c *WebSocketClient) establishConnection(ctx context.Context, dialer *websocket.Dialer, headers http.Header) (*websocket.Conn, *http.Response, error) {
+func (c *WebSocketClient) establishConnection(
+	ctx context.Context,
+	dialer *websocket.Dialer,
+	headers http.Header,
+) (*websocket.Conn, *http.Response, error) {
 	conn, resp, err := dialer.DialContext(ctx, c.config.URL, headers)
 	
 	if resp != nil {

@@ -546,13 +546,23 @@ func runConcurrentFailoverTest(t *testing.T, cfg config.GatewayConfig, logger *z
 	return counters
 }
 
-func runGoroutineOperations(goroutineID, operationsCount int, cfg config.GatewayConfig, logger *zap.Logger, counters *clientCounters) {
+func runGoroutineOperations(
+	goroutineID, operationsCount int,
+	cfg config.GatewayConfig,
+	logger *zap.Logger,
+	counters *clientCounters,
+) {
 	for opIdx := 0; opIdx < operationsCount; opIdx++ {
 		runSingleOperation(goroutineID, opIdx, cfg, logger, counters)
 	}
 }
 
-func runSingleOperation(goroutineID, opIdx int, cfg config.GatewayConfig, logger *zap.Logger, counters *clientCounters) {
+func runSingleOperation(
+	goroutineID, opIdx int,
+	cfg config.GatewayConfig,
+	logger *zap.Logger,
+	counters *clientCounters,
+) {
 	client, err := NewTCPClient(cfg, logger)
 	if err != nil {
 		atomic.AddInt64(counters.errors, 1)

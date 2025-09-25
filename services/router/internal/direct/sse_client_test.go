@@ -806,7 +806,12 @@ func runSSEPerformanceTest(t *testing.T, logger *zap.Logger, tc struct {
 	analyzeSSEPerformanceResults(t, tc.name, connectTime, requestTimes)
 }
 
-func setupSSEPerformanceClient(t *testing.T, logger *zap.Logger, mockServer *mockSSEServer, perfConfig SSEPerformanceConfig) *SSEClient {
+func setupSSEPerformanceClient(
+	t *testing.T,
+	logger *zap.Logger,
+	mockServer *mockSSEServer,
+	perfConfig SSEPerformanceConfig,
+) *SSEClient {
 	t.Helper()
 	config := SSEClientConfig{
 		URL:            mockServer.getURL(),
@@ -851,7 +856,12 @@ func measureSSERequestPerformance(t *testing.T, client *SSEClient, ctx context.C
 	return requestTimes
 }
 
-func analyzeSSEPerformanceResults(t *testing.T, testName string, connectTime time.Duration, requestTimes []time.Duration) {
+func analyzeSSEPerformanceResults(
+	t *testing.T,
+	testName string,
+	connectTime time.Duration,
+	requestTimes []time.Duration,
+) {
 	t.Helper()
 	assert.Less(t, connectTime, 2*time.Second, "Connection should be fast: %v", connectTime)
 
