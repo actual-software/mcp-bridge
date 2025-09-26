@@ -34,29 +34,8 @@ func TestWebSocketOriginValidation(t *testing.T) {
 func setupWebSocketOriginTestServer(t *testing.T) (*GatewayServer, *httptest.Server) {
 	t.Helper()
 
-	cfg := createOriginTestConfig()
-	mockAuth := createMockAuthProvider()
-	mockSessions := createMockSessionManager(mockAuth.claims)
-	testRouter := createTestRouter()
-	
-	server := BootstrapGatewayServer(
-		cfg,
-		mockAuth,
-		mockSessions,
-		testRouter,
-		health.CreateHealthMonitor(nil, zap.NewNop()),
-		testutil.CreateTestMetricsRegistry(),
-		ratelimit.CreateLocalMemoryRateLimiter(zap.NewNop()),
-		testutil.NewTestLogger(t),
-	)
-
-	testServer := httptest.NewServer(http.HandlerFunc(server.handleWebSocket))
-
-	return server, testServer
-}
-
-func createOriginTestConfig() *config.Config {
-	return &config.Config{
+	// Create test server with specific allowed origins
+	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:                 8443,
 			MaxConnections:       10,
@@ -64,9 +43,7 @@ func createOriginTestConfig() *config.Config {
 			AllowedOrigins:       []string{"https://trusted.example.com", "http://localhost:3000"},
 		},
 	}
-}
 
-func createMockAuthProvider() *mockAuthProvider {
 	mockAuth := &mockAuthProvider{
 		claims: &auth.Claims{
 			RateLimit: auth.RateLimitConfig{
@@ -76,20 +53,16 @@ func createMockAuthProvider() *mockAuthProvider {
 		},
 	}
 	mockAuth.claims.Subject = "test-user"
-	return mockAuth
-}
 
-func createMockSessionManager(claims *auth.Claims) *mockSessionManager {
-	return &mockSessionManager{
+	mockSessions := &mockSessionManager{
 		session: &session.Session{
 			ID:        "test-session",
 			User:      "test-user",
-			RateLimit: claims.RateLimit,
+			RateLimit: mockAuth.claims.RateLimit,
 		},
 	}
-}
 
-func createTestRouter() router.RequestRouter {
+	// Create router
 	routerCfg := config.RoutingConfig{
 		Strategy: "round_robin",
 		CircuitBreaker: config.CircuitBreakerConfig{
@@ -98,13 +71,35 @@ func createTestRouter() router.RequestRouter {
 			TimeoutSeconds:   30,
 		},
 	}
-	return router.InitializeRequestRouter(
+	mockDiscovery := &mockServiceDiscovery{}
+	testRouter := router.InitializeRequestRouter(
 		context.Background(),
 		routerCfg,
-		&mockServiceDiscovery{},
+		mockDiscovery,
 		testutil.CreateTestMetricsRegistry(),
 		zap.NewNop(),
 	)
+
+	mockHealth := health.CreateHealthMonitor(nil, zap.NewNop())
+	registry := testutil.CreateTestMetricsRegistry()
+	mockRateLimiter := ratelimit.CreateLocalMemoryRateLimiter(zap.NewNop())
+	logger := testutil.NewTestLogger(t)
+
+	server := BootstrapGatewayServer(
+		cfg,
+		mockAuth,
+		mockSessions,
+		testRouter,
+		mockHealth,
+		registry,
+		mockRateLimiter,
+		logger,
+	)
+
+	// Start test server
+	testServer := httptest.NewServer(http.HandlerFunc(server.handleWebSocket))
+
+	return server, testServer
 }
 
 func createWebSocketOriginTests() []struct {
