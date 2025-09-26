@@ -652,6 +652,7 @@ func (m *DirectClientManager) createClientConnectionFunc(
 
 		if err := client.Connect(ctx); err != nil {
 			m.recordConnectionFailure(serverURL, protocol, startTime, err)
+
 			return nil, fmt.Errorf("failed to connect %s client to %s: %w", protocol, serverURL, err)
 		}
 
