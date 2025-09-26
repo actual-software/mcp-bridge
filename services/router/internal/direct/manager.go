@@ -1300,6 +1300,7 @@ func (m *DirectClientManager) validateSSEURL(serverURL string) (*url.URL, error)
 		m.logger.Debug("invalid SSE URL",
 			zap.String("server_url", serverURL),
 			zap.Error(err))
+
 		return nil, err
 	}
 
@@ -1308,6 +1309,7 @@ func (m *DirectClientManager) validateSSEURL(serverURL string) (*url.URL, error)
 		m.logger.Debug("URL does not use HTTP scheme for SSE",
 			zap.String("server_url", serverURL),
 			zap.String("scheme", parsedURL.Scheme))
+
 		return nil, fmt.Errorf("invalid scheme for SSE: %s", parsedURL.Scheme)
 	}
 
