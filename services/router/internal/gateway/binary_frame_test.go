@@ -219,6 +219,7 @@ func createValidFrameData() []byte {
 	}
 
 	_, _ = buf.Write(payload)
+
 	return buf.Bytes()
 }
 
@@ -229,6 +230,7 @@ func createInvalidMagicBytesData() []byte {
 	_ = binary.Write(buf, binary.BigEndian, uint16(MessageTypeRequest))
 	_ = binary.Write(buf, binary.BigEndian, uint32(0)) // Reserved padding
 	_ = binary.Write(buf, binary.BigEndian, uint32(0)) // Payload length
+
 	return buf.Bytes()
 }
 
@@ -239,6 +241,7 @@ func createPayloadTooLargeData() []byte {
 	_ = binary.Write(buf, binary.BigEndian, uint16(MessageTypeRequest))
 	_ = binary.Write(buf, binary.BigEndian, uint32(0)) // Reserved padding
 	_ = binary.Write(buf, binary.BigEndian, uint32(MaxPayloadSize+1))
+
 	return buf.Bytes()
 }
 

@@ -273,13 +273,13 @@ func verifyAuthenticateResult(t *testing.T, tt struct {
 	t.Helper()
 
 	if tt.wantError {
-		assert.Error(t, err)
+		require.Error(t, err)
 
 		if tt.errorMsg != "" {
 			assert.Contains(t, err.Error(), tt.errorMsg)
 		}
 	} else {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, claims)
 		assert.Equal(t, tt.wantClaims.Scopes, claims.Scopes)
 		assert.Equal(t, "user123", claims.Subject)
