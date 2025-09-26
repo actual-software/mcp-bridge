@@ -61,6 +61,8 @@ func (suite *ProtocolsIntegrationTestSuite) TestStdioBackendIntegration() {
 }
 
 func (suite *ProtocolsIntegrationTestSuite) setupStdioBackend(logger *zap.Logger) *stdio.Backend {
+	suite.T().Helper()
+
 	script := suite.createTestScript(suite.getEchoServerScript())
 	config := stdio.Config{
 		Command: []string{"python3", script},
@@ -114,11 +116,15 @@ while True:
 }
 
 func (suite *ProtocolsIntegrationTestSuite) testStdioBackendHealth(backend *stdio.Backend) {
+	suite.T().Helper()
+
 	err := backend.Health(suite.ctx)
 	suite.NoError(err)
 }
 
 func (suite *ProtocolsIntegrationTestSuite) testStdioBackendRequestResponse(backend *stdio.Backend) {
+	suite.T().Helper()
+
 	req := &mcp.Request{
 		JSONRPC: "2.0",
 		Method:  "test/echo",
@@ -144,6 +150,8 @@ func (suite *ProtocolsIntegrationTestSuite) testStdioBackendRequestResponse(back
 }
 
 func (suite *ProtocolsIntegrationTestSuite) verifyStdioBackendMetrics(backend *stdio.Backend) {
+	suite.T().Helper()
+
 	metrics := backend.GetMetrics()
 	suite.True(metrics.IsHealthy)
 	suite.Positive(metrics.RequestCount)
@@ -219,6 +227,8 @@ func (suite *ProtocolsIntegrationTestSuite) TestStdioBackendPerformance() {
 }
 
 func (suite *ProtocolsIntegrationTestSuite) setupPerformanceStdioBackend(logger *zap.Logger) *stdio.Backend {
+	suite.T().Helper()
+
 	script := suite.createTestScript(suite.getPerformanceServerScript())
 	config := stdio.Config{
 		Command: []string{"python3", script},
@@ -261,6 +271,8 @@ while True:
 }
 
 func (suite *ProtocolsIntegrationTestSuite) runPerformanceTest(backend *stdio.Backend, numRequests int) time.Duration {
+	suite.T().Helper()
+
 	results := make(chan error, numRequests)
 	start := time.Now()
 
@@ -294,6 +306,8 @@ func (suite *ProtocolsIntegrationTestSuite) runPerformanceTest(backend *stdio.Ba
 func (suite *ProtocolsIntegrationTestSuite) verifyPerformanceResults(
 	backend *stdio.Backend, duration time.Duration, numRequests int,
 ) {
+	suite.T().Helper()
+
 	suite.Less(duration, 5*time.Second, "Requests should complete quickly")
 
 	metrics := backend.GetMetrics()
@@ -325,6 +339,8 @@ func (suite *ProtocolsIntegrationTestSuite) setupConcurrentBackends(
 }
 
 func (suite *ProtocolsIntegrationTestSuite) createConcurrentStdioBackend(logger *zap.Logger) *stdio.Backend {
+	suite.T().Helper()
+
 	script := suite.createTestScript(suite.getConcurrentServerScript())
 	stdioConfig := stdio.Config{
 		Command: []string{"python3", script},
@@ -337,6 +353,8 @@ func (suite *ProtocolsIntegrationTestSuite) createConcurrentStdioBackend(logger 
 }
 
 func (suite *ProtocolsIntegrationTestSuite) createConcurrentWebSocketBackend(logger *zap.Logger) *wsBackend.Backend {
+	suite.T().Helper()
+
 	wsServer := suite.createWebSocketServer()
 	suite.T().Cleanup(func() { wsServer.Close() })
 
@@ -460,6 +478,8 @@ func (suite *ProtocolsIntegrationTestSuite) verifyConcurrentResults(
 	stdioBackend *stdio.Backend, wsBackendInstance *wsBackend.Backend,
 	stdioErrors, wsErrors, numRequests int,
 ) {
+	suite.T().Helper()
+
 	suite.LessOrEqual(stdioErrors, numRequests/2, "Too many stdio errors")
 	suite.LessOrEqual(wsErrors, numRequests/2, "Too many WebSocket errors")
 
@@ -475,6 +495,8 @@ func (suite *ProtocolsIntegrationTestSuite) verifyConcurrentResults(
 // Helper methods
 
 func (suite *ProtocolsIntegrationTestSuite) createTestScript(content string) string {
+	suite.T().Helper()
+
 	tmpDir := suite.T().TempDir()
 	scriptPath := filepath.Join(tmpDir, "test_script.py")
 
