@@ -126,6 +126,7 @@ func (s *keychainStore) waitForRetry(ctx context.Context, attempt int, operation
 func (s *keychainStore) isRecoverableError(err error) bool {
 	// Check for specific recoverable errors
 	errorStr := err.Error()
+
 	return strings.Contains(errorStr, "resource temporarily unavailable") ||
 		strings.Contains(errorStr, "operation not permitted") ||
 		strings.Contains(errorStr, "fork/exec")
@@ -276,6 +277,7 @@ func isValidHexString(s string) bool {
 	}
 
 	matched, _ := regexp.MatchString("^[0-9a-fA-F]+$", s)
+
 	return matched
 }
 
@@ -287,6 +289,7 @@ func decodeAndValidateLength(s string) ([]byte, error) {
 		// Conservative limit: anything longer is probably a real hex token
 		return nil, fmt.Errorf("decode failed or too long")
 	}
+
 	return decoded, nil
 }
 
@@ -305,6 +308,7 @@ func containsProblematicCharacters(decoded []byte) bool {
 	for _, r := range decodedStr {
 		if r > asciiMaxChar {
 			hasNonASCII = true
+
 			break
 		}
 	}
@@ -344,6 +348,7 @@ func isValidUTF8Content(decoded []byte) bool {
 	for _, r := range decodedStr {
 		if r > asciiMaxChar {
 			hasNonASCII = true
+
 			break
 		}
 	}
