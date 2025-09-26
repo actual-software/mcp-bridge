@@ -457,6 +457,8 @@ func createServerCounters() *serverCounters {
 }
 
 func createFailoverTestServer(t *testing.T, counters *serverCounters) *mockTCPServerBench {
+	t.Helper()
+
 	return newMockTCPServerBench(t, func(conn net.Conn) {
 		atomic.AddInt64(counters.requestCount, 1)
 		currentCount := atomic.LoadInt64(counters.requestCount)
@@ -515,6 +517,8 @@ func processRequestFrame(conn net.Conn, frame BinaryFrame) {
 }
 
 func startFailoverServer(t *testing.T, server *mockTCPServerBench) string {
+	t.Helper()
+
 	addr, err := server.Start()
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
@@ -532,6 +536,8 @@ func createFailoverClientConfig(addr string) config.GatewayConfig {
 }
 
 func runConcurrentFailoverTest(t *testing.T, cfg config.GatewayConfig, logger *zap.Logger) *clientCounters {
+	t.Helper()
+
 	const (
 		numGoroutines          = 20
 		operationsPerGoroutine = 5

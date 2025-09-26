@@ -217,6 +217,8 @@ func createProtocolSetups(b *testing.B, logger *zap.Logger) []struct {
 	name  string
 	setup func() (DirectClient, func())
 } {
+	b.Helper()
+
 	return []struct {
 		name  string
 		setup func() (DirectClient, func())
@@ -318,6 +320,8 @@ func runProtocolConnectionBenchmark(b *testing.B, protocol struct {
 	name  string
 	setup func() (DirectClient, func())
 }) {
+	b.Helper()
+
 	for i := 0; i < b.N; i++ {
 		client, cleanup := protocol.setup()
 
@@ -349,6 +353,8 @@ func BenchmarkProtocolConcurrency(b *testing.B) {
 }
 
 func createConcurrencyBenchmarkConfigs(b *testing.B, logger *zap.Logger) []protocolBenchmarkConfig {
+	b.Helper()
+
 	return []protocolBenchmarkConfig{
 		{
 			name:  "HTTP",
