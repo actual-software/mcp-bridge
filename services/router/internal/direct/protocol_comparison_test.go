@@ -38,6 +38,8 @@ type protocolBenchmarkConfig struct {
 }
 
 func createProtocolBenchmarkConfigs(b *testing.B, logger *zap.Logger) []protocolBenchmarkConfig {
+	b.Helper()
+
 	return []protocolBenchmarkConfig{
 		{
 			name:  "HTTP",

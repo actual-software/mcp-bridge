@@ -504,6 +504,7 @@ func runConcurrentDetectionTest(t *testing.T, manager *DirectClientManager, serv
 func runConcurrentDetectionWorker(t *testing.T, wg *sync.WaitGroup, manager *DirectClientManager,
 	serverURLs []string, ctx context.Context, workerID, detectionsPerWorker int,
 	successfulDetections, errors *int64) {
+	t.Helper()
 	defer wg.Done()
 
 	for j := 0; j < detectionsPerWorker; j++ {
@@ -1050,6 +1051,7 @@ func runSingleDetection(
 	i int,
 	successCount *int64,
 ) {
+	t.Helper()
 	defer wg.Done()
 
 	testURL := fmt.Sprintf("%s?test=%d", serverURL, i%10)

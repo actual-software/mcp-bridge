@@ -39,6 +39,8 @@ func createNewRouterTests(t *testing.T) []struct {
 	wantError bool
 	errorMsg  string
 } {
+	t.Helper()
+
 	return []struct {
 		name      string
 		config    *config.Config
@@ -894,6 +896,8 @@ func setupBenchmarkRouter(
 	b *testing.B,
 	mockServer *httptest.Server,
 ) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
+	b.Helper()
+
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -950,6 +954,8 @@ func waitForBenchmarkConnection(router *LocalRouter) {
 }
 
 func runBenchmarkLoop(b *testing.B, router *LocalRouter, request []byte) {
+	b.Helper()
+
 	for i := 0; i < b.N; i++ {
 		// Send request via stdin channel (proper way with new architecture).
 		router.GetStdinChan() <- request
