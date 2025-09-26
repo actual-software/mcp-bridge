@@ -730,7 +730,7 @@ func TestOAuth2Provider_ValidateToken_WithJWKS(t *testing.T) {
 
 	// Test token validation - should try JWKS first, fail, then fall back to introspection
 	claims, err := provider.ValidateToken("test-jwt-token")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, claims)
 	assert.Equal(t, "user123", claims.Subject)
 }
@@ -752,7 +752,7 @@ func TestOAuth2Provider_ValidateToken_IntrospectionFailure(t *testing.T) {
 
 	// Test token validation failure
 	claims, err := provider.ValidateToken("test-token")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, claims)
 	assert.Contains(t, err.Error(), "token introspection failed")
 }
@@ -918,7 +918,7 @@ func TestOAuth2Provider_IntrospectToken_NetworkError(t *testing.T) {
 
 	// Test that network error is handled properly
 	resp, err := provider.introspectToken("test-token")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "introspection request failed")
 }

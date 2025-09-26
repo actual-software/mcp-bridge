@@ -180,6 +180,7 @@ func runRedisSessionStoreTests(t *testing.T, tests []struct {
 			if tt.wantError {
 				if err == nil {
 					t.Error("Expected error, got nil")
+
 					return
 				}
 

@@ -1852,6 +1852,7 @@ func BenchmarkWebSocketClientFrameSizes(b *testing.B) {
 }
 
 func runWebSocketFrameSizeBenchmark(b *testing.B, logger *zap.Logger, frameSize int) {
+	b.Helper()
 	server := setupWebSocketFrameSizeBenchServer(b, frameSize)
 	defer server.Close()
 
@@ -1862,6 +1863,7 @@ func runWebSocketFrameSizeBenchmark(b *testing.B, logger *zap.Logger, frameSize 
 }
 
 func setupWebSocketFrameSizeBenchServer(b *testing.B, frameSize int) *httptest.Server {
+	b.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },

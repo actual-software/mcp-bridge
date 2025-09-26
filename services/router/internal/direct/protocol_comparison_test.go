@@ -682,6 +682,7 @@ func runPayloadBenchmarkLoop(
 	protocolName string,
 	payload string,
 ) {
+	b.Helper()
 	for i := 0; i < b.N; i++ {
 		req := &mcp.Request{
 			JSONRPC: constants.TestJSONRPCVersion,

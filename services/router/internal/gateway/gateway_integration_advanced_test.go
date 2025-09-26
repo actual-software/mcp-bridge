@@ -616,6 +616,7 @@ func runSingleOperation(
 }
 
 func validateConcurrentFailoverResults(t *testing.T, serverCounters *serverCounters, clientCounters *clientCounters) {
+	t.Helper()
 	clientSuccesses := atomic.LoadInt64(clientCounters.successes)
 	clientErrors := atomic.LoadInt64(clientCounters.errors)
 

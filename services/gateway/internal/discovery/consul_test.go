@@ -731,6 +731,7 @@ func waitForConsul(addr string, timeout time.Duration) error {
 		client, err := consulapi.NewClient(config)
 		if err != nil {
 			time.Sleep(1 * time.Second)
+
 			continue
 		}
 

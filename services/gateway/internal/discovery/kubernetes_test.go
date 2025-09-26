@@ -86,6 +86,7 @@ func testNamespaceOperations(t *testing.T, client kubernetes.Interface) {
 	for _, ns := range namespaces.Items {
 		if ns.Name == "test-mcp-namespace" {
 			found = true
+
 			break
 		}
 	}
@@ -1308,12 +1309,14 @@ func waitForKubernetesCluster(kubeconfigPath string, timeout time.Duration) erro
 		k8sConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 		if err != nil {
 			time.Sleep(2 * time.Second)
+
 			continue
 		}
 
 		client, err := kubernetes.NewForConfig(k8sConfig)
 		if err != nil {
 			time.Sleep(2 * time.Second)
+
 			continue
 		}
 

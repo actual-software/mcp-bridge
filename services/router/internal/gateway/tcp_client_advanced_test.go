@@ -142,6 +142,7 @@ func (e *eventTracker) getEvents() []string {
 }
 
 func createLifecycleTestServer(t *testing.T, tracker *eventTracker) *mockTCPServer {
+	t.Helper()
 	return newMockTCPServer(t, func(conn net.Conn) {
 		handleLifecycleConnection(conn, tracker)
 	})
@@ -244,6 +245,7 @@ func handleRequest(frame BinaryFrame, conn net.Conn, tracker *eventTracker) {
 }
 
 func startLifecycleServer(t *testing.T, server *mockTCPServer) string {
+	t.Helper()
 	addr, err := server.Start()
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
