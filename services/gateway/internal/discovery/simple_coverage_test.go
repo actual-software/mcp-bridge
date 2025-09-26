@@ -42,7 +42,7 @@ func testSSEDiscoveryStop(t *testing.T, logger *zap.Logger) {
 	}
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sseBridge, ok := discovery.(*SSEDiscovery)
 
@@ -67,7 +67,7 @@ func testStdioDiscoveryStop(t *testing.T, logger *zap.Logger) {
 	}
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	stdioBridge, ok := discovery.(*StdioDiscovery)
 
@@ -92,7 +92,7 @@ func testWebSocketDiscoveryStop(t *testing.T, logger *zap.Logger) {
 	}
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	wsBridge, ok := discovery.(*WebSocketDiscovery)
 
@@ -134,7 +134,7 @@ func testSSEDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sseBridge, ok := discovery.(*SSEDiscovery)
 
@@ -169,7 +169,7 @@ func testStdioDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	stdioBridge, ok := discovery.(*StdioDiscovery)
 
@@ -204,7 +204,7 @@ func testWebSocketDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 	}
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	wsBridge, ok := discovery.(*WebSocketDiscovery)
 
@@ -257,7 +257,7 @@ func testSSEDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sseBridge, ok := discovery.(*SSEDiscovery)
 
@@ -273,7 +273,7 @@ func testSSEDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 	// Should complete without panic (expect error due to non-existent service)
 	err = sseBridge.HealthCheck(ctx, endpoint)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func testStdioDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
@@ -293,7 +293,7 @@ func testStdioDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 	}
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	stdioBridge, ok := discovery.(*StdioDiscovery)
 
@@ -308,7 +308,7 @@ func testStdioDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 	// Should complete without panic (expect error due to non-existent command)
 	err = stdioBridge.HealthCheck(ctx, endpoint)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func testWebSocketDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
@@ -328,7 +328,7 @@ func testWebSocketDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 	}
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	wsBridge, ok := discovery.(*WebSocketDiscovery)
 
@@ -342,5 +342,5 @@ func testWebSocketDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 	// Should complete without panic (expect error due to non-existent service)
 	err = wsBridge.HealthCheck(ctx, endpoint)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 }
