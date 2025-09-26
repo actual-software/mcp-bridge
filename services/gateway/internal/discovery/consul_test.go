@@ -647,7 +647,7 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 	// Start Consul in dev mode for testing
 	// containerName is validated with regex above (line 605), port comes from findAvailablePort
 
-	cmd := exec.CommandContext(ctx, "docker", "run", "-d", "--rm",
+	cmd := exec.CommandContext(ctx, "docker", "run", "-d", "--rm", //nolint:gosec // Legitimate test Docker command
 		"--name", containerName,
 		"-p", fmt.Sprintf("%d:8500", port),
 		"consul:1.16",
@@ -664,7 +664,7 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 
 	if err := waitForConsul(consulAddr, 30*time.Second); err != nil {
 		// Cleanup on failure
-		_ = exec.CommandContext(ctx, "docker", "stop", containerName).Run()
+		_ = exec.CommandContext(ctx, "docker", "stop", containerName).Run() //nolint:gosec // Test cleanup command
 		return nil, "", fmt.Errorf("Consul failed to become ready: %w", err)
 	}
 
@@ -673,7 +673,7 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 	cleanup = func() {
 		t.Logf("Stopping Consul container %s", containerName)
 
-		cmd := exec.CommandContext(ctx, "docker", "stop", containerName)
+		cmd := exec.CommandContext(ctx, "docker", "stop", containerName) //nolint:gosec // Test cleanup command
 		if output, err := cmd.CombinedOutput(); err != nil {
 			t.Logf("Failed to stop Consul container: %v, output: %s", err, string(output))
 		}

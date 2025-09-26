@@ -357,7 +357,7 @@ func createTestScript(t *testing.T, content string) string {
 	tmpDir := t.TempDir()
 	scriptPath := filepath.Join(tmpDir, "test_script.sh")
 
-	err := os.WriteFile(scriptPath, []byte(content), 0o755)
+	err := os.WriteFile(scriptPath, []byte(content), 0o755) //nolint:gosec // Test file needs executable permissions
 	require.NoError(t, err)
 
 	return scriptPath
