@@ -207,7 +207,7 @@ done`)
 	}
 
 	_, err = backend.SendRequest(ctx, req)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "TIMEOUT")
 }
 

@@ -1327,6 +1327,7 @@ func (m *DirectClientManager) performSSEConnectionTest(ctx context.Context, serv
 		m.logger.Debug("failed to create SSE request",
 			zap.String("server_url", serverURL),
 			zap.Error(err))
+
 		return nil, err
 	}
 
@@ -1345,6 +1346,7 @@ func (m *DirectClientManager) performSSEConnectionTest(ctx context.Context, serv
 		m.logger.Debug("SSE connection test failed",
 			zap.String("server_url", serverURL),
 			zap.Error(err))
+
 		return nil, err
 	}
 
@@ -1364,6 +1366,7 @@ func (m *DirectClientManager) validateSSEResponse(serverURL string, resp *http.R
 		m.logger.Debug("server does not support SSE",
 			zap.String("server_url", serverURL),
 			zap.String("content_type", contentType))
+
 		return false
 	}
 
