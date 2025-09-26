@@ -56,6 +56,7 @@ func TestRedisRateLimiterWithCircuitBreaker_CircuitOpen(t *testing.T) {
 func TestRedisRateLimiterWithCircuitBreaker_CircuitRecovery(t *testing.T) {
 	// Set up circuit recovery test environment
 	db, mock, limiter := setupCircuitRecoveryTest(t)
+
 	defer func() { _ = db.Close() }()
 
 	ctx := context.Background()
@@ -85,7 +86,10 @@ func setupCircuitRecoveryTest(t *testing.T) (*redis.Client, redismock.ClientMock
 	return db, mock, limiter
 }
 
-func causeCircuitToOpen(t *testing.T, mock redismock.ClientMock, limiter *RedisRateLimiterWithCircuitBreaker, ctx context.Context, config auth.RateLimitConfig) {
+func causeCircuitToOpen(
+	t *testing.T, mock redismock.ClientMock, limiter *RedisRateLimiterWithCircuitBreaker,
+	ctx context.Context, config auth.RateLimitConfig,
+) {
 	t.Helper()
 	// Cause 3 Redis failures to open circuit
 	for i := 0; i < 3; i++ {
@@ -98,12 +102,16 @@ func causeCircuitToOpen(t *testing.T, mock redismock.ClientMock, limiter *RedisR
 		mock.ExpectTxPipelineExec().SetErr(errors.New("pipeline failed"))
 
 		allowed, err := limiter.Allow(ctx, "test-key", config)
+
 		assert.NoError(t, err) // Fallback should work
 		assert.True(t, allowed)
 	}
 }
 
-func verifyCircuitRecovery(t *testing.T, limiter *RedisRateLimiterWithCircuitBreaker, ctx context.Context, config auth.RateLimitConfig) {
+func verifyCircuitRecovery(
+	t *testing.T, limiter *RedisRateLimiterWithCircuitBreaker,
+	ctx context.Context, config auth.RateLimitConfig,
+) {
 	t.Helper()
 	// Circuit should be open
 	assert.Equal(t, circuit.StateOpen, limiter.GetCircuitBreakerState())
@@ -114,6 +122,7 @@ func verifyCircuitRecovery(t *testing.T, limiter *RedisRateLimiterWithCircuitBre
 	// Test that the circuit breaker can recover with successful Redis calls
 	// This is a simplified test that just verifies the fallback works consistently
 	allowed, err := limiter.Allow(ctx, "test-key", config)
+
 	assert.NoError(t, err) // Should succeed via fallback when circuit is open
 	assert.True(t, allowed)
 }
@@ -142,12 +151,14 @@ func TestRedisRateLimiterWithCircuitBreaker_FallbackRateLimit(t *testing.T) {
 	// First two requests should pass
 	for i := 0; i < 2; i++ {
 		allowed, err := limiter.Allow(ctx, "test-key", config)
+
 		assert.NoError(t, err)
 		assert.True(t, allowed)
 	}
 
 	// Third request should be rate limited by fallback
 	allowed, err := limiter.Allow(ctx, "test-key", config)
+
 	assert.NoError(t, err)
 	assert.False(t, allowed)
 }
@@ -167,6 +178,7 @@ func TestRedisSessionManagerWithCircuitBreaker_Get(t *testing.T) {
 	mock.ExpectGet("test-key").SetVal("test-value")
 
 	value, err := manager.Get(ctx, "test-key")
+
 	require.NoError(t, err)
 	assert.Equal(t, "test-value", value)
 
@@ -174,6 +186,7 @@ func TestRedisSessionManagerWithCircuitBreaker_Get(t *testing.T) {
 	mock.ExpectGet("missing-key").RedisNil()
 
 	_, err = manager.Get(ctx, "missing-key")
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "key not found")
 	assert.Equal(t, circuit.StateClosed, manager.GetCircuitBreakerState())
@@ -183,6 +196,7 @@ func TestRedisSessionManagerWithCircuitBreaker_Get(t *testing.T) {
 		mock.ExpectGet("error-key").SetErr(errors.New("redis error"))
 
 		_, err = manager.Get(ctx, "error-key")
+
 		assert.Error(t, err)
 	}
 
@@ -191,6 +205,7 @@ func TestRedisSessionManagerWithCircuitBreaker_Get(t *testing.T) {
 
 	// Next request should fail immediately
 	_, err = manager.Get(ctx, "any-key")
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "circuit breaker is open")
 
@@ -212,12 +227,14 @@ func TestRedisSessionManagerWithCircuitBreaker_SetAndDelete(t *testing.T) {
 	// Test successful set
 	mock.ExpectSet("test-key", "test-value", 5*time.Minute).SetVal("OK")
 	err := manager.Set(ctx, "test-key", "test-value", 5*time.Minute)
+
 	require.NoError(t, err)
 
 	// Test successful delete
 	mock.ExpectDel("test-key").SetVal(1)
 
 	err = manager.Delete(ctx, "test-key")
+
 	require.NoError(t, err)
 
 	// Open the circuit
@@ -229,10 +246,12 @@ func TestRedisSessionManagerWithCircuitBreaker_SetAndDelete(t *testing.T) {
 
 	// Operations should fail when circuit is open
 	err = manager.Set(ctx, "key", "value", time.Minute)
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "circuit breaker is open")
 
 	err = manager.Delete(ctx, "key")
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "circuit breaker is open")
 

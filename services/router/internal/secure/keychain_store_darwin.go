@@ -304,6 +304,7 @@ func containsProblematicCharacters(decoded []byte) bool {
 	
 	// Check for non-ASCII Unicode characters (by looking for valid UTF-8)
 	hasNonASCII := false
+
 	for _, r := range decodedStr {
 		if r > asciiMaxChar {
 			hasNonASCII = true
@@ -327,6 +328,7 @@ func hasAcceptableControlCharRatio(decoded []byte) bool {
 	// Additional safety: check if it's mostly readable content
 	// Count control characters (excluding the known good ones)
 	badControlChars := 0
+
 	for _, b := range decoded {
 		if b < 32 && b != '\n' && b != '\r' && b != '\t' {
 			badControlChars++
@@ -341,6 +343,7 @@ func isValidUTF8Content(decoded []byte) bool {
 	// Check if the string is valid UTF-8 (important for Unicode text)
 	decodedStr := string(decoded)
 	hasNonASCII := false
+
 	for _, r := range decodedStr {
 		if r > asciiMaxChar {
 			hasNonASCII = true

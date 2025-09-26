@@ -869,6 +869,7 @@ func runPerformanceRequests(t *testing.T, client *HTTPClient) []time.Duration {
 	t.Helper()
 	
 	const numRequests = 15
+
 	ctx := context.Background()
 	requestTimes := make([]time.Duration, numRequests)
 
@@ -985,6 +986,7 @@ func runConcurrentHTTPOperations(
 	t.Helper()
 	
 	var wg sync.WaitGroup
+
 	ctx := context.Background()
 
 	errChan := make(chan error, numGoroutines*requestsPerGoroutine)

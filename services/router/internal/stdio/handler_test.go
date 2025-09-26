@@ -156,6 +156,7 @@ func runStdinHandlerTest(
 
 	// Collect received messages.
 	var received []string
+
 	done := make(chan bool)
 
 	go func() {
@@ -166,6 +167,7 @@ func runStdinHandlerTest(
 					done <- true
 					return
 				}
+
 				received = append(received, string(msg))
 				if tt.ctxCancel && len(received) >= tt.cancelAt {
 					cancel()
@@ -353,6 +355,7 @@ func setupStdoutHandler(t *testing.T) (*bytes.Buffer, *Handler, chan []byte, con
 	t.Helper()
 	
 	var outputBuf bytes.Buffer
+
 	writer := bufio.NewWriter(&outputBuf)
 	logger := testutil.NewTestLogger(t)
 	stdoutChan := make(chan []byte, 10)

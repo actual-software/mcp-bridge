@@ -31,7 +31,7 @@ const providerKubernetes = "kubernetes"
 
 func createKubernetesTestClient(t *testing.T, kubeconfig string) kubernetes.Interface {
 	t.Helper()
-	
+
 	// Create Kubernetes client using the test cluster
 	k8sConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -48,7 +48,7 @@ func createKubernetesTestClient(t *testing.T, kubeconfig string) kubernetes.Inte
 
 func testBasicKubernetesConnectivity(t *testing.T, client kubernetes.Interface) {
 	t.Helper()
-	
+
 	// Test basic Kubernetes connectivity
 	nodes, err := client.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
@@ -61,7 +61,7 @@ func testBasicKubernetesConnectivity(t *testing.T, client kubernetes.Interface) 
 
 func testNamespaceOperations(t *testing.T, client kubernetes.Interface) {
 	t.Helper()
-	
+
 	// Test namespace operations
 	namespace := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -82,16 +82,18 @@ func testNamespaceOperations(t *testing.T, client kubernetes.Interface) {
 	}
 
 	found := false
+
 	for _, ns := range namespaces.Items {
 		if ns.Name == "test-mcp-namespace" {
 			found = true
 			break
 		}
 	}
-	
+
 	assert.True(t, found, "Test namespace should be created")
 
 	// Cleanup namespace
+
 	defer func() {
 		err = client.CoreV1().Namespaces().Delete(context.Background(), "test-mcp-namespace", metav1.DeleteOptions{})
 		if err != nil {
@@ -102,9 +104,10 @@ func testNamespaceOperations(t *testing.T, client kubernetes.Interface) {
 
 func testKubernetesDiscoveryIntegration(t *testing.T, client kubernetes.Interface, kubeconfig string) {
 	t.Helper()
-	
+
 	// Test KubernetesDiscovery integration with real cluster
 	var cfg config.ServiceDiscoveryConfig
+
 	cfg.Provider = providerKubernetes
 	cfg.Kubernetes.ConfigPath = kubeconfig
 
@@ -120,6 +123,7 @@ func testKubernetesDiscoveryIntegration(t *testing.T, client kubernetes.Interfac
 
 	// Test discovery operations
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
 	defer cancel()
 
 	err := discovery.Start(ctx)
@@ -132,6 +136,7 @@ func testKubernetesDiscoveryIntegration(t *testing.T, client kubernetes.Interfac
 
 	// Test namespace listing
 	namespaceList := discovery.ListNamespaces()
+
 	assert.Contains(t, namespaceList, "test-mcp-namespace", "Discovery should find our test namespace")
 	t.Logf("Discovery found namespaces: %v", namespaceList)
 
@@ -149,6 +154,7 @@ func TestNewKubernetesDiscovery(t *testing.T) {
 	if err != nil {
 		t.Skipf("Skipping test: %v", err)
 	}
+
 	defer cleanup()
 
 	client := createKubernetesTestClient(t, kubeconfig)
@@ -160,6 +166,7 @@ func TestNewKubernetesDiscovery(t *testing.T) {
 func TestKubernetesDiscovery_DiscoverNamespaceServices(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	tests := createKubernetesNamespaceServiceTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runNamespaceServiceTest(t, tt, logger)
@@ -180,7 +187,7 @@ func createKubernetesNamespaceServiceTests() []struct {
 	disabledTests := createDisabledServiceTests()
 	invalidTests := createInvalidServiceTests()
 	multipleTests := createMultipleServiceTests()
-	
+
 	var allTests []struct {
 		name              string
 		namespace         string
@@ -190,12 +197,12 @@ func createKubernetesNamespaceServiceTests() []struct {
 		expectedEndpoints int
 		expectedTools     int
 	}
-	
+
 	allTests = append(allTests, enabledTests...)
 	allTests = append(allTests, disabledTests...)
 	allTests = append(allTests, invalidTests...)
 	allTests = append(allTests, multipleTests...)
-	
+
 	return allTests
 }
 
@@ -282,10 +289,10 @@ func createInvalidServiceTests() []struct {
 		expectedEndpoints int
 		expectedTools     int
 	}
-	
+
 	tests = append(tests, createMissingAnnotationTests()...)
 	tests = append(tests, createInvalidToolsJSONTests()...)
-	
+
 	return tests
 }
 
@@ -529,6 +536,7 @@ func setupTestDiscovery(
 	client *fake.Clientset,
 ) *KubernetesDiscovery {
 	ctx, cancel := context.WithCancel(context.Background())
+
 	defer cancel()
 
 	return &KubernetesDiscovery{
@@ -543,7 +551,7 @@ func setupTestDiscovery(
 // verifyEndpointCount checks if the expected number of endpoints were discovered.
 func verifyEndpointCount(t *testing.T, actual, expected int) {
 	t.Helper()
-	
+
 	if actual != expected {
 		t.Errorf("Expected %d endpoints, got %d", expected, actual)
 	}
@@ -552,6 +560,7 @@ func verifyEndpointCount(t *testing.T, actual, expected int) {
 // verifyEndpointDetails verifies the details of discovered endpoints.
 func verifyEndpointDetails(t *testing.T, endpoints []Endpoint, expectedTools int, testName string) {
 	t.Helper()
+
 	for _, ep := range endpoints {
 		verifyBasicEndpointFields(t, ep)
 		verifyEndpointTools(t, ep, expectedTools)
@@ -562,6 +571,7 @@ func verifyEndpointDetails(t *testing.T, endpoints []Endpoint, expectedTools int
 // verifyBasicEndpointFields checks basic endpoint fields.
 func verifyBasicEndpointFields(t *testing.T, ep Endpoint) {
 	t.Helper()
+
 	if ep.Namespace == "" {
 		t.Error("Endpoint missing namespace")
 	}
@@ -582,6 +592,7 @@ func verifyBasicEndpointFields(t *testing.T, ep Endpoint) {
 // verifyEndpointTools checks endpoint tools count.
 func verifyEndpointTools(t *testing.T, ep Endpoint, expectedTools int) {
 	t.Helper()
+
 	if expectedTools > 0 && len(ep.Tools) != expectedTools {
 		t.Errorf("Expected %d tools, got %d", expectedTools, len(ep.Tools))
 	}
@@ -590,6 +601,7 @@ func verifyEndpointTools(t *testing.T, ep Endpoint, expectedTools int) {
 // verifyEndpointWeights checks endpoint weights for specific test cases.
 func verifyEndpointWeights(t *testing.T, ep Endpoint, testName string) {
 	t.Helper()
+
 	if testName != "Multiple services with different weights" {
 		return
 	}
@@ -706,6 +718,7 @@ func TestKubernetesDiscovery_ListNamespaces(t *testing.T) {
 
 	// Check all namespaces are present
 	namespaceMap := make(map[string]bool)
+
 	for _, ns := range namespaces {
 		namespaceMap[ns] = true
 	}
@@ -724,18 +737,25 @@ func TestKubernetesDiscovery_WatchEvents(t *testing.T) {
 	fakeClient.PrependWatchReactor("services", k8stesting.DefaultWatchReactor(fakeWatcher, nil))
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	defer cancel()
 
 	discovery := createKubernetesDiscoveryForWatch(ctx, cancel, logger, fakeClient)
 	eventChan := make(chan watch.Event)
 
 	startWatching(discovery, eventChan)
+
 	testService := createTestServiceForWatch()
 	testServiceEventHandling(eventChan, testService)
 	stopWatching(cancel, eventChan, discovery)
 }
 
-func createKubernetesDiscoveryForWatch(ctx context.Context, cancel context.CancelFunc, logger *zap.Logger, fakeClient *fake.Clientset) *KubernetesDiscovery {
+func createKubernetesDiscoveryForWatch(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	logger *zap.Logger,
+	fakeClient *fake.Clientset,
+) *KubernetesDiscovery {
 	return &KubernetesDiscovery{
 		config: config.ServiceDiscoveryConfig{
 			NamespaceSelector: []string{"test-namespace"},
@@ -752,8 +772,10 @@ func createKubernetesDiscoveryForWatch(ctx context.Context, cancel context.Cance
 
 func startWatching(discovery *KubernetesDiscovery, eventChan chan watch.Event) {
 	discovery.wg.Add(1)
+
 	go func() {
 		defer discovery.wg.Done()
+
 		discovery.handleServiceEvents("test-namespace", eventChan)
 	}()
 }
@@ -774,14 +796,18 @@ func createTestServiceForWatch() *v1.Service {
 
 func testServiceEventHandling(eventChan chan watch.Event, testService *v1.Service) {
 	eventChan <- watch.Event{Type: watch.Added, Object: testService}
+
 	time.Sleep(100 * time.Millisecond)
 
 	modifiedService := testService.DeepCopy()
+
 	modifiedService.Annotations["mcp.bridge/weight"] = "200"
 	eventChan <- watch.Event{Type: watch.Modified, Object: modifiedService}
+
 	time.Sleep(100 * time.Millisecond)
 
 	eventChan <- watch.Event{Type: watch.Deleted, Object: testService}
+
 	time.Sleep(100 * time.Millisecond)
 }
 
@@ -819,6 +845,7 @@ func TestKubernetesDiscovery_PeriodicResync(t *testing.T) {
 		defer discovery.wg.Done()
 
 		ticker := time.NewTicker(100 * time.Millisecond)
+
 		defer ticker.Stop()
 
 		for {
@@ -826,7 +853,7 @@ func TestKubernetesDiscovery_PeriodicResync(t *testing.T) {
 			case <-discovery.ctx.Done():
 				return
 			case <-ticker.C:
-				_ = discovery.discoverServices() 
+				_ = discovery.discoverServices()
 			}
 		}
 	}()
@@ -843,12 +870,13 @@ func TestKubernetesDiscovery_StartStop(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	testService, testEndpoint := createStartStopTestObjects()
 	fakeClient := createStartStopFakeClient(testService, testEndpoint)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
+
 	defer cancel()
-	
+
 	discovery := createStartStopDiscovery(ctx, cancel, logger, fakeClient)
-	
+
 	testDiscoveryStartStop(t, discovery)
 }
 
@@ -883,12 +911,22 @@ func createStartStopFakeClient(testService *v1.Service, testEndpoint *v1.Endpoin
 	fakeClient := fake.NewSimpleClientset(testService, testEndpoint)
 	fakeServiceWatcher := watch.NewFake()
 	fakeEndpointWatcher := watch.NewFake()
+
 	fakeClient.PrependWatchReactor("services", k8stesting.DefaultWatchReactor(fakeServiceWatcher, nil))
-	fakeClient.PrependWatchReactor("endpoints", k8stesting.DefaultWatchReactor(fakeEndpointWatcher, nil))
+	fakeClient.PrependWatchReactor(
+		"endpoints",
+		k8stesting.DefaultWatchReactor(fakeEndpointWatcher, nil),
+	)
+
 	return fakeClient
 }
 
-func createStartStopDiscovery(ctx context.Context, cancel context.CancelFunc, logger *zap.Logger, fakeClient *fake.Clientset) *KubernetesDiscovery {
+func createStartStopDiscovery(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	logger *zap.Logger,
+	fakeClient *fake.Clientset,
+) *KubernetesDiscovery {
 	return &KubernetesDiscovery{
 		config: config.ServiceDiscoveryConfig{
 			NamespaceSelector: []string{"test-namespace"},
@@ -905,19 +943,21 @@ func createStartStopDiscovery(ctx context.Context, cancel context.CancelFunc, lo
 
 func testDiscoveryStartStop(t *testing.T, discovery *KubernetesDiscovery) {
 	t.Helper()
+
 	err := discovery.Start(context.Background())
 	if err != nil {
 		t.Fatalf("Failed to start discovery: %v", err)
 	}
+
 	time.Sleep(100 * time.Millisecond) // Give some time for initialization
-	
+
 	endpoints := discovery.GetEndpoints("mcp-namespace")
 	if len(endpoints) != 1 {
 		t.Errorf("Expected 1 endpoint, got %d", len(endpoints))
 	}
-	
+
 	discovery.Stop()
-	
+
 	select {
 	case <-time.After(1 * time.Second):
 		t.Error("Discovery did not shut down cleanly")
@@ -987,6 +1027,7 @@ func NewMockServiceDiscovery() *MockServiceDiscovery {
 
 func (m *MockServiceDiscovery) Start(_ context.Context) error {
 	m.mu.Lock()
+
 	defer m.mu.Unlock()
 
 	if m.started {
@@ -1000,6 +1041,7 @@ func (m *MockServiceDiscovery) Start(_ context.Context) error {
 
 func (m *MockServiceDiscovery) Stop() {
 	m.mu.Lock()
+
 	defer m.mu.Unlock()
 
 	m.stopped = true
@@ -1007,6 +1049,7 @@ func (m *MockServiceDiscovery) Stop() {
 
 func (m *MockServiceDiscovery) GetEndpoints(namespace string) []Endpoint {
 	m.mu.RLock()
+
 	defer m.mu.RUnlock()
 
 	return m.endpoints[namespace]
@@ -1014,9 +1057,11 @@ func (m *MockServiceDiscovery) GetEndpoints(namespace string) []Endpoint {
 
 func (m *MockServiceDiscovery) GetAllEndpoints() map[string][]Endpoint {
 	m.mu.RLock()
+
 	defer m.mu.RUnlock()
 
 	result := make(map[string][]Endpoint)
+
 	for k, v := range m.endpoints {
 		result[k] = v
 	}
@@ -1026,9 +1071,11 @@ func (m *MockServiceDiscovery) GetAllEndpoints() map[string][]Endpoint {
 
 func (m *MockServiceDiscovery) ListNamespaces() []string {
 	m.mu.RLock()
+
 	defer m.mu.RUnlock()
 
 	namespaces := make([]string, 0, len(m.endpoints))
+
 	for ns := range m.endpoints {
 		namespaces = append(namespaces, ns)
 	}
@@ -1038,6 +1085,7 @@ func (m *MockServiceDiscovery) ListNamespaces() []string {
 
 func (m *MockServiceDiscovery) AddEndpoint(namespace string, endpoint Endpoint) {
 	m.mu.Lock()
+
 	defer m.mu.Unlock()
 
 	m.endpoints[namespace] = append(m.endpoints[namespace], endpoint)
@@ -1170,6 +1218,7 @@ func createEnabledTestConfig() config.ServiceDiscoveryConfig {
 // setupKubernetesInfrastructure creates a local Kubernetes cluster for testing.
 func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig string, err error) {
 	t.Helper()
+
 	ctx := context.Background() // Test infrastructure context
 
 	// Check if Docker is available
@@ -1186,8 +1235,9 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 	clusterName := fmt.Sprintf("test-mcp-%d", time.Now().Unix())
 
 	// Create kind cluster
-	
+
 	createCmd := exec.CommandContext(ctx, "kind", "create", "cluster", "--name", clusterName, "--wait", "60s")
+
 	createOutput, err := createCmd.CombinedOutput()
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to create kind cluster: %w, output: %s", err, string(createOutput))
@@ -1197,16 +1247,15 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 
 	// Get kubeconfig path
 	kubeconfigPath := filepath.Join(os.TempDir(), "kubeconfig-" + clusterName)
-	
+
 	// Export kubeconfig
-	
+
 	exportCmd := exec.CommandContext(ctx, "kind", "export", "kubeconfig",
 		"--name", clusterName, "--kubeconfig", kubeconfigPath)
+
 	exportOutput, err := exportCmd.CombinedOutput()
 	if err != nil {
 		// Cleanup on failure
-
-		
 		_ = exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", clusterName).Run()
 		return nil, "", fmt.Errorf("failed to export kubeconfig: %w, output: %s", err, string(exportOutput))
 	}
@@ -1214,10 +1263,9 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 	// Wait for cluster to be ready
 	if err := waitForKubernetesCluster(kubeconfigPath, 60*time.Second); err != nil {
 		// Cleanup on failure
-
-		
 		_ = exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", clusterName).Run()
 		_ = os.Remove(kubeconfigPath)
+
 		return nil, "", fmt.Errorf("Kubernetes cluster failed to become ready: %w", err)
 	}
 
@@ -1225,12 +1273,12 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 
 	cleanup = func() {
 		t.Logf("Cleaning up kind cluster: %s", clusterName)
-		
+
 		deleteCmd := exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", clusterName)
 		if output, err := deleteCmd.CombinedOutput(); err != nil {
 			t.Logf("Failed to delete kind cluster: %v, output: %s", err, string(output))
 		}
-		
+
 		// Remove kubeconfig file
 		if err := os.Remove(kubeconfigPath); err != nil {
 			t.Logf("Failed to remove kubeconfig file: %v", err)
@@ -1240,26 +1288,27 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 	return cleanup, kubeconfigPath, nil
 }
 
-
 // isKindAvailable checks if kind is available.
 func isKindAvailable() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
 	defer cancel()
+
 	cmd := exec.CommandContext(ctx, "kind", "version")
+
 	return cmd.Run() == nil
 }
 
 // waitForKubernetesCluster waits for the Kubernetes cluster to become ready.
 func waitForKubernetesCluster(kubeconfigPath string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
-	
+
 	for time.Now().Before(deadline) {
 		// Try to create a client and check if cluster is ready
 		k8sConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 		if err != nil {
 			time.Sleep(2 * time.Second)
 			continue
-
 		}
 
 		client, err := kubernetes.NewForConfig(k8sConfig)
@@ -1267,15 +1316,15 @@ func waitForKubernetesCluster(kubeconfigPath string, timeout time.Duration) erro
 			time.Sleep(2 * time.Second)
 			continue
 		}
-		
+
 		// Try to list nodes to verify cluster is working
 		_, err = client.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 		if err == nil {
 			return nil
 		}
-		
+
 		time.Sleep(2 * time.Second)
 	}
-	
+
 	return fmt.Errorf("Kubernetes cluster did not become ready within %v", timeout)
 }

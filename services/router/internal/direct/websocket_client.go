@@ -242,9 +242,11 @@ func (c *WebSocketClient) configureConnectionHandlers(conn *websocket.Conn) {
 			zap.String("text", text))
 
 		c.mu.Lock()
+
 		if c.state != StateClosing && c.state != StateClosed {
 			c.state = StateDisconnected
 		}
+
 		c.mu.Unlock()
 
 		c.updateMetrics(func(m *ClientMetrics) {

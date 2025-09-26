@@ -109,6 +109,7 @@ func runOTelTracerTests(t *testing.T, tests []struct {
 func TestOTelTracerOperations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	tracer := setupOTelTracer(t, logger)
+
 	defer func() { _ = tracer.Shutdown(context.Background()) }()
 
 	runOTelTracerOperationTests(t, tracer)

@@ -121,6 +121,7 @@ func TestJWTProvider_ValidateToken(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	secretKey := []byte("test-secret")
 	tmpFile := setupRSATestKeyFile(t)
+
 	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	privateKey := getRSAPrivateKey(t)
@@ -582,6 +583,7 @@ func TestClaims_CanAccessNamespace(t *testing.T) {
 func TestJWTProvider_Integration(t *testing.T) {
 	// Set up environment
 	_ = os.Setenv("TEST_JWT_SECRET", "integration-test-secret")
+
 	defer func() { _ = os.Unsetenv("TEST_JWT_SECRET") }()
 
 	logger := testutil.NewTestLogger(t)

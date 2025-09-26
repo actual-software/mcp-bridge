@@ -205,6 +205,7 @@ func prepareTLSConfigForTest(t *testing.T, tlsConfig common.TLSConfig, testName 
 		caCert := getTestCACertContent()
 		caFile, cleanup := testutil.TempFile(t, caCert)
 		t.Cleanup(cleanup)
+
 		tlsConfig.CAFile = caFile
 	}
 	
@@ -320,11 +321,13 @@ func createSuccessfulBearerHandler(t *testing.T) http.HandlerFunc {
 		}
 		
 		upgrader := websocket.Upgrader{}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			t.Errorf("Failed to upgrade: %v", err)
 			return
 		}
+
 		defer func() { _ = conn.Close() }()
 		
 		time.Sleep(testIterations * time.Millisecond)
@@ -344,10 +347,12 @@ func createMTLSHandler(t *testing.T) http.HandlerFunc {
 	
 	return func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
+
 		_ = conn.Close()
 	}
 }

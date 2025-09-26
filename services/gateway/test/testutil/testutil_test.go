@@ -150,6 +150,7 @@ func createTestJWTClaims() jwt.MapClaims {
 
 func testHMACTokenGeneration(t *testing.T, claims jwt.MapClaims) {
 	t.Helper()
+
 	secret := []byte("test-secret-key")
 	token := GenerateTestToken(t, claims, secret)
 

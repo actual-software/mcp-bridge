@@ -298,6 +298,7 @@ func setupMessageProcessingRouter(
 
 	go func() {
 		defer close(done)
+
 		func() { _ = router.Run(ctx) }()
 	}()
 
@@ -322,6 +323,7 @@ func waitForRouterConnection(t *testing.T, router *LocalRouter) {
 	t.Helper()
 	
 	timeout := time.After(constants.TestMediumTimeout)
+
 	ticker := time.NewTicker(constants.TestTickInterval)
 	defer ticker.Stop()
 
@@ -660,6 +662,7 @@ func setupInitializationRouter(
 
 	go func() {
 		defer close(done)
+
 		func() { _ = router.Run(ctx) }()
 	}()
 
@@ -919,6 +922,7 @@ func setupBenchmarkRouter(
 
 	go func() {
 		defer close(done)
+
 		func() { _ = router.Run(ctx) }()
 	}()
 
@@ -1062,6 +1066,7 @@ func startRouterForCorrelation(t *testing.T, router *LocalRouter, ctx context.Co
 
 	go func() {
 		defer routerWg.Done()
+
 		_ = router.Run(ctx)
 	}()
 }
@@ -1094,7 +1099,9 @@ func monitorCorrelationResponses(
 					if idStr, ok := resp.ID.(string); ok {
 						t.Logf("Received response for ID: %s", idStr)
 						responseMu.Lock()
+
 						receivedResponses[idStr] = true
+
 						responseMu.Unlock()
 					}
 				}
@@ -1140,7 +1147,9 @@ func verifyAllResponsesReceived(
 	for _, id := range requestIDs {
 		for time.Now().Before(timeout) {
 			responseMu.Lock()
+
 			received := receivedResponses[id]
+
 			responseMu.Unlock()
 
 			if received {
@@ -1153,7 +1162,9 @@ func verifyAllResponsesReceived(
 
 		// Final check.
 		responseMu.Lock()
+
 		received := receivedResponses[id]
+
 		responseMu.Unlock()
 
 		if !received {
@@ -1396,6 +1407,7 @@ func TestMessageRouter_ErrorHandling(t *testing.T) {
 	defer mockServer.Close()
 
 	router := setupErrorHandlingRouter(t, mockServer)
+
 	defer func() {
 		// Cleanup handled in setup
 	}()
@@ -1473,6 +1485,7 @@ func monitorConcurrentResponses(router *LocalRouter, responsesReceived *int32, r
 	// Monitor responses.
 	go func() {
 		defer cancel()
+
 		for {
 			select {
 			case data := <-router.GetStdoutChan():
@@ -1571,6 +1584,7 @@ func TestMessageRouter_ConcurrentRequests(t *testing.T) {
 	defer mockServer.Close()
 
 	router := setupConcurrentRequestsRouter(t, mockServer)
+
 	defer func() {
 		// Cleanup handled in setupConcurrentRequestsRouter
 	}()
@@ -1958,6 +1972,7 @@ func TestRequestQueue_FullLifecycle(t *testing.T) {
 	defer mockServer.Close()
 
 	router := setupQueueLifecycleRouter(t, mockServer.URL)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -1994,10 +2009,12 @@ func createDelayedConnectionServer(t *testing.T, connectionDelayMs *int32) *http
 		time.Sleep(time.Duration(atomic.LoadInt32(connectionDelayMs)) * time.Millisecond)
 
 		upgrader := websocket.Upgrader{}
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
+
 		defer func() { _ = conn.Close() }()
 
 		handleQueuedRequestsLoop(t, conn)
@@ -2085,7 +2102,9 @@ func processQueueLifecycleResponse(data []byte, responsesReceived *map[string]bo
 	if json.Unmarshal(data, &resp) == nil {
 		if idStr, ok := resp.ID.(string); ok {
 			responseMu.Lock()
+
 			(*responsesReceived)[idStr] = true
+
 			responseMu.Unlock()
 		}
 	}
@@ -2438,6 +2457,7 @@ func TestDirectToGatewayFallback(t *testing.T) {
 	defer cancel()
 
 	go func() { _ = router.Run(ctx) }()
+
 	waitForRouterConnection(t, router)
 
 	fallbackResponses := monitorFallbackResponses(t, ctx, router)
@@ -2550,6 +2570,7 @@ func verifyFallbackBehavior(t *testing.T, fallbackResponses *int32, router *Loca
 	directOnlyMethods := []string{
 		"tools/list", "tools/call", "resources/list", "resources/read",
 	}
+
 	methodCount := len(directOnlyMethods)
 	if methodCount > math.MaxInt32 {
 		t.Fatalf("Too many directOnlyMethods for test: %d exceeds int32 limit", methodCount)
@@ -2629,16 +2650,19 @@ func runRoutingDecisionTest(t *testing.T, tt routingDecisionTest) {
 	
 	routingDecisions := make(map[string]int32)
 	decisionMu := sync.Mutex{}
+
 	var gatewayRequests int32
 
 	gatewayServer := setupMockGatewayForRouting(t, &gatewayRequests)
 	defer gatewayServer.Close()
 
 	router := createRoutingTestRouter(t, gatewayServer.URL, tt)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	go func() { _ = router.Run(ctx) }()
+
 	waitForRouterConnection(t, router)
 
 	// Monitor which route was taken
@@ -2759,10 +2783,12 @@ func validateRoutingDecision(
 	t.Helper()
 	
 	decisionMu.Lock()
+
 	decisions := make(map[string]int32)
 	for k, v := range routingDecisions {
 		decisions[k] = v
 	}
+
 	decisionMu.Unlock()
 
 	switch tt.expectedRoute {
@@ -2804,6 +2830,7 @@ func TestProtocolNegotiation(t *testing.T) {
 	defer mockServer.Close()
 
 	router := createProtocolTestRouter(t, mockServer.URL)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -2813,6 +2840,7 @@ func TestProtocolNegotiation(t *testing.T) {
 
 	go func() {
 		defer routerWg.Done()
+
 		func() { _ = router.Run(ctx) }()
 	}()
 
@@ -2876,9 +2904,11 @@ func trackProtocolMethod(msg gateway.WireMessage, protocolResponses *map[string]
 	if payload, ok := msg.MCPPayload.(map[string]interface{}); ok {
 		if method, exists := payload["method"]; exists {
 			protocolMu.Lock()
+
 			if methodStr, ok := method.(string); ok {
 				(*protocolResponses)[methodStr]++
 			}
+
 			protocolMu.Unlock()
 		}
 	}

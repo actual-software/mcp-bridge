@@ -12,6 +12,7 @@ import (
 
 func TestCreateServiceDiscoveryProvider_Static(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	cfg := config.ServiceDiscoveryConfig{
@@ -29,17 +30,20 @@ func TestCreateServiceDiscoveryProvider_Static(t *testing.T) {
 	}
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// Verify it's a static discovery
 	staticSD, ok := sd.(*StaticDiscovery)
+
 	assert.True(t, ok)
 	assert.NotNil(t, staticSD)
 }
 
 func TestCreateServiceDiscoveryProvider_LegacyMode(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	// Test using legacy Mode field instead of Provider
@@ -58,17 +62,20 @@ func TestCreateServiceDiscoveryProvider_LegacyMode(t *testing.T) {
 	}
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// Verify it's a static discovery
 	staticSD, ok := sd.(*StaticDiscovery)
+
 	assert.True(t, ok)
 	assert.NotNil(t, staticSD)
 }
 
 func TestCreateServiceDiscoveryProvider_ProviderOverridesMode(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	// Test that Provider takes precedence over Mode
@@ -88,17 +95,20 @@ func TestCreateServiceDiscoveryProvider_ProviderOverridesMode(t *testing.T) {
 	}
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// Should create static discovery, not kubernetes
 	staticSD, ok := sd.(*StaticDiscovery)
+
 	assert.True(t, ok)
 	assert.NotNil(t, staticSD)
 }
 
 func TestCreateServiceDiscoveryProvider_DefaultKubernetes(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	// Test that it defaults to kubernetes when no provider specified
@@ -115,6 +125,7 @@ func TestCreateServiceDiscoveryProvider_DefaultKubernetes(t *testing.T) {
 
 func TestCreateServiceDiscoveryProvider_UnsupportedProvider(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	cfg := config.ServiceDiscoveryConfig{
@@ -122,6 +133,7 @@ func TestCreateServiceDiscoveryProvider_UnsupportedProvider(t *testing.T) {
 	}
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
+
 	assert.Error(t, err)
 	assert.Nil(t, sd)
 	assert.Contains(t, err.Error(), "invalid service configuration")
@@ -129,6 +141,7 @@ func TestCreateServiceDiscoveryProvider_UnsupportedProvider(t *testing.T) {
 
 func TestCreateServiceDiscoveryProvider_WebSocketAliases(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	testCases := []string{"websocket", "ws"}
@@ -136,6 +149,7 @@ func TestCreateServiceDiscoveryProvider_WebSocketAliases(t *testing.T) {
 	for _, provider := range testCases {
 		t.Run(provider, func(t *testing.T) {
 			t.Parallel()
+
 			cfg := config.ServiceDiscoveryConfig{
 				Provider: provider,
 				WebSocket: config.WebSocketDiscoveryConfig{
@@ -157,6 +171,7 @@ func TestCreateServiceDiscoveryProvider_WebSocketAliases(t *testing.T) {
 
 			// Verify it's a WebSocket discovery
 			wsSD, ok := sd.(*WebSocketDiscovery)
+
 			assert.True(t, ok)
 			assert.NotNil(t, wsSD)
 		})
@@ -165,6 +180,7 @@ func TestCreateServiceDiscoveryProvider_WebSocketAliases(t *testing.T) {
 
 func TestCreateServiceDiscoveryProvider_SSEAliases(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	testCases := []string{"sse", "server-sent-events"}
@@ -172,6 +188,7 @@ func TestCreateServiceDiscoveryProvider_SSEAliases(t *testing.T) {
 	for _, provider := range testCases {
 		t.Run(provider, func(t *testing.T) {
 			t.Parallel()
+
 			cfg := config.ServiceDiscoveryConfig{
 				Provider: provider,
 				SSE: config.SSEDiscoveryConfig{
@@ -194,6 +211,7 @@ func TestCreateServiceDiscoveryProvider_SSEAliases(t *testing.T) {
 
 			// Verify it's an SSE discovery
 			sseSD, ok := sd.(*SSEDiscovery)
+
 			assert.True(t, ok)
 			assert.NotNil(t, sseSD)
 		})
@@ -202,6 +220,7 @@ func TestCreateServiceDiscoveryProvider_SSEAliases(t *testing.T) {
 
 func TestCreateServiceDiscoveryProvider_STDIO(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	cfg := config.ServiceDiscoveryConfig{
@@ -225,12 +244,14 @@ func TestCreateServiceDiscoveryProvider_STDIO(t *testing.T) {
 
 	// Verify it's a STDIO discovery
 	stdioSD, ok := sd.(*StdioDiscovery)
+
 	assert.True(t, ok)
 	assert.NotNil(t, stdioSD)
 }
 
 func TestCreateServiceDiscoveryProvider_StaticWithInvalidConfig(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 
 	cfg := config.ServiceDiscoveryConfig{
@@ -241,6 +262,7 @@ func TestCreateServiceDiscoveryProvider_StaticWithInvalidConfig(t *testing.T) {
 	}
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
+
 	assert.Error(t, err)
 	assert.Nil(t, sd)
 	assert.Contains(t, err.Error(), "static endpoints configuration is required")

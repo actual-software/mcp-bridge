@@ -92,6 +92,7 @@ func validateErrorFields(t *testing.T, fields []zap.Field, err error, expectedFi
 	}
 
 	fieldMap := make(map[string]interface{})
+
 	for _, field := range fields {
 		switch field.Type {
 		case zapcore.StringType:

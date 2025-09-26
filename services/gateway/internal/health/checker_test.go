@@ -419,6 +419,7 @@ func runEndpointCheckTest(t *testing.T, tt struct {
 	expectedHealthyStatus bool
 }, logger *zap.Logger) {
 	t.Helper()
+
 	mockDiscovery := NewMockDiscovery()
 	for ns, eps := range tt.endpoints {
 		mockDiscovery.SetEndpoints(ns, eps)

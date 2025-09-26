@@ -438,6 +438,7 @@ func setupConcurrentDetectionManager(t *testing.T) *DirectClientManager {
 
 func cleanupConcurrentDetectionManager(t *testing.T, manager *DirectClientManager) {
 	t.Helper()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	
@@ -471,6 +472,7 @@ func closeConcurrentDetectionServers(servers []*httptest.Server) {
 
 func runConcurrentDetectionTest(t *testing.T, manager *DirectClientManager, serverURLs []string) {
 	t.Helper()
+
 	const (
 		numWorkers          = 20
 		detectionsPerWorker = 10
@@ -487,6 +489,7 @@ func runConcurrentDetectionTest(t *testing.T, manager *DirectClientManager, serv
 
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
+
 		go runConcurrentDetectionWorker(
 			t, &wg, manager, serverURLs, ctx, i, detectionsPerWorker,
 			&successfulDetections, &errors,
@@ -501,7 +504,6 @@ func runConcurrentDetectionTest(t *testing.T, manager *DirectClientManager, serv
 func runConcurrentDetectionWorker(t *testing.T, wg *sync.WaitGroup, manager *DirectClientManager, 
 	serverURLs []string, ctx context.Context, workerID, detectionsPerWorker int, 
 	successfulDetections, errors *int64) {
-	
 	defer wg.Done()
 
 	for j := 0; j < detectionsPerWorker; j++ {
@@ -530,6 +532,7 @@ func verifyConcurrentDetectionResults(
 	successfulDetections, errors int64,
 ) {
 	t.Helper()
+
 	totalDetections := int64(numWorkers * detectionsPerWorker)
 	successRate := float64(successfulDetections) / float64(totalDetections)
 
@@ -760,6 +763,7 @@ func TestAdvancedProtocolNegotiation_EdgeCases(t *testing.T) {
 	config := createEdgeCaseTestConfig()
 	
 	manager := setupEdgeCaseTestManager(t, config, logger)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -864,6 +868,7 @@ func testEmptyPreferredOrder(t *testing.T, ctx context.Context, config DirectCon
 
 	err := emptyManager.Start(ctx)
 	require.NoError(t, err)
+
 	defer func() { _ = emptyManager.Stop(ctx) }()
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -985,6 +990,7 @@ func setupPerformanceTestManager(t *testing.T) *DirectClientManager {
 
 func cleanupPerformanceTestManager(t *testing.T, manager *DirectClientManager) {
 	t.Helper()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	
@@ -1001,11 +1007,14 @@ func setupPerformanceTestServer() *httptest.Server {
 
 func runDetectionPerformanceTest(t *testing.T, manager *DirectClientManager, serverURL string) {
 	t.Helper()
+
 	const numDetections = 1000
+
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	startTime := time.Now()
+
 	var (
 		successCount int64
 		wg           sync.WaitGroup
@@ -1013,6 +1022,7 @@ func runDetectionPerformanceTest(t *testing.T, manager *DirectClientManager, ser
 
 	for i := 0; i < numDetections; i++ {
 		wg.Add(1)
+
 		go runSingleDetection(t, &wg, manager, ctx, serverURL, i, &successCount)
 	}
 
@@ -1043,6 +1053,7 @@ func runSingleDetection(
 	defer wg.Done()
 
 	testURL := fmt.Sprintf("%s?test=%d", serverURL, i%10)
+
 	_, err := manager.DetectProtocol(ctx, testURL)
 	if err == nil {
 		atomic.AddInt64(successCount, 1)
@@ -1051,7 +1062,9 @@ func runSingleDetection(
 
 func runCacheEffectivenessTest(t *testing.T, manager *DirectClientManager, serverURL string) {
 	t.Helper()
+
 	const numRepeatedDetections = 100
+
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 

@@ -114,6 +114,7 @@ func setupJSONTestEnv(t *testing.T) {
 	if err := os.Setenv("JSON_TEST_TOKEN", "json-token-value"); err != nil {
 		t.Fatalf("Failed to set environment variable: %v", err)
 	}
+
 	t.Cleanup(func() { _ = os.Unsetenv("JSON_TEST_TOKEN") })
 }
 
@@ -492,6 +493,7 @@ metrics:
 
 func TestConfig_ConfigFileFormats(t *testing.T) {
 	setupFormatTestEnv(t)
+
 	configData := createFormatTestConfigData()
 	tests := createFileFormatTests()
 	runFileFormatTests(t, configData, tests)
@@ -503,6 +505,7 @@ func setupFormatTestEnv(t *testing.T) {
 	if err := os.Setenv("FORMAT_TEST_TOKEN", "format-token"); err != nil {
 		t.Fatalf("Failed to set environment variable: %v", err)
 	}
+
 	t.Cleanup(func() { _ = os.Unsetenv("FORMAT_TEST_TOKEN") })
 }
 
@@ -766,6 +769,7 @@ func BenchmarkConfig_LoadComplex(b *testing.B) {
 	complexConfig := generateComplexBenchmarkConfig()
 	
 	setupIntegrationBenchmarkEnvironment(b)
+
 	defer cleanupBenchmarkEnvironment()
 
 	configPath, cleanup := testutil.TempFile(b, complexConfig)

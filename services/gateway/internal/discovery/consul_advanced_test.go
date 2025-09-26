@@ -30,6 +30,7 @@ func TestConsulDiscovery_Start_Advanced(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	defer cancel()
 
 	discovery.ctx = ctx
@@ -86,7 +87,15 @@ func TestConsulDiscovery_ServiceFiltering_Advanced(t *testing.T) {
 			hasMcpTag := discovery.hasTag(tt.tags, "mcp")
 
 			result := hasPrefix && hasMcpTag
-			assert.Equal(t, tt.expectedMatch, result, "Service %s with tags %v should match: %v", tt.serviceName, tt.tags, tt.expectedMatch)
+			assert.Equal(
+				t,
+				tt.expectedMatch,
+				result,
+				"Service %s with tags %v should match: %v",
+				tt.serviceName,
+				tt.tags,
+				tt.expectedMatch,
+			)
 		})
 	}
 }
@@ -107,6 +116,7 @@ func TestConsulDiscovery_WatchLogic_Advanced(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	defer cancel()
 
 	discovery.ctx = ctx
@@ -141,7 +151,7 @@ func TestConsulDiscovery_HealthCheckLogic_Advanced(t *testing.T) {
 	// Set up test endpoints with mixed health states
 	testEndpoints := []Endpoint{
 		{
-			Service: "weather-1", Namespace: "weather", Address: "127.0.0.1", Port: 8080, 
+			Service: "weather-1", Namespace: "weather", Address: "127.0.0.1", Port: 8080,
 			Healthy: true, Metadata: map[string]string{"consul_id": "weather-1"},
 		},
 		{
@@ -157,6 +167,7 @@ func TestConsulDiscovery_HealthCheckLogic_Advanced(t *testing.T) {
 
 	// Test initial health states
 	weatherEndpoints := discovery.GetEndpoints("weather")
+
 	assert.Len(t, weatherEndpoints, 3)
 
 	healthyCount := 0
@@ -215,15 +226,18 @@ func TestConsulDiscovery_UpdateHealthStatusLogic_Advanced(t *testing.T) {
 
 	// Test that endpoints exist and have expected initial state
 	updatedEndpoints := discovery.GetEndpoints("ns1")
+
 	require.Len(t, updatedEndpoints, 2)
 
 	// Verify initial states
+
 	for _, endpoint := range updatedEndpoints {
 		assert.True(t, endpoint.Healthy, "All endpoints should initially be healthy")
 		assert.NotEmpty(t, endpoint.Metadata["consul_id"], "Endpoints should have consul_id metadata")
 	}
 
 	// Test that we can find and update specific endpoints by metadata
+
 	for i := range discovery.endpoints["ns1"] {
 		endpoint := &discovery.endpoints["ns1"][i]
 		if endpoint.Metadata["consul_id"] == "service-2-id" {
@@ -273,12 +287,15 @@ func TestConsulDiscovery_ConcurrentAccess_Advanced(t *testing.T) {
 
 			// These operations should be safe for concurrent access
 			endpoints := discovery.GetEndpoints("test")
+
 			assert.Len(t, endpoints, 2)
 
 			allEndpoints := discovery.GetAllEndpoints()
+
 			assert.Contains(t, allEndpoints, "test")
 
 			namespaces := discovery.ListNamespaces()
+
 			assert.Contains(t, namespaces, "test")
 		}()
 	}
@@ -410,6 +427,7 @@ func TestConsulDiscovery_ConsulServiceToEndpoint_Advanced(t *testing.T) {
 		logger: zaptest.NewLogger(t),
 	}
 	tests := createConsulAdvancedEndpointTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			endpoint, err := discovery.consulServiceToEndpoint(tt.serviceEntry, tt.servicePrefix)
@@ -418,8 +436,10 @@ func TestConsulDiscovery_ConsulServiceToEndpoint_Advanced(t *testing.T) {
 
 				return
 			}
+
 			require.NoError(t, err)
 			require.NotNil(t, endpoint)
+
 			if tt.validateFunc != nil {
 				tt.validateFunc(t, endpoint)
 			}
@@ -437,7 +457,7 @@ func createConsulAdvancedEndpointTests() []struct {
 	customMetadataTests := createCustomMetadataTests()
 	invalidWeightTests := createInvalidWeightTests()
 	noNamespaceTests := createNoNamespaceTests()
-	
+
 	var allTests []struct {
 		name          string
 		serviceEntry  *consulapi.ServiceEntry
@@ -445,11 +465,11 @@ func createConsulAdvancedEndpointTests() []struct {
 		expectError   bool
 		validateFunc  func(*testing.T, *Endpoint)
 	}
-	
+
 	allTests = append(allTests, customMetadataTests...)
 	allTests = append(allTests, invalidWeightTests...)
 	allTests = append(allTests, noNamespaceTests...)
-	
+
 	return allTests
 }
 
@@ -594,6 +614,7 @@ func createNoNamespaceTests() []struct {
 func TestConsulDiscovery_IsHealthy_Advanced(t *testing.T) {
 	discovery := &ConsulDiscovery{}
 	tests := createHealthCheckAdvancedTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := discovery.isHealthy(tt.entry)

@@ -53,6 +53,7 @@ func TestProtocolsIntegration(t *testing.T) {
 func (suite *ProtocolsIntegrationTestSuite) TestStdioBackendIntegration() {
 	logger := zaptest.NewLogger(suite.T())
 	backend := suite.setupStdioBackend(logger)
+
 	defer func() { _ = backend.Stop(suite.ctx) }()
 
 	suite.testStdioBackendHealth(backend)
@@ -174,6 +175,7 @@ func (suite *ProtocolsIntegrationTestSuite) TestWebSocketBackendIntegration() {
 	err := backend.Start(suite.ctx)
 
 	suite.Require().NoError(err)
+
 	defer func() { _ = backend.Stop(suite.ctx) }()
 
 	// Give connections time to establish
@@ -208,9 +210,11 @@ func (suite *ProtocolsIntegrationTestSuite) TestWebSocketBackendIntegration() {
 func (suite *ProtocolsIntegrationTestSuite) TestStdioBackendPerformance() {
 	logger := zaptest.NewLogger(suite.T())
 	backend := suite.setupPerformanceStdioBackend(logger)
+
 	defer func() { _ = backend.Stop(suite.ctx) }()
 
 	const numRequests = 10
+
 	duration := suite.runPerformanceTest(backend, numRequests)
 	suite.verifyPerformanceResults(backend, duration, numRequests)
 }
@@ -277,6 +281,7 @@ func (suite *ProtocolsIntegrationTestSuite) runPerformanceTest(backend *stdio.Ba
 
 	// Collect results
 	errors := 0
+
 	for i := 0; i < numRequests; i++ {
 		if err := <-results; err != nil {
 			errors++
@@ -287,7 +292,9 @@ func (suite *ProtocolsIntegrationTestSuite) runPerformanceTest(backend *stdio.Ba
 	return time.Since(start)
 }
 
-func (suite *ProtocolsIntegrationTestSuite) verifyPerformanceResults(backend *stdio.Backend, duration time.Duration, numRequests int) {
+func (suite *ProtocolsIntegrationTestSuite) verifyPerformanceResults(
+	backend *stdio.Backend, duration time.Duration, numRequests int,
+) {
 	suite.Less(duration, 5*time.Second, "Requests should complete quickly")
 
 	metrics := backend.GetMetrics()
@@ -300,15 +307,19 @@ func (suite *ProtocolsIntegrationTestSuite) TestConcurrentMultiProtocolOperation
 	logger := zaptest.NewLogger(suite.T())
 
 	stdioBackend, wsBackendInstance := suite.setupConcurrentBackends(logger)
+
 	defer func() { _ = stdioBackend.Stop(suite.ctx) }()
 	defer func() { _ = wsBackendInstance.Stop(suite.ctx) }()
 
 	const numRequests = 5
+
 	stdioErrors, wsErrors := suite.runConcurrentRequests(stdioBackend, wsBackendInstance, numRequests)
 	suite.verifyConcurrentResults(stdioBackend, wsBackendInstance, stdioErrors, wsErrors, numRequests)
 }
 
-func (suite *ProtocolsIntegrationTestSuite) setupConcurrentBackends(logger *zap.Logger) (*stdio.Backend, *wsBackend.Backend) {
+func (suite *ProtocolsIntegrationTestSuite) setupConcurrentBackends(
+	logger *zap.Logger,
+) (*stdio.Backend, *wsBackend.Backend) {
 	stdioBackend := suite.createConcurrentStdioBackend(logger)
 	wsBackendInstance := suite.createConcurrentWebSocketBackend(logger)
 	return stdioBackend, wsBackendInstance
@@ -381,7 +392,9 @@ while True:
         pass`
 }
 
-func (suite *ProtocolsIntegrationTestSuite) runConcurrentRequests(stdioBackend *stdio.Backend, wsBackendInstance *wsBackend.Backend, numRequests int) (int, int) {
+func (suite *ProtocolsIntegrationTestSuite) runConcurrentRequests(
+	stdioBackend *stdio.Backend, wsBackendInstance *wsBackend.Backend, numRequests int,
+) (int, int) {
 	stdioResults := make(chan error, numRequests)
 	wsResults := make(chan error, numRequests)
 
@@ -391,7 +404,9 @@ func (suite *ProtocolsIntegrationTestSuite) runConcurrentRequests(stdioBackend *
 	return suite.collectResults(stdioResults, wsResults, numRequests)
 }
 
-func (suite *ProtocolsIntegrationTestSuite) launchStdioRequests(stdioBackend *stdio.Backend, numRequests int, results chan error) {
+func (suite *ProtocolsIntegrationTestSuite) launchStdioRequests(
+	stdioBackend *stdio.Backend, numRequests int, results chan error,
+) {
 	for i := 0; i < numRequests; i++ {
 		go func(id int) {
 			req := &mcp.Request{
@@ -400,13 +415,16 @@ func (suite *ProtocolsIntegrationTestSuite) launchStdioRequests(stdioBackend *st
 				ID:      fmt.Sprintf("stdio-%d", id),
 				Params:  map[string]interface{}{"id": id},
 			}
+
 			_, err := stdioBackend.SendRequest(suite.ctx, req)
 			results <- err
 		}(i)
 	}
 }
 
-func (suite *ProtocolsIntegrationTestSuite) launchWebSocketRequests(wsBackendInstance *wsBackend.Backend, numRequests int, results chan error) {
+func (suite *ProtocolsIntegrationTestSuite) launchWebSocketRequests(
+	wsBackendInstance *wsBackend.Backend, numRequests int, results chan error,
+) {
 	for i := 0; i < numRequests; i++ {
 		go func(id int) {
 			req := &mcp.Request{
@@ -415,18 +433,23 @@ func (suite *ProtocolsIntegrationTestSuite) launchWebSocketRequests(wsBackendIns
 				ID:      fmt.Sprintf("ws-%d", id),
 				Params:  map[string]interface{}{"id": id},
 			}
+
 			_, err := wsBackendInstance.SendRequest(suite.ctx, req)
 			results <- err
 		}(i)
 	}
 }
 
-func (suite *ProtocolsIntegrationTestSuite) collectResults(stdioResults, wsResults chan error, numRequests int) (int, int) {
+func (suite *ProtocolsIntegrationTestSuite) collectResults(
+	stdioResults, wsResults chan error, numRequests int,
+) (int, int) {
 	stdioErrors, wsErrors := 0, 0
+
 	for i := 0; i < numRequests; i++ {
 		if err := <-stdioResults; err != nil {
 			stdioErrors++
 		}
+
 		if err := <-wsResults; err != nil {
 			wsErrors++
 		}
@@ -434,7 +457,10 @@ func (suite *ProtocolsIntegrationTestSuite) collectResults(stdioResults, wsResul
 	return stdioErrors, wsErrors
 }
 
-func (suite *ProtocolsIntegrationTestSuite) verifyConcurrentResults(stdioBackend *stdio.Backend, wsBackendInstance *wsBackend.Backend, stdioErrors, wsErrors, numRequests int) {
+func (suite *ProtocolsIntegrationTestSuite) verifyConcurrentResults(
+	stdioBackend *stdio.Backend, wsBackendInstance *wsBackend.Backend,
+	stdioErrors, wsErrors, numRequests int,
+) {
 	suite.LessOrEqual(stdioErrors, numRequests/2, "Too many stdio errors")
 	suite.LessOrEqual(wsErrors, numRequests/2, "Too many WebSocket errors")
 

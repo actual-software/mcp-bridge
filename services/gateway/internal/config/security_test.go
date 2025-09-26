@@ -126,8 +126,10 @@ func createAuthConfigTestCases() []authConfigTestCase {
 	secureOAuth2 := AuthConfig{
 		Provider: "oauth2",
 		OAuth2: OAuth2Config{
-			ClientID: "secure-client-id", ClientSecretEnv: "OAUTH2_CLIENT_SECRET",
-			TokenEndpoint: "https://auth.example.com/oauth/token", IntrospectEndpoint: "https://auth.example.com/oauth/introspect",
+			ClientID:           "secure-client-id",
+			ClientSecretEnv:    "OAUTH2_CLIENT_SECRET",
+			TokenEndpoint:      "https://auth.example.com/oauth/token",
+			IntrospectEndpoint: "https://auth.example.com/oauth/introspect",
 			JWKSEndpoint: "https://auth.example.com/.well-known/jwks.json", Scopes: []string{"read", "write"},
 			Issuer: "https://auth.example.com", Audience: "mcp-services",
 		},
@@ -782,7 +784,9 @@ func createCompliantSecurityCases() []securityBestPracticeTestCase {
 				Auth: AuthConfig{
 					Provider: "oauth2",
 					OAuth2: OAuth2Config{
-						ClientID: "secure-client", TokenEndpoint: "https://auth.example.com/token", IntrospectEndpoint: "https://auth.example.com/introspect",
+						ClientID:           "secure-client",
+						TokenEndpoint:      "https://auth.example.com/token",
+						IntrospectEndpoint: "https://auth.example.com/introspect",
 					},
 				},
 			},

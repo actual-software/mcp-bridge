@@ -423,11 +423,13 @@ func (p *ConnectionPool) performHealthChecks() {
 	p.mu.RUnlock()
 
 	unhealthyCount := 0
+
 	var unhealthyConns []*PooledConnection
 
 	for _, conn := range connections {
 		if !p.performHealthCheck(conn) {
 			unhealthyCount++
+
 			unhealthyConns = append(unhealthyConns, conn)
 		}
 	}
@@ -522,9 +524,11 @@ func (p *ConnectionPool) updateStatsUnsafe(operation string) {
 
 	for _, conn := range connections {
 		conn.mu.RLock()
+
 		if now.Sub(conn.LastUsedAt) < time.Minute {
 			activeCount++
 		}
+
 		conn.mu.RUnlock()
 	}
 

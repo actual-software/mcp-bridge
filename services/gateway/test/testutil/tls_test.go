@@ -101,12 +101,14 @@ func testValidServerCertificate(t *testing.T) {
 	
 	localhostIP := net.IPv4(LocalhostIP, 0, 0, 1)
 	hasLocalhostIP := false
+
 	for _, ip := range serverCert.IPAddresses {
 		if ip.Equal(localhostIP) {
 			hasLocalhostIP = true
 			break
 		}
 	}
+
 	assert.True(t, hasLocalhostIP, "Server certificate should contain localhost IP")
 }
 
@@ -244,6 +246,7 @@ func testTLSConnectionWithTrustedCertificate(t *testing.T) {
 
 	// Test TLS connection using net.Pipe
 	serverConn, clientConn := net.Pipe()
+
 	defer func() { _ = serverConn.Close() }()
 	defer func() { _ = clientConn.Close() }()
 
@@ -291,6 +294,7 @@ func performTrustedTLSHandshake(t *testing.T, serverConn, clientConn net.Conn, s
 
 func runTLSServer(serverConn net.Conn, serverConfig *tls.Config, done chan<- error) {
 	tlsServerConn := tls.Server(serverConn, serverConfig)
+
 	err := tlsServerConn.HandshakeContext(context.Background())
 	done <- err
 	
@@ -301,6 +305,7 @@ func runTLSServer(serverConn net.Conn, serverConfig *tls.Config, done chan<- err
 
 func runTLSClient(clientConn net.Conn, clientConfig *tls.Config, done chan<- error) {
 	tlsClientConn := tls.Client(clientConn, clientConfig)
+
 	err := tlsClientConn.HandshakeContext(context.Background())
 	done <- err
 	
@@ -341,6 +346,7 @@ func testTLSRejectionWithUntrustedCertificate(t *testing.T) {
 
 	// Test TLS connection
 	serverConn, clientConn := net.Pipe()
+
 	defer func() { _ = serverConn.Close() }()
 	defer func() { _ = clientConn.Close() }()
 
@@ -363,7 +369,9 @@ func setupUntrustedTLSConfig(t *testing.T, certFile, keyFile string) (tls.Certif
 	return serverCert, clientConfig
 }
 
-func performUntrustedTLSHandshake(t *testing.T, serverConn, clientConn net.Conn, serverConfig, clientConfig *tls.Config) {
+func performUntrustedTLSHandshake(
+	t *testing.T, serverConn, clientConn net.Conn, serverConfig, clientConfig *tls.Config,
+) {
 	t.Helper()
 	
 	clientDone := make(chan error, 1)

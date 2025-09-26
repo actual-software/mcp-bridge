@@ -398,6 +398,7 @@ func runTracedHTTPClientTests(t *testing.T, tests []struct {
 			// Add parent span if needed
 			if tt.withSpan {
 				span := tracer.StartSpan("parent")
+
 				ctx = opentracing.ContextWithSpan(ctx, span)
 				defer span.Finish()
 			}
@@ -411,7 +412,8 @@ func runTracedHTTPClientTests(t *testing.T, tests []struct {
 	}
 }
 
-func executeTracedHTTPRequest(t *testing.T, ctx context.Context, server *httptest.Server, client *http.Client, tt struct {
+func executeTracedHTTPRequest(
+	t *testing.T, ctx context.Context, server *httptest.Server, client *http.Client, tt struct {
 	name        string
 	path        string
 	withSpan    bool

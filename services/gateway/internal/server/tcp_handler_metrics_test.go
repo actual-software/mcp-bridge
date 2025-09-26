@@ -117,8 +117,11 @@ func runTCPHandlerMetricsTests(t *testing.T, tests []struct {
 	}
 }
 
-func setupSuccessfulMetricsTest(t *testing.T) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
+func setupSuccessfulMetricsTest(
+	t *testing.T,
+) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
 	t.Helper()
+
 	authProvider := new(MockAuthProvider)
 	router := new(MockRouter)
 	sessionManager := new(MockSessionManager)
@@ -165,6 +168,7 @@ func setupSuccessfulMetricsTest(t *testing.T) (*TCPHandler, *MockAuthProvider, *
 
 func runSuccessfulMetricsScenario(t *testing.T, handler *TCPHandler, conn net.Conn) {
 	t.Helper()
+
 	transport := wire.NewTransport(conn)
 
 	// First, perform version negotiation
@@ -180,6 +184,7 @@ func runSuccessfulMetricsScenario(t *testing.T, handler *TCPHandler, conn net.Co
 	msgType, msg, err := transport.ReceiveMessage()
 	require.NoError(t, err)
 	assert.Equal(t, wire.MessageTypeVersionAck, msgType)
+
 	if ack, ok := msg.(*wire.VersionAckPayload); ok {
 		assert.Equal(t, wire.CurrentVersion, ack.AgreedVersion)
 	}
@@ -248,8 +253,11 @@ func checkSuccessfulMetrics(t *testing.T, reg *metrics.Registry) {
 	assert.GreaterOrEqual(t, outboundResponses, float64(2), "At least two outbound responses")
 }
 
-func setupAuthFailureMetricsTest(t *testing.T) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
+func setupAuthFailureMetricsTest(
+	t *testing.T,
+) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
 	t.Helper()
+
 	authProvider := new(MockAuthProvider)
 	router := new(MockRouter)
 	sessionManager := new(MockSessionManager)
@@ -274,6 +282,7 @@ func setupAuthFailureMetricsTest(t *testing.T) (*TCPHandler, *MockAuthProvider, 
 
 func runAuthFailureMetricsScenario(t *testing.T, handler *TCPHandler, conn net.Conn) {
 	t.Helper()
+
 	transport := wire.NewTransport(conn)
 
 	// First, perform version negotiation

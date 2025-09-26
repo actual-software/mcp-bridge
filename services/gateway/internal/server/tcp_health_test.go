@@ -72,7 +72,8 @@ func TestTCPHealthServer_Start(t *testing.T) {
 	assert.Nil(t, server.listener)
 
 	// Test with valid port (let system assign port)
-	server = CreateTCPHealthCheckServer(1, checker, metrics, logger) // Use port 1 to enable, will get actual port from listener
+	// Use port 1 to enable, will get actual port from listener
+	server = CreateTCPHealthCheckServer(1, checker, metrics, logger)
 	err = server.Start()
 	require.NoError(t, err)
 	require.NotNil(t, server.listener)
@@ -99,6 +100,7 @@ func TestTCPHealthServer_Start(t *testing.T) {
 
 func TestTCPHealthServer_HandleHealthCheck(t *testing.T) {
 	server, transport := setupTCPHealthServer(t)
+
 	defer func() { _ = server.Stop() }()
 	
 	sendHealthCheckRequest(t, transport)

@@ -495,6 +495,7 @@ func runManySmallOperationsTest(t *testing.T, store TokenStore) {
 	t.Helper()
 	
 	const numKeys = 1000
+
 	keys := storeMultipleSmallTokens(t, store, numKeys)
 	
 	retrievedCount := retrieveAllStoredTokens(t, store, keys)
@@ -580,6 +581,7 @@ func storeLargeTokensForMemoryPressure(t *testing.T, store TokenStore) []string 
 	
 	// Create large tokens to pressure memory
 	const largeTokenSize = 100000 // 100KB
+
 	largeToken := strings.Repeat("x", largeTokenSize)
 	storedKeys := make([]string, 0)
 	

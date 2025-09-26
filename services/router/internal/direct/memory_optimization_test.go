@@ -554,6 +554,7 @@ func TestMemoryOptimizer_MemoryUsagePattern(t *testing.T) {
 	}
 
 	optimizer := setupMemoryPatternOptimizer(t)
+
 	defer func() {
 		if err := optimizer.Stop(); err != nil {
 			t.Logf("Failed to stop optimizer: %v", err)
@@ -561,6 +562,7 @@ func TestMemoryOptimizer_MemoryUsagePattern(t *testing.T) {
 	}()
 
 	initialMem := recordInitialMemoryStats()
+
 	performMemoryIntensiveOperations(t, optimizer)
 	
 	// Let monitoring and GC run
@@ -592,6 +594,7 @@ func recordInitialMemoryStats() runtime.MemStats {
 
 func performMemoryIntensiveOperations(t *testing.T, optimizer *MemoryOptimizer) {
 	t.Helper()
+
 	const numOperations = 1000
 	
 	for i := 0; i < numOperations; i++ {
@@ -605,6 +608,7 @@ func performBufferOperations(optimizer *MemoryOptimizer) {
 	for j := 0; j < 100; j++ {
 		_, _ = buf.WriteString("memory test data ")
 	}
+
 	optimizer.PutBuffer(buf)
 }
 
@@ -622,6 +626,7 @@ func performJSONOperations(optimizer *MemoryOptimizer, iteration int) {
 	decoder := optimizer.GetJSONDecoder(reader)
 
 	var decoded map[string]interface{}
+
 	_ = decoder.Decode(&decoded)
 	optimizer.PutJSONDecoder(decoder)
 }
@@ -641,6 +646,7 @@ func calculateMemoryIncrease(initialMem runtime.MemStats) uint64 {
 
 func verifyMemoryUsagePattern(t *testing.T, memoryIncrease uint64, optimizer *MemoryOptimizer) {
 	t.Helper()
+
 	const numOperations = 1000
 	
 	t.Logf("Memory increase after %d operations: %d bytes", numOperations, memoryIncrease)

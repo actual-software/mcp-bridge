@@ -28,13 +28,12 @@ const (
 	testIterations          = 100
 	testTimeout             = 50
 	testMaxIterations       = 1000
-	
+
 	// Test timing constants - tuned for reliability vs speed.
 	connectionSetupTimeout    = 100 * time.Millisecond
 	responseProcessingTimeout = 300 * time.Millisecond
 	connectionCleanupTimeout  = 50 * time.Millisecond
 )
-
 
 // Mock implementations with error simulation capabilities.
 type MockRequestRouterWithError struct {
@@ -42,7 +41,9 @@ type MockRequestRouterWithError struct {
 	errorMsg    string
 }
 
-func (m *MockRequestRouterWithError) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+func (m *MockRequestRouterWithError) RouteRequest(
+	ctx context.Context, req *mcp.Request, targetNamespace string,
+) (*mcp.Response, error) {
 	if m.shouldError {
 		return nil, errors.New(m.errorMsg)
 	}
@@ -68,7 +69,9 @@ func (m *MockAuthProviderWithError) Authenticate(ctx context.Context, credential
 	return !m.shouldAuthFail, nil
 }
 
-func (m *MockAuthProviderWithError) GetUserInfo(ctx context.Context, credentials map[string]string) (map[string]interface{}, error) {
+func (m *MockAuthProviderWithError) GetUserInfo(
+	ctx context.Context, credentials map[string]string,
+) (map[string]interface{}, error) {
 	if m.shouldError {
 		return nil, errors.New(m.errorMsg)
 	}
@@ -101,6 +104,7 @@ type syncBuffer struct {
 
 func (sb *syncBuffer) Write(p []byte) (int, error) {
 	sb.mu.Lock()
+
 	defer sb.mu.Unlock()
 
 	return sb.buf.Write(p)
@@ -108,6 +112,7 @@ func (sb *syncBuffer) Write(p []byte) (int, error) {
 
 func (sb *syncBuffer) Len() int {
 	sb.mu.RLock()
+
 	defer sb.mu.RUnlock()
 
 	return sb.buf.Len()
@@ -115,6 +120,7 @@ func (sb *syncBuffer) Len() int {
 
 func (sb *syncBuffer) Bytes() []byte {
 	sb.mu.RLock()
+
 	defer sb.mu.RUnlock()
 
 	return sb.buf.Bytes()
@@ -122,6 +128,7 @@ func (sb *syncBuffer) Bytes() []byte {
 
 func (sb *syncBuffer) Reset() {
 	sb.mu.Lock()
+
 	defer sb.mu.Unlock()
 
 	sb.buf.Reset()
@@ -155,6 +162,7 @@ func (r *blockingReader) Read(p []byte) (n int, err error) {
 
 func (c *testConnection) Read(p []byte) (n int, err error) {
 	c.mu.Lock()
+
 	defer c.mu.Unlock()
 
 	if c.closed {
@@ -166,6 +174,7 @@ func (c *testConnection) Read(p []byte) (n int, err error) {
 
 func (c *testConnection) Write(p []byte) (n int, err error) {
 	c.mu.Lock()
+
 	defer c.mu.Unlock()
 
 	if c.closed {
@@ -177,6 +186,7 @@ func (c *testConnection) Write(p []byte) (n int, err error) {
 
 func (c *testConnection) Close() error {
 	c.mu.Lock()
+
 	defer c.mu.Unlock()
 
 	c.closed = true
@@ -238,10 +248,12 @@ func TestStdioFrontend_UnixSocketStartup(t *testing.T) {
 
 	// Verify socket was created
 	_, err = os.Stat(socketPath)
+
 	require.NoError(t, err)
 
 	// Verify frontend is running
 	metrics := frontend.GetMetrics()
+
 	assert.True(t, metrics.IsRunning)
 
 	// Test double start (should error)
@@ -255,6 +267,7 @@ func TestStdioFrontend_UnixSocketStartup(t *testing.T) {
 
 	// Verify metrics are updated
 	metrics = frontend.GetMetrics()
+
 	assert.False(t, metrics.IsRunning)
 	assert.Equal(t, uint64(0), metrics.ActiveConnections)
 
@@ -272,6 +285,7 @@ func TestStdioFrontend_UnixSocketConnection(t *testing.T) {
 	mockSessions := &MockSessionManager{}
 
 	socketPath := createTemporarySocketPath(t)
+
 	defer cleanupSocket(t, socketPath)
 
 	config := createUnixSocketConfig(socketPath)
@@ -279,6 +293,7 @@ func TestStdioFrontend_UnixSocketConnection(t *testing.T) {
 
 	err := frontend.Start(context.Background())
 	require.NoError(t, err)
+
 	defer func() { _ = frontend.Stop(context.Background()) }()
 
 	testUnixSocketConnection(t, socketPath, frontend)
@@ -287,11 +302,13 @@ func TestStdioFrontend_UnixSocketConnection(t *testing.T) {
 func createTemporarySocketPath(t *testing.T) string {
 	t.Helper()
 	tempDir := t.TempDir()
+
 	return filepath.Join(tempDir, "test.sock")
 }
 
 func cleanupSocket(t *testing.T, socketPath string) {
 	t.Helper()
+
 	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
 		t.Logf("Failed to remove socket: %v", err)
 	}
@@ -313,21 +330,25 @@ func createUnixSocketConfig(socketPath string) Config {
 func testUnixSocketConnection(t *testing.T, socketPath string, frontend *Frontend) {
 	t.Helper()
 	time.Sleep(100 * time.Millisecond)
-	
+
 	dialer := &net.Dialer{}
 	conn, err := dialer.DialContext(context.Background(), "unix", socketPath)
 	require.NoError(t, err)
+
 	defer func() { _ = conn.Close() }()
-	
+
 	request := `{"jsonrpc":"2.0","method":"test","params":{},"id":1}`
 	_, err = conn.Write([]byte(request + "\n"))
+
 	require.NoError(t, err)
-	
+
 	err = conn.SetReadDeadline(time.Now().Add(time.Second))
+
 	require.NoError(t, err)
-	
+
 	buffer := make([]byte, 1024)
 	n, err := conn.Read(buffer)
+
 	require.NoError(t, err)
 	assert.Positive(t, n)
 }
@@ -359,16 +380,19 @@ func TestStdioFrontend_StdinStdoutConnection(t *testing.T) {
 	// Test basic read/write operations
 	buf := make([]byte, 10)
 	n, err := testConn.Read(buf)
+
 	require.NoError(t, err)
 	assert.Equal(t, 9, n)
 	assert.Equal(t, "test data", string(buf[:n]))
 
 	n, err = testConn.Write([]byte("response"))
+
 	require.NoError(t, err)
 	assert.Equal(t, 8, n)
 	assert.Equal(t, "response", writer.String())
 
 	err = testConn.Close()
+
 	require.NoError(t, err)
 }
 
@@ -400,6 +424,7 @@ func TestStdioFrontend_StdinStdoutMode(t *testing.T) {
 
 	// Verify frontend is running
 	metrics := frontend.GetMetrics()
+
 	assert.True(t, metrics.IsRunning)
 
 	// Stop the frontend
@@ -407,6 +432,7 @@ func TestStdioFrontend_StdinStdoutMode(t *testing.T) {
 	require.NoError(t, err)
 
 	metrics = frontend.GetMetrics()
+
 	assert.False(t, metrics.IsRunning)
 }
 
@@ -414,6 +440,7 @@ func TestStdioFrontend_StdinStdoutMode(t *testing.T) {
 func TestStdioFrontend_HandleConnection(t *testing.T) {
 	// Setup test components
 	frontend, clientConn, serverConn := setupHandleConnectionTest(t)
+
 	defer cleanupConnections(clientConn, serverConn)
 
 	// Start frontend
@@ -463,15 +490,18 @@ func runConnectionTest(t *testing.T, clientConn, serverConn net.Conn) {
 	// Prepare test request
 	request := createTestRequest()
 	requestData, err := json.Marshal(request)
+
 	require.NoError(t, err)
 
 	// Setup channels for async operations
 	responseChan, errorChan := setupTestChannels()
 
 	// Start client writer
+
 	go writeClientRequest(clientConn, requestData)
 
 	// Start server handler
+
 	go handleServerConnection(serverConn, responseChan, errorChan)
 
 	// Read and validate response
@@ -584,12 +614,16 @@ func TestStdioFrontend_HandleConnectionWithAuth(t *testing.T) {
 	testFailedAuth(t, config, mockRouter, mockSessions, logger)
 }
 
-func testSuccessfulAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, mockAuth *MockAuthProviderWithError, mockSessions *MockSessionManager, logger *zap.Logger) {
+func testSuccessfulAuth(
+	t *testing.T, config Config, mockRouter *MockRequestRouter,
+	mockAuth *MockAuthProviderWithError, mockSessions *MockSessionManager, logger *zap.Logger,
+) {
 	t.Helper()
-	
+
 	frontend := CreateStdioFrontend("test", config, mockRouter, mockAuth, mockSessions, logger)
 	err := frontend.Start(context.Background())
 	require.NoError(t, err)
+
 	defer func() {
 		_ = frontend.Stop(context.Background())
 	}()
@@ -610,6 +644,7 @@ func testSuccessfulAuth(t *testing.T, config Config, mockRouter *MockRequestRout
 	}
 
 	requestData1, err := json.Marshal(request1)
+
 	require.NoError(t, err)
 
 	reader1 := &blockingReader{
@@ -625,6 +660,7 @@ func testSuccessfulAuth(t *testing.T, config Config, mockRouter *MockRequestRout
 	}
 
 	frontend.wg.Add(1)
+
 	go func() {
 		frontend.handleConnection(context.Background(), testConn1)
 	}()
@@ -638,7 +674,7 @@ func testSuccessfulAuth(t *testing.T, config Config, mockRouter *MockRequestRout
 
 func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, mockSessions *MockSessionManager, logger *zap.Logger) {
 	t.Helper()
-	
+
 	failingMockAuth := &MockAuthProviderWithError{
 		shouldAuthFail: true,
 	}
@@ -646,6 +682,7 @@ func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, 
 
 	err := failingFrontend.Start(context.Background())
 	require.NoError(t, err)
+
 	defer func() {
 		_ = failingFrontend.Stop(context.Background())
 	}()
@@ -666,6 +703,7 @@ func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, 
 	}
 
 	requestData2, err := json.Marshal(request2)
+
 	require.NoError(t, err)
 
 	reader2 := &blockingReader{
@@ -681,6 +719,7 @@ func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, 
 	}
 
 	failingFrontend.wg.Add(1)
+
 	go func() {
 		failingFrontend.handleConnection(context.Background(), testConn2)
 	}()
@@ -692,7 +731,9 @@ func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, 
 	assert.Positive(t, writer2.Len(), "Expected auth failure response")
 
 	var errorResp mcp.Response
+
 	err = json.Unmarshal(writer2.Bytes(), &errorResp)
+
 	require.NoError(t, err)
 	assert.NotNil(t, errorResp.Error, "Expected error in auth failure response")
 }
@@ -715,9 +756,12 @@ func TestStdioFrontend_HandleRequest(t *testing.T) {
 	testRequestWithRouterError(t, config, mockAuth, mockSessions, logger)
 }
 
-func testSuccessfulRequest(t *testing.T, config Config, mockAuth *MockAuthProvider, mockSessions *MockSessionManager, logger *zap.Logger) {
+func testSuccessfulRequest(
+	t *testing.T, config Config, mockAuth *MockAuthProvider,
+	mockSessions *MockSessionManager, logger *zap.Logger,
+) {
 	t.Helper()
-	
+
 	mockRouter := &MockRequestRouterWithError{}
 	frontend := CreateStdioFrontend("test", config, mockRouter, mockAuth, mockSessions, logger)
 
@@ -735,15 +779,20 @@ func testSuccessfulRequest(t *testing.T, config Config, mockAuth *MockAuthProvid
 	}
 
 	frontend.wg.Add(1)
+
 	go frontend.handleRequest(context.Background(), conn, request)
+
 	time.Sleep(responseProcessingTimeout)
 
 	assert.Positive(t, writer.Len())
 }
 
-func testRequestWithRouterError(t *testing.T, config Config, mockAuth *MockAuthProvider, mockSessions *MockSessionManager, logger *zap.Logger) {
+func testRequestWithRouterError(
+	t *testing.T, config Config, mockAuth *MockAuthProvider,
+	mockSessions *MockSessionManager, logger *zap.Logger,
+) {
 	t.Helper()
-	
+
 	errorMockRouter := &MockRequestRouterWithError{
 		shouldError: true,
 		errorMsg:    "routing failed",
@@ -765,13 +814,17 @@ func testRequestWithRouterError(t *testing.T, config Config, mockAuth *MockAuthP
 	}
 
 	errorFrontend.wg.Add(1)
+
 	go errorFrontend.handleRequest(context.Background(), conn, request)
+
 	time.Sleep(responseProcessingTimeout)
 
 	assert.Positive(t, writer.Len())
 
 	var errorResp mcp.Response
+
 	err := json.Unmarshal(writer.Bytes(), &errorResp)
+
 	require.NoError(t, err)
 	assert.NotNil(t, errorResp.Error)
 	assert.Contains(t, errorResp.Error.Message, "routing failed")
@@ -821,6 +874,7 @@ func TestStdioFrontend_CleanupIdleConnections(t *testing.T) {
 	})
 
 	initialMetrics := frontend.GetMetrics()
+
 	assert.Equal(t, uint64(2), initialMetrics.ActiveConnections)
 
 	// Run cleanup
@@ -828,12 +882,14 @@ func TestStdioFrontend_CleanupIdleConnections(t *testing.T) {
 
 	// Check that old connection was removed
 	frontend.connectionsMu.RLock()
+
 	assert.NotContains(t, frontend.connections, "conn1")
 	assert.Contains(t, frontend.connections, "conn2")
 	frontend.connectionsMu.RUnlock()
 
 	// Metrics should be updated
 	finalMetrics := frontend.GetMetrics()
+
 	assert.Equal(t, uint64(1), finalMetrics.ActiveConnections)
 }
 
@@ -877,7 +933,7 @@ func setupMaxClientsTest(frontend *Frontend) {
 
 func testMaxConcurrentClientsLimit(t *testing.T, frontend *Frontend) {
 	t.Helper()
-	
+
 	request := mcp.Request{
 		JSONRPC: "2.0",
 		Method:  "test_method",
@@ -885,6 +941,7 @@ func testMaxConcurrentClientsLimit(t *testing.T, frontend *Frontend) {
 	}
 
 	requestData, err := json.Marshal(request)
+
 	require.NoError(t, err)
 
 	reader := bytes.NewReader(append(requestData, '\n'))
@@ -904,11 +961,13 @@ func testMaxConcurrentClientsLimit(t *testing.T, frontend *Frontend) {
 	}()
 
 	frontend.wg.Add(1)
+
 	go frontend.handleConnection(context.Background(), testConn)
 
 	time.Sleep(responseProcessingTimeout)
 
 	frontend.connectionsMu.RLock()
+
 	assert.Len(t, frontend.connections, 1)
 	assert.Contains(t, frontend.connections, "conn1")
 	frontend.connectionsMu.RUnlock()
@@ -965,6 +1024,7 @@ func TestStdioFrontend_ConnectionCleanupRoutine(t *testing.T) {
 
 	// Connection should have been cleaned up
 	frontend.connectionsMu.RLock()
+
 	assert.Empty(t, frontend.connections)
 	frontend.connectionsMu.RUnlock()
 }
@@ -1018,10 +1078,12 @@ func TestStdioFrontend_UnixSocketPermissions(t *testing.T) {
 
 	// Check socket permissions
 	info, err := os.Stat(socketPath)
+
 	require.NoError(t, err)
 
 	// On Unix systems, socket permissions should be set
 	mode := info.Mode()
+
 	assert.NotEqual(t, 0, mode&os.ModeSocket)
 }
 
@@ -1033,6 +1095,7 @@ func TestStdioFrontend_StopGracefulShutdown(t *testing.T) {
 	mockSessions := &MockSessionManager{}
 
 	socketPath, config := setupGracefulShutdownTest(t)
+
 	defer cleanupSocketPath(t, socketPath)
 
 	frontend := CreateStdioFrontend("test", config, mockRouter, mockAuth, mockSessions, logger)
@@ -1042,7 +1105,7 @@ func TestStdioFrontend_StopGracefulShutdown(t *testing.T) {
 
 func setupGracefulShutdownTest(t *testing.T) (string, Config) {
 	t.Helper()
-	
+
 	socketPath := fmt.Sprintf("/tmp/stdio_shutdown_%d_%d.sock", os.Getpid(), time.Now().UnixNano())
 	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
 		t.Logf("Failed to remove socket: %v", err)
@@ -1068,6 +1131,7 @@ func setupGracefulShutdownTest(t *testing.T) (string, Config) {
 
 func cleanupSocketPath(t *testing.T, socketPath string) {
 	t.Helper()
+
 	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
 		t.Logf("Failed to remove socket: %v", err)
 	}
@@ -1075,7 +1139,7 @@ func cleanupSocketPath(t *testing.T, socketPath string) {
 
 func testGracefulShutdown(t *testing.T, frontend *Frontend) {
 	t.Helper()
-	
+
 	err := frontend.Start(context.Background())
 	require.NoError(t, err)
 
@@ -1095,16 +1159,20 @@ func testGracefulShutdown(t *testing.T, frontend *Frontend) {
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
 	defer cancel()
 
 	err = frontend.Stop(ctx)
+
 	require.NoError(t, err)
 
 	frontend.connectionsMu.RLock()
+
 	assert.Empty(t, frontend.connections)
 	frontend.connectionsMu.RUnlock()
 
 	metrics := frontend.GetMetrics()
+
 	assert.False(t, metrics.IsRunning)
 	assert.Equal(t, uint64(0), metrics.ActiveConnections)
 }
@@ -1133,11 +1201,13 @@ func TestStdioFrontend_StopTimeout(t *testing.T) {
 
 	// Test stop with immediate timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+
 	defer cancel()
 
 	time.Sleep(10 * time.Millisecond) // Let timeout expire
 
 	err = frontend.Stop(ctx)
+
 	require.Error(t, err)
 	assert.Equal(t, context.DeadlineExceeded, err)
 }
@@ -1184,6 +1254,7 @@ func TestStdioFrontend_ConnectionErrorHandling(t *testing.T) {
 
 	// Check metrics for error count
 	metrics := frontend.GetMetrics()
+
 	assert.Positive(t, metrics.ErrorCount)
 
 	// Test EOF (client disconnect)
@@ -1247,6 +1318,7 @@ func TestStdioFrontend_WriteErrorHandling(t *testing.T) {
 
 	// Check that error count increased
 	metrics := frontend.GetMetrics()
+
 	assert.Positive(t, metrics.ErrorCount)
 }
 
@@ -1273,6 +1345,7 @@ func TestStdioFrontend_UnixSocketExistingFile(t *testing.T) {
 
 	// Create existing file
 	file, err := os.Create(filepath.Clean(socketPath))
+
 	require.NoError(t, err)
 
 	_ = file.Close()
@@ -1361,10 +1434,12 @@ func BenchmarkStdioFrontend_HandleRequest(b *testing.B) {
 		wg.Add(1)
 
 		// Use a custom function to avoid the frontend's waitgroup
+
 		go func() {
 			defer wg.Done()
 
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
 			defer cancel()
 
 			resp, err := frontend.router.RouteRequest(ctx, request, "")
@@ -1375,7 +1450,7 @@ func BenchmarkStdioFrontend_HandleRequest(b *testing.B) {
 			}
 
 			conn.mu.Lock()
-			_ = conn.writer.Encode(resp) 
+			_ = conn.writer.Encode(resp)
 			conn.mu.Unlock()
 		}()
 

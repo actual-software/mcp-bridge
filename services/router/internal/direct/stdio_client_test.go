@@ -173,6 +173,7 @@ if __name__ == "__main__":
 
 func setupStdioTestClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 5 * time.Second,
@@ -194,6 +195,7 @@ func setupStdioTestClient(t *testing.T, logger *zap.Logger, scriptPath string) *
 
 func cleanupStdioTestClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -201,6 +203,7 @@ func cleanupStdioTestClient(t *testing.T, client *StdioClient) {
 
 func runStdioSendRequestTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	
 	req := &mcp.Request{
@@ -220,6 +223,7 @@ func runStdioSendRequestTest(t *testing.T, client *StdioClient) {
 
 func verifyStdioRequestMetrics(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	metrics := client.GetMetrics()
 	assert.Equal(t, uint64(1), metrics.RequestCount)
 	assert.Equal(t, uint64(0), metrics.ErrorCount)
@@ -404,6 +408,7 @@ if __name__ == "__main__":
 
 func setupStdioHealthCheckClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 5 * time.Second,
@@ -426,6 +431,8 @@ func setupStdioHealthCheckClient(t *testing.T, logger *zap.Logger, scriptPath st
 
 func cleanupStdioHealthCheckClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -524,6 +531,7 @@ if __name__ == "__main__":
 
 func setupStdioEnvClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Env: map[string]string{
@@ -548,6 +556,8 @@ func setupStdioEnvClient(t *testing.T, logger *zap.Logger, scriptPath string) *S
 
 func cleanupStdioEnvClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -555,6 +565,7 @@ func cleanupStdioEnvClient(t *testing.T, client *StdioClient) {
 
 func runStdioEnvVariableTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	
 	req := &mcp.Request{
@@ -569,8 +580,11 @@ func runStdioEnvVariableTest(t *testing.T, client *StdioClient) {
 	verifyStdioEnvResponse(t, resp)
 }
 
+
 func verifyStdioEnvResponse(t *testing.T, resp *mcp.Response) {
 	t.Helper()
+
+
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
 	
@@ -629,6 +643,7 @@ if __name__ == "__main__":
 
 func setupStdioWorkingDirClient(t *testing.T, logger *zap.Logger, scriptPath, tmpDir string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command:    []string{"python3", scriptPath},
 		WorkingDir: tmpDir,
@@ -651,6 +666,7 @@ func setupStdioWorkingDirClient(t *testing.T, logger *zap.Logger, scriptPath, tm
 
 func cleanupStdioWorkingDirClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -658,6 +674,7 @@ func cleanupStdioWorkingDirClient(t *testing.T, client *StdioClient) {
 
 func runStdioWorkingDirTest(t *testing.T, client *StdioClient, expectedTmpDir string) {
 	t.Helper()
+
 	ctx := context.Background()
 	
 	req := &mcp.Request{
@@ -674,6 +691,7 @@ func runStdioWorkingDirTest(t *testing.T, client *StdioClient, expectedTmpDir st
 
 func verifyStdioWorkingDirResponse(t *testing.T, resp *mcp.Response, expectedTmpDir string) {
 	t.Helper()
+
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
 	
@@ -780,6 +798,7 @@ if __name__ == "__main__":
 
 func setupStdioLifecycleClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 5 * time.Second,
@@ -798,6 +817,7 @@ func setupStdioLifecycleClient(t *testing.T, logger *zap.Logger, scriptPath stri
 
 func runStdioLifecycleTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 
 	testStdioLifecycleStartup(t, client, ctx)
@@ -807,6 +827,7 @@ func runStdioLifecycleTest(t *testing.T, client *StdioClient) {
 
 func testStdioLifecycleStartup(t *testing.T, client *StdioClient, ctx context.Context) {
 	t.Helper()
+
 	err := client.Connect(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, StateConnected, client.GetState())
@@ -816,6 +837,7 @@ func testStdioLifecycleStartup(t *testing.T, client *StdioClient, ctx context.Co
 
 func testStdioLifecycleResponse(t *testing.T, client *StdioClient, ctx context.Context) {
 	t.Helper()
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "get_lifecycle",
@@ -829,6 +851,7 @@ func testStdioLifecycleResponse(t *testing.T, client *StdioClient, ctx context.C
 
 func testStdioLifecycleShutdown(t *testing.T, client *StdioClient, ctx context.Context) {
 	t.Helper()
+
 	err := client.Close(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, StateClosed, client.GetState())
@@ -894,6 +917,7 @@ if __name__ == "__main__":
 
 func setupStdioRestartClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 3 * time.Second,
@@ -921,6 +945,7 @@ func setupStdioRestartClient(t *testing.T, logger *zap.Logger, scriptPath string
 
 func cleanupStdioRestartClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -928,6 +953,7 @@ func cleanupStdioRestartClient(t *testing.T, client *StdioClient) {
 
 func runStdioRestartTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 
 	time.Sleep(2 * constants.TestSleepShort)
@@ -939,6 +965,7 @@ func runStdioRestartTest(t *testing.T, client *StdioClient) {
 
 func sendStdioNormalRequest(t *testing.T, client *StdioClient, ctx context.Context) {
 	t.Helper()
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "normal",
@@ -951,6 +978,7 @@ func sendStdioNormalRequest(t *testing.T, client *StdioClient, ctx context.Conte
 
 func triggerStdioProcessCrash(t *testing.T, client *StdioClient, ctx context.Context) {
 	t.Helper()
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "crash",
@@ -1022,10 +1050,12 @@ func runStdioPerformanceOptimizationTest(t *testing.T, logger *zap.Logger, tc st
 }) {
 	t.Helper()
 	scriptPath := createStdioPerformanceScript(t)
+
 	client := setupStdioPerformanceClient(t, logger, scriptPath, tc.config)
 	defer cleanupStdioPerformanceClient(t, client)
 
 	connectTime := measureStdioConnectTime(t, client)
+
 	time.Sleep(100 * time.Millisecond)
 
 	requestTimes := measureStdioRequestPerformance(t, client)
@@ -1084,8 +1114,10 @@ func setupStdioPerformanceClient(
 	logger *zap.Logger,
 	scriptPath string,
 	perfConfig StdioPerformanceConfig,
+
 ) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command:     []string{"python3", scriptPath},
 		Timeout:     5 * time.Second,
@@ -1102,6 +1134,7 @@ func setupStdioPerformanceClient(
 
 func cleanupStdioPerformanceClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -1109,6 +1142,7 @@ func cleanupStdioPerformanceClient(t *testing.T, client *StdioClient) {
 
 func measureStdioConnectTime(t *testing.T, client *StdioClient) time.Duration {
 	t.Helper()
+
 	ctx := context.Background()
 	start := time.Now()
 	err := client.Connect(ctx)
@@ -1118,7 +1152,9 @@ func measureStdioConnectTime(t *testing.T, client *StdioClient) time.Duration {
 
 func measureStdioRequestPerformance(t *testing.T, client *StdioClient) []time.Duration {
 	t.Helper()
+
 	const numRequests = 20
+
 	ctx := context.Background()
 	requestTimes := make([]time.Duration, numRequests)
 
@@ -1232,6 +1268,7 @@ if __name__ == "__main__":
 
 func setupStdioConcurrentClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 10 * time.Second,
@@ -1259,6 +1296,7 @@ func setupStdioConcurrentClient(t *testing.T, logger *zap.Logger, scriptPath str
 
 func cleanupStdioConcurrentClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -1266,6 +1304,7 @@ func cleanupStdioConcurrentClient(t *testing.T, client *StdioClient) {
 
 func runStdioConcurrentOperationsTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	const (
 		numGoroutines        = 8
 		requestsPerGoroutine = 3
@@ -1274,6 +1313,7 @@ func runStdioConcurrentOperationsTest(t *testing.T, client *StdioClient) {
 	errChan, responseChan := createStdioConcurrentChannels(numGoroutines, requestsPerGoroutine)
 	
 	var wg sync.WaitGroup
+
 	ctx := context.Background()
 
 	launchStdioConcurrentWorkers(t, &wg, client, ctx, numGoroutines, requestsPerGoroutine, errChan, responseChan)
@@ -1291,16 +1331,15 @@ func createStdioConcurrentChannels(numGoroutines, requestsPerGoroutine int) (cha
 
 func launchStdioConcurrentWorkers(t *testing.T, wg *sync.WaitGroup, client *StdioClient, ctx context.Context,
 	numGoroutines, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
-	
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
+
 		go runStdioConcurrentWorker(wg, client, ctx, g, requestsPerGoroutine, errChan, responseChan)
 	}
 }
 
 func runStdioConcurrentWorker(wg *sync.WaitGroup, client *StdioClient, ctx context.Context,
 	goroutineID, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
-	
 	defer wg.Done()
 
 	for r := 0; r < requestsPerGoroutine; r++ {
@@ -1322,7 +1361,9 @@ func runStdioConcurrentWorker(wg *sync.WaitGroup, client *StdioClient, ctx conte
 
 func waitForStdioConcurrentCompletion(t *testing.T, wg *sync.WaitGroup) {
 	t.Helper()
+
 	done := make(chan struct{})
+
 	go func() {
 		wg.Wait()
 		close(done)
@@ -1355,8 +1396,8 @@ func collectStdioConcurrentResults(errChan chan error, responseChan chan *mcp.Re
 
 func verifyStdioConcurrentResults(t *testing.T, client *StdioClient, errors []error, responses []*mcp.Response,
 	numGoroutines, requestsPerGoroutine int) {
-	
 	t.Helper()
+
 	expectedCount := numGoroutines * requestsPerGoroutine
 
 	assert.Empty(t, errors, "No errors should occur during concurrent operations")
@@ -1418,6 +1459,7 @@ if __name__ == "__main__":
 
 func setupStdioMemoryOptimizedClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	memoryOptimizer := createStdioMemoryOptimizer(logger)
 	config := createStdioMemoryOptimizedConfig(scriptPath)
 
@@ -1470,6 +1512,7 @@ func createStdioMemoryOptimizedConfig(scriptPath string) StdioClientConfig {
 
 func cleanupStdioMemoryOptimizedClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -1477,7 +1520,9 @@ func cleanupStdioMemoryOptimizedClient(t *testing.T, client *StdioClient) {
 
 func runStdioMemoryOptimizationTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	const numRequests = 50
+
 	ctx := context.Background()
 
 	for i := 0; i < numRequests; i++ {
@@ -1497,6 +1542,7 @@ func runStdioMemoryOptimizationTest(t *testing.T, client *StdioClient) {
 
 func verifyStdioMemoryOptimizationMetrics(t *testing.T, client *StdioClient, expectedRequests int) {
 	t.Helper()
+
 	metrics := client.GetMetrics()
 	assert.Equal(t, uint64(expectedRequests), metrics.RequestCount)
 	assert.Equal(t, uint64(0), metrics.ErrorCount)
@@ -1560,6 +1606,7 @@ if __name__ == "__main__":
 
 func setupStdioLargePayloadClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command:       []string{"python3", scriptPath},
 		Timeout:       10 * time.Second,
@@ -1587,13 +1634,16 @@ func setupStdioLargePayloadClient(t *testing.T, logger *zap.Logger, scriptPath s
 
 func cleanupStdioLargePayloadClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
+
 	require.NoError(t, err)
 }
 
 func runStdioLargePayloadTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	
 	largePayload := strings.Repeat("test_data_", 1000) // ~10KB payload
@@ -1608,11 +1658,13 @@ func runStdioLargePayloadTest(t *testing.T, client *StdioClient) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 
+
 	verifyStdioLargePayloadResponse(t, resp)
 }
 
 func verifyStdioLargePayloadResponse(t *testing.T, resp *mcp.Response) {
 	t.Helper()
+
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
 
@@ -1699,6 +1751,7 @@ if __name__ == "__main__":
 
 func setupStdioErrorRecoveryClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
 	t.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 5 * time.Second,
@@ -1720,6 +1773,7 @@ func setupStdioErrorRecoveryClient(t *testing.T, logger *zap.Logger, scriptPath 
 
 func cleanupStdioErrorRecoveryClient(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -1727,6 +1781,7 @@ func cleanupStdioErrorRecoveryClient(t *testing.T, client *StdioClient) {
 
 func runStdioErrorRecoveryTest(t *testing.T, client *StdioClient) {
 	t.Helper()
+
 	testCases := createStdioErrorTestCases()
 	successCount, errorCount := executeStdioErrorTestCases(t, client, testCases)
 	
@@ -1753,7 +1808,9 @@ func executeStdioErrorTestCases(t *testing.T, client *StdioClient, testCases []s
 	expectError bool
 }) (int, int) {
 	t.Helper()
+
 	var successCount, errorCount int
+
 	ctx := context.Background()
 
 	for i, tc := range testCases {
@@ -1878,6 +1935,7 @@ if __name__ == "__main__":
     main()
 `
 
+
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
 	require.NoError(b, err)
 	return scriptPath
@@ -1885,6 +1943,7 @@ if __name__ == "__main__":
 
 func setupStdioConcurrentBenchClient(b *testing.B, logger *zap.Logger, scriptPath string) *StdioClient {
 	b.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 10 * time.Second,
@@ -1912,6 +1971,7 @@ func setupStdioConcurrentBenchClient(b *testing.B, logger *zap.Logger, scriptPat
 
 func cleanupStdioConcurrentBenchClient(b *testing.B, client *StdioClient) {
 	b.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(b, err)
@@ -1919,6 +1979,7 @@ func cleanupStdioConcurrentBenchClient(b *testing.B, client *StdioClient) {
 
 func runStdioConcurrentBenchmark(b *testing.B, client *StdioClient) {
 	b.Helper()
+
 	ctx := context.Background()
 
 	b.ResetTimer()
@@ -1986,6 +2047,7 @@ func setupStdioMemoryBenchClient(
 	memoryOptimizer *MemoryOptimizer,
 ) *StdioClient {
 	b.Helper()
+
 	config := StdioClientConfig{
 		Command: []string{"python3", scriptPath},
 		Timeout: 5 * time.Second,
@@ -2017,6 +2079,7 @@ func setupStdioMemoryBenchClient(
 
 func cleanupStdioMemoryBenchClient(b *testing.B, client *StdioClient) {
 	b.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(b, err)
@@ -2024,6 +2087,7 @@ func cleanupStdioMemoryBenchClient(b *testing.B, client *StdioClient) {
 
 func runStdioMemoryBenchmark(b *testing.B, client *StdioClient) {
 	b.Helper()
+
 	ctx := context.Background()
 
 	b.ResetTimer()

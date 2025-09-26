@@ -62,7 +62,9 @@ type MockRouter struct {
 	mock.Mock
 }
 
-func (m *MockRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+func (m *MockRouter) RouteRequest(
+	ctx context.Context, req *mcp.Request, targetNamespace string,
+) (*mcp.Response, error) {
 	args := m.Called(ctx, req, targetNamespace)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -201,7 +203,9 @@ type tcpTestMocks struct {
 	rateLimiter  *MockRateLimiter
 }
 
-func setupSuccessfulAuthMocks(t *testing.T, logger *zap.Logger, registry *metrics.Registry) (*TCPHandler, *tcpTestMocks) {
+func setupSuccessfulAuthMocks(
+	t *testing.T, logger *zap.Logger, registry *metrics.Registry,
+) (*TCPHandler, *tcpTestMocks) {
 	t.Helper()
 	
 	// Create mocks
@@ -399,6 +403,7 @@ func testTCPHandlerRateLimitExceeded(t *testing.T, logger *zap.Logger, registry 
 
 	// Close connection
 	cancel()
+
 	_ = clientConn.Close()
 
 	<-done
@@ -445,6 +450,7 @@ func testTCPHandlerHealthCheck(t *testing.T, logger *zap.Logger, registry *metri
 
 	// Close connection
 	cancel()
+
 	_ = clientConn.Close()
 
 	<-done

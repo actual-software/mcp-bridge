@@ -422,6 +422,7 @@ func runConcurrentWrites(checker *Checker, done chan error) {
 
 func waitForConcurrentOperations(t *testing.T, done chan error, expectedOps int) {
 	t.Helper()
+
 	for i := 0; i < expectedOps; i++ {
 		select {
 		case err := <-done:

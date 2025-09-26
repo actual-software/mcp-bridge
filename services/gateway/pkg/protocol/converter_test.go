@@ -153,7 +153,9 @@ func createTestMessage(protocol string) Message {
 	}
 }
 
-func verifyProtocolConversion(t *testing.T, converted Message, expectedProtocol string, expectedMeta map[string]string) {
+func verifyProtocolConversion(
+	t *testing.T, converted Message, expectedProtocol string, expectedMeta map[string]string,
+) {
 	t.Helper()
 	assert.Equal(t, expectedProtocol, converted.Protocol)
 

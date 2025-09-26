@@ -21,10 +21,12 @@ const (
 func TestCreateSSEServiceDiscovery(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+
 	tests := createSSEDiscoveryCreationTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			sd, err := CreateSSEServiceDiscovery(tt.config, logger)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -475,10 +477,12 @@ func TestSSEDiscovery_MetadataFiltering(t *testing.T) {
 func TestSSEDiscovery_URLParsing(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+
 	tests := createSSEURLParsingTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			config := config.SSEDiscoveryConfig{
 				Services: []config.SSEServiceConfig{
 					{
@@ -487,8 +491,11 @@ func TestSSEDiscovery_URLParsing(t *testing.T) {
 					},
 				},
 			}
+
 			sd, err := CreateSSEServiceDiscovery(config, logger)
+
 			require.NoError(t, err)
+
 			endpoints := sd.GetEndpoints("default")
 			require.Len(t, endpoints, 1)
 			ep := endpoints[0]

@@ -16,10 +16,12 @@ import (
 func TestCreateStdioServiceDiscovery(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+
 	tests := createStdioDiscoveryCreationTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			sd, err := CreateStdioServiceDiscovery(tt.config, logger)
 			if tt.wantErr {
 				assert.Error(t, err)

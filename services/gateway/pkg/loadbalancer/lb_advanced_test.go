@@ -104,6 +104,7 @@ func TestHybridLoadBalancer_TrafficDistribution_Advanced(t *testing.T) {
 
 	for i := 0; i < iterations; i++ {
 		endpoint := lb.Next()
+
 		require.NotNil(t, endpoint)
 
 		distribution[endpoint.Service]++
@@ -116,6 +117,7 @@ func TestHybridLoadBalancer_TrafficDistribution_Advanced(t *testing.T) {
 	svc3Ratio := float64(distribution["svc3"]) / total
 
 	// Allow for some variance (±0.1)
+
 	assert.InDelta(t, 0.5, svc1Ratio, 0.1, "svc1 should get ~testTimeout%% of traffic")
 	assert.InDelta(t, 0.3, svc2Ratio, 0.1, "svc2 should get ~30%% of traffic")
 	assert.InDelta(t, 0.2, svc3Ratio, 0.1, "svc3 should get ~20%% of traffic")
@@ -176,8 +178,10 @@ func TestHybridLoadBalancer_ConcurrentTrafficDistribution_Advanced(t *testing.T)
 	assert.Equal(t, numGoroutines*requestsPerGoroutine, totalRequests)
 
 	// Verify reasonably even distribution (should be roughly 1/3 each)
+
 	for service, count := range distribution {
 		ratio := float64(count) / float64(totalRequests)
+
 		assert.InDelta(t, 0.33, ratio, 0.1, "Service %s should get roughly 1/3 of traffic", service)
 	}
 }
@@ -185,7 +189,7 @@ func TestHybridLoadBalancer_ConcurrentTrafficDistribution_Advanced(t *testing.T)
 // TestHybridLoadBalancer_ProtocolGrouping_Advanced tests protocol-based grouping.
 func TestHybridLoadBalancer_ProtocolGrouping_Advanced(t *testing.T) {
 	lb, endpoints := setupProtocolGroupingTest(t)
-	
+
 	testHTTPProtocolPreference(t, lb)
 	testWebSocketFallback(t, endpoints)
 	testSSELastResort(t, endpoints)
@@ -193,7 +197,7 @@ func TestHybridLoadBalancer_ProtocolGrouping_Advanced(t *testing.T) {
 
 func setupProtocolGroupingTest(t *testing.T) (*HybridLoadBalancer, []*discovery.Endpoint) {
 	t.Helper()
-	
+
 	endpoints := []*discovery.Endpoint{
 		{
 			Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Healthy: true,
@@ -228,21 +232,23 @@ func setupProtocolGroupingTest(t *testing.T) (*HybridLoadBalancer, []*discovery.
 		ProtocolPreference: []string{"http", "websocket", "sse"},
 	}
 	lb := NewHybridLoadBalancer(endpoints, config)
-	
+
 	// Test protocol statistics
 	stats := lb.GetProtocolStats()
+
 	assert.NotNil(t, stats)
-	
+
 	return lb, endpoints
 }
 
 func testHTTPProtocolPreference(t *testing.T, lb *HybridLoadBalancer) {
 	t.Helper()
-	
+
 	protocolCounts := make(map[string]int)
-	
+
 	for i := 0; i < 10; i++ {
 		endpoint := lb.Next()
+
 		require.NotNil(t, endpoint)
 
 		if endpoint.Metadata != nil {
@@ -259,10 +265,11 @@ func testHTTPProtocolPreference(t *testing.T, lb *HybridLoadBalancer) {
 
 func testWebSocketFallback(t *testing.T, originalEndpoints []*discovery.Endpoint) {
 	t.Helper()
-	
+
 	// Create unhealthy HTTP endpoints
 	endpointsNoHTTP := make([]*discovery.Endpoint, len(originalEndpoints))
 	copy(endpointsNoHTTP, originalEndpoints)
+
 	for _, ep := range endpointsNoHTTP {
 		if ep.Metadata["protocol"] == "http" {
 			ep.Healthy = false
@@ -279,6 +286,7 @@ func testWebSocketFallback(t *testing.T, originalEndpoints []*discovery.Endpoint
 
 	for i := 0; i < 10; i++ {
 		endpoint := lb2.Next()
+
 		require.NotNil(t, endpoint)
 
 		if endpoint.Metadata != nil {
@@ -295,7 +303,7 @@ func testWebSocketFallback(t *testing.T, originalEndpoints []*discovery.Endpoint
 
 func testSSELastResort(t *testing.T, originalEndpoints []*discovery.Endpoint) {
 	t.Helper()
-	
+
 	// Create endpoints with only SSE healthy
 	endpointsOnlySSE := []*discovery.Endpoint{
 		{
@@ -325,6 +333,7 @@ func testSSELastResort(t *testing.T, originalEndpoints []*discovery.Endpoint) {
 
 	for i := 0; i < 10; i++ {
 		endpoint := lb3.Next()
+
 		require.NotNil(t, endpoint)
 
 		if endpoint.Metadata != nil {
@@ -342,7 +351,7 @@ func testSSELastResort(t *testing.T, originalEndpoints []*discovery.Endpoint) {
 // TestLoadBalancer_HealthRecoveryPatterns_Advanced tests health recovery patterns.
 func TestLoadBalancer_HealthRecoveryPatterns_Advanced(t *testing.T) {
 	lb := setupHealthRecoveryTest(t)
-	
+
 	testInitialHealthyState(t, lb)
 	testServiceDegradation(t, lb)
 	testServiceRecovery(t, lb)
@@ -350,7 +359,7 @@ func TestLoadBalancer_HealthRecoveryPatterns_Advanced(t *testing.T) {
 
 func setupHealthRecoveryTest(t *testing.T) *HybridLoadBalancer {
 	t.Helper()
-	
+
 	initialEndpoints := []*discovery.Endpoint{
 		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
 		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations},
@@ -366,7 +375,7 @@ func setupHealthRecoveryTest(t *testing.T) *HybridLoadBalancer {
 
 func testInitialHealthyState(t *testing.T, lb *HybridLoadBalancer) {
 	t.Helper()
-	
+
 	healthyCount := 0
 
 	for i := 0; i < 30; i++ {
@@ -381,7 +390,7 @@ func testInitialHealthyState(t *testing.T, lb *HybridLoadBalancer) {
 
 func testServiceDegradation(t *testing.T, lb *HybridLoadBalancer) {
 	t.Helper()
-	
+
 	// Simulate one service becoming unhealthy
 	degradedEndpoints := []*discovery.Endpoint{
 		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: false, Weight: testIterations}, // unhealthy
@@ -396,6 +405,7 @@ func testServiceDegradation(t *testing.T, lb *HybridLoadBalancer) {
 
 	for i := 0; i < testIterations; i++ {
 		endpoint := lb.Next()
+
 		require.NotNil(t, endpoint)
 		assert.True(t, endpoint.Healthy, "Should only return healthy endpoints")
 
@@ -403,6 +413,7 @@ func testServiceDegradation(t *testing.T, lb *HybridLoadBalancer) {
 	}
 
 	// Should not route to svc1 (unhealthy)
+
 	assert.Equal(t, 0, serviceCounts["svc1"], "Should not route to unhealthy service")
 	assert.Positive(t, serviceCounts["svc2"], "Should route to healthy svc2")
 	assert.Positive(t, serviceCounts["svc3"], "Should route to healthy svc3")
@@ -410,7 +421,7 @@ func testServiceDegradation(t *testing.T, lb *HybridLoadBalancer) {
 
 func testServiceRecovery(t *testing.T, lb *HybridLoadBalancer) {
 	t.Helper()
-	
+
 	// Simulate recovery
 	recoveredEndpoints := []*discovery.Endpoint{
 		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations}, // recovered
@@ -425,6 +436,7 @@ func testServiceRecovery(t *testing.T, lb *HybridLoadBalancer) {
 
 	for i := 0; i < 300; i++ {
 		endpoint := lb.Next()
+
 		require.NotNil(t, endpoint)
 		assert.True(t, endpoint.Healthy, "All endpoints should be healthy")
 
@@ -477,12 +489,14 @@ func TestLoadBalancer_WeightDistributionAccuracy_Advanced(t *testing.T) {
 
 			for i := 0; i < iterations; i++ {
 				endpoint := lb.Next()
+
 				require.NotNil(t, endpoint)
 
 				distribution[endpoint.Service]++
 			}
 
 			// Verify distribution accuracy
+
 			for i, weight := range tc.weights {
 				serviceName := "svc" + string(rune('1'+i))
 				expectedRatio := float64(weight) / float64(totalWeight)
@@ -514,6 +528,7 @@ func TestHybridLoadBalancer_EdgeCases_Advanced(t *testing.T) {
 			},
 			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
 				endpoint := lb.Next()
+
 				assert.NotNil(t, endpoint, "Should return endpoint even with zero weight")
 			},
 		},
@@ -526,6 +541,7 @@ func TestHybridLoadBalancer_EdgeCases_Advanced(t *testing.T) {
 			},
 			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
 				endpoint := lb.Next()
+
 				assert.Nil(t, endpoint, "Should return nil when no endpoints available")
 			},
 		},
@@ -543,6 +559,7 @@ func TestHybridLoadBalancer_EdgeCases_Advanced(t *testing.T) {
 				// Should consistently return the same endpoint
 				for i := 0; i < 10; i++ {
 					endpoint := lb.Next()
+
 					require.NotNil(t, endpoint)
 					assert.Equal(t, "only-svc", endpoint.Service)
 				}
@@ -566,6 +583,7 @@ func TestLoadBalancer_PerformanceUnderLoad_Advanced(t *testing.T) {
 	requests := 10000
 
 	// Test performance for each algorithm
+
 	for _, algorithm := range algorithms {
 		t.Run(algorithm, func(t *testing.T) {
 			runPerformanceTestForAlgorithm(t, algorithm, endpoints, requests)
@@ -575,6 +593,7 @@ func TestLoadBalancer_PerformanceUnderLoad_Advanced(t *testing.T) {
 
 func createManyTestEndpoints() []*discovery.Endpoint {
 	const numEndpoints = testTimeout
+
 	endpoints := make([]*discovery.Endpoint, numEndpoints)
 
 	for i := 0; i < numEndpoints; i++ {
@@ -605,6 +624,7 @@ func runPerformanceTestForAlgorithm(t *testing.T, algorithm string, endpoints []
 
 func executePerformanceRequests(lb *HybridLoadBalancer, requests int) int {
 	successCount := 0
+
 	for i := 0; i < requests; i++ {
 		endpoint := lb.Next()
 		if endpoint != nil && endpoint.Healthy {
@@ -621,6 +641,7 @@ func validatePerformanceResults(t *testing.T, algorithm string, successCount, re
 
 	// Calculate and verify throughput
 	rps := float64(requests) / duration.Seconds()
+
 	assert.Greater(t, rps, 1000.0, "Should handle at least 1000 requests per second")
 
 	t.Logf("Algorithm: %s, RPS: %.2f, Success Rate: %.2f%%",
@@ -646,6 +667,7 @@ func TestHybridLoadBalancer_UpdateEndpoints_Advanced(t *testing.T) {
 
 	for i := 0; i < testIterations; i++ {
 		endpoint := lb.Next()
+
 		require.NotNil(t, endpoint)
 
 		initialDistribution[endpoint.Service]++
@@ -670,12 +692,14 @@ func TestHybridLoadBalancer_UpdateEndpoints_Advanced(t *testing.T) {
 
 	for i := 0; i < 300; i++ {
 		endpoint := lb.Next()
+
 		require.NotNil(t, endpoint)
 
 		updatedDistribution[endpoint.Service]++
 	}
 
 	// Should not route to svc2 (removed)
+
 	assert.Equal(t, 0, updatedDistribution["svc2"], "Should not route to removed service")
 	// Should route to remaining and new services
 	assert.Positive(t, updatedDistribution["svc1"], "Should continue routing to svc1")

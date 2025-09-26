@@ -836,7 +836,9 @@ func createIntegrationTestEndpoints() []*discovery.Endpoint {
 	}
 }
 
-func createMultipleConnections(t *testing.T, multiplexer *ConnectionMultiplexer, endpoints []*discovery.Endpoint) []*PooledConnection {
+func createMultipleConnections(
+	t *testing.T, multiplexer *ConnectionMultiplexer, endpoints []*discovery.Endpoint,
+) []*PooledConnection {
 	ctx := context.Background()
 	connections := make([]*PooledConnection, 0)
 
@@ -845,6 +847,7 @@ func createMultipleConnections(t *testing.T, multiplexer *ConnectionMultiplexer,
 		for i := 0; i < 2; i++ {
 			conn, err := multiplexer.GetConnection(ctx, endpoint)
 			require.NoError(t, err)
+
 			connections = append(connections, conn)
 		}
 	}
@@ -857,7 +860,10 @@ func verifyMultiplexerStats(t *testing.T, multiplexer *ConnectionMultiplexer, ex
 	assert.Equal(t, expectedConnections, stats.TotalConnections)
 }
 
-func returnAndReuseConnections(t *testing.T, multiplexer *ConnectionMultiplexer, endpoints []*discovery.Endpoint, connections []*PooledConnection) {
+func returnAndReuseConnections(
+	t *testing.T, multiplexer *ConnectionMultiplexer, endpoints []*discovery.Endpoint,
+	connections []*PooledConnection,
+) {
 	ctx := context.Background()
 
 	// Return some connections

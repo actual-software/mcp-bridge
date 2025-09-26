@@ -363,6 +363,7 @@ func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenar
 	t.Helper()
 	
 	server := newMockTCPServerBench(t, tt.serverBehavior)
+
 	addr, err := server.Start()
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
@@ -386,8 +387,10 @@ func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenar
 		if !tt.expectedSuccess && tt.expectedError != "" && containsError(err.Error(), tt.expectedError) {
 			return
 		}
+
 		t.Fatalf("Failed to connect: %v", err)
 	}
+
 	defer func() { _ = client.Close() }()
 	
 	err = tt.clientOps(client)
@@ -396,6 +399,7 @@ func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenar
 
 func validateFailoverResult(t *testing.T, err error, tt failoverScenarioTest) {
 	t.Helper()
+
 	if tt.expectedSuccess {
 		if err != nil {
 			t.Errorf("Expected success but got error: %v", err)
@@ -421,6 +425,7 @@ func TestGatewayClient_ConcurrentFailover(t *testing.T) {
 	serverCounters := createServerCounters()
 	
 	server := createFailoverTestServer(t, serverCounters)
+
 	addr := startFailoverServer(t, server)
 	defer server.Stop()
 	
@@ -457,6 +462,7 @@ func createFailoverTestServer(t *testing.T, counters *serverCounters) *mockTCPSe
 		
 		if currentCount%3 == 0 {
 			atomic.AddInt64(counters.errorCount, 1)
+
 			_ = conn.Close()
 			return
 		}
@@ -467,10 +473,12 @@ func createFailoverTestServer(t *testing.T, counters *serverCounters) *mockTCPSe
 
 func handleSuccessfulConnection(conn net.Conn, successCount *int64) {
 	reader := newEchoReader(conn)
+
 	frame, err := ReadBinaryFrame(reader)
 	if err != nil {
 		return
 	}
+
 	if frame.MessageType == MessageTypeVersionNegotiation {
 		sendIntegrationVersionAck(conn)
 	}
@@ -480,6 +488,7 @@ func handleSuccessfulConnection(conn net.Conn, successCount *int64) {
 		if err != nil {
 			return
 		}
+
 		if frame.MessageType == MessageTypeRequest {
 			atomic.AddInt64(successCount, 1)
 			processRequestFrame(conn, *frame)
@@ -536,11 +545,14 @@ func runConcurrentFailoverTest(t *testing.T, cfg config.GatewayConfig, logger *z
 	var wg sync.WaitGroup
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
+
 		go func(goroutineID int) {
 			defer wg.Done()
+
 			runGoroutineOperations(goroutineID, operationsPerGoroutine, cfg, logger, counters)
 		}(i)
 	}
+
 	wg.Wait()
 	
 	return counters
@@ -568,6 +580,7 @@ func runSingleOperation(
 		atomic.AddInt64(counters.errors, 1)
 		return
 	}
+
 	defer func() { _ = client.Close() }()
 	
 	ctx := context.Background()
@@ -610,6 +623,7 @@ func validateConcurrentFailoverResults(t *testing.T, serverCounters *serverCount
 	if clientSuccesses == 0 {
 		t.Error("Expected some successful operations in concurrent failover test")
 	}
+
 	if clientErrors == 0 {
 		t.Error("Expected some errors due to simulated server failures")
 	}

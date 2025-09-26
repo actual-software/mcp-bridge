@@ -214,10 +214,12 @@ func startMockGoroutinesForShutdown(server *GatewayServer, ctx context.Context) 
 
 	go func() {
 		defer server.wg.Done()
+
 		<-ctx.Done()
 	}()
 	go func() {
 		defer server.wg.Done()
+
 		<-ctx.Done()
 	}()
 }

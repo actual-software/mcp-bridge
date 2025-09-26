@@ -271,10 +271,12 @@ func TestPrometheusExporter_RequestDurationHistogram(t *testing.T) {
 	exporter := NewPrometheusExporter(":0", logger)
 
 	testMetrics := createRequestDurationTestMetrics()
+
 	exporter.SetRouterMetrics(func() *RouterMetrics { return testMetrics })
 
 	ctx, cancel := startPrometheusServer(t, exporter)
 	defer cancel()
+
 	time.Sleep(testIterations * time.Millisecond)
 
 	addr := exporter.GetEndpoint()
@@ -311,6 +313,7 @@ func getPrometheusMetrics(t *testing.T, ctx context.Context, addr string) string
 	if err != nil {
 		t.Fatalf("Failed to get metrics: %v", err)
 	}
+
 	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)

@@ -16,7 +16,9 @@ import (
 // Mock implementations for testing.
 type MockRequestRouter struct{}
 
-func (m *MockRequestRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+func (m *MockRequestRouter) RouteRequest(
+	ctx context.Context, req *mcp.Request, targetNamespace string,
+) (*mcp.Response, error) {
 	return &mcp.Response{
 		JSONRPC: "2.0",
 		ID:      req.ID,
@@ -30,7 +32,9 @@ func (m *MockAuthProvider) Authenticate(ctx context.Context, credentials map[str
 	return true, nil
 }
 
-func (m *MockAuthProvider) GetUserInfo(ctx context.Context, credentials map[string]string) (map[string]interface{}, error) {
+func (m *MockAuthProvider) GetUserInfo(
+	ctx context.Context, credentials map[string]string,
+) (map[string]interface{}, error) {
 	return map[string]interface{}{"user": "test"}, nil
 }
 

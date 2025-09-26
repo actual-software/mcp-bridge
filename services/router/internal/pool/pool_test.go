@@ -785,6 +785,7 @@ func runRapidAcquireReleaseCycles(t *testing.T, factory *mockFactory, logger *za
 
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
+
 	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
@@ -797,6 +798,7 @@ func runRapidAcquireReleaseCycles(t *testing.T, factory *mockFactory, logger *za
 	for i := 0; i < numCycles; i++ {
 		// Acquire multiple connections
 		conns := make([]Connection, 3)
+
 		for j := 0; j < 3; j++ {
 			conn, err := pool.Acquire(ctx)
 			require.NoError(t, err, "Cycle %d, connection %d", i, j)
@@ -825,6 +827,7 @@ func runConnectionFailureDuringOperations(t *testing.T, factory *mockFactory, lo
 
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
+
 	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
@@ -879,6 +882,7 @@ func runReleaseInvalidConnectionTest(t *testing.T, factory *mockFactory, logger 
 	config := DefaultConfig()
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
+
 	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
@@ -894,6 +898,7 @@ func runReleaseInvalidConnectionTest(t *testing.T, factory *mockFactory, logger 
 	otherFactory := &mockFactory{}
 	otherPool, err := NewPool(config, otherFactory, logger)
 	require.NoError(t, err)
+
 	defer func() { _ = otherPool.Close() }()
 
 	ctx := context.Background()
@@ -917,6 +922,7 @@ func runFactoryCreateErrorsTest(t *testing.T, factory *mockFactory, logger *zap.
 
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
+
 	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
@@ -958,14 +964,18 @@ func runConcurrentCloseAndOperationsTest(t *testing.T, factory *mockFactory, log
 	require.NoError(t, err)
 
 	ctx := context.Background()
+
 	var wg sync.WaitGroup
+
 	stopChan := make(chan struct{})
 
 	// Start background acquire/release operations
 	for i := 0; i < 3; i++ {
 		wg.Add(1)
+
 		go func() {
 			defer wg.Done()
+
 			for {
 				select {
 				case <-stopChan:
@@ -976,7 +986,9 @@ func runConcurrentCloseAndOperationsTest(t *testing.T, factory *mockFactory, log
 						// Pool might be closed
 						return
 					}
+
 					time.Sleep(time.Millisecond)
+
 					_ = pool.Release(conn)
 				}
 			}

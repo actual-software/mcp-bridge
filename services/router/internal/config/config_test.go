@@ -209,6 +209,7 @@ func testDefaultConfigLoad(t *testing.T, tempDir string) {
 // setupTestEnvironment sets up test environment variables and returns cleanup function.
 func setupTestEnvironment(t *testing.T) func() {
 	t.Helper()
+
 	origToken, tokenExists := os.LookupEnv("TEST_TOKEN")
 
 	if err := os.Setenv("TEST_TOKEN", "test-token-value"); err != nil {

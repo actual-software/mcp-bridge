@@ -164,7 +164,6 @@ func (s *encryptedFileStore) loadTokens() (*tokenData, error) {
 	if err != nil {
 		// Handle corruption by returning empty data and allowing recovery
 		// The corrupted file will be overwritten on next save
-		
 		return &tokenData{Tokens: make(map[string]string)}, nil
 	}
 
@@ -172,7 +171,6 @@ func (s *encryptedFileStore) loadTokens() (*tokenData, error) {
 	var data tokenData
 	if err := json.Unmarshal(decryptedData, &data); err != nil {
 		// Handle JSON corruption by returning empty data and allowing recovery
-		
 		return &tokenData{Tokens: make(map[string]string)}, nil
 	}
 

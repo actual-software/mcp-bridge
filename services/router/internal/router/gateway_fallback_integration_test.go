@@ -64,6 +64,7 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 	mockClients := createMockClientsForPerformance()
 	
 	var requestCount int64
+
 	mockClients.gwClient.sendRequestFunc = func(req *mcp.Request) error {
 		atomic.AddInt64(&requestCount, 1)
 		time.Sleep(5 * time.Millisecond) // Simulate gateway latency
@@ -152,6 +153,7 @@ func setupMessageRouterForPerformance(cfg *config.Config, logger *zap.Logger, mo
 
 	// Wait for connection to be established.
 	timeout := time.After(2 * time.Second)
+
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
 
@@ -194,6 +196,7 @@ func measurePerformance(t *testing.T, msgRouter *MessageRouter, useDirectMode bo
 	t.Helper()
 	
 	numRequests := 10
+
 	var totalLatency time.Duration
 
 	start := time.Now()

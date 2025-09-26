@@ -316,8 +316,12 @@ func createTestRouter(strategy string, mockDiscovery *mockServiceDiscovery) *Rou
 	}
 }
 
-func validateLoadBalancerResult(t *testing.T, lb loadbalancer.LoadBalancer, expectNil bool, router *Router, namespace string) {
+func validateLoadBalancerResult(
+	t *testing.T, lb loadbalancer.LoadBalancer, expectNil bool,
+	router *Router, namespace string,
+) {
 	t.Helper()
+
 	if expectNil {
 		if lb != nil {
 			t.Error("Expected nil load balancer")
@@ -326,6 +330,7 @@ func validateLoadBalancerResult(t *testing.T, lb loadbalancer.LoadBalancer, expe
 		if lb == nil {
 			t.Error("Expected load balancer to be created")
 		}
+
 		lb2 := router.getLoadBalancer(namespace)
 		if lb != lb2 {
 			t.Error("Expected cached load balancer")
@@ -469,6 +474,7 @@ func setupTestRouter(t *testing.T, backendURL string) *Router {
 
 func runRouteRequestTests(t *testing.T, router *Router) {
 	t.Helper()
+
 	tests := []struct {
 		name            string
 		request         *mcp.Request
@@ -498,6 +504,7 @@ func runRouteRequestTests(t *testing.T, router *Router) {
 	}
 
 	ctx := context.Background()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := router.RouteRequest(ctx, tt.request, tt.targetNamespace)
@@ -512,6 +519,7 @@ func runRouteRequestTests(t *testing.T, router *Router) {
 
 func TestRouter_RouteRequest_WithSession(t *testing.T) {
 	sessionReceived := false
+
 	backend := setupSessionTestBackend(&sessionReceived)
 	defer backend.Close()
 
@@ -575,7 +583,9 @@ func testSessionRouting(t *testing.T, router *Router, sessionReceived *bool) {
 	}
 
 	type contextKey string
+
 	const sessionKey contextKey = "session"
+
 	ctx := context.WithValue(context.Background(), sessionKey, sess)
 
 	req := &mcp.Request{
@@ -852,12 +862,15 @@ func runConcurrentRequests(t *testing.T, router *Router) {
 	t.Helper()
 	
 	var wg sync.WaitGroup
+
 	errors := make(chan error, testIterations)
 
 	for i := 0; i < testIterations; i++ {
 		wg.Add(1)
+
 		go func(id int) {
 			defer wg.Done()
+
 			req := &mcp.Request{
 				JSONRPC: "2.0",
 				Method:  "test.method",
@@ -865,6 +878,7 @@ func runConcurrentRequests(t *testing.T, router *Router) {
 			}
 
 			ctx := context.Background()
+
 			_, err := router.RouteRequest(ctx, req, "test")
 			if err != nil {
 				errors <- err
@@ -876,8 +890,10 @@ func runConcurrentRequests(t *testing.T, router *Router) {
 	close(errors)
 
 	errorCount := 0
+
 	for err := range errors {
 		t.Logf("Concurrent request error: %v", err)
+
 		errorCount++
 	}
 

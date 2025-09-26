@@ -210,10 +210,12 @@ func createValidFrameData() []byte {
 	_ = binary.Write(buf, binary.BigEndian, uint16(0x0001))
 	_ = binary.Write(buf, binary.BigEndian, uint16(MessageTypeRequest))
 	_ = binary.Write(buf, binary.BigEndian, uint32(0)) // Reserved padding
+
 	payload := []byte(`{"test":"data"}`)
 	if len(payload) <= math.MaxUint32 {
 		_ = binary.Write(buf, binary.BigEndian, uint32(len(payload))) // #nosec G115 - bounds checked above
 	}
+
 	_, _ = buf.Write(payload)
 	return buf.Bytes()
 }

@@ -16,6 +16,7 @@ const (
 
 func TestConfig_Validation(t *testing.T) {
 	tests := createConfigValidationTestCases()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runConfigValidationTest(t, tt)
@@ -43,7 +44,12 @@ func createConfigValidationTestCases() []configValidationTestCase {
 		{"invalid routing config", createConfigWithInvalidRouting(), true, "invalid routing configuration"},
 		{"invalid discovery config", createConfigWithInvalidDiscovery(), true, "invalid discovery configuration"},
 		{"invalid rate limit config", createConfigWithInvalidRateLimit(), true, "invalid rate limit configuration"},
-		{"invalid circuit breaker config", createConfigWithInvalidCircuitBreaker(), true, "invalid circuit breaker configuration"},
+		{
+			"invalid circuit breaker config",
+			createConfigWithInvalidCircuitBreaker(),
+			true,
+			"invalid circuit breaker configuration",
+		},
 		{"invalid metrics config", createConfigWithInvalidMetrics(), true, "invalid metrics configuration"},
 		{"invalid logging config", createConfigWithInvalidLogging(), true, "invalid logging configuration"},
 		{"invalid tracing config", createConfigWithInvalidTracing(), true, "invalid tracing configuration"},
@@ -68,11 +74,13 @@ func runConfigValidationTest(t *testing.T, tt configValidationTestCase) {
 
 func TestServerConfig_Validation(t *testing.T) {
 	tests := createServerConfigValidationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateServerConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
@@ -91,17 +99,17 @@ func createServerConfigValidationTests() []struct {
 } {
 	validTests := createValidServerConfigTests()
 	invalidTests := createInvalidServerConfigTests()
-	
+
 	var allTests []struct {
 		name    string
 		config  ServerConfig
 		wantErr bool
 		errMsg  string
 	}
-	
+
 	allTests = append(allTests, validTests...)
 	allTests = append(allTests, invalidTests...)
-	
+
 	return allTests
 }
 
@@ -134,7 +142,7 @@ func createInvalidServerConfigTests() []struct {
 	tests := createPortValidationTests()
 	tests = append(tests, createHostValidationTests()...)
 	tests = append(tests, createTimeoutValidationTests()...)
-	
+
 	return tests
 }
 
@@ -242,11 +250,13 @@ func createTimeoutValidationTests() []struct {
 
 func TestTLSConfig_Validation(t *testing.T) {
 	tests := createTLSConfigValidationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateTLSConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
@@ -265,17 +275,17 @@ func createTLSConfigValidationTests() []struct {
 } {
 	validTests := createValidTLSConfigTests()
 	invalidTests := createInvalidTLSConfigTests()
-	
+
 	var allTests []struct {
 		name    string
 		config  TLSConfig
 		wantErr bool
 		errMsg  string
 	}
-	
+
 	allTests = append(allTests, validTests...)
 	allTests = append(allTests, invalidTests...)
-	
+
 	return allTests
 }
 
@@ -367,6 +377,7 @@ func createInvalidTLSConfigTests() []struct {
 
 func TestAuthConfig_Validation(t *testing.T) {
 	tests := createAuthConfigValidationTestCases()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runAuthConfigValidationTest(t, tt)
@@ -401,7 +412,9 @@ func createAuthConfigValidationTestCases() []authConfigValidationTestCase {
 			config: AuthConfig{
 				Provider: "oauth2",
 				OAuth2: OAuth2Config{
-					ClientID: "test-client", TokenEndpoint: "https://auth.example.com/token", IntrospectEndpoint: "https://auth.example.com/introspect",
+					ClientID:           "test-client",
+					TokenEndpoint:      "https://auth.example.com/token",
+					IntrospectEndpoint: "https://auth.example.com/introspect",
 				},
 			},
 			wantErr: false,
@@ -423,7 +436,10 @@ func createAuthConfigValidationTestCases() []authConfigValidationTestCase {
 			name: "invalid OAuth2 config - missing client ID",
 			config: AuthConfig{
 				Provider: "oauth2",
-				OAuth2: OAuth2Config{TokenEndpoint: "https://auth.example.com/token", IntrospectEndpoint: "https://auth.example.com/introspect"},
+				OAuth2: OAuth2Config{
+					TokenEndpoint:      "https://auth.example.com/token",
+					IntrospectEndpoint: "https://auth.example.com/introspect",
+				},
 			},
 			wantErr: true, errMsg: "OAuth2 client ID required",
 		},
@@ -445,6 +461,7 @@ func runAuthConfigValidationTest(t *testing.T, tt authConfigValidationTestCase) 
 
 	if tt.wantErr {
 		require.Error(t, err)
+
 		if tt.errMsg != "" {
 			assert.Contains(t, err.Error(), tt.errMsg)
 		}
@@ -455,11 +472,13 @@ func runAuthConfigValidationTest(t *testing.T, tt authConfigValidationTestCase) 
 
 func TestServiceDiscoveryConfig_Validation(t *testing.T) {
 	tests := createServiceDiscoveryValidationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateServiceDiscoveryConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
@@ -478,17 +497,17 @@ func createServiceDiscoveryValidationTests() []struct {
 } {
 	validTests := createValidServiceDiscoveryTests()
 	invalidTests := createInvalidServiceDiscoveryTests()
-	
+
 	var allTests []struct {
 		name    string
 		config  ServiceDiscoveryConfig
 		wantErr bool
 		errMsg  string
 	}
-	
+
 	allTests = append(allTests, validTests...)
 	allTests = append(allTests, invalidTests...)
-	
+
 	return allTests
 }
 
@@ -591,11 +610,13 @@ func createInvalidServiceDiscoveryTests() []struct {
 
 func TestCircuitBreakerConfig_Validation(t *testing.T) {
 	tests := createCircuitBreakerValidationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateCircuitBreakerConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
@@ -614,7 +635,7 @@ func createCircuitBreakerValidationTests() []struct {
 } {
 	tests := createValidCircuitBreakerTests()
 	tests = append(tests, createInvalidCircuitBreakerTests()...)
-	
+
 	return tests
 }
 
@@ -699,11 +720,13 @@ func createInvalidCircuitBreakerTests() []struct {
 
 func TestRateLimitConfig_Validation(t *testing.T) {
 	tests := createRateLimitValidationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateRateLimitConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
@@ -722,7 +745,7 @@ func createRateLimitValidationTests() []struct {
 } {
 	tests := createValidRateLimitTests()
 	tests = append(tests, createInvalidRateLimitTests()...)
-	
+
 	return tests
 }
 
@@ -816,11 +839,13 @@ func createInvalidRateLimitTests() []struct {
 
 func TestMetricsConfig_Validation(t *testing.T) {
 	tests := createMetricsConfigValidationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateMetricsConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
@@ -945,11 +970,13 @@ func TestLoggingConfig_Validation(t *testing.T) {
 
 func TestTracingConfig_Validation(t *testing.T) {
 	tests := createTracingConfigValidationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateTracingConfig(&tt.config)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
@@ -972,10 +999,10 @@ func createTracingConfigValidationTests() []struct {
 		wantErr bool
 		errMsg  string
 	}
-	
+
 	tests = append(tests, createValidTracingTests()...)
 	tests = append(tests, createInvalidTracingTests()...)
-	
+
 	return tests
 }
 
@@ -1023,10 +1050,10 @@ func createInvalidTracingTests() []struct {
 		wantErr bool
 		errMsg  string
 	}
-	
+
 	tests = append(tests, createInvalidTracingConfigTests()...)
 	tests = append(tests, createInvalidTracingParameterTests()...)
-	
+
 	return tests
 }
 

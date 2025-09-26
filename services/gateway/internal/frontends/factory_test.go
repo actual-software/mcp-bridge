@@ -22,7 +22,11 @@ const (
 
 type mockRequestRouter struct{}
 
-func (m *mockRequestRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+func (m *mockRequestRouter) RouteRequest(
+	ctx context.Context,
+	req *mcp.Request,
+	targetNamespace string,
+) (*mcp.Response, error) {
 	return &mcp.Response{
 		JSONRPC: "2.0",
 		ID:      req.ID,
@@ -34,11 +38,17 @@ type mockAuthProvider struct {
 	shouldAuthenticate bool
 }
 
-func (m *mockAuthProvider) Authenticate(ctx context.Context, credentials map[string]string) (bool, error) {
+func (m *mockAuthProvider) Authenticate(
+	ctx context.Context,
+	credentials map[string]string,
+) (bool, error) {
 	return m.shouldAuthenticate, nil
 }
 
-func (m *mockAuthProvider) GetUserInfo(ctx context.Context, credentials map[string]string) (map[string]interface{}, error) {
+func (m *mockAuthProvider) GetUserInfo(
+	ctx context.Context,
+	credentials map[string]string,
+) (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"user_id": "test-user",
 		"scopes":  []string{"read", "write"},
@@ -97,6 +107,7 @@ func TestDefaultFactory_CreateFrontend_UnsupportedProtocol(t *testing.T) {
 	}
 
 	frontend, err := factory.CreateFrontend(config, router, auth, sessions)
+
 	assert.Error(t, err)
 	assert.Nil(t, frontend)
 	assert.Contains(t, err.Error(), "unsupported frontend protocol: unsupported")
@@ -106,9 +117,11 @@ func TestDefaultFactory_CreateStdioFrontend(t *testing.T) {
 	t.Parallel()
 
 	tests := createStdioFrontendTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			logger := zaptest.NewLogger(t)
 			factory := CreateFrontendFactory(logger)
 			router := &mockRequestRouter{}
@@ -131,6 +144,7 @@ func TestDefaultFactory_CreateStdioFrontend(t *testing.T) {
 			} else {
 				assert.Error(t, err)
 				assert.Nil(t, frontend)
+
 				if tt.expectError != "" {
 					assert.Contains(t, err.Error(), tt.expectError)
 				}
@@ -151,10 +165,10 @@ func createStdioFrontendTests() []struct {
 		expectSuccess bool
 		expectError   string
 	}
-	
+
 	tests = append(tests, createValidStdioTests()...)
 	tests = append(tests, createStdioEdgeCaseTests()...)
-	
+
 	return tests
 }
 
@@ -170,10 +184,10 @@ func createValidStdioTests() []struct {
 		expectSuccess bool
 		expectError   string
 	}
-	
+
 	tests = append(tests, createBasicStdioTests()...)
 	tests = append(tests, createComplexStdioTests()...)
-	
+
 	return tests
 }
 
@@ -322,6 +336,7 @@ func TestFrontendWrapper_GetMetrics(t *testing.T) {
 	}
 
 	frontend, err := factory.CreateFrontend(config, router, auth, sessions)
+
 	require.NoError(t, err)
 	require.NotNil(t, frontend)
 
@@ -375,6 +390,7 @@ func TestDefaultFactory_ComplexConfigurationParsing(t *testing.T) {
 	}
 
 	frontend, err := factory.CreateFrontend(stdioConfig, router, auth, sessions)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, frontend)
 	assert.Equal(t, "complex-stdio", frontend.GetName())
@@ -383,6 +399,7 @@ func TestDefaultFactory_ComplexConfigurationParsing(t *testing.T) {
 
 func TestDefaultFactory_EdgeCases(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
@@ -390,9 +407,11 @@ func TestDefaultFactory_EdgeCases(t *testing.T) {
 	sessions := &mockSessionManager{}
 
 	tests := createFactoryEdgeCaseTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			frontend, err := factory.CreateFrontend(tt.config, router, auth, sessions)
 			if tt.expectError {
 				assert.Error(t, err)
@@ -415,10 +434,10 @@ func createFactoryEdgeCaseTests() []struct {
 		config      FrontendConfig
 		expectError bool
 	}
-	
+
 	tests = append(tests, createNilConfigTests()...)
 	tests = append(tests, createInvalidTypeTests()...)
-	
+
 	return tests
 }
 
@@ -612,11 +631,13 @@ func TestDefaultFactory_ConfigurationDefaults(t *testing.T) {
 	}
 
 	frontend, err := factory.CreateFrontend(config, router, auth, sessions)
+
 	assert.NoError(t, err)
 	assert.NotNil(t, frontend)
 
 	// Verify that the frontend was created successfully with defaults
 	metrics := frontend.GetMetrics()
+
 	assert.Equal(t, uint64(0), metrics.ActiveConnections)
 	assert.Equal(t, uint64(0), metrics.TotalConnections)
 	assert.False(t, metrics.IsRunning)
@@ -624,6 +645,7 @@ func TestDefaultFactory_ConfigurationDefaults(t *testing.T) {
 
 func TestDefaultFactory_ModesConfigurationParsing(t *testing.T) {
 	t.Parallel()
+
 	logger := zaptest.NewLogger(t)
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
@@ -631,9 +653,11 @@ func TestDefaultFactory_ModesConfigurationParsing(t *testing.T) {
 	sessions := &mockSessionManager{}
 
 	tests := createModesConfigurationTests()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			config := FrontendConfig{
 				Name:     "modes-test",
 				Protocol: "stdio",
@@ -642,6 +666,7 @@ func TestDefaultFactory_ModesConfigurationParsing(t *testing.T) {
 					"modes":   tt.modes,
 				},
 			}
+
 			frontend, err := factory.CreateFrontend(config, router, auth, sessions)
 			if tt.expect {
 				assert.NoError(t, err)

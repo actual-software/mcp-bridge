@@ -15,16 +15,20 @@ import (
 func TestCreateStaticServiceDiscovery(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+
 	tests := createStaticDiscoveryCreationTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			sd, err := CreateStaticServiceDiscovery(tt.config, logger)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				if tt.errContains != "" {
 					assert.Contains(t, err.Error(), tt.errContains)
 				}
+
 				assert.Nil(t, sd)
 			} else {
 				assert.NoError(t, err)
@@ -144,6 +148,7 @@ func verifyLoadedEndpoints(t *testing.T, sd *StaticDiscovery) {
 	for _, endpoints := range allEndpoints {
 		totalCount += len(endpoints)
 	}
+
 	assert.Equal(t, 3, totalCount) // 2 default + 1 production
 
 	// Check default namespace endpoints
@@ -380,10 +385,12 @@ func TestStaticDiscovery_EmptyNamespace(t *testing.T) {
 func TestStaticDiscovery_URLParsing(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+
 	tests := createStaticURLParsingTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			config := config.ServiceDiscoveryConfig{
 				Static: config.StaticDiscoveryConfig{
 					Endpoints: map[string][]config.EndpointConfig{
@@ -397,7 +404,9 @@ func TestStaticDiscovery_URLParsing(t *testing.T) {
 				},
 			}
 			sd, err := CreateStaticServiceDiscovery(config, logger)
+
 			require.NoError(t, err)
+
 			endpoints := sd.GetEndpoints("test")
 			require.Len(t, endpoints, 1)
 			ep := endpoints[0]

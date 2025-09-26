@@ -119,6 +119,7 @@ func TestTracerOperations(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	tracer := setupTracerForOperationTests(t, logger)
+
 	defer func() { _ = tracer.Shutdown(context.Background()) }()
 
 	t.Run("StartSpan", func(t *testing.T) {
@@ -203,6 +204,7 @@ func testSetSpanAttributes(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
 	
 	ctx := context.Background()
+
 	spanCtx, span := tracer.StartSpan(ctx, "test-attributes")
 	defer span.End()
 
@@ -220,6 +222,7 @@ func testAddSpanEvent(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
 	
 	ctx := context.Background()
+
 	spanCtx, span := tracer.StartSpan(ctx, "test-events")
 	defer span.End()
 
@@ -231,6 +234,7 @@ func testRecordError(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
 	
 	ctx := context.Background()
+
 	spanCtx, span := tracer.StartSpan(ctx, "test-error")
 	defer span.End()
 
@@ -280,12 +284,14 @@ func testMapPropagation(t *testing.T, tracer *tracing.Tracer) {
 	
 	// Check for the header (case-insensitive).
 	found := false
+
 	for k := range headers {
 		if strings.EqualFold(k, "traceparent") {
 			found = true
 			break
 		}
 	}
+
 	assert.True(t, found, "traceparent header not found")
 
 	// Extract from map.

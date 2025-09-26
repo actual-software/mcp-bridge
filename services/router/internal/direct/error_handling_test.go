@@ -298,6 +298,7 @@ func runConcurrentRequestsTest(t *testing.T) {
 	// Test concurrent access to DirectClientManager rather than individual client requests.
 	// This focuses on the concurrency safety of the manager itself.
 	manager := setupConcurrentTestManager(t)
+
 	defer func() { _ = manager.Stop(context.Background()) }()
 	
 	results := runConcurrentClientOperations(t, manager)

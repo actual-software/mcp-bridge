@@ -254,6 +254,7 @@ func setupHTTPBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, f
 		Timeout:     5 * time.Second,
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
+
 	client, err := NewHTTPClient("http-conn-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -269,6 +270,7 @@ func setupWebSocketBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClie
 		Timeout:     5 * time.Second,
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
+
 	client, err := NewWebSocketClient("ws-conn-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -284,6 +286,7 @@ func setupSSEBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, fu
 		RequestTimeout: 5 * time.Second,
 		HealthCheck:    HealthCheckConfig{Enabled: false},
 	}
+
 	client, err := NewSSEClient("sse-conn-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -301,6 +304,7 @@ func setupStdioBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, 
 		Timeout:     5 * time.Second,
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
+
 	client, err := NewStdioClient("stdio-conn-bench", "stdio://python3 "+scriptPath, config, logger)
 	if err != nil {
 		b.Fatal(err)

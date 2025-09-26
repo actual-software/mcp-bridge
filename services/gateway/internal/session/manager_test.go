@@ -115,6 +115,7 @@ func TestInitializeRedisSessionStore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer mr.Close()
 
 	logger := testutil.NewTestLogger(t)
@@ -210,6 +211,7 @@ func TestRedisManager_CreateSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer mr.Close()
 
 	logger := testutil.NewTestLogger(t)
@@ -221,7 +223,7 @@ func TestRedisManager_CreateSession(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer func() { _ = manager.Close() }() 
+	defer func() { _ = manager.Close() }()
 
 	// Test claims
 	claims := &auth.Claims{
@@ -275,8 +277,8 @@ func TestRedisManager_CreateSession(t *testing.T) {
 func TestRedisManager_GetSession(t *testing.T) {
 	// Setup
 	mr, manager := setupRedisManagerTest(t)
-	
-	defer func() { _ = manager.Close() }() 
+
+	defer func() { _ = manager.Close() }()
 
 	// Test valid session retrieval
 	testValidSessionRetrieval(t, manager)
@@ -288,7 +290,7 @@ func TestRedisManager_GetSession(t *testing.T) {
 	testExpiredSessionHandling(t, manager, mr)
 }
 
-func setupRedisManagerTest(t *testing.T) (*miniredis.Miniredis, Manager) { 
+func setupRedisManagerTest(t *testing.T) (*miniredis.Miniredis, Manager) {
 	t.Helper()
 
 	mr, err := miniredis.Run()
@@ -378,6 +380,7 @@ func testExpiredSessionHandling(t *testing.T, manager Manager, mr *miniredis.Min
 
 func TestRedisManager_UpdateSession(t *testing.T) {
 	manager := setupRedisManagerForUpdate(t)
+
 	defer func() { _ = manager.Close() }()
 
 	session := createTestSessionForUpdate(t, manager)
@@ -387,7 +390,7 @@ func TestRedisManager_UpdateSession(t *testing.T) {
 
 func setupRedisManagerForUpdate(t *testing.T) Manager {
 	t.Helper()
-	
+
 	mr, err := miniredis.Run()
 	if err != nil {
 		t.Fatal(err)
@@ -407,7 +410,7 @@ func setupRedisManagerForUpdate(t *testing.T) Manager {
 
 func createTestSessionForUpdate(t *testing.T, manager Manager) *Session {
 	t.Helper()
-	
+
 	// Create a session
 	claims := &auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -427,7 +430,7 @@ func createTestSessionForUpdate(t *testing.T, manager Manager) *Session {
 
 func testSessionUpdate(t *testing.T, manager Manager, session *Session) {
 	t.Helper()
-	
+
 	originalUpdatedAt := session.UpdatedAt
 
 	// Update session metadata
@@ -458,7 +461,7 @@ func testSessionUpdate(t *testing.T, manager Manager, session *Session) {
 
 func testExpiredSessionUpdate(t *testing.T, manager Manager) {
 	t.Helper()
-	
+
 	// Test updating expired session
 	expiredSession := &Session{
 		ID:        "expired-id",
@@ -476,6 +479,7 @@ func TestRedisManager_RemoveSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer mr.Close()
 
 	logger := testutil.NewTestLogger(t)
@@ -487,7 +491,7 @@ func TestRedisManager_RemoveSession(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer func() { _ = manager.Close() }() 
+	defer func() { _ = manager.Close() }()
 
 	// Create a session
 	claims := &auth.Claims{
@@ -585,7 +589,9 @@ func isValidHex(s string) bool {
 
 func TestRedisManager_SessionTTL(t *testing.T) {
 	rm, mr := setupRedisManagerForTTL(t)
+
 	defer func() { _ = rm.Close() }()
+
 	defer mr.Close()
 
 	tests := createSessionTTLTests(rm)
@@ -594,7 +600,7 @@ func TestRedisManager_SessionTTL(t *testing.T) {
 
 func setupRedisManagerForTTL(t *testing.T) (*RedisManager, *miniredis.Miniredis) {
 	t.Helper()
-	
+
 	mr, err := miniredis.Run()
 	if err != nil {
 		t.Fatal(err)
@@ -675,8 +681,8 @@ func runSessionTTLTests(t *testing.T, tests []struct {
 func TestRedisManager_ConcurrentAccess(t *testing.T) {
 	// Setup
 	manager, session := setupConcurrentTest(t)
-	
-	defer func() { _ = manager.Close() }() 
+
+	defer func() { _ = manager.Close() }()
 
 	// Run concurrent operations
 	errors := runConcurrentOperations(manager, session)
@@ -753,7 +759,7 @@ func startConcurrentReaders(manager *RedisManager, sessionID string, done chan b
 					errors <- err
 				}
 			}
-			
+
 			done <- true
 		}()
 	}
@@ -775,7 +781,7 @@ func startConcurrentUpdaters(manager *RedisManager, sessionID string, done chan 
 					errors <- err
 				}
 			}
-			
+
 			done <- true
 		}(i)
 	}
@@ -785,6 +791,7 @@ func checkConcurrentResults(t *testing.T, errors chan error, manager *RedisManag
 	t.Helper()
 
 	// Check for errors
+
 	for err := range errors {
 		t.Errorf("Concurrent operation error: %v", err)
 	}
@@ -875,6 +882,7 @@ func BenchmarkSessionCreation(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+
 	defer mr.Close()
 
 	logger := testutil.NewBenchLogger(b)
@@ -886,7 +894,7 @@ func BenchmarkSessionCreation(b *testing.B) {
 		b.Fatal(err)
 	}
 
-	defer func() { _ = manager.Close() }() 
+	defer func() { _ = manager.Close() }()
 
 	claims := &auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -911,6 +919,7 @@ func BenchmarkSessionRetrieval(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+
 	defer mr.Close()
 
 	logger := testutil.NewBenchLogger(b)
@@ -922,7 +931,7 @@ func BenchmarkSessionRetrieval(b *testing.B) {
 		b.Fatal(err)
 	}
 
-	defer func() { _ = manager.Close() }() 
+	defer func() { _ = manager.Close() }()
 
 	// Create a session
 	claims := &auth.Claims{

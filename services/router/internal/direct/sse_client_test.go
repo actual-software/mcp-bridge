@@ -788,6 +788,7 @@ func runSSEPerformanceTest(t *testing.T, logger *zap.Logger, tc struct {
 	config SSEPerformanceConfig
 }) {
 	t.Helper()
+
 	mockServer := newMockSSEServer()
 	defer mockServer.close()
 
@@ -795,6 +796,7 @@ func runSSEPerformanceTest(t *testing.T, logger *zap.Logger, tc struct {
 	ctx := context.Background()
 
 	connectTime := measureSSEConnectionTime(t, client, ctx)
+
 	defer func() {
 		err := client.Close(ctx)
 		require.NoError(t, err)
@@ -813,6 +815,7 @@ func setupSSEPerformanceClient(
 	perfConfig SSEPerformanceConfig,
 ) *SSEClient {
 	t.Helper()
+
 	config := SSEClientConfig{
 		URL:            mockServer.getURL(),
 		RequestTimeout: 5 * time.Second,
@@ -829,6 +832,7 @@ func setupSSEPerformanceClient(
 
 func measureSSEConnectionTime(t *testing.T, client *SSEClient, ctx context.Context) time.Duration {
 	t.Helper()
+
 	start := time.Now()
 	err := client.Connect(ctx)
 	require.NoError(t, err)
@@ -837,7 +841,9 @@ func measureSSEConnectionTime(t *testing.T, client *SSEClient, ctx context.Conte
 
 func measureSSERequestPerformance(t *testing.T, client *SSEClient, ctx context.Context) []time.Duration {
 	t.Helper()
+
 	const numRequests = 10
+
 	requestTimes := make([]time.Duration, numRequests)
 
 	for i := 0; i < numRequests; i++ {
@@ -850,6 +856,7 @@ func measureSSERequestPerformance(t *testing.T, client *SSEClient, ctx context.C
 		start := time.Now()
 		_, err := client.SendRequest(ctx, req)
 		requestTimes[i] = time.Since(start)
+
 		require.NoError(t, err)
 	}
 
@@ -882,6 +889,7 @@ func analyzeSSEPerformanceResults(
 // TestSSEClientConcurrentOperations tests concurrent request handling.
 func TestSSEClientConcurrentOperations(t *testing.T) { 
 	logger := zaptest.NewLogger(t)
+
 	client := setupSSEConcurrentClient(t, logger)
 	defer cleanupSSEConcurrentClient(t, client)
 
@@ -890,7 +898,9 @@ func TestSSEClientConcurrentOperations(t *testing.T) {
 
 func setupSSEConcurrentClient(t *testing.T, logger *zap.Logger) *SSEClient {
 	t.Helper()
+
 	mockServer := newMockSSEServer()
+
 	t.Cleanup(func() { mockServer.close() })
 
 	config := SSEClientConfig{
@@ -919,6 +929,7 @@ func setupSSEConcurrentClient(t *testing.T, logger *zap.Logger) *SSEClient {
 
 func cleanupSSEConcurrentClient(t *testing.T, client *SSEClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -926,12 +937,15 @@ func cleanupSSEConcurrentClient(t *testing.T, client *SSEClient) {
 
 func runSSEConcurrentOperationsTest(t *testing.T, client *SSEClient) {
 	t.Helper()
+
 	const numGoroutines = 1
+
 	const requestsPerGoroutine = 5
 
 	errChan, responseChan := createSSEConcurrentChannels(numGoroutines, requestsPerGoroutine)
 	
 	var wg sync.WaitGroup
+
 	ctx := context.Background()
 
 	launchSSEConcurrentWorkers(t, &wg, client, ctx, numGoroutines, requestsPerGoroutine, errChan, responseChan)
@@ -949,16 +963,15 @@ func createSSEConcurrentChannels(numGoroutines, requestsPerGoroutine int) (chan 
 
 func launchSSEConcurrentWorkers(t *testing.T, wg *sync.WaitGroup, client *SSEClient, ctx context.Context, 
 	numGoroutines, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
-	
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
+
 		go runSSEConcurrentWorker(wg, client, ctx, g, requestsPerGoroutine, errChan, responseChan)
 	}
 }
 
 func runSSEConcurrentWorker(wg *sync.WaitGroup, client *SSEClient, ctx context.Context,
 	goroutineID, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
-	
 	defer wg.Done()
 
 	for r := 0; r < requestsPerGoroutine; r++ {
@@ -980,7 +993,9 @@ func runSSEConcurrentWorker(wg *sync.WaitGroup, client *SSEClient, ctx context.C
 
 func waitForSSEConcurrentCompletion(t *testing.T, wg *sync.WaitGroup) {
 	t.Helper()
+
 	done := make(chan struct{})
+
 	go func() {
 		wg.Wait()
 		close(done)
@@ -1013,8 +1028,8 @@ func collectSSEConcurrentResults(errChan chan error, responseChan chan *mcp.Resp
 
 func verifySSEConcurrentResults(t *testing.T, client *SSEClient, errors []error, responses []*mcp.Response,
 	numGoroutines, requestsPerGoroutine int) {
-	
 	t.Helper()
+
 	expectedCount := numGoroutines * requestsPerGoroutine
 
 	assert.Empty(t, errors, "No errors should occur during concurrent operations")
@@ -1138,6 +1153,7 @@ func runSSEStreamManagementTest(t *testing.T, logger *zap.Logger, tc struct {
 	expectError    bool
 }) {
 	t.Helper()
+
 	server := httptest.NewServer(http.HandlerFunc(tc.serverBehavior))
 	defer server.Close()
 
@@ -1151,6 +1167,7 @@ func runSSEStreamManagementTest(t *testing.T, logger *zap.Logger, tc struct {
 	}
 
 	require.NoError(t, err)
+
 	defer func() {
 		err := client.Close(ctx)
 		require.NoError(t, err)
@@ -1161,6 +1178,7 @@ func runSSEStreamManagementTest(t *testing.T, logger *zap.Logger, tc struct {
 
 func setupSSEStreamManagementClient(t *testing.T, logger *zap.Logger, serverURL string) *SSEClient {
 	t.Helper()
+
 	config := SSEClientConfig{
 		URL:            serverURL,
 		RequestTimeout: 5 * time.Second,
@@ -1186,6 +1204,7 @@ func verifySSEStreamConnection(t *testing.T, client *SSEClient) {
 // TestSSEClientReconnectionScenarios tests various reconnection scenarios.
 func TestSSEClientReconnectionScenarios(t *testing.T) { 
 	logger := zaptest.NewLogger(t)
+
 	server, toggleServer := setupReconnectionServer()
 	defer server.Close()
 
@@ -1203,7 +1222,9 @@ func setupReconnectionServer() (*httptest.Server, func(bool)) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serverMu.Lock()
+
 		enabled := serverEnabled
+
 		serverMu.Unlock()
 
 		if !enabled {
@@ -1234,7 +1255,9 @@ func setupReconnectionServer() (*httptest.Server, func(bool)) {
 
 	toggleServer := func(enabled bool) {
 		serverMu.Lock()
+
 		serverEnabled = enabled
+
 		serverMu.Unlock()
 	}
 
@@ -1243,6 +1266,7 @@ func setupReconnectionServer() (*httptest.Server, func(bool)) {
 
 func setupReconnectionClient(t *testing.T, logger *zap.Logger, serverURL string) *SSEClient {
 	t.Helper()
+
 	config := SSEClientConfig{
 		URL:            serverURL,
 		RequestTimeout: 2 * time.Second,
@@ -1266,6 +1290,7 @@ func setupReconnectionClient(t *testing.T, logger *zap.Logger, serverURL string)
 
 func cleanupReconnectionClient(t *testing.T, client *SSEClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -1337,6 +1362,7 @@ func runCompressionTest(t *testing.T, logger *zap.Logger, tc struct {
 	expectHeader      bool
 }) {
 	t.Helper()
+
 	server := setupCompressionTestServer(t, tc.expectHeader)
 	defer server.Close()
 
@@ -1357,6 +1383,7 @@ func setupCompressionTestServer(t *testing.T, expectHeader bool) *httptest.Serve
 			if expectHeader {
 				assert.Contains(t, acceptEncoding, "gzip", "Should request compression when enabled")
 			}
+
 			w.WriteHeader(http.StatusAccepted)
 		}
 	}))
@@ -1364,6 +1391,7 @@ func setupCompressionTestServer(t *testing.T, expectHeader bool) *httptest.Serve
 
 func setupCompressionTestClient(t *testing.T, logger *zap.Logger, serverURL string, enableCompression bool) *SSEClient {
 	t.Helper()
+
 	config := SSEClientConfig{
 		URL:            serverURL,
 		RequestTimeout: 5 * time.Second,
@@ -1387,6 +1415,7 @@ func setupCompressionTestClient(t *testing.T, logger *zap.Logger, serverURL stri
 
 func cleanupCompressionTestClient(t *testing.T, client *SSEClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -1409,6 +1438,7 @@ func testCompressionHeaders(t *testing.T, client *SSEClient) {
 // TestSSEClientErrorRecovery tests error recovery mechanisms.
 func TestSSEClientErrorRecovery(t *testing.T) { 
 	logger := zaptest.NewLogger(t)
+
 	server, requestCounter := setupErrorRecoveryServer()
 	defer server.Close()
 
@@ -1435,6 +1465,7 @@ func setupErrorRecoveryServer() (*httptest.Server, *int) {
 				http.Error(w, "Temporary server error", http.StatusInternalServerError)
 				return
 			}
+
 			w.WriteHeader(http.StatusAccepted)
 
 			go func() {
@@ -1448,6 +1479,7 @@ func setupErrorRecoveryServer() (*httptest.Server, *int) {
 
 func setupErrorRecoveryClient(t *testing.T, logger *zap.Logger, serverURL string) *SSEClient {
 	t.Helper()
+
 	config := SSEClientConfig{
 		URL:            serverURL,
 		RequestTimeout: 2 * time.Second,
@@ -1469,6 +1501,7 @@ func setupErrorRecoveryClient(t *testing.T, logger *zap.Logger, serverURL string
 
 func cleanupErrorRecoveryClient(t *testing.T, client *SSEClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -1476,6 +1509,7 @@ func cleanupErrorRecoveryClient(t *testing.T, client *SSEClient) {
 
 func runSSEErrorRecoveryTest(t *testing.T, client *SSEClient, requestCounter *int) {
 	t.Helper()
+
 	ctx := context.Background()
 
 	for i := 0; i < 3; i++ {
@@ -1496,6 +1530,7 @@ func runSSEErrorRecoveryTest(t *testing.T, client *SSEClient, requestCounter *in
 
 func verifyErrorRecoveryMetrics(t *testing.T, client *SSEClient) {
 	t.Helper()
+
 	metrics := client.GetMetrics()
 	assert.GreaterOrEqual(t, metrics.ErrorCount, uint64(2), "Should have recorded errors")
 }

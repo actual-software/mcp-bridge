@@ -84,17 +84,17 @@ type MockCatalog struct {
 
 func (m *MockCatalog) Services(opts *consulapi.QueryOptions) (map[string][]string, *consulapi.QueryMeta, error) {
 	args := m.Called(opts)
-	
+
 	var services map[string][]string
 	if args.Get(0) != nil {
 		services, _ = args.Get(0).(map[string][]string)
 	}
-	
+
 	var meta *consulapi.QueryMeta
 	if args.Get(1) != nil {
 		meta, _ = args.Get(1).(*consulapi.QueryMeta)
 	}
-	
+
 	return services, meta, args.Error(2)
 }
 
@@ -109,17 +109,17 @@ func (m *MockHealth) Service(
 	opts *consulapi.QueryOptions,
 ) ([]*consulapi.ServiceEntry, *consulapi.QueryMeta, error) {
 	args := m.Called(service, tag, passingOnly, opts)
-	
+
 	var entries []*consulapi.ServiceEntry
 	if args.Get(0) != nil {
 		entries, _ = args.Get(0).([]*consulapi.ServiceEntry)
 	}
-	
+
 	var meta *consulapi.QueryMeta
 	if args.Get(1) != nil {
 		meta, _ = args.Get(1).(*consulapi.QueryMeta)
 	}
-	
+
 	return entries, meta, args.Error(2)
 }
 
@@ -188,8 +188,9 @@ func TestConsulDiscovery_consulServiceToEndpoint_BasicHTTP(t *testing.T) {
 	}
 
 	endpoint, err := discovery.consulServiceToEndpoint(serviceEntry, "mcp/")
+
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, "mcp/weather", endpoint.Service)
 	assert.Equal(t, "weather", endpoint.Namespace)
 	assert.Equal(t, "127.0.0.1", endpoint.Address)
@@ -235,8 +236,9 @@ func TestConsulDiscovery_consulServiceToEndpoint_WebSocketTLS(t *testing.T) {
 	}
 
 	endpoint, err := discovery.consulServiceToEndpoint(serviceEntry, "mcp/")
+
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, "mcp/chat", endpoint.Service)
 	assert.Equal(t, "chat", endpoint.Namespace)
 	assert.Equal(t, "wss", endpoint.Scheme)
@@ -417,12 +419,14 @@ func TestConsulDiscovery_GetEndpoints(t *testing.T) {
 
 	// Test getting endpoints for existing namespace
 	weatherEndpoints := discovery.GetEndpoints("weather")
+
 	assert.Len(t, weatherEndpoints, 2)
 	assert.Equal(t, "weather-1", weatherEndpoints[0].Service)
 	assert.Equal(t, "weather-2", weatherEndpoints[1].Service)
 
 	// Test getting endpoints for non-existing namespace
 	nonExistentEndpoints := discovery.GetEndpoints("non-existent")
+
 	assert.Empty(t, nonExistentEndpoints)
 }
 
@@ -439,6 +443,7 @@ func TestConsulDiscovery_GetAllEndpoints(t *testing.T) {
 	}
 
 	allEndpoints := discovery.GetAllEndpoints()
+
 	assert.Len(t, allEndpoints, 2)
 	assert.Contains(t, allEndpoints, "weather")
 	assert.Contains(t, allEndpoints, "chat")
@@ -456,6 +461,7 @@ func TestConsulDiscovery_ListNamespaces(t *testing.T) {
 	}
 
 	namespaces := discovery.ListNamespaces()
+
 	assert.Len(t, namespaces, 3)
 	assert.Contains(t, namespaces, "weather")
 	assert.Contains(t, namespaces, "chat")
@@ -467,10 +473,12 @@ func TestConsulDiscovery_Integration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
+
 	cleanup, consulAddr, err := setupConsulInfrastructure(t)
 	if err != nil {
 		t.Skipf("Skipping test: %v", err)
 	}
+
 	defer cleanup()
 
 	client := createConsulClient(t, consulAddr)
@@ -489,15 +497,19 @@ type testServiceInfo struct {
 
 func createConsulClient(t *testing.T, consulAddr string) *consulapi.Client {
 	t.Helper()
+
 	consulConfig := consulapi.DefaultConfig()
 	consulConfig.Address = consulAddr
 	client, err := consulapi.NewClient(consulConfig)
+
 	require.NoError(t, err, "Failed to create Consul client")
+
 	return client
 }
 
 func testConsulConnectivity(t *testing.T, client *consulapi.Client) {
 	t.Helper()
+
 	leader, err := client.Status().Leader()
 	require.NoError(t, err, "Failed to get Consul leader")
 	assert.NotEmpty(t, leader, "Consul leader should be set")
@@ -505,6 +517,7 @@ func testConsulConnectivity(t *testing.T, client *consulapi.Client) {
 
 func registerTestService(t *testing.T, client *consulapi.Client) testServiceInfo {
 	t.Helper()
+
 	serviceInfo := testServiceInfo{
 		ID:   "test-service-1",
 		Name: "test-mcp-service",
@@ -524,11 +537,13 @@ func registerTestService(t *testing.T, client *consulapi.Client) testServiceInfo
 	err := client.Agent().ServiceRegister(registration)
 	require.NoError(t, err, "Failed to register service")
 	time.Sleep(2 * time.Second) // Wait for registration to propagate
+
 	return serviceInfo
 }
 
 func testServiceQuery(t *testing.T, client *consulapi.Client, serviceInfo testServiceInfo) {
 	t.Helper()
+
 	services, _, err := client.Health().Service(serviceInfo.Name, "", false, nil)
 	require.NoError(t, err, "Failed to query service")
 	assert.Len(t, services, 1, "Should find exactly one service")
@@ -539,6 +554,7 @@ func testServiceQuery(t *testing.T, client *consulapi.Client, serviceInfo testSe
 
 func testConsulDiscoveryIntegration(t *testing.T, consulAddr string, serviceInfo testServiceInfo) {
 	t.Helper()
+
 	cfg := config.ServiceDiscoveryConfig{
 		Provider: "consul",
 	}
@@ -547,15 +563,19 @@ func testConsulDiscoveryIntegration(t *testing.T, consulAddr string, serviceInfo
 	}
 	logger := zaptest.NewLogger(t)
 	discovery, err := InitializeConsulServiceDiscovery(cfg, consulCfg, logger)
+
 	require.NoError(t, err, "Failed to create ConsulDiscovery")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
 	defer cancel()
 
 	err = discovery.Start(ctx)
+
 	require.NoError(t, err, "Failed to start discovery")
 
 	endpoints := discovery.GetEndpoints("default")
+
 	t.Logf("Found %d endpoints", len(endpoints))
 
 	discovery.Stop()
@@ -563,6 +583,7 @@ func testConsulDiscoveryIntegration(t *testing.T, consulAddr string, serviceInfo
 
 func cleanupTestService(t *testing.T, client *consulapi.Client, serviceID string) {
 	t.Helper()
+
 	err := client.Agent().ServiceDeregister(serviceID)
 	require.NoError(t, err, "Failed to deregister service")
 }
@@ -600,7 +621,7 @@ func TestConsulDiscovery_StartStop(t *testing.T) {
 // setupConsulInfrastructure starts a Consul container for testing.
 func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string, err error) {
 	t.Helper()
-	
+
 	ctx := context.Background() // Test infrastructure context
 
 	// Check if Docker is available
@@ -625,7 +646,7 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 
 	// Start Consul in dev mode for testing
 	// containerName is validated with regex above (line 605), port comes from findAvailablePort
-	
+
 	cmd := exec.CommandContext(ctx, "docker", "run", "-d", "--rm",
 		"--name", containerName,
 		"-p", fmt.Sprintf("%d:8500", port),
@@ -643,7 +664,6 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 
 	if err := waitForConsul(consulAddr, 30*time.Second); err != nil {
 		// Cleanup on failure
-		
 		_ = exec.CommandContext(ctx, "docker", "stop", containerName).Run()
 		return nil, "", fmt.Errorf("Consul failed to become ready: %w", err)
 	}
@@ -652,7 +672,7 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 
 	cleanup = func() {
 		t.Logf("Stopping Consul container %s", containerName)
-		
+
 		cmd := exec.CommandContext(ctx, "docker", "stop", containerName)
 		if output, err := cmd.CombinedOutput(); err != nil {
 			t.Logf("Failed to stop Consul container: %v, output: %s", err, string(output))
@@ -666,6 +686,7 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 
 func isDockerAvailable() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "docker", "ps")
@@ -676,9 +697,9 @@ func isDockerAvailable() bool {
 func findAvailablePort() (int, error) {
 	lc := &net.ListenConfig{}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	
+
 	defer cancel()
-	
+
 	listener, err := lc.Listen(ctx, "tcp", "localhost:0")
 	if err != nil {
 		return 0, err
@@ -691,7 +712,6 @@ func findAvailablePort() (int, error) {
 		}
 	}()
 
-
 	addr, ok := listener.Addr().(*net.TCPAddr)
 	if !ok {
 		return 0, fmt.Errorf("expected TCP address, got %T", listener.Addr())
@@ -702,7 +722,7 @@ func findAvailablePort() (int, error) {
 // waitForConsul waits for Consul to become ready.
 func waitForConsul(addr string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
-	
+
 	for time.Now().Before(deadline) {
 		// Try to create a client and check if Consul is ready
 		config := consulapi.DefaultConfig()
@@ -713,15 +733,15 @@ func waitForConsul(addr string, timeout time.Duration) error {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		
+
 		// Try to get the leader to verify Consul is working
 		_, err = client.Status().Leader()
 		if err == nil {
 			return nil
 		}
-		
+
 		time.Sleep(1 * time.Second)
 	}
-	
+
 	return fmt.Errorf("Consul at %s did not become ready within %v", addr, timeout)
 }

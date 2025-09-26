@@ -330,6 +330,7 @@ func TestWebSocketClientSendRequestNotConnected(t *testing.T) {
 
 func TestWebSocketClientSendRequestTimeout(t *testing.T) { 
 	logger := zaptest.NewLogger(t)
+
 	slowServer := setupWebSocketTimeoutServer(t)
 	defer slowServer.close()
 
@@ -370,6 +371,7 @@ func setupWebSocketTimeoutServer(t *testing.T) *mockWebSocketServer {
 
 func setupWebSocketTimeoutClient(t *testing.T, logger *zap.Logger, slowServer *mockWebSocketServer) *WebSocketClient {
 	t.Helper()
+
 	config := WebSocketClientConfig{
 		URL:     "ws" + strings.TrimPrefix(slowServer.server.URL, "http"),
 		Timeout: 100 * time.Millisecond,
@@ -391,6 +393,7 @@ func setupWebSocketTimeoutClient(t *testing.T, logger *zap.Logger, slowServer *m
 
 func cleanupWebSocketTimeoutClient(t *testing.T, client *WebSocketClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -398,6 +401,7 @@ func cleanupWebSocketTimeoutClient(t *testing.T, client *WebSocketClient) {
 
 func runWebSocketTimeoutTest(t *testing.T, client *WebSocketClient) {
 	t.Helper()
+
 	ctx := context.Background()
 	
 	req := &mcp.Request{
@@ -415,6 +419,7 @@ func runWebSocketTimeoutTest(t *testing.T, client *WebSocketClient) {
 
 func verifyWebSocketTimeoutMetrics(t *testing.T, client *WebSocketClient) {
 	t.Helper()
+
 	metrics := client.GetMetrics()
 	assert.Equal(t, uint64(0), metrics.RequestCount)
 	assert.Equal(t, uint64(1), metrics.ErrorCount)
@@ -784,6 +789,7 @@ func setupWebSocketCorrelationServer(t *testing.T) *httptest.Server {
 		}
 
 		defer func() { _ = conn.Close() }()
+
 		handleWebSocketCorrelationMessages(t, conn)
 	}))
 }
@@ -855,6 +861,7 @@ func cleanupWebSocketCorrelationClient(t *testing.T, client *WebSocketClient) {
 
 func runWebSocketCorrelationTest(t *testing.T, client *WebSocketClient) {
 	const numRequests = 5
+
 	expectedResponses := make(map[string]string, numRequests)
 
 	ctx := context.Background()
@@ -966,13 +973,16 @@ func executeWebSocketConcurrentRequests(
 	responseChan chan *mcp.Response,
 ) {
 	var wg sync.WaitGroup
+
 	ctx := context.Background()
 
 	// Launch concurrent goroutines
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
+
 		go func(goroutineID int) {
 			defer wg.Done()
+
 			executeWebSocketConcurrentGoroutine(ctx, client, goroutineID, requestsPerGoroutine, errChan, responseChan)
 		}(g)
 	}
@@ -999,12 +1009,14 @@ func executeWebSocketConcurrentGoroutine(
 			errChan <- err
 			return
 		}
+
 		responseChan <- resp
 	}
 }
 
 func waitForWebSocketConcurrentCompletion(t *testing.T, wg *sync.WaitGroup) {
 	done := make(chan struct{})
+
 	go func() {
 		wg.Wait()
 		close(done)
@@ -1109,6 +1121,7 @@ func handleWebSocketReconnectConnection(t *testing.T, w http.ResponseWriter, r *
 	if err != nil {
 		return
 	}
+
 	defer func() { _ = conn.Close() }()
 
 	sendWebSocketReconnectAck(t, conn, connectionCount)
@@ -1339,6 +1352,7 @@ func cleanupWebSocketPerformanceClient(t *testing.T, client *WebSocketClient) {
 
 func executeWebSocketPerformanceRequests(t *testing.T, client *WebSocketClient) []time.Duration {
 	const numRequests = 20
+
 	requestTimes := make([]time.Duration, numRequests)
 	ctx := context.Background()
 
@@ -1432,6 +1446,7 @@ func setupWebSocketFrameHandlingServer(t *testing.T, tc webSocketFrameTestCase) 
 		if err != nil {
 			return
 		}
+
 		defer func() { _ = conn.Close() }()
 
 		handleWebSocketFrameMessages(t, conn, tc)
@@ -1609,6 +1624,7 @@ func TestWebSocketClientErrorRecovery(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	serverErrorCount := 0
+
 	server := setupWebSocketErrorRecoveryServer(t, &serverErrorCount)
 	defer server.Close()
 
@@ -1681,6 +1697,7 @@ func executeWebSocketErrorRecoveryRequests(t *testing.T, client *WebSocketClient
 	expectError bool
 }) (int, int) {
 	var successCount, clientErrorCount int
+
 	ctx := context.Background()
 
 	for i, tc := range testCases {
@@ -1693,6 +1710,7 @@ func executeWebSocketErrorRecoveryRequests(t *testing.T, client *WebSocketClient
 		_, err := client.SendRequest(ctx, req)
 		if err != nil {
 			clientErrorCount++
+
 			t.Logf("Expected error for %s: %v", tc.method, err)
 		} else {
 			successCount++
@@ -1852,6 +1870,7 @@ func setupWebSocketFrameSizeBenchServer(b *testing.B, frameSize int) *httptest.S
 		if err != nil {
 			return
 		}
+
 		defer func() { _ = conn.Close() }()
 
 		handleWebSocketFrameSizeBenchMessages(b, conn, frameSize)
@@ -1919,6 +1938,7 @@ func executeWebSocketFrameSizeBenchmark(b *testing.B, client *WebSocketClient, f
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
+
 		for pb.Next() {
 			payload := strings.Repeat("test", frameSize/4)
 			req := &mcp.Request{

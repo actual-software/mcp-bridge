@@ -405,6 +405,7 @@ func validateTLSTestResult(t *testing.T, tt struct {
 
 	if tt.wantError {
 		require.Error(t, err)
+
 		if tt.errorMsg != "" {
 			assert.Contains(t, err.Error(), tt.errorMsg)
 		}
@@ -548,6 +549,7 @@ func validateMTLSTestResult(t *testing.T, tt struct {
 
 	if tt.wantError {
 		require.Error(t, err)
+
 		if tt.errorMsg != "" {
 			assert.Contains(t, err.Error(), tt.errorMsg)
 		}

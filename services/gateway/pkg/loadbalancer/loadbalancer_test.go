@@ -88,7 +88,7 @@ func runRoundRobinTests(t *testing.T, tests []struct {
 	want      []string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := NewRoundRobin(tt.endpoints)
@@ -199,6 +199,7 @@ func TestLeastConnections_Next(t *testing.T) {
 	}
 
 	// All endpoints should have been selected once
+
 	for _, ep := range endpoints {
 		if seen[ep.Address] != 1 {
 			t.Errorf("Expected endpoint %s to be selected once, got %d",
@@ -335,12 +336,13 @@ func TestWeighted_ZeroWeight(t *testing.T) {
 func TestLoadBalancer_ConcurrentAccess(t *testing.T) {
 	endpoints := createConcurrentTestEndpoints()
 	loadBalancers := createLoadBalancerVariants(endpoints)
-	
+
 	runConcurrentAccessTests(t, loadBalancers)
 }
 
 func createConcurrentTestEndpoints() []*discovery.Endpoint {
 	endpoints := make([]*discovery.Endpoint, 10)
+
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),
@@ -370,7 +372,7 @@ func runConcurrentAccessTests(t *testing.T, loadBalancers []struct {
 	lb   LoadBalancer
 }) {
 	t.Helper()
-	
+
 	for _, tt := range loadBalancers {
 		t.Run(tt.name, func(t *testing.T) {
 			var wg sync.WaitGroup
@@ -401,6 +403,7 @@ func runConcurrentAccessTests(t *testing.T, loadBalancers []struct {
 					defer wg.Done()
 
 					newEndpoints := make([]*discovery.Endpoint, 5)
+
 					for j := range newEndpoints {
 						newEndpoints[j] = &discovery.Endpoint{
 							Address: fmt.Sprintf("new-ep%d-%d", iter, j),
@@ -420,6 +423,7 @@ func runConcurrentAccessTests(t *testing.T, loadBalancers []struct {
 
 			selections.Range(func(_, _ interface{}) bool {
 				count++
+
 				return true
 			})
 
@@ -432,6 +436,7 @@ func runConcurrentAccessTests(t *testing.T, loadBalancers []struct {
 
 func BenchmarkRoundRobin_Next(b *testing.B) {
 	endpoints := make([]*discovery.Endpoint, testIterations)
+
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),
@@ -450,6 +455,7 @@ func BenchmarkRoundRobin_Next(b *testing.B) {
 
 func BenchmarkLeastConnections_Next(b *testing.B) {
 	endpoints := make([]*discovery.Endpoint, testIterations)
+
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),
@@ -471,6 +477,7 @@ func BenchmarkLeastConnections_Next(b *testing.B) {
 
 func BenchmarkWeighted_Next(b *testing.B) {
 	endpoints := make([]*discovery.Endpoint, testIterations)
+
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),

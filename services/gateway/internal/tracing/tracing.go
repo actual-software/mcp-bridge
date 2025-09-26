@@ -73,7 +73,9 @@ func InitTracer(cfg Config, logger *zap.Logger) (opentracing.Tracer, io.Closer, 
 
 // StartSpanFromContext starts a new span from context.
 
-func StartSpanFromContext(ctx context.Context, operationName string, opts ...opentracing.StartSpanOption) (opentracing.Span, context.Context) {
+func StartSpanFromContext(
+	ctx context.Context, operationName string, opts ...opentracing.StartSpanOption,
+) (opentracing.Span, context.Context) {
 	return opentracing.StartSpanFromContext(ctx, operationName, opts...)
 }
 

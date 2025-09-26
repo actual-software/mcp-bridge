@@ -107,6 +107,7 @@ func TestTCPClient_ConnectionLifecycle(t *testing.T) {
 	eventTracker := createEventTracker()
 	
 	server := createLifecycleTestServer(t, eventTracker)
+
 	addr := startLifecycleServer(t, server)
 	defer server.Stop()
 	
@@ -147,6 +148,7 @@ func createLifecycleTestServer(t *testing.T, tracker *eventTracker) *mockTCPServ
 
 func handleLifecycleConnection(conn net.Conn, tracker *eventTracker) {
 	tracker.addEvent("connection_accepted")
+
 	defer func() {
 		tracker.addEvent("connection_closed")
 	}()
@@ -216,23 +218,27 @@ func handleMessageByType(frame BinaryFrame, conn net.Conn, tracker *eventTracker
 
 func handlePing(frame BinaryFrame, conn net.Conn, tracker *eventTracker) {
 	tracker.addEvent("ping_received")
+
 	pongFrame := &BinaryFrame{
 		Version:     frame.Version,
 		MessageType: MessageTypeHealthCheck,
 		Payload:     []byte("{}"),
 	}
 	_ = pongFrame.Write(conn)
+
 	tracker.addEvent("pong_sent")
 }
 
 func handleRequest(frame BinaryFrame, conn net.Conn, tracker *eventTracker) {
 	tracker.addEvent("request_received")
+
 	respFrame := &BinaryFrame{
 		Version:     frame.Version,
 		MessageType: MessageTypeResponse,
 		Payload:     frame.Payload,
 	}
 	_ = respFrame.Write(conn)
+
 	tracker.addEvent("response_sent")
 }
 
@@ -292,17 +298,20 @@ func runLifecycleTest(t *testing.T, client *TCPClient) {
 
 func validateLifecycleEvents(t *testing.T, tracker *eventTracker) {
 	time.Sleep(100 * time.Millisecond)
+
 	events := tracker.getEvents()
 	
 	expectedEvents := []string{"connection_accepted", "version_negotiation", "version_ack_sent"}
 	for _, expected := range expectedEvents {
 		found := false
+
 		for _, event := range events {
 			if event == expected {
 				found = true
 				break
 			}
 		}
+
 		if !found {
 			t.Errorf("Expected event %s not found in events: %v", expected, events)
 		}
@@ -312,9 +321,11 @@ func validateLifecycleEvents(t *testing.T, tracker *eventTracker) {
 // TestTCPClient_ConcurrentOperations tests thread safety of TCP client.
 func TestTCPClient_ConcurrentOperations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
+
 	var requestCount int64
 
 	server := setupConcurrentOperationsServer(t, &requestCount)
+
 	addr := startServerOrFail(t, server)
 	defer server.Stop()
 
@@ -322,6 +333,7 @@ func TestTCPClient_ConcurrentOperations(t *testing.T) {
 	defer closeClient(t, client)
 
 	const numRequests = 50
+
 	results := runConcurrentRequests(t, client, numRequests)
 	validateConcurrentResults(t, results, numRequests, requestCount)
 }
@@ -458,10 +470,12 @@ func runConcurrentRequests(t *testing.T, client *TCPClient, numRequests int) cha
 	t.Helper()
 	
 	var wg sync.WaitGroup
+
 	results := make(chan int64, numRequests)
 
 	for i := 0; i < numRequests; i++ {
 		wg.Add(1)
+
 		go sendConcurrentRequest(t, &wg, client, i, results)
 	}
 
@@ -623,10 +637,12 @@ func runErrorRecoveryTest(t *testing.T, tt errorRecoveryTest, logger *zap.Logger
 	t.Helper()
 	
 	server := newMockTCPServer(t, tt.handler)
+
 	addr := startServerOrFail(t, server)
 	defer server.Stop()
 
 	client := createErrorRecoveryClient(t, addr, logger)
+
 	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()

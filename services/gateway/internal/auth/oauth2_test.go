@@ -274,8 +274,8 @@ func verifyAuthenticateResult(t *testing.T, tt struct {
 	t.Helper()
 
 	if tt.wantError {
-		
 		assert.Error(t, err)
+
 		if tt.errorMsg != "" {
 			assert.Contains(t, err.Error(), tt.errorMsg)
 		}
@@ -843,6 +843,7 @@ func TestOAuth2Provider_ValidateToken_CompleteFlow(t *testing.T) {
 
 	// Create a comprehensive test that exercises multiple code paths
 	callCount := 0
+
 	server := createCompleteFlowMockServer(t, &callCount)
 	defer server.Close()
 
@@ -855,6 +856,7 @@ func createCompleteFlowMockServer(t *testing.T, callCount *int) *httptest.Server
 
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		*callCount++
+
 		switch r.URL.Path {
 		case "/introspect":
 			w.Header().Set("Content-Type", "application/json")
@@ -872,6 +874,7 @@ func createCompleteFlowMockServer(t *testing.T, callCount *int) *httptest.Server
 
 func setupCompleteFlowProvider(t *testing.T, serverURL string) *OAuth2Provider {
 	t.Helper()
+
 	config := config.OAuth2Config{
 		IntrospectEndpoint: serverURL + "/introspect",
 		ClientID:           "test-client",
@@ -886,6 +889,7 @@ func setupCompleteFlowProvider(t *testing.T, serverURL string) *OAuth2Provider {
 
 func runCompleteFlowValidation(t *testing.T, provider *OAuth2Provider, callCount *int) {
 	t.Helper()
+
 	token := "valid-token"
 	
 	result, err := provider.ValidateToken(token)
@@ -922,11 +926,14 @@ func TestOAuth2Provider_IntrospectToken_NetworkError(t *testing.T) {
 
 func TestOAuth2Provider_IntrospectionToClaims_EdgeCases(t *testing.T) {
 	t.Parallel()
+
 	provider := &OAuth2Provider{}
+
 	tests := createIntrospectionEdgeCaseTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			claims := provider.introspectionToClaims(tt.introspection)
 			assert.Equal(t, tt.expectScopes, claims.Scopes)
 			assert.Equal(t, tt.expectRPM, claims.RateLimit.RequestsPerMinute)

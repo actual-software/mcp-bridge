@@ -67,7 +67,7 @@ func runFrameEncodeTests(t *testing.T, tests []struct {
 	wantErr bool
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
@@ -87,25 +87,30 @@ func runFrameEncodeTests(t *testing.T, tests []struct {
 
 func validateEncodedFrame(t *testing.T, buf *bytes.Buffer, frame *Frame) {
 	t.Helper()
-	
+
 	// Verify header
 	data := buf.Bytes()
+
 	assert.GreaterOrEqual(t, len(data), HeaderSize)
 
 	// Check magic bytes
 	magic := binary.BigEndian.Uint32(data[0:4])
+
 	assert.Equal(t, MagicBytes, magic)
 
 	// Check version
 	version := binary.BigEndian.Uint16(data[4:6])
+
 	assert.Equal(t, frame.Version, version)
 
 	// Check message type
 	msgType := binary.BigEndian.Uint16(data[6:8])
+
 	assert.Equal(t, uint16(frame.MessageType), msgType)
 
 	// Check payload length
 	payloadLen := binary.BigEndian.Uint32(data[8:12])
+
 	assert.Equal(t, uint32(len(frame.Payload)), payloadLen)
 
 	// Check payload
@@ -210,48 +215,58 @@ func createInvalidDecodeTests() []struct {
 
 func buildValidFrameData() []byte {
 	var buf bytes.Buffer
+
 	_ = binary.Write(&buf, binary.BigEndian, MagicBytes)
 	_ = binary.Write(&buf, binary.BigEndian, CurrentVersion)
 	_ = binary.Write(&buf, binary.BigEndian, uint16(MessageTypeRequest))
 	payload := []byte(`{"test":"data"}`)
 	_ = binary.Write(&buf, binary.BigEndian, uint32(len(payload)))
 	_, _ = buf.Write(payload)
+
 	return buf.Bytes()
 }
 
 func buildInvalidMagicFrameData() []byte {
 	var buf bytes.Buffer
+
 	_ = binary.Write(&buf, binary.BigEndian, uint32(0xDEADBEEF))
 	_ = binary.Write(&buf, binary.BigEndian, CurrentVersion)
 	_ = binary.Write(&buf, binary.BigEndian, uint16(MessageTypeRequest))
 	_ = binary.Write(&buf, binary.BigEndian, uint32(0))
+
 	return buf.Bytes()
 }
 
 func buildLargePayloadFrameData() []byte {
 	var buf bytes.Buffer
+
 	_ = binary.Write(&buf, binary.BigEndian, MagicBytes)
 	_ = binary.Write(&buf, binary.BigEndian, CurrentVersion)
 	_ = binary.Write(&buf, binary.BigEndian, uint16(MessageTypeRequest))
 	_ = binary.Write(&buf, binary.BigEndian, uint32(11*1024*1024))
+
 	return buf.Bytes()
 }
 
 func buildTruncatedHeaderFrameData() []byte {
 	var buf bytes.Buffer
+
 	_ = binary.Write(&buf, binary.BigEndian, MagicBytes)
 	_ = binary.Write(&buf, binary.BigEndian, CurrentVersion)
 	// Missing message type and length
+
 	return buf.Bytes()
 }
 
 func buildTruncatedPayloadFrameData() []byte {
 	var buf bytes.Buffer
+
 	_ = binary.Write(&buf, binary.BigEndian, MagicBytes)
 	_ = binary.Write(&buf, binary.BigEndian, CurrentVersion)
 	_ = binary.Write(&buf, binary.BigEndian, uint16(MessageTypeRequest))
 	_ = binary.Write(&buf, binary.BigEndian, uint32(testIterations))
 	_, _ = buf.WriteString("short")
+
 	return buf.Bytes()
 }
 
@@ -263,7 +278,7 @@ func runDecodeTests(t *testing.T, tests []struct {
 	errorMsg  string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			data := tt.buildData()
@@ -317,10 +332,12 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 			var buf bytes.Buffer
 
 			err := original.Encode(&buf)
+
 			require.NoError(t, err)
 
 			// Decode
 			decoded, err := Decode(&buf)
+
 			require.NoError(t, err)
 
 			// Compare
@@ -334,10 +351,12 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 func TestEncodeMessage(t *testing.T) {
 	payload := []byte(`{"test":"data"}`)
 	data, err := EncodeMessage(MessageTypeRequest, payload)
+
 	require.NoError(t, err)
 
 	// Verify we can decode it
 	frame, err := DecodeMessage(data)
+
 	require.NoError(t, err)
 
 	assert.Equal(t, CurrentVersion, frame.Version)
@@ -355,10 +374,12 @@ func TestDecodeMessage(t *testing.T) {
 		Payload:     []byte(`{"result":"success"}`),
 	}
 	err := frame.Encode(&buf)
+
 	require.NoError(t, err)
 
 	// Decode from bytes
 	decoded, err := DecodeMessage(buf.Bytes())
+
 	require.NoError(t, err)
 
 	assert.Equal(t, frame.Version, decoded.Version)
@@ -378,10 +399,12 @@ func TestDecodeUnsupportedVersion(t *testing.T) {
 	var buf bytes.Buffer
 
 	err := frame.Encode(&buf)
+
 	require.NoError(t, err)
 
 	// Try to decode - should fail with unsupported version error
 	_, err = Decode(&buf)
+
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported protocol version")
 }
@@ -399,7 +422,10 @@ func BenchmarkEncode(b *testing.B) {
 	frame := &Frame{
 		Version:     CurrentVersion,
 		MessageType: MessageTypeRequest,
-		Payload:     []byte(`{"jsonrpc":"2.0","method":"tools/call","params":{"name":"test.tool","arguments":{}},"id":"550e8400-e29b-41d4-a716-446655440000"}`),
+		Payload: []byte(
+			`{"jsonrpc":"2.0","method":"tools/call","params":{"name":"test.tool","arguments":{}},` +
+				`"id":"550e8400-e29b-41d4-a716-446655440000"}`,
+		),
 	}
 
 	var buf bytes.Buffer
@@ -408,7 +434,7 @@ func BenchmarkEncode(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf.Reset()
-		_ = frame.Encode(&buf) 
+		_ = frame.Encode(&buf)
 	}
 }
 
@@ -417,18 +443,21 @@ func BenchmarkDecode(b *testing.B) {
 	frame := &Frame{
 		Version:     CurrentVersion,
 		MessageType: MessageTypeRequest,
-		Payload:     []byte(`{"jsonrpc":"2.0","method":"tools/call","params":{"name":"test.tool","arguments":{}},"id":"550e8400-e29b-41d4-a716-446655440000"}`),
+		Payload: []byte(
+			`{"jsonrpc":"2.0","method":"tools/call","params":{"name":"test.tool","arguments":{}},` +
+				`"id":"550e8400-e29b-41d4-a716-446655440000"}`,
+		),
 	}
 
 	var buf bytes.Buffer
 
-	_ = frame.Encode(&buf) 
+	_ = frame.Encode(&buf)
 	data := buf.Bytes()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = Decode(bytes.NewReader(data)) 
+		_, _ = Decode(bytes.NewReader(data))
 	}
 }
 

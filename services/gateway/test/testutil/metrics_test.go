@@ -512,6 +512,7 @@ func TestMetricsRegistryIntegration(t *testing.T) {
 
 func runSimultaneousMetricOperationsTest(t *testing.T) {
 	t.Helper()
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// Simulate concurrent metric operations
@@ -539,6 +540,7 @@ func runSimultaneousMetricOperationsTest(t *testing.T) {
 
 func runMetricResetBehaviorTest(t *testing.T) {
 	t.Helper()
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// Increment some metrics
@@ -556,6 +558,7 @@ func runMetricResetBehaviorTest(t *testing.T) {
 
 func runLabelValidationTest(t *testing.T) {
 	t.Helper()
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	validLabels := getValidLabelTestCases()

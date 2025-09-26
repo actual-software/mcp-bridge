@@ -107,6 +107,7 @@ func testConcurrentIPTracking(t *testing.T, s *GatewayServer) {
 	for i := 0; i < numGoroutines; i++ {
 		go func() {
 			defer wg.Done()
+
 			for j := 0; j < incrementsPerGoroutine; j++ {
 				s.incrementIPConnCount(ip)
 			}
@@ -119,9 +120,11 @@ func testConcurrentIPTracking(t *testing.T, s *GatewayServer) {
 	assert.Equal(t, expectedCount, s.getIPConnCount(ip))
 
 	wg.Add(numGoroutines)
+
 	for i := 0; i < numGoroutines; i++ {
 		go func() {
 			defer wg.Done()
+
 			for j := 0; j < incrementsPerGoroutine; j++ {
 				s.decrementIPConnCount(ip)
 			}
@@ -137,6 +140,7 @@ func TestTCPPerIPLimits(t *testing.T) {
 	defer cancel()
 
 	serverAddr := server.tcpListener.Addr().String()
+
 	conns := testPerIPConnectionLimits(t, serverAddr)
 	defer cleanupConnections(conns)
 
@@ -195,6 +199,7 @@ func setupTCPPerIPLimitServer(t *testing.T) (*GatewayServer, context.CancelFunc)
 
 	// Start accept loop
 	s.wg.Add(1)
+
 	go s.acceptTCPConnections()
 
 	return s, cancel
@@ -204,13 +209,16 @@ func testPerIPConnectionLimits(t *testing.T, serverAddr string) []net.Conn {
 	t.Helper()
 	
 	var conns []net.Conn
+
 	dialer := &net.Dialer{}
 
 	// First 3 connections should succeed
 	for i := 0; i < 3; i++ {
 		conn, err := dialer.DialContext(context.Background(), "tcp", serverAddr)
 		require.NoError(t, err)
+
 		conns = append(conns, conn)
+
 		time.Sleep(testTimeout * time.Millisecond) // Give server time to process
 	}
 
@@ -259,6 +267,7 @@ func testConnectionRecovery(t *testing.T, serverAddr string, conns []net.Conn) {
 
 	// Now we should be able to connect again
 	dialer := &net.Dialer{}
+
 	conn5, err := dialer.DialContext(context.Background(), "tcp", serverAddr)
 	if err == nil {
 		defer func() { _ = conn5.Close() }()

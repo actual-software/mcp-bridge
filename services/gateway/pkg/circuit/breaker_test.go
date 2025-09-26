@@ -346,14 +346,17 @@ func testClosedStateTransitions(cb *CircuitBreaker, checkState func(State)) {
 
 	// Success in closed state
 	_ = cb.Call(func() error { return nil })
+
 	checkState(StateClosed)
 
 	// First failure
 	_ = cb.Call(func() error { return errors.New("error") })
+
 	checkState(StateClosed)
 
 	// Second failure - opens circuit
 	_ = cb.Call(func() error { return errors.New("error") })
+
 	checkState(StateOpen)
 }
 
@@ -363,22 +366,27 @@ func testOpenStateTransitions(t *testing.T, cb *CircuitBreaker, checkState func(
 	if err == nil {
 		t.Error("Expected error when calling open circuit")
 	}
+
 	checkState(StateOpen)
 
 	// Wait for the circuit timeout to expire
 	waitTime := cb.timeout + 10*time.Millisecond
+
 	timer := time.NewTimer(waitTime)
 	defer timer.Stop()
+
 	<-timer.C
 }
 
 func testHalfOpenStateTransitions(cb *CircuitBreaker, checkState func(State)) {
 	// Success transitions to half-open
 	_ = cb.Call(func() error { return nil })
+
 	checkState(StateHalfOpen)
 
 	// Another success closes circuit
 	_ = cb.Call(func() error { return nil })
+
 	checkState(StateClosed)
 }
 

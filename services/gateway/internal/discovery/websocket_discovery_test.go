@@ -16,10 +16,12 @@ import (
 func TestCreateWebSocketServiceDiscovery(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+
 	tests := createWebSocketDiscoveryCreationTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			sd, err := CreateWebSocketServiceDiscovery(tt.config, logger)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -472,10 +474,12 @@ func TestWebSocketDiscovery_MetadataFiltering(t *testing.T) {
 func TestWebSocketDiscovery_URLParsing(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+
 	tests := createWebSocketURLParsingTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			config := config.WebSocketDiscoveryConfig{
 				Services: []config.WebSocketServiceConfig{
 					{
@@ -486,6 +490,7 @@ func TestWebSocketDiscovery_URLParsing(t *testing.T) {
 			}
 			sd, err := CreateWebSocketServiceDiscovery(config, logger)
 			require.NoError(t, err)
+
 			endpoints := sd.GetEndpoints("default")
 			require.Len(t, endpoints, 1)
 			ep := endpoints[0]

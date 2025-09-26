@@ -261,7 +261,9 @@ func setupWebSocketTestServer(t *testing.T) *GatewayServer {
 	mockRateLimiter := ratelimit.CreateLocalMemoryRateLimiter(zap.NewNop())
 	logger := testutil.NewTestLogger(t)
 
-	server := BootstrapGatewayServer(cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger)
+	server := BootstrapGatewayServer(
+		cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger,
+	)
 	
 	// Override the upgrader to allow all origins for testing
 	server.upgrader.CheckOrigin = func(r *http.Request) bool { return true }
@@ -293,6 +295,7 @@ func closeWebSocketConnection(conn *websocket.Conn, resp *http.Response) {
 	if conn != nil {
 		_ = conn.Close()
 	}
+
 	if resp != nil && resp.Body != nil {
 		_ = resp.Body.Close()
 	}
@@ -317,6 +320,7 @@ func validateWebSocketConnection(t *testing.T, server *GatewayServer, resp *http
 	if !exists {
 		// Debug: check what connections exist
 		var connectionIDs []string
+
 		server.connections.Range(func(key, value interface{}) bool {
 			if keyStr, ok := key.(string); ok {
 				connectionIDs = append(connectionIDs, keyStr)
@@ -444,7 +448,9 @@ func setupProcessClientMessageTest(t *testing.T, hasBackend bool) (*GatewayServe
 		}
 	}
 
-	testRouter := router.InitializeRequestRouter(context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), zap.NewNop())
+	testRouter := router.InitializeRequestRouter(
+		context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), zap.NewNop(),
+	)
 
 	server := &GatewayServer{
 		router:      testRouter,
@@ -472,7 +478,9 @@ func setupProcessClientMessageTest(t *testing.T, hasBackend bool) (*GatewayServe
 	return server, client
 }
 
-func validateProcessClientMessageResult(t *testing.T, err error, client *ClientConnection, tt processClientMessageTest) {
+func validateProcessClientMessageResult(
+	t *testing.T, err error, client *ClientConnection, tt processClientMessageTest,
+) {
 	t.Helper()
 
 	if tt.wantError {
@@ -855,7 +863,9 @@ type mockRouter struct {
 	err      error
 }
 
-func (m *mockRouter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+func (m *mockRouter) RouteRequest(
+	ctx context.Context, req *mcp.Request, targetNamespace string,
+) (*mcp.Response, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -923,7 +933,9 @@ func BenchmarkGatewayServer_processClientMessage(b *testing.B) {
 		},
 	}
 	mockDiscovery := &mockServiceDiscovery{}
-	testRouter := router.InitializeRequestRouter(context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), zap.NewNop())
+	testRouter := router.InitializeRequestRouter(
+		context.Background(), routerCfg, mockDiscovery, testutil.CreateTestMetricsRegistry(), zap.NewNop(),
+	)
 
 	server := &GatewayServer{
 		router:  testRouter,

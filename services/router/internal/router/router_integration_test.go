@@ -67,10 +67,12 @@ func TestRouterIntegration_MessageFlow(t *testing.T) {
 	defer cancel()
 
 	go func() { _ = router.Run(ctx) }()
+
 	waitForConnection(t, router)
 	sendInitializationRequest(t, router)
 
 	testRequest := createTestRequest()
+
 	monitorForResponse(t, router, responseReceived, done)
 
 	// Send request.

@@ -441,6 +441,7 @@ func TestSSEBackend_CustomHeaders(t *testing.T) {
 
 func TestSSEBackend_ConcurrentRequests(t *testing.T) {
 	logger := zaptest.NewLogger(t)
+
 	server := createTestSSEServer(t)
 	defer server.Close()
 
@@ -449,6 +450,7 @@ func TestSSEBackend_ConcurrentRequests(t *testing.T) {
 
 	err := backend.Start(ctx)
 	require.NoError(t, err)
+
 	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
@@ -458,6 +460,7 @@ func TestSSEBackend_ConcurrentRequests(t *testing.T) {
 
 func setupConcurrentRequestsBackend(t *testing.T, server *httptest.Server, logger *zap.Logger) *Backend {
 	t.Helper()
+
 	config := Config{
 		BaseURL:         server.URL,
 		StreamEndpoint:  sseEndpoint,
@@ -470,7 +473,9 @@ func setupConcurrentRequestsBackend(t *testing.T, server *httptest.Server, logge
 
 func sendConcurrentRequests(t *testing.T, ctx context.Context, backend *Backend) {
 	t.Helper()
+
 	const numRequests = 5
+
 	responses := make(chan *mcp.Response, numRequests)
 	errors := make(chan error, numRequests)
 
@@ -484,6 +489,7 @@ func sendConcurrentRequests(t *testing.T, ctx context.Context, backend *Backend)
 					"requestId": id,
 				},
 			}
+
 			response, err := backend.SendRequest(ctx, req)
 			if err != nil {
 				errors <- err
@@ -555,7 +561,13 @@ func handleSSEConnection(
 }
 
 // processSSERequests processes pending requests in SSE stream.
-func processSSERequests(w http.ResponseWriter, r *http.Request, flusher http.Flusher, pendingRequests map[string]mcp.Request, requestsMu *sync.Mutex) {
+func processSSERequests(
+	w http.ResponseWriter,
+	r *http.Request,
+	flusher http.Flusher,
+	pendingRequests map[string]mcp.Request,
+	requestsMu *sync.Mutex,
+) {
 	ticker := time.NewTicker(testIterations * time.Millisecond)
 	defer ticker.Stop()
 
@@ -564,13 +576,23 @@ func processSSERequests(w http.ResponseWriter, r *http.Request, flusher http.Flu
 		case <-r.Context().Done():
 			return
 		case <-ticker.C:
-			processPendingRequests(w, flusher, pendingRequests, requestsMu)
+			processPendingRequests(
+				w,
+				flusher,
+				pendingRequests,
+				requestsMu,
+			)
 		}
 	}
 }
 
 // processPendingRequests processes and responds to pending requests.
-func processPendingRequests(w http.ResponseWriter, flusher http.Flusher, pendingRequests map[string]mcp.Request, requestsMu *sync.Mutex) {
+func processPendingRequests(
+	w http.ResponseWriter,
+	flusher http.Flusher,
+	pendingRequests map[string]mcp.Request,
+	requestsMu *sync.Mutex,
+) {
 	requestsMu.Lock()
 	defer requestsMu.Unlock()
 
@@ -613,7 +635,12 @@ func sendSSEMessage(w http.ResponseWriter, flusher http.Flusher, data string) {
 }
 
 // handlePostRequest handles POST request submission.
-func handlePostRequest(w http.ResponseWriter, r *http.Request, pendingRequests map[string]mcp.Request, requestsMu *sync.Mutex) {
+func handlePostRequest(
+	w http.ResponseWriter,
+	r *http.Request,
+	pendingRequests map[string]mcp.Request,
+	requestsMu *sync.Mutex,
+) {
 	var request mcp.Request
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)

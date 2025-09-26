@@ -39,7 +39,7 @@ func getVersionNegotiationTestData() []versionNegotiationTest {
 	tests = append(tests, getSuccessfulNegotiationTests()...)
 	tests = append(tests, getFailedNegotiationTests()...)
 	tests = append(tests, getEdgeCaseNegotiationTests()...)
-	
+
 	return tests
 }
 
@@ -157,13 +157,18 @@ func getEdgeCaseNegotiationTests() []versionNegotiationTest {
 	}
 }
 
-func verifyVersionNegotiationResult(t *testing.T, version uint16, err error, expectedVer uint16, expectError bool, errorContains string) {
+func verifyVersionNegotiationResult(
+	t *testing.T, version uint16, err error, expectedVer uint16, expectError bool, errorContains string,
+) {
 	t.Helper()
+
 	if expectError {
 		assert.Error(t, err)
+
 		if errorContains != "" {
 			assert.Contains(t, err.Error(), errorContains)
 		}
+
 		assert.Equal(t, uint16(0), version)
 	} else {
 		assert.NoError(t, err)
@@ -334,6 +339,7 @@ func TestMessageTypeConstants(t *testing.T) {
 
 		// Check that all message types are unique
 		seen := make(map[MessageType]bool)
+
 		for _, msgType := range messageTypes {
 			assert.False(t, seen[msgType], "Message type %d should be unique", msgType)
 			seen[msgType] = true
@@ -344,24 +350,28 @@ func TestMessageTypeConstants(t *testing.T) {
 func TestVersionNegotiationEdgeCases(t *testing.T) {
 	t.Run("Same min and max versions", func(t *testing.T) {
 		version, err := NegotiateVersion(2, 2, 2, 2)
+
 		assert.NoError(t, err)
 		assert.Equal(t, uint16(2), version)
 	})
 
 	t.Run("Client has wider range", func(t *testing.T) {
 		version, err := NegotiateVersion(1, 10, 5, 6)
+
 		assert.NoError(t, err)
 		assert.Equal(t, uint16(6), version)
 	})
 
 	t.Run("Server has wider range", func(t *testing.T) {
 		version, err := NegotiateVersion(5, 6, 1, 10)
+
 		assert.NoError(t, err)
 		assert.Equal(t, uint16(6), version)
 	})
 
 	t.Run("Adjacent non-overlapping ranges", func(t *testing.T) {
 		_, err := NegotiateVersion(1, 2, 3, 4)
+
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "no compatible protocol version")
 	})
@@ -378,7 +388,7 @@ func BenchmarkNegotiateVersion(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = NegotiateVersion(1, 5, 3, 7) 
+		_, _ = NegotiateVersion(1, 5, 3, 7)
 	}
 }
 
