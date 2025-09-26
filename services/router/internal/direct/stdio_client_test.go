@@ -167,7 +167,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -268,7 +268,7 @@ for line in sys.stdin:
     time.sleep(10)  # Sleep longer than the timeout
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 
 	config := StdioClientConfig{
@@ -402,7 +402,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -524,7 +524,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -633,7 +633,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return tmpDir, scriptPath
 }
@@ -788,7 +788,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -907,7 +907,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -1101,7 +1101,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -1258,7 +1258,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -1449,7 +1449,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -1596,7 +1596,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -1740,7 +1740,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
 	return scriptPath
 }
@@ -1845,7 +1845,7 @@ func BenchmarkStdioClientSendRequest(b *testing.B) {
 	scriptPath := filepath.Join(tmpDir, "echo_server.py")
 	scriptContent := constants.TestPythonEchoScript
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(b, err)
 
 	config := StdioClientConfig{
@@ -1931,7 +1931,7 @@ if __name__ == "__main__":
     main()
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(b, err)
 	return scriptPath
 }
@@ -2030,7 +2030,7 @@ func createStdioMemoryBenchScript(b *testing.B) string {
 	scriptPath := filepath.Join(tmpDir, "memory_bench_server.py")
 	scriptContent := constants.TestPythonEchoScript
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(b, err)
 	return scriptPath
 }
