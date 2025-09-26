@@ -2,10 +2,13 @@ package circuit
 
 import (
 	"errors"
+	"math"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -302,7 +305,10 @@ func TestCircuitBreaker_ConcurrentCalls(t *testing.T) {
 
 	wg.Wait()
 
-	totalCalls := int32(numGoroutines * callsPerGoroutine)
+	// Validate bounds before conversion to prevent overflow
+	totalCallsInt := numGoroutines * callsPerGoroutine
+	require.True(t, totalCallsInt <= math.MaxInt32, "Total calls must fit in int32")
+	totalCalls := int32(totalCallsInt)
 	actualCalls := successCount + failureCount
 
 	// Due to circuit breaker, actual calls might be less than total attempts

@@ -165,7 +165,7 @@ func TestCreateServiceDiscoveryProvider_WebSocketAliases(t *testing.T) {
 			sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
 			// WebSocket discovery should be created successfully with valid config
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, sd)
 
 			// Verify it's a WebSocket discovery
@@ -262,7 +262,7 @@ func TestCreateServiceDiscoveryProvider_StaticWithInvalidConfig(t *testing.T) {
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, sd)
 	assert.Contains(t, err.Error(), "static endpoints configuration is required")
 }

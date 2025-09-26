@@ -298,6 +298,8 @@ func validateHTTPMiddlewareResponse(t *testing.T, recorder *httptest.ResponseRec
 	// Check tags
 	assert.Equal(t, tt.method, requestSpan.Tag("http.method"))
 	assert.Equal(t, "http", requestSpan.Tag("component"))
+	// Validate HTTP status code is in valid range before conversion
+	require.True(t, tt.expectedStatus >= 100 && tt.expectedStatus <= 599, "HTTP status code must be in valid range")
 	assert.Equal(t, uint16(tt.expectedStatus), requestSpan.Tag("http.status_code"))
 
 	if tt.expectError {
