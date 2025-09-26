@@ -166,6 +166,7 @@ func TestHTTPMiddleware(t *testing.T) {
 func setupMockTracer() *mocktracer.MockTracer {
 	tracer := mocktracer.New()
 	opentracing.SetGlobalTracer(tracer)
+
 	return tracer
 }
 
@@ -287,6 +288,7 @@ func validateHTTPMiddlewareResponse(t *testing.T, recorder *httptest.ResponseRec
 	for _, s := range spans {
 		if s.OperationName == tt.method+" "+tt.path {
 			requestSpan = s
+
 			break
 		}
 	}
@@ -303,6 +305,7 @@ func validateHTTPMiddlewareResponse(t *testing.T, recorder *httptest.ResponseRec
 			if errTag, ok := requestSpan.Tag("error").(bool); ok {
 				return errTag
 			}
+
 			return false
 		}())
 	}
@@ -449,6 +452,7 @@ func validateTracedHTTPResponse(t *testing.T, tracer *mocktracer.MockTracer, tt 
 	for _, s := range spans {
 		if s.OperationName == "HTTP GET" {
 			clientSpan = s
+
 			break
 		}
 	}
@@ -464,6 +468,7 @@ func validateTracedHTTPResponse(t *testing.T, tracer *mocktracer.MockTracer, tt 
 			if errTag, ok := clientSpan.Tag("error").(bool); ok {
 				return errTag
 			}
+
 			return false
 		}())
 	}
