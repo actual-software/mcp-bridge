@@ -84,12 +84,12 @@ done`)
 
 	// Test double start (should fail)
 	err = backend.Start(ctx)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "already running")
 
 	// Test stop - FIX: Capture the actual stop error
 	stopErr := backend.Stop(ctx)
-	assert.NoError(t, stopErr)
+	require.NoError(t, stopErr)
 
 	// Verify stopped state
 	backend.mu.RLock()
@@ -226,7 +226,7 @@ func TestStdioBackend_SendRequestNotRunning(t *testing.T) {
 	}
 
 	_, err := backend.SendRequest(context.Background(), req)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not running")
 }
 
