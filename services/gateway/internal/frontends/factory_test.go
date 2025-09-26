@@ -107,7 +107,7 @@ func TestDefaultFactory_CreateFrontend_UnsupportedProtocol(t *testing.T) {
 
 	frontend, err := factory.CreateFrontend(config, router, auth, sessions)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, frontend)
 	assert.Contains(t, err.Error(), "unsupported frontend protocol: unsupported")
 }
@@ -136,12 +136,12 @@ func TestDefaultFactory_CreateStdioFrontend(t *testing.T) {
 			frontend, err := factory.CreateFrontend(frontendConfig, router, auth, sessions)
 
 			if tt.expectSuccess {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, frontend)
 				assert.Equal(t, "test-stdio", frontend.GetName())
 				assert.Equal(t, "stdio", frontend.GetProtocol())
 			} else {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, frontend)
 
 				if tt.expectError != "" {
@@ -390,7 +390,7 @@ func TestDefaultFactory_ComplexConfigurationParsing(t *testing.T) {
 
 	frontend, err := factory.CreateFrontend(stdioConfig, router, auth, sessions)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, frontend)
 	assert.Equal(t, "complex-stdio", frontend.GetName())
 	assert.Equal(t, "stdio", frontend.GetProtocol())
@@ -413,10 +413,10 @@ func TestDefaultFactory_EdgeCases(t *testing.T) {
 
 			frontend, err := factory.CreateFrontend(tt.config, router, auth, sessions)
 			if tt.expectError {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, frontend)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, frontend)
 			}
 		})
@@ -572,7 +572,7 @@ func TestDefaultFactory_DependencyInjection(t *testing.T) {
 			}
 
 			frontend, err := factory.CreateFrontend(config, tt.router, tt.auth, tt.sessions)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, frontend)
 
 			// Verify the frontend was created with the correct dependencies
@@ -631,7 +631,7 @@ func TestDefaultFactory_ConfigurationDefaults(t *testing.T) {
 
 	frontend, err := factory.CreateFrontend(config, router, auth, sessions)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, frontend)
 
 	// Verify that the frontend was created successfully with defaults
@@ -668,10 +668,10 @@ func TestDefaultFactory_ModesConfigurationParsing(t *testing.T) {
 
 			frontend, err := factory.CreateFrontend(config, router, auth, sessions)
 			if tt.expect {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, frontend)
 			} else {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, frontend)
 			}
 		})
