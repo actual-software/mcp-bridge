@@ -1881,6 +1881,7 @@ func setupWebSocketFrameSizeBenchServer(b *testing.B, frameSize int) *httptest.S
 }
 
 func handleWebSocketFrameSizeBenchMessages(b *testing.B, conn *websocket.Conn, frameSize int) {
+	b.Helper()
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
@@ -1907,6 +1908,7 @@ func handleWebSocketFrameSizeBenchMessages(b *testing.B, conn *websocket.Conn, f
 }
 
 func setupWebSocketFrameSizeBenchClient(b *testing.B, logger *zap.Logger, server *httptest.Server) *WebSocketClient {
+	b.Helper()
 	config := WebSocketClientConfig{
 		URL:            "ws" + strings.TrimPrefix(server.URL, "http"),
 		Timeout:        10 * time.Second,
@@ -1930,6 +1932,7 @@ func setupWebSocketFrameSizeBenchClient(b *testing.B, logger *zap.Logger, server
 }
 
 func cleanupWebSocketFrameSizeBenchClient(b *testing.B, client *WebSocketClient) {
+	b.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(b, err)

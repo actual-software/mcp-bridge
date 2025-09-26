@@ -311,6 +311,7 @@ func validateLifecycleEvents(t *testing.T, tracker *eventTracker) {
 		for _, event := range events {
 			if event == expected {
 				found = true
+
 				break
 			}
 		}

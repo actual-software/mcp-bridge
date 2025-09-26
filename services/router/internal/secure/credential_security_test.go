@@ -519,6 +519,7 @@ func storeMultipleSmallTokens(t *testing.T, store TokenStore, numKeys int) []str
 		err := store.Store(key, token)
 		if err != nil {
 			t.Logf("Store failed at key %d (resource limits?): %v", i, err)
+
 			break
 		}
 	}
@@ -592,6 +593,7 @@ func storeLargeTokensForMemoryPressure(t *testing.T, store TokenStore) []string 
 		err := store.Store(key, largeToken)
 		if err != nil {
 			t.Logf("Store failed at iteration %d (memory pressure?): %v", i, err)
+
 			break
 		}
 

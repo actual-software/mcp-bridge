@@ -384,6 +384,7 @@ func sendStdoutMessages(t *testing.T, stdoutChan chan []byte, tt struct {
 	for i, msg := range tt.messages {
 		if msg == "" {
 			stdoutChan <- nil
+
 			continue
 		}
 

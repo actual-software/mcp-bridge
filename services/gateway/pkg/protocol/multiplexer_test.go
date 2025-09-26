@@ -838,6 +838,7 @@ func createIntegrationTestEndpoints() []*discovery.Endpoint {
 func createMultipleConnections(
 	t *testing.T, multiplexer *ConnectionMultiplexer, endpoints []*discovery.Endpoint,
 ) []*PooledConnection {
+	t.Helper()
 	ctx := context.Background()
 	connections := make([]*PooledConnection, 0)
 
@@ -855,6 +856,7 @@ func createMultipleConnections(
 }
 
 func verifyMultiplexerStats(t *testing.T, multiplexer *ConnectionMultiplexer, expectedPools, expectedConnections int) {
+	t.Helper()
 	stats := multiplexer.GetStats()
 	assert.Equal(t, expectedPools, stats.TotalPools)
 	assert.Equal(t, expectedConnections, stats.TotalConnections)
@@ -864,6 +866,7 @@ func returnAndReuseConnections(
 	t *testing.T, multiplexer *ConnectionMultiplexer, endpoints []*discovery.Endpoint,
 	connections []*PooledConnection,
 ) {
+	t.Helper()
 	ctx := context.Background()
 
 	// Return some connections

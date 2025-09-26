@@ -105,6 +105,7 @@ func setupMaliciousInputTestStore(t *testing.T, tempDir string) TokenStore {
 	require.True(t, ok, "type assertion failed")
 
 	fileStore.filePath = filepath.Join(tempDir, "malicious-test.enc")
+
 	return store
 }
 
@@ -204,6 +205,7 @@ func runMaliciousInputTest(t *testing.T, store TokenStore, input maliciousInputT
 	if err != nil {
 		// Some malicious inputs might be rejected, which is fine
 		t.Logf("Input rejected (acceptable): %v", err)
+
 		return
 	}
 
@@ -211,6 +213,7 @@ func runMaliciousInputTest(t *testing.T, store TokenStore, input maliciousInputT
 	retrieved, err := store.Retrieve(input.key)
 	if err != nil {
 		t.Errorf("Failed to retrieve after storing malicious input: %v", err)
+
 		return
 	}
 
