@@ -514,11 +514,13 @@ func runConcurrentDetectionWorker(t *testing.T, wg *sync.WaitGroup, manager *Dir
 		if err != nil {
 			atomic.AddInt64(errors, 1)
 			t.Logf("Worker %d detection %d failed: %v", workerID, j, err)
+
 			continue
 		}
 
 		if protocol != ClientTypeHTTP {
 			t.Logf("Worker %d detected unexpected protocol %s for %s", workerID, protocol, serverURL)
+
 			continue
 		}
 
