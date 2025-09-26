@@ -1,4 +1,3 @@
-
 package integration
 
 import (
@@ -479,7 +478,7 @@ func (suite *ProtocolsIntegrationTestSuite) createTestScript(content string) str
 	tmpDir := suite.T().TempDir()
 	scriptPath := filepath.Join(tmpDir, "test_script.py")
 
-	err := os.WriteFile(scriptPath, []byte(content), 0o700) 
+	err := os.WriteFile(scriptPath, []byte(content), 0o700)
 	suite.Require().NoError(err)
 
 	return scriptPath
@@ -500,7 +499,7 @@ func (suite *ProtocolsIntegrationTestSuite) createWebSocketServer() *httptest.Se
 			return
 		}
 
-		defer func() { _ = conn.Close() }() 
+		defer func() { _ = conn.Close() }()
 
 		for {
 			// Read message

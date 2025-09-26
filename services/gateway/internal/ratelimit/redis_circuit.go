@@ -30,14 +30,14 @@ type RedisRateLimiterWithCircuitBreaker struct {
 // CreateFaultTolerantRedisRateLimiter creates a Redis rate limiter with circuit breaker protection.
 func CreateFaultTolerantRedisRateLimiter(client *redis.Client, logger *zap.Logger) *RedisRateLimiterWithCircuitBreaker {
 	return &RedisRateLimiterWithCircuitBreaker{
-		limiter:        CreateRedisBackedRateLimiter(client, logger),
+		limiter: CreateRedisBackedRateLimiter(client, logger),
 		circuitBreaker: circuit.NewCircuitBreaker(
 			circuitBreakerThreshold,
 			circuitBreakerFailureCount,
 			circuitBreakerTimeoutSeconds*time.Second,
 		),
-		logger:         logger,
-		fallback:       CreateLocalMemoryRateLimiter(logger),
+		logger:   logger,
+		fallback: CreateLocalMemoryRateLimiter(logger),
 	}
 }
 
@@ -103,13 +103,13 @@ func CreateFaultTolerantRedisSessionManager(
 	logger *zap.Logger,
 ) *RedisSessionManagerWithCircuitBreaker {
 	return &RedisSessionManagerWithCircuitBreaker{
-		client:         client,
+		client: client,
 		circuitBreaker: circuit.NewCircuitBreaker(
 			circuitBreakerThreshold,
 			circuitBreakerFailureCount,
 			circuitBreakerTimeoutSeconds*time.Second,
 		),
-		logger:         logger,
+		logger: logger,
 	}
 }
 

@@ -158,11 +158,11 @@ func (p *OAuth2Provider) introspectToken(token string) (*introspectionResponse, 
 	data.Set("token_type_hint", "access_token")
 
 	req, err := http.NewRequestWithContext(
-		context.Background(), 
-		http.MethodPost, 
-		p.config.IntrospectEndpoint, 
+		context.Background(),
+		http.MethodPost,
+		p.config.IntrospectEndpoint,
 		strings.NewReader(data.Encode()),
-	) 
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

@@ -185,7 +185,7 @@ func echoHandler(conn net.Conn) {
 	}
 }
 
-func TestTCPClient_Connect(t *testing.T) { 
+func TestTCPClient_Connect(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	tests := []struct {
@@ -270,7 +270,7 @@ func TestTCPClient_Connect(t *testing.T) {
 	}
 }
 
-func TestTCPClient_SendRequest(t *testing.T) { 
+func TestTCPClient_SendRequest(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	server := newMockTCPServer(t, echoHandler)
@@ -345,7 +345,7 @@ func TestTCPClient_SendRequest(t *testing.T) {
 	}
 }
 
-func TestTCPClient_ReceiveResponse(t *testing.T) { 
+func TestTCPClient_ReceiveResponse(t *testing.T) {
 	handler := createResponseTestServer(t)
 	server := newMockTCPServer(t, handler)
 
@@ -516,7 +516,7 @@ func sendTestResponse(t *testing.T, conn net.Conn, requestFrame *BinaryFrame) {
 	_ = respFrame.Write(conn)
 }
 
-func TestTCPClient_SendPing(t *testing.T) { 
+func TestTCPClient_SendPing(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	pingReceived := make(chan struct{})
@@ -636,7 +636,7 @@ func sendPingPong(t *testing.T, conn net.Conn, requestFrame *BinaryFrame) {
 	_ = pongFrame.Write(conn)
 }
 
-func TestTCPClient_Reconnect(t *testing.T) { 
+func TestTCPClient_Reconnect(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	server := newMockTCPServer(t, echoHandler)
@@ -690,7 +690,7 @@ func TestTCPClient_Reconnect(t *testing.T) {
 	_ = client.Close()
 }
 
-func TestTCPClient_TLS(t *testing.T) { 
+func TestTCPClient_TLS(t *testing.T) {
 	// Skip TLS test in short mode.
 	if testing.Short() {
 		t.Skip("Skipping TLS test in short mode")

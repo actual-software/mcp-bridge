@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 	"github.com/stretchr/testify/assert"
@@ -200,7 +201,7 @@ func (m *mockSSEServer) close() {
 	m.server.Close()
 }
 
-func TestNewSSEClient(t *testing.T) { 
+func TestNewSSEClient(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	testCases := []struct {
@@ -261,7 +262,7 @@ func TestNewSSEClient(t *testing.T) {
 	}
 }
 
-func TestSSEClientDefaults(t *testing.T) { 
+func TestSSEClientDefaults(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := SSEClientConfig{} // Empty config to test defaults
 
@@ -283,7 +284,7 @@ func TestSSEClientDefaults(t *testing.T) {
 	assert.Equal(t, "no-cache", client.config.Headers["Cache-Control"])
 }
 
-func TestSSEClientConnectAndClose(t *testing.T) { 
+func TestSSEClientConnectAndClose(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockSSEServer()
@@ -326,7 +327,7 @@ func TestSSEClientConnectAndClose(t *testing.T) {
 	require.NoError(t, err) // Should not error
 }
 
-func TestSSEClientSendRequest(t *testing.T) { 
+func TestSSEClientSendRequest(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockSSEServer()
@@ -383,7 +384,7 @@ func TestSSEClientSendRequest(t *testing.T) {
 	assert.Positive(t, metrics.AverageLatency)
 }
 
-func TestSSEClientSendRequestNotConnected(t *testing.T) { 
+func TestSSEClientSendRequestNotConnected(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := SSEClientConfig{
 		URL: fmt.Sprintf("http://localhost:%d", constants.TestHTTPPort),
@@ -405,7 +406,7 @@ func TestSSEClientSendRequestNotConnected(t *testing.T) {
 	assert.Contains(t, err.Error(), "not connected")
 }
 
-func TestSSEClientSendRequestTimeout(t *testing.T) { 
+func TestSSEClientSendRequestTimeout(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Create a server that accepts requests but never sends SSE responses.
@@ -476,7 +477,7 @@ func TestSSEClientSendRequestTimeout(t *testing.T) {
 	assert.Equal(t, uint64(1), metrics.ErrorCount)
 }
 
-func TestSSEClientHealth(t *testing.T) { 
+func TestSSEClientHealth(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockSSEServer()
@@ -524,7 +525,7 @@ func TestSSEClientHealth(t *testing.T) {
 	assert.False(t, metrics.LastHealthCheck.IsZero())
 }
 
-func TestSSEClientHealthCheck(t *testing.T) { 
+func TestSSEClientHealthCheck(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockSSEServer()
@@ -563,7 +564,7 @@ func TestSSEClientHealthCheck(t *testing.T) {
 	assert.True(t, metrics.IsHealthy)
 }
 
-func TestSSEClientGetStatus(t *testing.T) { 
+func TestSSEClientGetStatus(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := SSEClientConfig{
 		URL: fmt.Sprintf("http://localhost:%d/sse", constants.TestHTTPPort),
@@ -579,7 +580,7 @@ func TestSSEClientGetStatus(t *testing.T) {
 	assert.Equal(t, StateDisconnected, status.State)
 }
 
-func TestSSEClientConnectInvalidURL(t *testing.T) { 
+func TestSSEClientConnectInvalidURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := SSEClientConfig{
 		URL:            "http://nonexistent.invalid:12345",
@@ -598,7 +599,7 @@ func TestSSEClientConnectInvalidURL(t *testing.T) {
 	assert.Equal(t, StateError, client.GetState())
 }
 
-func TestSSEClientHeaders(t *testing.T) { 
+func TestSSEClientHeaders(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Create a server that checks headers.
@@ -658,7 +659,7 @@ func TestSSEClientHeaders(t *testing.T) {
 	assert.Equal(t, StateConnected, client.GetState())
 }
 
-func TestSSEClientURL(t *testing.T) { 
+func TestSSEClientURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := SSEClientConfig{
 		URL: fmt.Sprintf("http://example.com:%d/path", constants.TestHTTPPort),
@@ -671,7 +672,7 @@ func TestSSEClientURL(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("http://example.com:%d/path", constants.TestHTTPPort), client.GetURL())
 }
 
-func TestSSEEventParsing(t *testing.T) { 
+func TestSSEEventParsing(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	client := &SSEClient{
 		logger:          logger,
@@ -728,7 +729,7 @@ func TestSSEEventParsing(t *testing.T) {
 // ==============================================================================
 
 // TestSSEClientPerformanceOptimizations tests SSE-specific performance features.
-func TestSSEClientPerformanceOptimizations(t *testing.T) { 
+func TestSSEClientPerformanceOptimizations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testCases := createSSEPerformanceTestCases()
 
@@ -887,7 +888,7 @@ func analyzeSSEPerformanceResults(
 }
 
 // TestSSEClientConcurrentOperations tests concurrent request handling.
-func TestSSEClientConcurrentOperations(t *testing.T) { 
+func TestSSEClientConcurrentOperations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	client := setupSSEConcurrentClient(t, logger)
@@ -943,7 +944,7 @@ func runSSEConcurrentOperationsTest(t *testing.T, client *SSEClient) {
 	const requestsPerGoroutine = 5
 
 	errChan, responseChan := createSSEConcurrentChannels(numGoroutines, requestsPerGoroutine)
-	
+
 	var wg sync.WaitGroup
 
 	ctx := context.Background()
@@ -961,7 +962,7 @@ func createSSEConcurrentChannels(numGoroutines, requestsPerGoroutine int) (chan 
 	return errChan, responseChan
 }
 
-func launchSSEConcurrentWorkers(t *testing.T, wg *sync.WaitGroup, client *SSEClient, ctx context.Context, 
+func launchSSEConcurrentWorkers(t *testing.T, wg *sync.WaitGroup, client *SSEClient, ctx context.Context,
 	numGoroutines, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
@@ -1042,7 +1043,7 @@ func verifySSEConcurrentResults(t *testing.T, client *SSEClient, errors []error,
 }
 
 // TestSSEClientStreamManagement tests SSE stream handling edge cases.
-func TestSSEClientStreamManagement(t *testing.T) { 
+func TestSSEClientStreamManagement(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testCases := createSSEStreamManagementTestCases()
 
@@ -1202,7 +1203,7 @@ func verifySSEStreamConnection(t *testing.T, client *SSEClient) {
 }
 
 // TestSSEClientReconnectionScenarios tests various reconnection scenarios.
-func TestSSEClientReconnectionScenarios(t *testing.T) { 
+func TestSSEClientReconnectionScenarios(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	server, toggleServer := setupReconnectionServer()
@@ -1322,7 +1323,7 @@ func restoreServerConnection(t *testing.T, client *SSEClient, toggleServer func(
 }
 
 // TestSSEClientCompressionSupport tests compression handling.
-func TestSSEClientCompressionSupport(t *testing.T) { 
+func TestSSEClientCompressionSupport(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testCases := createCompressionTestCases()
 
@@ -1436,7 +1437,7 @@ func testCompressionHeaders(t *testing.T, client *SSEClient) {
 }
 
 // TestSSEClientErrorRecovery tests error recovery mechanisms.
-func TestSSEClientErrorRecovery(t *testing.T) { 
+func TestSSEClientErrorRecovery(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	server, requestCounter := setupErrorRecoveryServer()
@@ -1450,7 +1451,7 @@ func TestSSEClientErrorRecovery(t *testing.T) {
 
 func setupErrorRecoveryServer() (*httptest.Server, *int) {
 	requestCount := 0
-	
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			w.Header().Set("Content-Type", "text/event-stream")

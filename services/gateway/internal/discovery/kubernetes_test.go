@@ -1246,7 +1246,7 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 	t.Logf("Created kind cluster: %s", clusterName)
 
 	// Get kubeconfig path
-	kubeconfigPath := filepath.Join(os.TempDir(), "kubeconfig-" + clusterName)
+	kubeconfigPath := filepath.Join(os.TempDir(), "kubeconfig-"+clusterName)
 
 	// Export kubeconfig
 

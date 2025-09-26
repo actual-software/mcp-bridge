@@ -1,7 +1,5 @@
 package discovery
 
-
-
 import (
 	"context"
 	"encoding/json"

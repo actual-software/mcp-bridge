@@ -1,4 +1,3 @@
-
 // Package weather provides HTTP server implementation for the Weather MCP server
 package weather
 
@@ -36,7 +35,7 @@ const (
 	defaultCircuitTimeout = 30
 	shutdownTimeout       = 30
 	serverReadTimeout     = 10 // seconds
-	
+
 	// Health check status constants.
 	healthStatusUnhealthy = "unhealthy"
 )

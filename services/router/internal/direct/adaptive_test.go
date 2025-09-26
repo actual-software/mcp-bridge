@@ -2,17 +2,18 @@ package direct
 
 import (
 	"context"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
 
-func TestAdaptiveTimeout_Basic(t *testing.T) { 
+func TestAdaptiveTimeout_Basic(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -41,7 +42,7 @@ func TestAdaptiveTimeout_Basic(t *testing.T) {
 	assert.Equal(t, config.BaseTimeout, stats["current_timeout"])
 }
 
-func TestAdaptiveTimeout_Defaults(t *testing.T) { 
+func TestAdaptiveTimeout_Defaults(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{} // Empty config to test defaults
@@ -59,7 +60,7 @@ func TestAdaptiveTimeout_Defaults(t *testing.T) {
 	assert.Equal(t, 5*time.Minute, adaptive.config.LearningPeriod)
 }
 
-func TestAdaptiveTimeout_ContextDeadline(t *testing.T) { 
+func TestAdaptiveTimeout_ContextDeadline(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -90,7 +91,7 @@ func TestAdaptiveTimeout_ContextDeadline(t *testing.T) {
 	assert.Equal(t, config.BaseTimeout, timeout3)
 }
 
-func TestAdaptiveTimeout_RecordRequest(t *testing.T) { 
+func TestAdaptiveTimeout_RecordRequest(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -135,7 +136,7 @@ func TestAdaptiveTimeout_RecordRequest(t *testing.T) {
 	assert.Equal(t, 4, stats["window_size"])
 }
 
-func TestAdaptiveTimeout_WindowSizeLimit(t *testing.T) { 
+func TestAdaptiveTimeout_WindowSizeLimit(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -160,7 +161,7 @@ func TestAdaptiveTimeout_WindowSizeLimit(t *testing.T) {
 	assert.Equal(t, 3, stats["window_size"]) // Should be limited to WindowSize
 }
 
-func TestAdaptiveTimeout_Adaptation(t *testing.T) { 
+func TestAdaptiveTimeout_Adaptation(t *testing.T) {
 	t.Parallel()
 
 	adaptive, config := setupAdaptiveTest(t)
@@ -273,7 +274,7 @@ func waitForTimeoutDecrease(t *testing.T, adaptive *AdaptiveTimeout, previousTim
 	return finalTimeout
 }
 
-func TestAdaptiveTimeout_AdaptationConstraints(t *testing.T) { 
+func TestAdaptiveTimeout_AdaptationConstraints(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -326,7 +327,7 @@ func TestAdaptiveTimeout_AdaptationConstraints(t *testing.T) {
 	assert.GreaterOrEqual(t, timeout, config.MinTimeout)
 }
 
-func TestAdaptiveTimeout_LearningDisabled(t *testing.T) { 
+func TestAdaptiveTimeout_LearningDisabled(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -357,7 +358,7 @@ func TestAdaptiveTimeout_LearningDisabled(t *testing.T) {
 	assert.Equal(t, initialTimeout, finalTimeout)
 }
 
-func TestAdaptiveTimeout_InsufficientData(t *testing.T) { 
+func TestAdaptiveTimeout_InsufficientData(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -389,7 +390,7 @@ func TestAdaptiveTimeout_InsufficientData(t *testing.T) {
 	assert.Equal(t, initialTimeout, timeout)
 }
 
-func TestAdaptiveTimeout_ConcurrentAccess(t *testing.T) { 
+func TestAdaptiveTimeout_ConcurrentAccess(t *testing.T) {
 	t.Parallel()
 
 	adaptive, config := setupConcurrentAdaptiveTest(t)
@@ -517,7 +518,7 @@ func verifyFinalConcurrencyState(
 	assert.LessOrEqual(t, stats["window_size"], config.WindowSize)
 }
 
-func TestAdaptiveTimeout_SuccessRatioCalculation(t *testing.T) { 
+func TestAdaptiveTimeout_SuccessRatioCalculation(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -550,7 +551,7 @@ func TestAdaptiveTimeout_SuccessRatioCalculation(t *testing.T) {
 	assert.Equal(t, 10, stats["window_size"])
 }
 
-func TestAdaptiveTimeout_AverageResponseTime(t *testing.T) { 
+func TestAdaptiveTimeout_AverageResponseTime(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
@@ -654,7 +655,7 @@ func TestAdaptiveTimeout_RealWorldScenario(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping real-world scenario test in short mode")
 	}
-	
+
 	adaptive := setupAdaptiveTimeoutTest(t)
 	initialTimeout := simulateGoodPerformance(t, adaptive)
 	peakTimeout := simulateDegradedPerformance(t, adaptive, initialTimeout)
@@ -664,7 +665,7 @@ func TestAdaptiveTimeout_RealWorldScenario(t *testing.T) {
 
 func setupAdaptiveTimeoutTest(t *testing.T) *AdaptiveTimeout {
 	t.Helper()
-	
+
 	logger := zaptest.NewLogger(t)
 	config := AdaptiveTimeoutConfig{
 		BaseTimeout:    5 * time.Second,
@@ -676,13 +677,13 @@ func setupAdaptiveTimeoutTest(t *testing.T) *AdaptiveTimeout {
 		EnableLearning: true,
 		LearningPeriod: 200 * time.Millisecond,
 	}
-	
+
 	return NewAdaptiveTimeout(config, logger)
 }
 
 func simulateGoodPerformance(t *testing.T, adaptive *AdaptiveTimeout) time.Duration {
 	t.Helper()
-	
+
 	// Simulate initial good performance
 	for i := 0; i < 20; i++ {
 		adaptive.RecordRequest(RequestMetrics{
@@ -691,16 +692,16 @@ func simulateGoodPerformance(t *testing.T, adaptive *AdaptiveTimeout) time.Durat
 			Success:   true,
 		})
 	}
-	
+
 	// Let adaptation occur
 	time.Sleep(250 * time.Millisecond)
-	
+
 	return adaptive.GetTimeout(context.Background())
 }
 
 func simulateDegradedPerformance(t *testing.T, adaptive *AdaptiveTimeout, initialTimeout time.Duration) time.Duration {
 	t.Helper()
-	
+
 	// Simulate degraded performance
 	for i := 0; i < 50; i++ {
 		adaptive.RecordRequest(RequestMetrics{
@@ -709,24 +710,24 @@ func simulateDegradedPerformance(t *testing.T, adaptive *AdaptiveTimeout, initia
 			Success:   i%5 != 0, // 80% success rate - below 95% threshold
 		})
 	}
-	
+
 	// Track peak timeout during degradation
 	var peakTimeout time.Duration
 	for i := 0; i < 5; i++ {
 		time.Sleep(250 * time.Millisecond)
-		
+
 		currentTimeout := adaptive.GetTimeout(context.Background())
 		if currentTimeout > peakTimeout {
 			peakTimeout = currentTimeout
 		}
 	}
-	
+
 	return peakTimeout
 }
 
 func simulateRecoveryPerformance(t *testing.T, adaptive *AdaptiveTimeout) time.Duration {
 	t.Helper()
-	
+
 	// Simulate recovery with overwhelming successful requests
 	for i := 0; i < 100; i++ {
 		adaptive.RecordRequest(RequestMetrics{
@@ -735,10 +736,10 @@ func simulateRecoveryPerformance(t *testing.T, adaptive *AdaptiveTimeout) time.D
 			Success:   true,
 		})
 	}
-	
+
 	// Wait for recovery adaptation
 	time.Sleep(500 * time.Millisecond)
-	
+
 	return adaptive.GetTimeout(context.Background())
 }
 
@@ -748,18 +749,18 @@ func verifyAdaptiveBehavior(
 	initialTimeout, peakTimeout, finalTimeout time.Duration,
 ) {
 	t.Helper()
-	
+
 	config := AdaptiveTimeoutConfig{
 		MinTimeout: 1 * time.Second,
 		MaxTimeout: 30 * time.Second,
 	}
-	
+
 	// Verify adaptive behavior
 	assert.Greater(t, peakTimeout, initialTimeout, "Timeout should increase during degraded performance")
 	assert.Less(t, finalTimeout, peakTimeout, "Timeout should decrease during recovery")
 	assert.GreaterOrEqual(t, finalTimeout, config.MinTimeout)
 	assert.LessOrEqual(t, peakTimeout, config.MaxTimeout)
-	
+
 	// Verify stats are reasonable
 	stats := adaptive.GetStats()
 	assert.Greater(t, stats["total_requests"], int64(160)) // 20 + 50 + 100 = 170 total
@@ -767,7 +768,7 @@ func verifyAdaptiveBehavior(
 }
 
 // Test the abs helper function.
-func TestAbs(t *testing.T) { 
+func TestAbs(t *testing.T) {
 	t.Parallel()
 
 	assert.Equal(t, 5*time.Second, abs(5*time.Second))

@@ -1,4 +1,3 @@
-
 package router
 
 import (
@@ -95,7 +94,7 @@ func TestRouter_extractNamespace(t *testing.T) {
 	router := &Router{}
 
 	tests := createExtractNamespaceTests()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := router.extractNamespace(tt.request)
@@ -424,7 +423,7 @@ func handleTestBackendRequest(t *testing.T, w http.ResponseWriter, r *http.Reque
 	body, _ := io.ReadAll(r.Body)
 
 	var req mcp.Request
-	
+
 	_ = json.Unmarshal(body, &req)
 
 	// Send response
@@ -442,7 +441,7 @@ func handleTestBackendRequest(t *testing.T, w http.ResponseWriter, r *http.Reque
 func setupTestRouter(t *testing.T, backendURL string) *Router {
 	t.Helper()
 	logger := zaptest.NewLogger(t)
-	
+
 	cfg := config.RoutingConfig{
 		Strategy:            "round_robin",
 		HealthCheckInterval: "30s",
@@ -453,14 +452,14 @@ func setupTestRouter(t *testing.T, backendURL string) *Router {
 			TimeoutSeconds:   30,
 		},
 	}
-	
+
 	registry := testutil.CreateTestMetricsRegistry()
-	
+
 	// Create a mock discovery that returns the backend endpoint
 	parts := strings.Split(strings.TrimPrefix(backendURL, "http://"), ":")
 	port := 80
 	_, _ = fmt.Sscanf(parts[1], "%d", &port)
-	
+
 	mockDiscovery := &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
 			"default": {
@@ -468,7 +467,7 @@ func setupTestRouter(t *testing.T, backendURL string) *Router {
 			},
 		},
 	}
-	
+
 	return InitializeRequestRouter(context.Background(), cfg, mockDiscovery, registry, logger)
 }
 
@@ -576,7 +575,7 @@ func setupSessionTestRouter(backend *httptest.Server) *Router {
 
 func testSessionRouting(t *testing.T, router *Router, sessionReceived *bool) {
 	t.Helper()
-	
+
 	sess := &session.Session{
 		ID:   "test-session-123",
 		User: "test-user",
@@ -662,7 +661,7 @@ func testForwardRequestError(t *testing.T, tt struct {
 	errorContains string
 }) {
 	t.Helper()
-	
+
 	backend := httptest.NewServer(tt.handler)
 	defer backend.Close()
 
@@ -752,7 +751,7 @@ func testEndpointCheck(t *testing.T, tt struct {
 	expectedHealth bool
 }) {
 	t.Helper()
-	
+
 	backend := httptest.NewServer(tt.handler)
 	defer backend.Close()
 
@@ -860,7 +859,7 @@ func setupConcurrentTestRouter(backend *httptest.Server) *Router {
 
 func runConcurrentRequests(t *testing.T, router *Router) {
 	t.Helper()
-	
+
 	var wg sync.WaitGroup
 
 	errors := make(chan error, testIterations)

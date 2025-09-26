@@ -4,19 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
 
-func TestConnectionPool_Basic(t *testing.T) { 
+func TestConnectionPool_Basic(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -69,7 +70,7 @@ func TestConnectionPool_Basic(t *testing.T) {
 	assert.Greater(t, stats["total_connections"], 1)
 }
 
-func TestConnectionPool_MaxConnections(t *testing.T) { 
+func TestConnectionPool_MaxConnections(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -114,7 +115,7 @@ func TestConnectionPool_MaxConnections(t *testing.T) {
 	assert.LessOrEqual(t, stats["active_connections"], 2)
 }
 
-func TestConnectionPool_RemoveConnection(t *testing.T) { 
+func TestConnectionPool_RemoveConnection(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -148,7 +149,7 @@ func TestConnectionPool_RemoveConnection(t *testing.T) {
 	assert.Contains(t, err.Error(), "connection not found")
 }
 
-func TestConnectionPool_Stats(t *testing.T) { 
+func TestConnectionPool_Stats(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -189,7 +190,7 @@ func TestConnectionPool_Stats(t *testing.T) {
 }
 
 // Enhanced test coverage for pool lifecycle management.
-func TestConnectionPool_LifecycleManagement(t *testing.T) { 
+func TestConnectionPool_LifecycleManagement(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -238,7 +239,7 @@ func TestConnectionPool_LifecycleManagement(t *testing.T) {
 	assert.NotEqual(t, conn1, conn2) // Should be different connection
 }
 
-func TestConnectionPool_IdleTimeout(t *testing.T) { 
+func TestConnectionPool_IdleTimeout(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -277,7 +278,7 @@ func TestConnectionPool_IdleTimeout(t *testing.T) {
 	assert.False(t, conn.IsIdle(config.IdleTimeout))
 }
 
-func TestConnectionPool_HealthChecking(t *testing.T) { 
+func TestConnectionPool_HealthChecking(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -321,7 +322,7 @@ func TestConnectionPool_HealthChecking(t *testing.T) {
 	assert.False(t, conn.GetHealthy())
 }
 
-func TestConnectionPool_ConnectionReuse(t *testing.T) { 
+func TestConnectionPool_ConnectionReuse(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -369,7 +370,7 @@ func TestConnectionPool_ConnectionReuse(t *testing.T) {
 	assert.Equal(t, int64(3), conn1.GetUsageCount())
 }
 
-func TestConnectionPool_NoReuse(t *testing.T) { 
+func TestConnectionPool_NoReuse(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -420,7 +421,7 @@ func TestConnectionPool_ConcurrentAccess(t *testing.T) {
 	verifyConcurrentAccessResults(t, pool, connections)
 }
 
-func TestConnectionPool_EvictionPolicy(t *testing.T) { 
+func TestConnectionPool_EvictionPolicy(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -470,7 +471,7 @@ func TestConnectionPool_EvictionPolicy(t *testing.T) {
 	assert.LessOrEqual(t, stats["active_connections"], config.MaxActiveConnections)
 }
 
-func TestConnectionPool_MultiProtocol(t *testing.T) { 
+func TestConnectionPool_MultiProtocol(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -513,7 +514,7 @@ func TestConnectionPool_MultiProtocol(t *testing.T) {
 	}
 }
 
-func TestConnectionPool_ErrorHandling(t *testing.T) { 
+func TestConnectionPool_ErrorHandling(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -547,7 +548,7 @@ func TestConnectionPool_ErrorHandling(t *testing.T) {
 	assert.Contains(t, err.Error(), "connection not found")
 }
 
-func TestConnectionPool_Shutdown(t *testing.T) { 
+func TestConnectionPool_Shutdown(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -581,7 +582,7 @@ func TestConnectionPool_Shutdown(t *testing.T) {
 	time.Sleep(2 * constants.TestSleepShort)
 }
 
-func TestConnectionPool_GetActiveConnections(t *testing.T) { 
+func TestConnectionPool_GetActiveConnections(t *testing.T) {
 	t.Parallel()
 
 	config := DefaultConnectionPoolConfig()
@@ -763,7 +764,7 @@ func BenchmarkConnectionPool_Stats(b *testing.B) {
 }
 
 // Stress test for memory usage under load.
-func TestConnectionPool_MemoryUsage(t *testing.T) { 
+func TestConnectionPool_MemoryUsage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping memory usage test in short mode")
 	}

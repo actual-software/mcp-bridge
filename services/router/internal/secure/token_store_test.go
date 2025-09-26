@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewTokenStore(t *testing.T) { 
+func TestNewTokenStore(t *testing.T) {
 	store := validateTokenStoreCreation(t, "test-app")
 	validatePlatformSpecificStore(t, store)
 }
@@ -93,7 +93,7 @@ func validateDefaultStore(t *testing.T, store TokenStore) {
 	}
 }
 
-func TestTokenStoreOperations(t *testing.T) { 
+func TestTokenStoreOperations(t *testing.T) {
 	testKey := "test-token-key"
 	testToken := "super-secret-token-123"
 	updatedToken := "updated-secret-token-456"
@@ -202,7 +202,7 @@ func testDeleteOperation(t *testing.T, store TokenStore, testKey string) {
 	}
 }
 
-func TestEncryptedFileStore(t *testing.T) { 
+func TestEncryptedFileStore(t *testing.T) {
 	store, filePath, cleanup := setupEncryptedFileStoreTest(t)
 	defer cleanup()
 
@@ -297,7 +297,7 @@ func testEncryptedListAndDelete(t *testing.T, store TokenStore, testKey string) 
 	}
 }
 
-func TestEncryptionDecryption(t *testing.T) { 
+func TestEncryptionDecryption(t *testing.T) {
 	store, err := newEncryptedFileStore("test-crypto")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
@@ -337,7 +337,7 @@ func TestEncryptionDecryption(t *testing.T) {
 	}
 }
 
-func TestConcurrentAccess(t *testing.T) { 
+func TestConcurrentAccess(t *testing.T) {
 	store := setupConcurrentTest(t)
 
 	done := make(chan bool, 10)
@@ -420,7 +420,7 @@ func cleanupConcurrentTest(t *testing.T, store TokenStore) {
 	}
 }
 
-func TestTokenNotFound(t *testing.T) { 
+func TestTokenNotFound(t *testing.T) {
 	store, err := NewTokenStore("test-notfound")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
@@ -433,7 +433,7 @@ func TestTokenNotFound(t *testing.T) {
 	}
 }
 
-func TestDeleteNonExistent(t *testing.T) { 
+func TestDeleteNonExistent(t *testing.T) {
 	store, err := NewTokenStore("test-delete-nonexistent")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
@@ -446,7 +446,7 @@ func TestDeleteNonExistent(t *testing.T) {
 	}
 }
 
-func TestEncryptedFileStore_SecurityFeatures(t *testing.T) { 
+func TestEncryptedFileStore_SecurityFeatures(t *testing.T) {
 	tempDir := t.TempDir()
 
 	fileStore, store := setupSecurityTestStore(t, tempDir)
@@ -536,7 +536,7 @@ func testFilePermissions(t *testing.T, store TokenStore, fileStore *encryptedFil
 	}
 }
 
-func TestEncryptedFileStore_CorruptionResistance(t *testing.T) { 
+func TestEncryptedFileStore_CorruptionResistance(t *testing.T) {
 	// Test behavior with corrupted encrypted files.
 	tempDir := t.TempDir()
 
@@ -586,7 +586,7 @@ func TestEncryptedFileStore_CorruptionResistance(t *testing.T) {
 	}
 }
 
-func TestEncryptedFileStore_KeyDerivation(t *testing.T) { 
+func TestEncryptedFileStore_KeyDerivation(t *testing.T) {
 	// Test that key derivation is deterministic but secure.
 	appName1 := "test-app-1"
 	appName2 := "test-app-2"
@@ -611,7 +611,7 @@ func TestEncryptedFileStore_KeyDerivation(t *testing.T) {
 	}
 }
 
-func TestEncryptedFileStore_ConcurrentOperations(t *testing.T) { 
+func TestEncryptedFileStore_ConcurrentOperations(t *testing.T) {
 	tempDir := t.TempDir()
 	store := setupConcurrentEncryptedTest(t, tempDir)
 
@@ -693,7 +693,7 @@ func verifyConcurrentEncryptedTokens(t *testing.T, store TokenStore, numGoroutin
 	}
 }
 
-func TestTokenStore_EdgeCases(t *testing.T) { 
+func TestTokenStore_EdgeCases(t *testing.T) {
 	store := setupTokenStoreEdgeCaseTest(t)
 	tests := createTokenStoreEdgeCaseTests()
 	runTokenStoreEdgeCaseTests(t, store, tests)
@@ -701,7 +701,7 @@ func TestTokenStore_EdgeCases(t *testing.T) {
 
 func setupTokenStoreEdgeCaseTest(t *testing.T) TokenStore {
 	t.Helper()
-	
+
 	store, err := NewTokenStore("edge-case-test")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
@@ -771,7 +771,7 @@ func runTokenStoreEdgeCaseTests(t *testing.T, store TokenStore, tests []struct {
 	wantErr bool
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			processEdgeCaseTest(t, store, tt)
@@ -786,10 +786,10 @@ func processEdgeCaseTest(t *testing.T, store TokenStore, tt struct {
 	wantErr bool
 }) {
 	t.Helper()
-	
+
 	// Store the token.
 	err := store.Store(tt.key, tt.token)
-	
+
 	if !validateEdgeCaseStoreResult(t, err, tt.wantErr) {
 		return
 	}
@@ -801,7 +801,7 @@ func processEdgeCaseTest(t *testing.T, store TokenStore, tt struct {
 
 func validateEdgeCaseStoreResult(t *testing.T, err error, wantErr bool) bool {
 	t.Helper()
-	
+
 	if wantErr && err == nil {
 		t.Error("Expected error but got none")
 		return false
@@ -811,13 +811,13 @@ func validateEdgeCaseStoreResult(t *testing.T, err error, wantErr bool) bool {
 		t.Errorf("Unexpected error: %v", err)
 		return false
 	}
-	
+
 	return true
 }
 
 func verifyAndCleanupEdgeCaseToken(t *testing.T, store TokenStore, key, expectedToken string) {
 	t.Helper()
-	
+
 	// Retrieve and verify.
 	retrieved, err := store.Retrieve(key)
 	if err != nil {
@@ -835,7 +835,7 @@ func verifyAndCleanupEdgeCaseToken(t *testing.T, store TokenStore, key, expected
 	}
 }
 
-func TestTokenStore_PerformanceUnderLoad(t *testing.T) { 
+func TestTokenStore_PerformanceUnderLoad(t *testing.T) {
 	store := setupPerformanceTest(t)
 
 	const numTokens = 1000

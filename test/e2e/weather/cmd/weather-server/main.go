@@ -1,4 +1,3 @@
-
 // Package main provides the entry point for the Weather MCP server
 package main
 
@@ -11,8 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	weather "weather-test"
+
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -95,7 +95,7 @@ func loadConfig(configFile string, defaults *weather.ServerConfig) *weather.Serv
 	}
 
 	// Validate and read config file safely
-	data, err := readConfigFileSafely(configFile) 
+	data, err := readConfigFileSafely(configFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to read config file: %v\n", err)
 		os.Exit(1)
@@ -200,18 +200,18 @@ func mergeConfigs(fileConfig, cmdConfig *weather.ServerConfig) *weather.ServerCo
 func readConfigFileSafely(configFile string) ([]byte, error) {
 	// Clean the path to prevent directory traversal
 	cleanPath := filepath.Clean(configFile)
-	
+
 	// Ensure the file path doesn't contain dangerous patterns
 	if strings.Contains(cleanPath, "..") {
 		return nil, errors.New("invalid config file path: path traversal detected")
 	}
-	
+
 	// Only allow files with specific extensions
 	ext := strings.ToLower(filepath.Ext(cleanPath))
 	if ext != ".yaml" && ext != ".yml" && ext != ".json" {
 		return nil, errors.New("invalid config file extension: only .yaml, .yml, and .json are allowed")
 	}
-	
+
 	return os.ReadFile(cleanPath)
 }
 

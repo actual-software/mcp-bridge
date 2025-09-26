@@ -85,7 +85,7 @@ func createJWTAuthProvider(cfg config.JWTConfig, logger *zap.Logger) (*JWTProvid
 
 	// Load public key if specified (for RS256)
 	if cfg.PublicKeyPath != "" {
-		keyData, err := os.ReadFile(cfg.PublicKeyPath) 
+		keyData, err := os.ReadFile(cfg.PublicKeyPath)
 		if err != nil {
 			return nil, customerrors.Wrap(err, "failed to read public key").
 				WithComponent("auth_jwt").

@@ -13,13 +13,13 @@ const (
 	minExpectedTools = 2
 
 	// Performance test parameters.
-	maxConnectionsLimit = 5
-	testConnectionCount = 8
+	maxConnectionsLimit    = 5
+	testConnectionCount    = 8
 	highThroughputRequests = 100
 
 	// Wait and timeout parameters.
-	defaultMaxRetries = 10
-	defaultTimeoutSeconds = 10
+	defaultMaxRetries         = 10
+	defaultTimeoutSeconds     = 10
 	defaultPollIntervalMillis = 100
 
 	// Memory calculation.

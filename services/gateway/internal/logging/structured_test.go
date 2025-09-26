@@ -87,7 +87,7 @@ func validateErrorFields(t *testing.T, fields []zap.Field, err error, expectedFi
 
 	if err == nil {
 		assert.Empty(t, fields)
-		
+
 		return
 	}
 
@@ -169,7 +169,7 @@ func setupFullContext() context.Context {
 	ctx = ContextWithUserInfo(ctx, "user-789", "sess-abc")
 	ctx = ContextWithNamespace(ctx, "test-ns")
 	ctx = ContextWithMethod(ctx, "test-method")
-	
+
 	return ctx
 }
 
@@ -178,7 +178,7 @@ func setupPartialContext() context.Context {
 	ctx := context.Background()
 	ctx = ContextWithTracing(ctx, "", "req-123")
 	ctx = ContextWithUserInfo(ctx, "user-789", "")
-	
+
 	return ctx
 }
 
@@ -249,7 +249,7 @@ func TestLogError(t *testing.T) {
 			require.Len(t, logs, 1)
 			assert.Equal(t, tt.expectedLevel, logs[0].Level)
 			assert.Equal(t, "Test error message", logs[0].Message)
-			
+
 			// Verify context fields
 			assert.NotNil(t, logs[0].ContextMap()["request_id"])
 		})
@@ -262,7 +262,7 @@ func TestGenerateIDs(t *testing.T) {
 	// Test trace ID generation
 	traceID1 := GenerateTraceID()
 	traceID2 := GenerateTraceID()
-	
+
 	assert.NotEmpty(t, traceID1)
 	assert.NotEmpty(t, traceID2)
 	assert.NotEqual(t, traceID1, traceID2)
@@ -270,7 +270,7 @@ func TestGenerateIDs(t *testing.T) {
 	// Test request ID generation
 	reqID1 := GenerateRequestID()
 	reqID2 := GenerateRequestID()
-	
+
 	assert.NotEmpty(t, reqID1)
 	assert.NotEmpty(t, reqID2)
 	assert.NotEqual(t, reqID1, reqID2)
@@ -288,7 +288,7 @@ func TestContextWithTracing(t *testing.T) {
 	// Verify values are stored
 	assert.Equal(t, traceID, GetTraceID(enhancedCtx))
 	assert.Equal(t, requestID, GetRequestID(enhancedCtx))
-	
+
 	// Verify start time is set using the proper context key
 	startTime := enhancedCtx.Value(loggingContextKeyRequestStartTime)
 	assert.NotNil(t, startTime)
@@ -298,7 +298,7 @@ func TestGetRequestDuration(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	
+
 	// Context without start time
 	duration := GetRequestDuration(ctx)
 	assert.Equal(t, time.Duration(0), duration)
@@ -342,7 +342,7 @@ func TestLogRequestComplete(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = ContextWithTracing(ctx, "trace-123", "req-456")
-			
+
 			// Add some delay to have measurable duration
 			time.Sleep(10 * time.Millisecond)
 
@@ -350,7 +350,7 @@ func TestLogRequestComplete(t *testing.T) {
 
 			logs := obs.All()
 			require.Len(t, logs, 1)
-			
+
 			if tt.expectError {
 				assert.Equal(t, zapcore.ErrorLevel, logs[0].Level)
 				assert.Equal(t, "request failed", logs[0].Message)
@@ -358,7 +358,7 @@ func TestLogRequestComplete(t *testing.T) {
 				assert.Equal(t, zapcore.InfoLevel, logs[0].Level)
 				assert.Equal(t, "request completed", logs[0].Message)
 			}
-			
+
 			// Verify fields
 			assert.NotNil(t, logs[0].ContextMap()["trace_id"])
 			assert.NotNil(t, logs[0].ContextMap()["request_id"])
@@ -372,7 +372,7 @@ func TestEnhanceLogger(t *testing.T) {
 	t.Parallel()
 
 	baseLogger := zaptest.NewLogger(t)
-	
+
 	ctx := context.Background()
 	ctx = ContextWithTracing(ctx, "", "req-123")
 	ctx = ContextWithUserInfo(ctx, "user-456", "")
@@ -382,7 +382,7 @@ func TestEnhanceLogger(t *testing.T) {
 	// The enhanced logger should have the context fields
 	// This is hard to test directly, but we can verify it doesn't panic
 	assert.NotNil(t, enhancedLogger)
-	
+
 	// Test that empty context doesn't modify logger
 	emptyCtx := context.Background()
 	sameLogger := EnhanceLogger(emptyCtx, baseLogger)
@@ -396,7 +396,7 @@ func BenchmarkWithError(b *testing.B) {
 		WithContext("field", "value")
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		_ = WithError(err)
 	}
@@ -408,7 +408,7 @@ func BenchmarkWithRequestContext(b *testing.B) {
 	ctx = ContextWithUserInfo(ctx, "user-789", "")
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		_ = WithRequestContext(ctx)
 	}
@@ -420,7 +420,7 @@ func BenchmarkLogError(b *testing.B) {
 	err := errors.New("benchmark error")
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		LogError(ctx, logger, "benchmark message", err)
 	}

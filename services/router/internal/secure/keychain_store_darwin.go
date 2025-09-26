@@ -16,12 +16,12 @@ import (
 )
 
 const (
-	defaultRetryCount = 10
-	maxConcurrentOps  = 10               // Limit concurrent keychain operations to prevent resource exhaustion
-	operationTimeout  = 30 * time.Second // Increased from 10s to handle slow operations
-	retryBackoffBase  = 100 * time.Millisecond // Base backoff duration for exponential retry
-	asciiMaxChar      = 127                    // Maximum ASCII character value
-	maxBadControlRatio = 0.2                  // Maximum ratio of bad control characters for valid base64
+	defaultRetryCount  = 10
+	maxConcurrentOps   = 10                     // Limit concurrent keychain operations to prevent resource exhaustion
+	operationTimeout   = 30 * time.Second       // Increased from 10s to handle slow operations
+	retryBackoffBase   = 100 * time.Millisecond // Base backoff duration for exponential retry
+	asciiMaxChar       = 127                    // Maximum ASCII character value
+	maxBadControlRatio = 0.2                    // Maximum ratio of bad control characters for valid base64
 )
 
 // keychainStore implements TokenStore using macOS Keychain Services.
@@ -136,7 +136,6 @@ func (s *keychainStore) Store(key, token string) error {
 	return s.executeKeychainOperation("store", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
-		
 		cmd := exec.CommandContext(ctx, "security", "add-generic-password",
 			"-a", key, // account name
 			"-s", serviceName, // service name
@@ -164,7 +163,6 @@ func (s *keychainStore) Retrieve(key string) (string, error) {
 	err := s.executeKeychainOperation("retrieve", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
-		
 		cmd := exec.CommandContext(ctx, "security", "find-generic-password",
 			"-a", key, // account name
 			"-s", serviceName, // service name
@@ -211,7 +209,6 @@ func (s *keychainStore) Delete(key string) error {
 	return s.executeKeychainOperation("delete", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
-		
 		cmd := exec.CommandContext(ctx, "security", "delete-generic-password",
 			"-a", key, // account name
 			"-s", serviceName) // service name
@@ -259,16 +256,16 @@ func (s *keychainStore) serviceName() string {
 
 // isHexEncoded checks if a string looks like keychain-encoded data
 // The keychain hex-encodes when tokens contain special characters/binary data.
-func isHexEncoded(s string) bool { 
+func isHexEncoded(s string) bool {
 	if !isValidHexString(s) {
 		return false
 	}
-	
+
 	decoded, err := decodeAndValidateLength(s)
 	if err != nil {
 		return false
 	}
-	
+
 	return containsProblematicCharacters(decoded) && passesQualityChecks(decoded)
 }
 
@@ -277,7 +274,7 @@ func isValidHexString(s string) bool {
 	if len(s)%2 != 0 || len(s) == 0 {
 		return false
 	}
-	
+
 	matched, _ := regexp.MatchString("^[0-9a-fA-F]+$", s)
 	return matched
 }
@@ -295,13 +292,13 @@ func decodeAndValidateLength(s string) ([]byte, error) {
 
 func containsProblematicCharacters(decoded []byte) bool {
 	decodedStr := string(decoded)
-	
+
 	// Check for specific characters that we know cause keychain encoding
 	hasNewlineTab := strings.Contains(decodedStr, "\n") ||
 		strings.Contains(decodedStr, "\t") ||
 		strings.Contains(decodedStr, "\r")
 	hasBackslash := strings.Contains(decodedStr, "\\")
-	
+
 	// Check for non-ASCII Unicode characters (by looking for valid UTF-8)
 	hasNonASCII := false
 
@@ -311,7 +308,7 @@ func containsProblematicCharacters(decoded []byte) bool {
 			break
 		}
 	}
-	
+
 	// Must contain known problematic characters
 	return hasNewlineTab || hasBackslash || hasNonASCII
 }
@@ -320,7 +317,7 @@ func passesQualityChecks(decoded []byte) bool {
 	if !hasAcceptableControlCharRatio(decoded) {
 		return false
 	}
-	
+
 	return isValidUTF8Content(decoded)
 }
 
@@ -334,7 +331,7 @@ func hasAcceptableControlCharRatio(decoded []byte) bool {
 			badControlChars++
 		}
 	}
-	
+
 	// If more than 20% of bytes are bad control characters, it's likely random data
 	return float64(badControlChars)/float64(len(decoded)) <= maxBadControlRatio
 }
@@ -350,11 +347,10 @@ func isValidUTF8Content(decoded []byte) bool {
 			break
 		}
 	}
-	
+
 	if hasNonASCII && strings.ToValidUTF8(decodedStr, "") != decodedStr {
 		return false // Invalid UTF-8 suggests random binary data
 	}
-	
+
 	return true
 }
-

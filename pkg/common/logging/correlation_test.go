@@ -275,7 +275,7 @@ func getLoggerWithCorrelationTestCases() []correlationTestCase {
 func verifyLoggerWithCorrelation(t *testing.T, tt correlationTestCase, logger *zap.Logger,
 	recorded *observer.ObservedLogs) {
 	t.Helper()
-	
+
 	correlationLogger := LoggerWithCorrelation(tt.ctx, logger)
 	correlationLogger.Info("test message")
 
@@ -429,7 +429,7 @@ func getLoggerWithConnectionTestCases() []connectionTestCase {
 func verifyLoggerWithConnection(t *testing.T, tt connectionTestCase, logger *zap.Logger,
 	recorded *observer.ObservedLogs) {
 	t.Helper()
-	
+
 	connectionLogger := LoggerWithConnection(tt.ctx, logger, tt.connectionID, tt.remoteAddr)
 	connectionLogger.Info(tt.expectedMsg)
 

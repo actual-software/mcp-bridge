@@ -69,7 +69,7 @@ func validateComplexNamespaceRouting(c *Config) error {
 	const expectedEndpointCount = 3
 
 	const expectedRuleCount = 3
-	
+
 	endpoints := c.GetGatewayEndpoints()
 	if len(endpoints) != expectedEndpointCount {
 		return fmt.Errorf("expected %d endpoints, got %d", expectedEndpointCount, len(endpoints))

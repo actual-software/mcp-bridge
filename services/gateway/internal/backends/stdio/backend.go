@@ -1,7 +1,5 @@
 package stdio
 
-
-
 import (
 	"bufio"
 	"context"
@@ -181,7 +179,7 @@ func (b *Backend) startProcess(ctx context.Context) error {
 	}
 
 	// G204: Command arguments are from validated configuration, not user input
-	b.cmd = exec.CommandContext(ctx, b.config.Command[0], b.config.Command[1:]...) //nolint:gosec 
+	b.cmd = exec.CommandContext(ctx, b.config.Command[0], b.config.Command[1:]...) //nolint:gosec
 
 	// Set working directory
 	if b.config.WorkingDir != "" {
@@ -205,7 +203,7 @@ func (b *Backend) startProcess(ctx context.Context) error {
 
 	stdout, err := b.cmd.StdoutPipe()
 	if err != nil {
-		_ = stdin.Close() 
+		_ = stdin.Close()
 
 		return errors.WrapStdioError(ctx, err, "create_stdout_pipe")
 	}
@@ -215,8 +213,8 @@ func (b *Backend) startProcess(ctx context.Context) error {
 
 	stderr, err := b.cmd.StderrPipe()
 	if err != nil {
-		_ = stdin.Close()  
-		_ = stdout.Close() 
+		_ = stdin.Close()
+		_ = stdout.Close()
 
 		return errors.WrapStdioError(ctx, err, "create_stderr_pipe")
 	}
@@ -225,9 +223,9 @@ func (b *Backend) startProcess(ctx context.Context) error {
 
 	// Start the process
 	if err := b.cmd.Start(); err != nil {
-		_ = stdin.Close()  
-		_ = stdout.Close() 
-		_ = stderr.Close() 
+		_ = stdin.Close()
+		_ = stdout.Close()
+		_ = stderr.Close()
 
 		return errors.WrapStdioError(ctx, err, "start")
 	}
@@ -336,7 +334,7 @@ func (b *Backend) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.Respo
 
 		return nil, err
 	}
-	
+
 	return resp, nil
 }
 
@@ -466,7 +464,7 @@ func (b *Backend) recordErrorMetric(err error) {
 	b.updateMetrics(func(m *BackendMetrics) {
 		m.ErrorCount++
 	})
-	
+
 	// Record to Prometheus metrics if available
 	if b.metricsRegistry != nil && err != nil {
 		// Check if it's already a GatewayError
@@ -481,7 +479,7 @@ func (b *Backend) recordErrorMetric(err error) {
 			gatewayErr = gatewayErr.WithComponent("stdio_backend").
 				WithContext("backend_name", b.name)
 		}
-		
+
 		errors.RecordError(gatewayErr, b.metricsRegistry)
 	}
 }
@@ -590,7 +588,7 @@ func (b *Backend) initiateShutdown() {
 
 	// Close stdin to signal the process to shutdown
 	if b.stdin != nil {
-		_ = b.stdin.Close() 
+		_ = b.stdin.Close()
 	}
 }
 
@@ -627,7 +625,7 @@ func (b *Backend) forceKillProcess() {
 	b.logger.Warn("force killing process")
 
 	if b.cmd.Process != nil {
-		_ = b.cmd.Process.Kill() 
+		_ = b.cmd.Process.Kill()
 	}
 }
 
@@ -644,11 +642,11 @@ func (b *Backend) waitForResponseReader() {
 func (b *Backend) cleanupResources() {
 	// Close remaining pipes
 	if b.stdout != nil {
-		_ = b.stdout.Close() 
+		_ = b.stdout.Close()
 	}
 
 	if b.stderr != nil {
-		_ = b.stderr.Close() 
+		_ = b.stderr.Close()
 	}
 
 	b.running = false

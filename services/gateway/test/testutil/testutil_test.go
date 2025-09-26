@@ -1,4 +1,3 @@
-
 package testutil
 
 import (
@@ -281,11 +280,11 @@ type containsStringTest struct {
 
 func createContainsStringTestCases() []containsStringTest {
 	var tests []containsStringTest
-	
+
 	tests = append(tests, createBasicContainsTests()...)
 	tests = append(tests, createEdgeCaseContainsTests()...)
 	tests = append(tests, createSpecialCaseContainsTests()...)
-	
+
 	return tests
 }
 

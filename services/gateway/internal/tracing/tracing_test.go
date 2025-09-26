@@ -1,4 +1,3 @@
-
 package tracing
 
 import (
@@ -74,7 +73,7 @@ func TestInitTracer(t *testing.T) {
 				assert.Equal(t, tt.wantNoop, isNoop)
 
 				// Clean up
-				_ = closer.Close() 
+				_ = closer.Close()
 			}
 		})
 	}
@@ -149,18 +148,18 @@ func TestHTTPHeaderInjectionExtraction(t *testing.T) {
 	childRecord := tracer.FinishedSpans()[0]
 	assert.Equal(t, func() uint64 {
 		if mockCtx, ok := span.Context().(mocktracer.MockSpanContext); ok {
-			return uint64(mockCtx.SpanID) 
+			return uint64(mockCtx.SpanID)
 		}
 
 		return 0
-	}(), uint64(childRecord.ParentID)) 
+	}(), uint64(childRecord.ParentID))
 }
 
 func TestHTTPMiddleware(t *testing.T) {
 	tracer := setupMockTracer()
 	tests := createHTTPMiddlewareTests()
 	wrapped := setupHTTPMiddlewareHandler(tracer)
-	
+
 	runHTTPMiddlewareTests(t, tests, tracer, wrapped)
 }
 
@@ -242,7 +241,7 @@ func runHTTPMiddlewareTests(t *testing.T, tests []struct {
 	expectError    bool
 }, tracer *mocktracer.MockTracer, wrapped http.Handler) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tracer.Reset()
@@ -276,7 +275,7 @@ func validateHTTPMiddlewareResponse(t *testing.T, recorder *httptest.ResponseRec
 	expectError    bool
 }, tracer *mocktracer.MockTracer) {
 	t.Helper()
-	
+
 	// Verify response
 	assert.Equal(t, tt.expectedStatus, recorder.Code)
 
@@ -319,10 +318,10 @@ func validateHTTPMiddlewareResponse(t *testing.T, recorder *httptest.ResponseRec
 func TestTracedHTTPClient(t *testing.T) {
 	tracer := setupTracedHTTPClientTest()
 	defer tracer.Close()
-	
+
 	client := TracedHTTPClient(nil)
 	tests := createTracedHTTPClientTests()
-	
+
 	runTracedHTTPClientTests(t, tests, tracer, client)
 }
 
@@ -342,7 +341,7 @@ func setupTracedHTTPClientTest() *httptest.Server {
 
 		_, _ = w.Write([]byte("response"))
 	}))
-	
+
 	return server
 }
 
@@ -386,9 +385,9 @@ func runTracedHTTPClientTests(t *testing.T, tests []struct {
 	expectError bool
 }, server *httptest.Server, client *http.Client) {
 	t.Helper()
-	
+
 	tracer := opentracing.GlobalTracer().(*mocktracer.MockTracer)
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tracer.Reset()
@@ -404,7 +403,7 @@ func runTracedHTTPClientTests(t *testing.T, tests []struct {
 			}
 
 			executeTracedHTTPRequest(t, ctx, server, client, tt)
-			
+
 			if tt.withSpan {
 				validateTracedHTTPResponse(t, tracer, tt)
 			}
@@ -414,13 +413,13 @@ func runTracedHTTPClientTests(t *testing.T, tests []struct {
 
 func executeTracedHTTPRequest(
 	t *testing.T, ctx context.Context, server *httptest.Server, client *http.Client, tt struct {
-	name        string
-	path        string
-	withSpan    bool
-	expectError bool
-}) {
+		name        string
+		path        string
+		withSpan    bool
+		expectError bool
+	}) {
 	t.Helper()
-	
+
 	// Make request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+tt.path, nil)
 	require.NoError(t, err)
@@ -438,7 +437,7 @@ func validateTracedHTTPResponse(t *testing.T, tracer *mocktracer.MockTracer, tt 
 	expectError bool
 }) {
 	t.Helper()
-	
+
 	// Wait for spans to finish
 	time.Sleep(10 * time.Millisecond)
 
@@ -483,7 +482,7 @@ func TestResponseWrapper(t *testing.T) {
 	// Write without explicit WriteHeader
 	recorder2 := httptest.NewRecorder()
 	wrapper2 := &responseWrapper{ResponseWriter: recorder2, statusCode: http.StatusOK}
-	_, _ = wrapper2.Write([]byte("test")) 
+	_, _ = wrapper2.Write([]byte("test"))
 	assert.Equal(t, http.StatusOK, wrapper2.statusCode)
 }
 

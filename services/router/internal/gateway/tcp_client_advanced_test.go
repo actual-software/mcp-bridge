@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"io"
 	"net"
 	"strings"
@@ -14,6 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
@@ -105,15 +106,15 @@ func (s *mockTCPServerBench) Stop() {
 func TestTCPClient_ConnectionLifecycle(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	eventTracker := createEventTracker()
-	
+
 	server := createLifecycleTestServer(t, eventTracker)
 
 	addr := startLifecycleServer(t, server)
 	defer server.Stop()
-	
+
 	client := createLifecycleTestClient(t, addr, logger)
 	runLifecycleTest(t, client)
-	
+
 	validateLifecycleEvents(t, eventTracker)
 }
 
@@ -152,7 +153,7 @@ func handleLifecycleConnection(conn net.Conn, tracker *eventTracker) {
 	defer func() {
 		tracker.addEvent("connection_closed")
 	}()
-	
+
 	reader := bufio.NewReader(conn)
 	handleVersionNegotiation(reader, conn, tracker)
 	handleRegularMessages(reader, conn, tracker)
@@ -163,7 +164,7 @@ func handleVersionNegotiation(reader *bufio.Reader, conn net.Conn, tracker *even
 	if err != nil {
 		return
 	}
-	
+
 	if frame.MessageType == MessageTypeVersionNegotiation {
 		tracker.addEvent("version_negotiation")
 		sendVersionAck(conn)
@@ -191,7 +192,7 @@ func handleRegularMessages(reader *bufio.Reader, conn net.Conn, tracker *eventTr
 			}
 			return
 		}
-		
+
 		tracker.addEvent("message_received")
 		handleMessageByType(*frame, conn, tracker)
 	}
@@ -257,7 +258,7 @@ func createLifecycleTestClient(t *testing.T, addr string, logger *zap.Logger) *T
 			TimeoutMs: 5000,
 		},
 	}
-	
+
 	client, err := NewTCPClient(cfg, logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
@@ -267,19 +268,19 @@ func createLifecycleTestClient(t *testing.T, addr string, logger *zap.Logger) *T
 
 func runLifecycleTest(t *testing.T, client *TCPClient) {
 	ctx := context.Background()
-	
+
 	if err := client.Connect(ctx); err != nil {
 		t.Fatalf("Failed to connect: %v", err)
 	}
-	
+
 	if !client.IsConnected() {
 		t.Error("Expected client to be connected")
 	}
-	
+
 	if err := client.SendPing(); err != nil {
 		t.Errorf("Failed to send ping: %v", err)
 	}
-	
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "test",
@@ -288,9 +289,9 @@ func runLifecycleTest(t *testing.T, client *TCPClient) {
 	if err := client.SendRequest(req); err != nil {
 		t.Errorf("Failed to send request: %v", err)
 	}
-	
+
 	_ = client.Close()
-	
+
 	if client.IsConnected() {
 		t.Error("Expected client to be disconnected")
 	}
@@ -300,7 +301,7 @@ func validateLifecycleEvents(t *testing.T, tracker *eventTracker) {
 	time.Sleep(100 * time.Millisecond)
 
 	events := tracker.getEvents()
-	
+
 	expectedEvents := []string{"connection_accepted", "version_negotiation", "version_ack_sent"}
 	for _, expected := range expectedEvents {
 		found := false
@@ -340,7 +341,7 @@ func TestTCPClient_ConcurrentOperations(t *testing.T) {
 
 func setupConcurrentOperationsServer(t *testing.T, requestCount *int64) *mockTCPServer {
 	t.Helper()
-	
+
 	return newMockTCPServer(t, func(conn net.Conn) {
 		handleConcurrentConnection(conn, requestCount)
 	})
@@ -384,7 +385,7 @@ func handleConcurrentVersionNegotiation(reader *bufio.Reader, conn net.Conn) boo
 		}
 		_ = ackFrame.Write(conn)
 	}
-	
+
 	return true
 }
 
@@ -427,7 +428,7 @@ func processConcurrentRequest(frame BinaryFrame, conn net.Conn, requestCount *in
 
 func startServerOrFail(t *testing.T, server *mockTCPServer) string {
 	t.Helper()
-	
+
 	addr, err := server.Start()
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
@@ -437,7 +438,7 @@ func startServerOrFail(t *testing.T, server *mockTCPServer) string {
 
 func createAndConnectClient(t *testing.T, addr string, logger *zap.Logger) *TCPClient {
 	t.Helper()
-	
+
 	cfg := config.GatewayConfig{
 		URL: "tcp://" + addr,
 		Connection: common.ConnectionConfig{
@@ -460,7 +461,7 @@ func createAndConnectClient(t *testing.T, addr string, logger *zap.Logger) *TCPC
 
 func closeClient(t *testing.T, client *TCPClient) {
 	t.Helper()
-	
+
 	if err := client.Close(); err != nil {
 		t.Logf("Failed to close client: %v", err)
 	}
@@ -468,7 +469,7 @@ func closeClient(t *testing.T, client *TCPClient) {
 
 func runConcurrentRequests(t *testing.T, client *TCPClient, numRequests int) chan int64 {
 	t.Helper()
-	
+
 	var wg sync.WaitGroup
 
 	results := make(chan int64, numRequests)
@@ -528,7 +529,7 @@ func extractCountFromResponse(t *testing.T, resp *mcp.Response, id int) int64 {
 
 func validateConcurrentResults(t *testing.T, results chan int64, expectedNumRequests int, actualRequestCount int64) {
 	t.Helper()
-	
+
 	// Verify all requests were processed
 	receivedCounts := make(map[int64]bool)
 	for count := range results {
@@ -635,7 +636,7 @@ func handlePartialMessageTransmission(conn net.Conn) {
 
 func runErrorRecoveryTest(t *testing.T, tt errorRecoveryTest, logger *zap.Logger) {
 	t.Helper()
-	
+
 	server := newMockTCPServer(t, tt.handler)
 
 	addr := startServerOrFail(t, server)
@@ -647,13 +648,13 @@ func runErrorRecoveryTest(t *testing.T, tt errorRecoveryTest, logger *zap.Logger
 
 	ctx := context.Background()
 	err := attemptConnectionAndOperation(client, ctx)
-	
+
 	validateErrorResult(t, err, tt.expectedError)
 }
 
 func createErrorRecoveryClient(t *testing.T, addr string, logger *zap.Logger) *TCPClient {
 	t.Helper()
-	
+
 	cfg := config.GatewayConfig{
 		URL: "tcp://" + addr,
 		Connection: common.ConnectionConfig{
@@ -694,7 +695,7 @@ func attemptConnectionAndOperation(client *TCPClient, ctx context.Context) error
 
 func validateErrorResult(t *testing.T, err error, expectedError string) {
 	t.Helper()
-	
+
 	if expectedError != "" {
 		if err == nil || !strings.Contains(err.Error(), expectedError) {
 			t.Errorf("Expected error containing %q, got: %v", expectedError, err)
@@ -705,7 +706,7 @@ func validateErrorResult(t *testing.T, err error, expectedError string) {
 }
 
 // TestTCPClient_PerformanceMetrics tests performance characteristics.
-func TestTCPClient_PerformanceMetrics(t *testing.T) { 
+func TestTCPClient_PerformanceMetrics(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Use descriptive performance test environment instead of complex inline logic.
@@ -735,7 +736,7 @@ func TestTCPClient_PerformanceMetrics(t *testing.T) {
 }
 
 // TestTCPClient_ConnectionPooling tests connection reuse and pooling behavior.
-func TestTCPClient_ConnectionPooling(t *testing.T) { 
+func TestTCPClient_ConnectionPooling(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Use descriptive connection pooling test environment.
@@ -928,7 +929,7 @@ func BenchmarkTCPClient_ConcurrentRequests(b *testing.B) {
 }
 
 // TestTCPClient_HealthMonitoring tests health check and monitoring features.
-func TestTCPClient_HealthMonitoring(t *testing.T) { 
+func TestTCPClient_HealthMonitoring(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	var pingCount int64

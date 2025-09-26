@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -87,7 +86,7 @@ func TestTCPHealthServer_Start(t *testing.T) {
 	conn, err := dialer.DialContext(context.Background(), "tcp", addr.String())
 	require.NoError(t, err)
 
-	_ = conn.Close() 
+	_ = conn.Close()
 
 	// Stop server
 	err = server.Stop()
@@ -102,7 +101,7 @@ func TestTCPHealthServer_HandleHealthCheck(t *testing.T) {
 	server, transport := setupTCPHealthServer(t)
 
 	defer func() { _ = server.Stop() }()
-	
+
 	sendHealthCheckRequest(t, transport)
 	response := receiveHealthCheckResponse(t, transport)
 	validateHealthCheckResponse(t, response)
@@ -110,7 +109,7 @@ func TestTCPHealthServer_HandleHealthCheck(t *testing.T) {
 
 func setupTCPHealthServer(t *testing.T) (*TCPHealthServer, *wire.Transport) {
 	t.Helper()
-	
+
 	logger := zap.NewNop()
 	mockDisc := &mockDiscovery{
 		endpoints: []discovery.Endpoint{
@@ -150,7 +149,7 @@ func setupTCPHealthServer(t *testing.T) (*TCPHealthServer, *wire.Transport) {
 
 func sendHealthCheckRequest(t *testing.T, transport *wire.Transport) {
 	t.Helper()
-	
+
 	// Send health check request
 	healthReq := map[string]interface{}{
 		"check": "detailed",
@@ -172,7 +171,7 @@ func sendHealthCheckRequest(t *testing.T, transport *wire.Transport) {
 
 func receiveHealthCheckResponse(t *testing.T, transport *wire.Transport) map[string]interface{} {
 	t.Helper()
-	
+
 	// Set read timeout
 	require.NoError(t, transport.SetReadDeadline(time.Now().Add(5*time.Second)))
 
@@ -190,7 +189,7 @@ func receiveHealthCheckResponse(t *testing.T, transport *wire.Transport) map[str
 
 func validateHealthCheckResponse(t *testing.T, response map[string]interface{}) {
 	t.Helper()
-	
+
 	// Verify response structure
 	assert.Contains(t, response, "healthy")
 	assert.Contains(t, response, "checks")
@@ -235,7 +234,7 @@ func TestTCPHealthServer_SimpleHealthCheck(t *testing.T) {
 	conn, err := dialer.DialContext(context.Background(), "tcp", addr.String())
 	require.NoError(t, err)
 
-	defer func() { _ = conn.Close() }() 
+	defer func() { _ = conn.Close() }()
 
 	// Create transport
 	transport := wire.NewTransport(conn)
@@ -259,7 +258,7 @@ func TestTCPHealthServer_SimpleHealthCheck(t *testing.T) {
 	require.NoError(t, err)
 
 	// Receive response
-	require.NoError(t, transport.SetReadDeadline(time.Now().Add(5 * time.Second)))
+	require.NoError(t, transport.SetReadDeadline(time.Now().Add(5*time.Second)))
 	msgType, msg, err := transport.ReceiveMessage()
 	require.NoError(t, err)
 	assert.Equal(t, wire.MessageTypeHealthCheck, msgType)
@@ -297,7 +296,7 @@ func TestTCPHealthServer_InvalidMessage(t *testing.T) {
 	conn, err := dialer.DialContext(context.Background(), "tcp", addr.String())
 	require.NoError(t, err)
 
-	defer func() { _ = conn.Close() }() 
+	defer func() { _ = conn.Close() }()
 
 	// Create transport
 	transport := wire.NewTransport(conn)
@@ -315,7 +314,7 @@ func TestTCPHealthServer_InvalidMessage(t *testing.T) {
 	require.NoError(t, err)
 
 	// Connection should be closed by server
-	require.NoError(t, transport.SetReadDeadline(time.Now().Add(1 * time.Second)))
+	require.NoError(t, transport.SetReadDeadline(time.Now().Add(1*time.Second)))
 	_, _, err = transport.ReceiveMessage()
 	assert.Error(t, err)
 }
@@ -346,7 +345,7 @@ func TestTCPHealthServer_Metrics(t *testing.T) {
 	conn, err := dialer.DialContext(context.Background(), "tcp", addr.String())
 	require.NoError(t, err)
 
-	defer func() { _ = conn.Close() }() 
+	defer func() { _ = conn.Close() }()
 
 	transport := wire.NewTransport(conn)
 
@@ -363,7 +362,7 @@ func TestTCPHealthServer_Metrics(t *testing.T) {
 	require.NoError(t, err)
 
 	// Receive response
-	require.NoError(t, transport.SetReadDeadline(time.Now().Add(5 * time.Second)))
+	require.NoError(t, transport.SetReadDeadline(time.Now().Add(5*time.Second)))
 	_, _, err = transport.ReceiveMessage()
 	require.NoError(t, err)
 

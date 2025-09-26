@@ -15,9 +15,7 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 )
 
-
-
-func TestWebSocketConnection(t *testing.T) { 
+func TestWebSocketConnection(t *testing.T) {
 	t.Parallel()
 	// Test the WebSocket connection wrapper using the new generic implementation.
 	conn := NewGenericConnection(nil) // nil client for testing
@@ -36,7 +34,7 @@ func TestWebSocketConnection(t *testing.T) {
 	assert.False(t, conn.IsAlive())
 }
 
-func TestWebSocketFactory(t *testing.T) { 
+func TestWebSocketFactory(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -66,7 +64,7 @@ func TestWebSocketFactory(t *testing.T) {
 	assert.Contains(t, err.Error(), "not alive")
 }
 
-func TestNewWebSocketPool(t *testing.T) { 
+func TestNewWebSocketPool(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -84,7 +82,7 @@ func TestNewWebSocketPool(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, pool)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -95,7 +93,7 @@ func TestNewWebSocketPool(t *testing.T) {
 	assert.Equal(t, int64(0), stats.TotalConnections)
 }
 
-func TestWebSocketPoolIntegration(t *testing.T) { 
+func TestWebSocketPoolIntegration(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -114,7 +112,7 @@ func TestWebSocketPoolIntegration(t *testing.T) {
 	pool, err := NewWebSocketPool(poolConfig, gwConfig, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}

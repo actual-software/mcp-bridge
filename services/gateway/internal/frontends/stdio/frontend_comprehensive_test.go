@@ -1,4 +1,3 @@
-
 package stdio
 
 import (
@@ -25,9 +24,9 @@ import (
 )
 
 const (
-	testIterations          = 100
-	testTimeout             = 50
-	testMaxIterations       = 1000
+	testIterations    = 100
+	testTimeout       = 50
+	testMaxIterations = 1000
 
 	// Test timing constants - tuned for reliability vs speed.
 	connectionSetupTimeout    = 100 * time.Millisecond

@@ -1,4 +1,3 @@
-
 package session
 
 import (
@@ -23,7 +22,7 @@ func TestMemoryManager_CreateAndGet(t *testing.T) {
 
 	mgr := CreateInMemorySessionStore(logger, 5*time.Minute)
 
-	defer func() { _ = mgr.Close() }() 
+	defer func() { _ = mgr.Close() }()
 
 	// Create test claims
 	claims := &auth.Claims{
@@ -57,7 +56,7 @@ func TestMemoryManager_ExpiredSession(t *testing.T) {
 
 	mgr := CreateInMemorySessionStore(logger, 5*time.Minute)
 
-	defer func() { _ = mgr.Close() }() 
+	defer func() { _ = mgr.Close() }()
 
 	// Create test claims with expired time
 	claims := &auth.Claims{
@@ -85,7 +84,7 @@ func TestMemoryManager_CleanupExpiredSessions(t *testing.T) {
 		t.Fatal("Expected MemoryManager")
 	}
 
-	defer func() { _ = mgr.Close() }() 
+	defer func() { _ = mgr.Close() }()
 
 	// Create session that is already expired to test cleanup
 	claims := &auth.Claims{
@@ -128,7 +127,7 @@ func TestMemoryManager_UpdateSession(t *testing.T) {
 
 	mgr := CreateInMemorySessionStore(logger, 5*time.Minute)
 
-	defer func() { _ = mgr.Close() }() 
+	defer func() { _ = mgr.Close() }()
 
 	// Create test claims
 	claims := &auth.Claims{
@@ -164,7 +163,7 @@ func TestMemoryManager_RemoveSession(t *testing.T) {
 
 	mgr := CreateInMemorySessionStore(logger, 5*time.Minute)
 
-	defer func() { _ = mgr.Close() }() 
+	defer func() { _ = mgr.Close() }()
 
 	// Create test claims
 	claims := &auth.Claims{
@@ -232,7 +231,7 @@ func TestMemoryManager_GetStats(t *testing.T) {
 		t.Fatal("Expected MemoryManager")
 	}
 
-	defer func() { _ = mgr.Close() }() 
+	defer func() { _ = mgr.Close() }()
 
 	// Create mix of active and expired sessions
 	for i := 0; i < 3; i++ {

@@ -8,7 +8,7 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 )
 
-func TestNewNamespaceRouter(t *testing.T) { 
+func TestNewNamespaceRouter(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := NamespaceRoutingConfig{
@@ -55,7 +55,7 @@ func TestNamespaceRouter_RouteRequest(t *testing.T) {
 
 func setupNamespaceRouterForTesting(t *testing.T, logger *zap.Logger) *NamespaceRouter {
 	t.Helper()
-	
+
 	config := NamespaceRoutingConfig{
 		Enabled: true,
 		Rules: []NamespaceRoutingRule{
@@ -147,17 +147,17 @@ func createNamespaceRouterTests() []namespaceRouterTest {
 
 func runNamespaceRouterTest(t *testing.T, router *NamespaceRouter, tt namespaceRouterTest) {
 	t.Helper()
-	
+
 	req := &mcp.Request{Method: tt.method}
 	tags, err := router.RouteRequest(req)
-	
+
 	handleRouterError(t, err, tt.method, tt.expectMatch)
 	validateRouterResults(t, tags, tt)
 }
 
 func handleRouterError(t *testing.T, err error, method string, expectMatch bool) {
 	t.Helper()
-	
+
 	if err != nil && expectMatch {
 		t.Errorf("Unexpected error for method %s: %v", method, err)
 	}
@@ -165,7 +165,7 @@ func handleRouterError(t *testing.T, err error, method string, expectMatch bool)
 
 func validateRouterResults(t *testing.T, tags []string, tt namespaceRouterTest) {
 	t.Helper()
-	
+
 	if tt.expectMatch {
 		validateExpectedMatch(t, tags, tt)
 	} else {
@@ -175,7 +175,7 @@ func validateRouterResults(t *testing.T, tags []string, tt namespaceRouterTest) 
 
 func validateExpectedMatch(t *testing.T, tags []string, tt namespaceRouterTest) {
 	t.Helper()
-	
+
 	if len(tags) == 0 {
 		t.Errorf("Expected tags for method %s, got none", tt.method)
 		return
@@ -191,7 +191,7 @@ func validateExpectedMatch(t *testing.T, tags []string, tt namespaceRouterTest) 
 
 func validateNoMatch(t *testing.T, tags []string, method string) {
 	t.Helper()
-	
+
 	if len(tags) > 0 {
 		t.Errorf("Expected no tags for method %s, got %v", method, tags)
 	}
@@ -206,7 +206,7 @@ func containsTag(tags []string, expectedTag string) bool {
 	return false
 }
 
-func TestNamespaceRouter_DefaultRules(t *testing.T) { 
+func TestNamespaceRouter_DefaultRules(t *testing.T) {
 	logger := zap.NewNop()
 
 	// Test with default rules.
@@ -255,7 +255,7 @@ func TestNamespaceRouter_DefaultRules(t *testing.T) {
 	}
 }
 
-func TestNamespaceRouter_PriorityOrdering(t *testing.T) { 
+func TestNamespaceRouter_PriorityOrdering(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := NamespaceRoutingConfig{
@@ -313,7 +313,7 @@ func TestNamespaceRouter_PriorityOrdering(t *testing.T) {
 	}
 }
 
-func TestNamespaceRouter_Disabled(t *testing.T) { 
+func TestNamespaceRouter_Disabled(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := NamespaceRoutingConfig{
@@ -348,7 +348,7 @@ func TestNamespaceRouter_Disabled(t *testing.T) {
 	}
 }
 
-func TestNamespaceRouter_InvalidRegex(t *testing.T) { 
+func TestNamespaceRouter_InvalidRegex(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := NamespaceRoutingConfig{
@@ -413,7 +413,7 @@ func TestNamespaceRouter_InvalidRegex(t *testing.T) {
 	}
 }
 
-func TestNamespaceRouter_EmptyMethod(t *testing.T) { 
+func TestNamespaceRouter_EmptyMethod(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := NamespaceRoutingConfig{
@@ -448,7 +448,7 @@ func TestNamespaceRouter_EmptyMethod(t *testing.T) {
 	}
 }
 
-func TestNamespaceRouter_MultipleMatches(t *testing.T) { 
+func TestNamespaceRouter_MultipleMatches(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := NamespaceRoutingConfig{

@@ -1,4 +1,3 @@
-
 package testutil
 
 import (
@@ -42,7 +41,7 @@ func TestCreateTestMetricsRegistry(t *testing.T) {
 
 func testRegistryCreation(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistry()
 	assert.NotNil(t, registry)
 	assert.IsType(t, &metrics.Registry{}, registry)
@@ -58,7 +57,7 @@ func testRegistryCreation(t *testing.T) {
 
 func validateConnectionMetrics(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assert.NotNil(t, registry.ConnectionsTotal)
 	assert.NotNil(t, registry.ConnectionsActive)
 	assert.NotNil(t, registry.ConnectionsRejected)
@@ -66,7 +65,7 @@ func validateConnectionMetrics(t *testing.T, registry *metrics.Registry) {
 
 func validateRequestMetrics(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assert.NotNil(t, registry.RequestsTotal)
 	assert.NotNil(t, registry.RequestDuration)
 	assert.NotNil(t, registry.RequestsInFlight)
@@ -74,33 +73,33 @@ func validateRequestMetrics(t *testing.T, registry *metrics.Registry) {
 
 func validateAuthMetrics(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assert.NotNil(t, registry.AuthFailuresTotal)
 }
 
 func validateRoutingMetrics(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assert.NotNil(t, registry.RoutingErrorsTotal)
 	assert.NotNil(t, registry.EndpointRequestsTotal)
 }
 
 func validateCircuitBreakerMetrics(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assert.NotNil(t, registry.CircuitBreakerState)
 }
 
 func validateWebSocketMetrics(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assert.NotNil(t, registry.WebSocketMessagesTotal)
 	assert.NotNil(t, registry.WebSocketBytesTotal)
 }
 
 func validateTCPMetrics(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assert.NotNil(t, registry.TCPConnectionsTotal)
 	assert.NotNil(t, registry.TCPConnectionsActive)
 	assert.NotNil(t, registry.TCPMessagesTotal)
@@ -111,7 +110,7 @@ func validateTCPMetrics(t *testing.T, registry *metrics.Registry) {
 
 func testMetricNames(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistry()
 
 	validateConnectionMetricNames(t, registry)
@@ -125,7 +124,7 @@ func testMetricNames(t *testing.T) {
 
 func validateConnectionMetricNames(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assertMetricName(t, registry.ConnectionsTotal, "mcp_gateway_connections_total")
 	assertMetricName(t, registry.ConnectionsActive, "mcp_gateway_connections_active")
 	assertMetricName(t, registry.ConnectionsRejected, "mcp_gateway_connections_rejected_total")
@@ -133,7 +132,7 @@ func validateConnectionMetricNames(t *testing.T, registry *metrics.Registry) {
 
 func validateRequestMetricNames(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assertMetricVecName(t, registry.RequestsTotal, "mcp_gateway_requests_total")
 	assertMetricVecName(t, registry.RequestDuration, "mcp_gateway_request_duration_seconds")
 	assertMetricName(t, registry.RequestsInFlight, "mcp_gateway_requests_in_flight")
@@ -141,33 +140,33 @@ func validateRequestMetricNames(t *testing.T, registry *metrics.Registry) {
 
 func validateAuthMetricNames(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assertMetricVecName(t, registry.AuthFailuresTotal, "mcp_gateway_auth_failures_total")
 }
 
 func validateRoutingMetricNames(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assertMetricVecName(t, registry.RoutingErrorsTotal, "mcp_gateway_routing_errors_total")
 	assertMetricVecName(t, registry.EndpointRequestsTotal, "mcp_gateway_endpoint_requests_total")
 }
 
 func validateCircuitBreakerMetricNames(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assertMetricVecName(t, registry.CircuitBreakerState, "mcp_gateway_circuit_breaker_state")
 }
 
 func validateWebSocketMetricNames(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assertMetricVecName(t, registry.WebSocketMessagesTotal, "mcp_gateway_websocket_messages_total")
 	assertMetricVecName(t, registry.WebSocketBytesTotal, "mcp_gateway_websocket_bytes_total")
 }
 
 func validateTCPMetricNames(t *testing.T, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	assertMetricName(t, registry.TCPConnectionsTotal, "mcp_gateway_tcp_connections_total")
 	assertMetricName(t, registry.TCPConnectionsActive, "mcp_gateway_tcp_connections_active")
 	assertMetricVecName(t, registry.TCPMessagesTotal, "mcp_gateway_tcp_messages_total")
@@ -178,7 +177,7 @@ func validateTCPMetricNames(t *testing.T, registry *metrics.Registry) {
 
 func testMetricHelpText(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistry()
 
 	// Sample a few metrics to ensure help text is present
@@ -189,7 +188,7 @@ func testMetricHelpText(t *testing.T) {
 
 func testCounterVecLabels(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistry()
 
 	// Test that CounterVec metrics can accept labels
@@ -212,7 +211,7 @@ func testCounterVecLabels(t *testing.T) {
 
 func testHistogramVecBuckets(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistry()
 
 	// Test that histogram metrics have proper bucket configuration
@@ -274,7 +273,7 @@ func TestGetTCPMessageCount(t *testing.T) {
 
 func testTCPMessageCountZero(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 	count := registry.GetTCPMessageCount("inbound", "request")
 	assert.Equal(t, float64(0), count)
@@ -282,7 +281,7 @@ func testTCPMessageCountZero(t *testing.T) {
 
 func testTCPMessageCountAfterSingleIncrement(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// Increment the counter
@@ -296,7 +295,7 @@ func testTCPMessageCountAfterSingleIncrement(t *testing.T) {
 
 func testTCPMessageCountAfterMultipleIncrements(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// Increment the counter multiple times
@@ -313,7 +312,7 @@ func testTCPMessageCountAfterMultipleIncrements(t *testing.T) {
 
 func testTCPMessageCountWithInvalidLabels(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// First increment a valid metric
@@ -331,7 +330,7 @@ func testTCPMessageCountWithInvalidLabels(t *testing.T) {
 
 func testTCPMessageCountWithDifferentLabelCombinations(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	testCases := createTCPMessageTestCases()
@@ -356,7 +355,7 @@ func createTCPMessageTestCases() []tcpMessageTestCase {
 
 func setupTCPMessageCounters(t *testing.T, registry *TestMetricsRegistry, testCases []tcpMessageTestCase) {
 	t.Helper()
-	
+
 	for _, tc := range testCases {
 		counter, err := registry.TCPMessagesTotal.GetMetricWithLabelValues(tc.direction, tc.msgType)
 		require.NoError(t, err)
@@ -369,7 +368,7 @@ func setupTCPMessageCounters(t *testing.T, registry *TestMetricsRegistry, testCa
 
 func verifyTCPMessageCounts(t *testing.T, registry *TestMetricsRegistry, testCases []tcpMessageTestCase) {
 	t.Helper()
-	
+
 	for _, tc := range testCases {
 		count := registry.GetTCPMessageCount(tc.direction, tc.msgType)
 		assert.Equal(t, float64(tc.increments), count, "Failed for %s/%s", tc.direction, tc.msgType)
@@ -401,7 +400,7 @@ func TestGetTCPProtocolErrorCount(t *testing.T) {
 
 func testTCPProtocolErrorCountZero(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 	count := registry.GetTCPProtocolErrorCount("invalid_frame")
 	assert.Equal(t, float64(0), count)
@@ -409,7 +408,7 @@ func testTCPProtocolErrorCountZero(t *testing.T) {
 
 func testTCPProtocolErrorCountAfterSingleIncrement(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// Increment the counter
@@ -423,7 +422,7 @@ func testTCPProtocolErrorCountAfterSingleIncrement(t *testing.T) {
 
 func testTCPProtocolErrorCountAfterMultipleIncrements(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// Increment the counter multiple times
@@ -440,7 +439,7 @@ func testTCPProtocolErrorCountAfterMultipleIncrements(t *testing.T) {
 
 func testTCPProtocolErrorCountWithInvalidErrorType(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// First increment a valid metric
@@ -455,7 +454,7 @@ func testTCPProtocolErrorCountWithInvalidErrorType(t *testing.T) {
 
 func testTCPProtocolErrorCountWithDifferentErrorTypes(t *testing.T) {
 	t.Helper()
-	
+
 	registry := CreateTestMetricsRegistryWithHelpers()
 
 	// Set up different error types
@@ -475,7 +474,7 @@ func createTCPProtocolErrorTestCases() map[string]int {
 
 func setupTCPProtocolErrorCounters(t *testing.T, registry *TestMetricsRegistry, errorTypes map[string]int) {
 	t.Helper()
-	
+
 	for errorType, increments := range errorTypes {
 		counter, err := registry.TCPProtocolErrors.GetMetricWithLabelValues(errorType)
 		require.NoError(t, err)
@@ -488,7 +487,7 @@ func setupTCPProtocolErrorCounters(t *testing.T, registry *TestMetricsRegistry, 
 
 func verifyTCPProtocolErrorCounts(t *testing.T, registry *TestMetricsRegistry, errorTypes map[string]int) {
 	t.Helper()
-	
+
 	for errorType, expectedCount := range errorTypes {
 		count := registry.GetTCPProtocolErrorCount(errorType)
 		assert.Equal(t, float64(expectedCount), count, "Failed for error type %s", errorType)

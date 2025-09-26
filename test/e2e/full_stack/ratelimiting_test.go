@@ -221,7 +221,7 @@ func testConnectionLimits(t *testing.T, stack *DockerStackWithRateLimiting) {
 		} else {
 			failureCount++
 		}
-		
+
 		// Small delay to avoid overwhelming the system
 		time.Sleep(100 * time.Millisecond)
 	}

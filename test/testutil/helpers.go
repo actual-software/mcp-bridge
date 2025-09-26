@@ -252,7 +252,7 @@ func NewMockServer(port int) *MockServer {
 	mux.HandleFunc("/", ms.routeHandler)
 
 	const readHeaderTimeout = 10 // seconds for header read timeout
-	
+
 	ms.Server = &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
 		Handler:           mux,

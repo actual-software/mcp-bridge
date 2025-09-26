@@ -133,7 +133,7 @@ func createExporter(cfg config.TracingConfig, logger *zap.Logger) (sdktrace.Span
 }
 
 // createSampler creates the appropriate sampler based on configuration.
-func createSampler(cfg config.TracingConfig) sdktrace.Sampler { 
+func createSampler(cfg config.TracingConfig) sdktrace.Sampler {
 	switch cfg.SamplerType {
 	case "always_on", "":
 		return sdktrace.AlwaysSample()

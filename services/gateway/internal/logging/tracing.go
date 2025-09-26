@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"time"
-	
+
 	"go.uber.org/zap"
 )
 
@@ -17,15 +17,15 @@ const (
 	// ID generation sizes.
 	traceIDSize   = 16 // Bytes for trace ID
 	requestIDSize = 8  // Bytes for request ID
-	
+
 	// Context keys for logging and tracing.
-	loggingContextKeyTraceID         loggingContextKey = "trace_id"
-	loggingContextKeyRequestID       loggingContextKey = "request_id"
+	loggingContextKeyTraceID          loggingContextKey = "trace_id"
+	loggingContextKeyRequestID        loggingContextKey = "request_id"
 	loggingContextKeyRequestStartTime loggingContextKey = "request_start_time"
-	loggingContextKeyUserID          loggingContextKey = "user_id"
-	loggingContextKeySessionID       loggingContextKey = "session_id"
-	loggingContextKeyNamespace       loggingContextKey = "namespace"
-	loggingContextKeyMethod          loggingContextKey = "method"
+	loggingContextKeyUserID           loggingContextKey = "user_id"
+	loggingContextKeySessionID        loggingContextKey = "session_id"
+	loggingContextKeyNamespace        loggingContextKey = "namespace"
+	loggingContextKeyMethod           loggingContextKey = "method"
 )
 
 // GenerateTraceID generates a unique trace ID.
@@ -35,7 +35,7 @@ func GenerateTraceID() string {
 		// Fallback to timestamp-based ID
 		return fmt.Sprintf("trace_%d", time.Now().UnixNano())
 	}
-	
+
 	return hex.EncodeToString(b)
 }
 
@@ -46,7 +46,7 @@ func GenerateRequestID() string {
 		// Fallback to timestamp-based ID
 		return fmt.Sprintf("req_%d", time.Now().UnixNano())
 	}
-	
+
 	return hex.EncodeToString(b)
 }
 
@@ -55,7 +55,7 @@ func ContextWithTracing(ctx context.Context, traceID, requestID string) context.
 	ctx = context.WithValue(ctx, loggingContextKeyTraceID, traceID)
 	ctx = context.WithValue(ctx, loggingContextKeyRequestID, requestID)
 	ctx = context.WithValue(ctx, loggingContextKeyRequestStartTime, time.Now())
-	
+
 	return ctx
 }
 
@@ -64,11 +64,11 @@ func ContextWithUserInfo(ctx context.Context, userID, sessionID string) context.
 	if userID != "" {
 		ctx = context.WithValue(ctx, loggingContextKeyUserID, userID)
 	}
-	
+
 	if sessionID != "" {
 		ctx = context.WithValue(ctx, loggingContextKeySessionID, sessionID)
 	}
-	
+
 	return ctx
 }
 
@@ -77,7 +77,7 @@ func ContextWithNamespace(ctx context.Context, namespace string) context.Context
 	if namespace != "" {
 		ctx = context.WithValue(ctx, loggingContextKeyNamespace, namespace)
 	}
-	
+
 	return ctx
 }
 
@@ -86,7 +86,7 @@ func ContextWithMethod(ctx context.Context, method string) context.Context {
 	if method != "" {
 		ctx = context.WithValue(ctx, loggingContextKeyMethod, method)
 	}
-	
+
 	return ctx
 }
 
@@ -97,7 +97,7 @@ func GetTraceID(ctx context.Context) string {
 			return traceIDStr
 		}
 	}
-	
+
 	return ""
 }
 
@@ -108,7 +108,7 @@ func GetRequestID(ctx context.Context) string {
 			return reqIDStr
 		}
 	}
-	
+
 	return ""
 }
 
@@ -119,20 +119,20 @@ func GetRequestDuration(ctx context.Context) time.Duration {
 			return time.Since(startTimeVal)
 		}
 	}
-	
+
 	return 0
 }
 
 // LogRequestComplete logs request completion with duration.
 func LogRequestComplete(ctx context.Context, logger *zap.Logger, statusCode int, err error) {
 	duration := GetRequestDuration(ctx)
-	
+
 	fields := WithRequestContext(ctx)
 	fields = append(fields,
 		zap.Duration("duration", duration),
 		zap.Int("status_code", statusCode),
 	)
-	
+
 	if err != nil {
 		fields = append(fields, WithError(err)...)
 		logger.Error("request failed", fields...)

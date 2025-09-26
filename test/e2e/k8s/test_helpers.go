@@ -1,4 +1,3 @@
-
 package k8se2e
 
 import (
@@ -63,19 +62,12 @@ func testBasicMCPFlowWithoutInit(t *testing.T, client *e2e.MCPClient) {
 
 //
 
-
-
-
-
-
-
-
 // testMultipleToolExecution tests various tool executions.
 //
 
 func testMultipleToolExecution(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
-	
+
 	testMathTools(t, client)
 	testCalculateExpression(t, client)
 }
@@ -89,7 +81,7 @@ func testMathTools(t *testing.T, client *e2e.MCPClient) {
 
 func testAddTool(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
-	
+
 	const (
 		testNumberA = 15.5
 		testNumberB = 26.5
@@ -112,7 +104,7 @@ func testAddTool(t *testing.T, client *e2e.MCPClient) {
 
 func testMultiplyTool(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
-	
+
 	const (
 		multiplyX = 6.0
 		multiplyY = 7.0
@@ -134,7 +126,7 @@ func testMultiplyTool(t *testing.T, client *e2e.MCPClient) {
 
 func testSumTool(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
-	
+
 	sumResp, err := client.CallTool("sum", map[string]interface{}{
 		"numbers": []interface{}{10.0, 15.0, 17.0},
 	})
@@ -150,7 +142,7 @@ func testSumTool(t *testing.T, client *e2e.MCPClient) {
 
 func testCalculateExpression(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
-	
+
 	calcResp, err := client.CallTool("calculate", map[string]interface{}{
 		"expression": "2 + 2 * 20",
 	})

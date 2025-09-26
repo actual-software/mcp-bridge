@@ -1,4 +1,3 @@
-
 package discovery
 
 import (
@@ -68,7 +67,6 @@ func testStdioDiscoveryStop(t *testing.T, logger *zap.Logger) {
 	}
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
 
-
 	assert.NoError(t, err)
 
 	stdioBridge, ok := discovery.(*StdioDiscovery)
@@ -136,7 +134,6 @@ func testSSEDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
 
-
 	assert.NoError(t, err)
 
 	sseBridge, ok := discovery.(*SSEDiscovery)
@@ -167,9 +164,7 @@ func testStdioDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 				Namespace: "test",
 				Command:   []string{"echo", "test"},
 			},
-
 		},
-
 	}
 
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
@@ -179,7 +174,6 @@ func testStdioDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 	stdioBridge, ok := discovery.(*StdioDiscovery)
 
 	require.True(t, ok, "Expected StdioDiscovery type")
-
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -206,11 +200,9 @@ func testWebSocketDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 
 				Endpoints: []string{"ws://localhost:8080/ws"},
 			},
-
 		},
 	}
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
-
 
 	assert.NoError(t, err)
 
@@ -259,7 +251,6 @@ func testSSEDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 				HealthCheck: config.SSEHealthCheckConfig{
 					Enabled: true,
 				},
-
 			},
 		},
 	}
@@ -313,7 +304,6 @@ func testStdioDiscoveryHealthCheck(t *testing.T, logger *zap.Logger) {
 	endpoint := &Endpoint{
 		Service:   "test",
 		Namespace: "test",
-
 	}
 	// Should complete without panic (expect error due to non-existent command)
 	err = stdioBridge.HealthCheck(ctx, endpoint)

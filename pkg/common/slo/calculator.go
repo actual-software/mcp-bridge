@@ -214,7 +214,7 @@ func (c *Calculator) updateMetrics(success bool) {
 	}
 	// Note: Burn rate calculations would typically be done by Prometheus
 	// recording rules based on the rate of violations over time windows
-} 
+}
 
 // CalculateErrorBudget calculates the remaining error budget.
 func (c *Calculator) CalculateErrorBudget(currentSLI float64) float64 {

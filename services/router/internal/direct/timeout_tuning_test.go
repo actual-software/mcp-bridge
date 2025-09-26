@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func TestTimeoutTuner_Basic(t *testing.T) { 
+func TestTimeoutTuner_Basic(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultTimeoutTuningConfig()
@@ -24,7 +24,7 @@ func TestTimeoutTuner_Basic(t *testing.T) {
 	assert.True(t, tuner.config.EnableDynamicAdjustment)
 }
 
-func TestTimeoutTuner_TimeoutProfiles(t *testing.T) { 
+func TestTimeoutTuner_TimeoutProfiles(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -44,7 +44,7 @@ func TestTimeoutTuner_TimeoutProfiles(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			
+
 			config := DefaultTimeoutTuningConfig()
 			config.TimeoutProfile = tc.profile
 
@@ -60,7 +60,7 @@ func TestTimeoutTuner_TimeoutProfiles(t *testing.T) {
 	}
 }
 
-func TestTimeoutTuner_RetryProfiles(t *testing.T) { 
+func TestTimeoutTuner_RetryProfiles(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -80,7 +80,7 @@ func TestTimeoutTuner_RetryProfiles(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			
+
 			config := DefaultTimeoutTuningConfig()
 			config.RetryProfile = tc.profile
 
@@ -96,7 +96,7 @@ func TestTimeoutTuner_RetryProfiles(t *testing.T) {
 	}
 }
 
-func TestTimeoutTuner_NetworkConditions(t *testing.T) { 
+func TestTimeoutTuner_NetworkConditions(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -120,7 +120,7 @@ func TestTimeoutTuner_NetworkConditions(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			
+
 			config := DefaultTimeoutTuningConfig()
 			config.NetworkCondition = tc.condition
 
@@ -152,7 +152,7 @@ func TestTimeoutTuner_NetworkConditions(t *testing.T) {
 	}
 }
 
-func TestTimeoutTuner_ProtocolOptimization(t *testing.T) { 
+func TestTimeoutTuner_ProtocolOptimization(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultTimeoutTuningConfig()
@@ -177,7 +177,7 @@ func TestTimeoutTuner_ProtocolOptimization(t *testing.T) {
 	}
 }
 
-func TestTimeoutTuner_ProtocolSpecificAdjustments(t *testing.T) { 
+func TestTimeoutTuner_ProtocolSpecificAdjustments(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultTimeoutTuningConfig()
@@ -211,7 +211,7 @@ func TestTimeoutTuner_ProtocolSpecificAdjustments(t *testing.T) {
 	assert.GreaterOrEqual(t, sseConfig.AdaptiveRetry.MaxRetries, baseRetryConfig.MaxRetries)
 }
 
-func TestTimeoutTuner_ProtocolOverrides(t *testing.T) { 
+func TestTimeoutTuner_ProtocolOverrides(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultTimeoutTuningConfig()
@@ -268,7 +268,7 @@ func TestTimeoutTuner_ProtocolOverrides(t *testing.T) {
 	assert.NotEqual(t, customTimeout.BaseTimeout, defaultConfig.AdaptiveTimeout.BaseTimeout)
 }
 
-func TestTimeoutTuner_LatencyBasedTimeout(t *testing.T) { 
+func TestTimeoutTuner_LatencyBasedTimeout(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -295,7 +295,7 @@ func TestTimeoutTuner_LatencyBasedTimeout(t *testing.T) {
 	assert.Greater(t, timeoutConfig2.MaxTimeout, timeoutConfig2.BaseTimeout)
 }
 
-func TestTimeoutTuner_LoadBasedRetry(t *testing.T) { 
+func TestTimeoutTuner_LoadBasedRetry(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -314,7 +314,7 @@ func TestTimeoutTuner_LoadBasedRetry(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			
+
 			config := DefaultTimeoutTuningConfig()
 			config.EnableLoadBasedRetry = tc.enableLoad
 			config.LoadThreshold = tc.loadThreshold
@@ -329,7 +329,7 @@ func TestTimeoutTuner_LoadBasedRetry(t *testing.T) {
 	}
 }
 
-func TestTimeoutTuner_ConfigValidation(t *testing.T) { 
+func TestTimeoutTuner_ConfigValidation(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -347,7 +347,7 @@ func TestTimeoutTuner_ConfigValidation(t *testing.T) {
 	assert.NotNil(t, tuner.config.ProtocolOverrides)
 }
 
-func TestTimeoutTuner_Defaults(t *testing.T) { 
+func TestTimeoutTuner_Defaults(t *testing.T) {
 	t.Parallel()
 
 	defaultConfig := DefaultTimeoutTuningConfig()
@@ -409,7 +409,7 @@ func BenchmarkTimeoutTuner_GetProtocolOptimized(b *testing.B) {
 }
 
 // Test profile combinations.
-func TestTimeoutTuner_ProfileCombinations(t *testing.T) { 
+func TestTimeoutTuner_ProfileCombinations(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -436,7 +436,7 @@ func TestTimeoutTuner_ProfileCombinations(t *testing.T) {
 					if k%2 == 0 { // Test every other condition
 						t.Run(string(timeoutProfile)+"_"+string(retryProfile)+"_"+string(networkCondition), func(t *testing.T) {
 							t.Parallel()
-							
+
 							config := DefaultTimeoutTuningConfig()
 							config.TimeoutProfile = timeoutProfile
 							config.RetryProfile = retryProfile
@@ -463,7 +463,7 @@ func TestTimeoutTuner_ProfileCombinations(t *testing.T) {
 }
 
 // Test edge cases.
-func TestTimeoutTuner_EdgeCases(t *testing.T) { 
+func TestTimeoutTuner_EdgeCases(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 

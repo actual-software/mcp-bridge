@@ -120,7 +120,7 @@ func generateTestCertificate(
 	return certPEM, keyPEM
 }
 
-func TestClient_ConfigureTLS(t *testing.T) { 
+func TestClient_ConfigureTLS(t *testing.T) {
 	tmpDir, certPath, keyPath, caPath := setupTLSTestCertificates(t)
 	tests := createTLSConfigurationTests(tmpDir, certPath, keyPath, caPath)
 
@@ -136,7 +136,7 @@ func TestClient_ConfigureTLS(t *testing.T) {
 
 func setupTLSTestCertificates(t *testing.T) (tmpDir, certPath, keyPath, caPath string) {
 	t.Helper()
-	
+
 	// Create temporary directory for test certificates.
 	tmpDir = t.TempDir()
 
@@ -192,11 +192,11 @@ func createBasicTLSTests(caPath string) []struct {
 		errorMsg  string
 		validate  func(t *testing.T, tlsConfig *tls.Config)
 	}
-	
+
 	tests = append(tests, createBasicTLSConfigTests()...)
 	tests = append(tests, createCustomCATLSTests(caPath)...)
 	tests = append(tests, createCipherSuiteTLSTests()...)
-	
+
 	return tests
 }
 
@@ -420,7 +420,7 @@ func validateTLSTestResult(t *testing.T, tt struct {
 	}
 }
 
-func TestClient_ConfigureMTLS(t *testing.T) { 
+func TestClient_ConfigureMTLS(t *testing.T) {
 	tmpDir, certPath, keyPath, invalidCertPath := setupMTLSTestFiles(t)
 	tests := createMTLSConfigurationTests(tmpDir, certPath, keyPath, invalidCertPath)
 
@@ -428,7 +428,7 @@ func TestClient_ConfigureMTLS(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			client := createMTLSTestClient(t, tt)
 			err := client.configureMTLS()
-			
+
 			validateMTLSTestResult(t, tt, client, err)
 		})
 	}
@@ -436,7 +436,7 @@ func TestClient_ConfigureMTLS(t *testing.T) {
 
 func setupMTLSTestFiles(t *testing.T) (tmpDir, certPath, keyPath, invalidCertPath string) {
 	t.Helper()
-	
+
 	// Create temporary directory for test certificates.
 	tmpDir = t.TempDir()
 
@@ -527,7 +527,7 @@ func createMTLSTestClient(t *testing.T, tt struct {
 	errorMsg  string
 }) *Client {
 	t.Helper()
-	
+
 	logger := testutil.NewTestLogger(t)
 	return &Client{
 		config: config.GatewayConfig{
@@ -559,7 +559,7 @@ func validateMTLSTestResult(t *testing.T, tt struct {
 	}
 }
 
-func TestGetCipherSuiteID(t *testing.T) { 
+func TestGetCipherSuiteID(t *testing.T) {
 	tests := []struct {
 		name   string
 		suite  string
@@ -616,7 +616,7 @@ func TestGetCipherSuiteID(t *testing.T) {
 	}
 }
 
-func TestClient_ConfigureTLS_Integration(t *testing.T) { 
+func TestClient_ConfigureTLS_Integration(t *testing.T) {
 	// This test verifies the full TLS configuration flow.
 	tmpDir := t.TempDir()
 

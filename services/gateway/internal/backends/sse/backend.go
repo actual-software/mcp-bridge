@@ -1,7 +1,5 @@
 package sse
 
-
-
 import (
 	"bufio"
 	"bytes"
@@ -177,7 +175,7 @@ func (b *Backend) Start(ctx context.Context) error {
 	defer b.mu.Unlock()
 
 	if b.running {
-		return customerrors.New(customerrors.TypeInternal, "backend " + b.name + " already running").
+		return customerrors.New(customerrors.TypeInternal, "backend "+b.name+" already running").
 			WithComponent("backend_sse").
 			WithContext("backend_name", b.name)
 	}
@@ -245,7 +243,7 @@ func (b *Backend) connectSSE(ctx context.Context) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		_ = resp.Body.Close() 
+		_ = resp.Body.Close()
 
 		return customerrors.New(customerrors.TypeInternal, fmt.Sprintf("SSE stream returned status %d", resp.StatusCode)).
 			WithComponent("backend_sse").
@@ -257,9 +255,9 @@ func (b *Backend) connectSSE(ctx context.Context) error {
 	// Verify content type
 	contentType := resp.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "text/event-stream") {
-		_ = resp.Body.Close() 
+		_ = resp.Body.Close()
 
-		return customerrors.New(customerrors.TypeValidation, "invalid content type: " + contentType ).
+		return customerrors.New(customerrors.TypeValidation, "invalid content type: "+contentType).
 			WithComponent("backend_sse").
 			WithContext("backend_name", b.name).
 			WithContext("content_type", contentType)
@@ -330,7 +328,7 @@ func (b *Backend) handleSSEReadError(err error) {
 	b.connected = false
 
 	if b.sseConn != nil {
-		_ = b.sseConn.Body.Close() 
+		_ = b.sseConn.Body.Close()
 		b.sseConn = nil
 	}
 
@@ -450,7 +448,7 @@ func (b *Backend) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.Respo
 		b.updateMetrics(func(m *BackendMetrics) {
 			m.ErrorCount++
 		})
-		
+
 		wrappedErr := customerrors.WrapWriteError(ctx, err, b.name, 0).
 			WithContext("request_id", req.ID).
 			WithContext("method", req.Method)
@@ -466,7 +464,7 @@ func (b *Backend) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.Respo
 
 		return nil, err
 	}
-	
+
 	return resp, nil
 }
 
@@ -595,12 +593,12 @@ func (b *Backend) sendHTTPRequest(ctx context.Context, req *mcp.Request) error {
 	}
 
 	defer func() {
-		_ = resp.Body.Close() 
+		_ = resp.Body.Close()
 	}()
 
 	// Check response status
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body) 
+		body, _ := io.ReadAll(resp.Body)
 
 		return customerrors.New(customerrors.TypeInternal,
 			fmt.Sprintf("HTTP request failed with status %d: %s", resp.StatusCode, string(body))).
@@ -708,7 +706,7 @@ func (b *Backend) Stop(ctx context.Context) error {
 	b.connMu.Lock()
 
 	if b.sseConn != nil {
-		_ = b.sseConn.Body.Close() 
+		_ = b.sseConn.Body.Close()
 		b.sseConn = nil
 	}
 
@@ -771,7 +769,7 @@ func (b *Backend) recordErrorMetric(err error) {
 	b.updateMetrics(func(m *BackendMetrics) {
 		m.ErrorCount++
 	})
-	
+
 	// Record to Prometheus metrics if available
 	if b.metricsRegistry != nil && err != nil {
 		// Check if it's already a GatewayError
@@ -786,7 +784,7 @@ func (b *Backend) recordErrorMetric(err error) {
 			gatewayErr = gatewayErr.WithComponent("sse_backend").
 				WithContext("backend_name", b.name)
 		}
-		
+
 		customerrors.RecordError(gatewayErr, b.metricsRegistry)
 	}
 }

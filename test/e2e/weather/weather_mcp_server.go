@@ -1,4 +1,3 @@
-
 // Package weather provides a production-ready MCP server implementation
 // for weather data using the Open-Meteo API for E2E testing.
 package weather
@@ -42,21 +41,21 @@ const (
 	// Circuit breaker state constants.
 	circuitBreakerStateOpen     = "open"
 	circuitBreakerStateHalfOpen = "half-open"
-	defaultMaxIdleConns    = 100
-	defaultWSReadTimeout   = 30
-	defaultRetryBackoff    = 10
-	defaultCircuitFailures = 5
-	defaultCircuitSuccess  = 2
-	circuitTimeoutSeconds  = 30
-	bufferLength           = 16
-	apiSuccessThreshold    = 0.9
-	shutdownDelayTime      = 5
-	pingInterval           = 30 // seconds
-	messageChannelSize     = 10
-	averageLatencyFactor   = 0.9
-	latencyNewValueFactor  = 0.1
-	metricsInterval        = 10 // seconds
-	httpTimeout            = 5  // seconds
+	defaultMaxIdleConns         = 100
+	defaultWSReadTimeout        = 30
+	defaultRetryBackoff         = 10
+	defaultCircuitFailures      = 5
+	defaultCircuitSuccess       = 2
+	circuitTimeoutSeconds       = 30
+	bufferLength                = 16
+	apiSuccessThreshold         = 0.9
+	shutdownDelayTime           = 5
+	pingInterval                = 30 // seconds
+	messageChannelSize          = 10
+	averageLatencyFactor        = 0.9
+	latencyNewValueFactor       = 0.1
+	metricsInterval             = 10 // seconds
+	httpTimeout                 = 5  // seconds
 
 	// RetryDelay between API call attempts.
 	RetryDelay = 1 * time.Second
@@ -294,7 +293,7 @@ func (s *WeatherMCPServer) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	s.wg.Add(1)
 
 	go func() {
-		ctx := s.ctx 
+		ctx := s.ctx
 		s.handleConnection(ctx, connID, conn)
 	}()
 }
@@ -909,7 +908,7 @@ func (s *WeatherMCPServer) checkAPIHealth() bool {
 		return false
 	}
 
-	defer func() { _ = resp.Body.Close() }() 
+	defer func() { _ = resp.Body.Close() }()
 
 	return resp.StatusCode == http.StatusOK
 }
@@ -924,7 +923,7 @@ func (s *WeatherMCPServer) Shutdown() {
 	// Close all connections
 	s.connections.Range(func(key, value interface{}) bool {
 		if conn, ok := value.(*websocket.Conn); ok {
-			_ = conn.WriteMessage(websocket.CloseMessage, 
+			_ = conn.WriteMessage(websocket.CloseMessage,
 				websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Server shutting down"))
 			_ = conn.Close() // Best effort
 		}

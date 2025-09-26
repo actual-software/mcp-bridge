@@ -1,4 +1,3 @@
-
 package circuit
 
 import (
@@ -93,7 +92,7 @@ func TestCircuitBreaker_Call_Failures(t *testing.T) {
 	}
 
 	// Second failure
-	_ = cb.Call(func() error { 
+	_ = cb.Call(func() error {
 		return testErr
 	})
 
@@ -102,7 +101,7 @@ func TestCircuitBreaker_Call_Failures(t *testing.T) {
 	}
 
 	// Third failure - should open circuit
-	_ = cb.Call(func() error { 
+	_ = cb.Call(func() error {
 		return testErr
 	})
 
@@ -126,8 +125,8 @@ func TestCircuitBreaker_HalfOpen(t *testing.T) {
 	testErr := errors.New("test error")
 
 	// Open the circuit
-	_ = cb.Call(func() error { return testErr }) 
-	_ = cb.Call(func() error { return testErr }) 
+	_ = cb.Call(func() error { return testErr })
+	_ = cb.Call(func() error { return testErr })
 
 	if cb.GetState() != StateOpen {
 		t.Fatal("Expected circuit to be open")
@@ -167,7 +166,7 @@ func TestCircuitBreaker_HalfOpen(t *testing.T) {
 	}
 
 	// One more success should close the circuit
-	_ = cb.Call(func() error { return nil }) 
+	_ = cb.Call(func() error { return nil })
 
 	if cb.GetState() != StateClosed {
 		t.Errorf("Expected state to be closed after 2 successes, got %s", cb.GetState())
@@ -179,8 +178,8 @@ func TestCircuitBreaker_HalfOpen_Failure(t *testing.T) {
 	testErr := errors.New("test error")
 
 	// Open the circuit
-	_ = cb.Call(func() error { return testErr }) 
-	_ = cb.Call(func() error { return testErr }) 
+	_ = cb.Call(func() error { return testErr })
+	_ = cb.Call(func() error { return testErr })
 
 	// Wait for the circuit timeout to expire
 	waitTime := cb.timeout + 10*time.Millisecond
@@ -191,7 +190,7 @@ func TestCircuitBreaker_HalfOpen_Failure(t *testing.T) {
 	<-timer.C
 
 	// Failure in half-open should reopen immediately
-	_ = cb.Call(func() error { return testErr }) 
+	_ = cb.Call(func() error { return testErr })
 
 	if cb.GetState() != StateOpen {
 		t.Errorf("Expected state to be open after failure in half-open, got %s", cb.GetState())
@@ -203,8 +202,8 @@ func TestCircuitBreaker_Reset(t *testing.T) {
 	testErr := errors.New("test error")
 
 	// Open the circuit
-	_ = cb.Call(func() error { return testErr }) 
-	_ = cb.Call(func() error { return testErr }) 
+	_ = cb.Call(func() error { return testErr })
+	_ = cb.Call(func() error { return testErr })
 
 	if cb.GetState() != StateOpen {
 		t.Fatal("Expected circuit to be open")
@@ -259,8 +258,8 @@ func TestCircuitBreaker_IsOpen(t *testing.T) {
 	// Open the circuit
 	testErr := errors.New("test error")
 
-	_ = cb.Call(func() error { return testErr }) 
-	_ = cb.Call(func() error { return testErr }) 
+	_ = cb.Call(func() error { return testErr })
+	_ = cb.Call(func() error { return testErr })
 
 	if !cb.IsOpen() {
 		t.Error("Expected circuit to be open after failures")
@@ -303,7 +302,7 @@ func TestCircuitBreaker_ConcurrentCalls(t *testing.T) {
 
 	wg.Wait()
 
-	totalCalls := int32(numGoroutines * callsPerGoroutine) 
+	totalCalls := int32(numGoroutines * callsPerGoroutine)
 	actualCalls := successCount + failureCount
 
 	// Due to circuit breaker, actual calls might be less than total attempts
@@ -409,12 +408,12 @@ func BenchmarkCircuitBreaker_Call_Open(b *testing.B) {
 	cb := NewCircuitBreaker(1, 10, time.Hour)
 
 	// Open the circuit
-	_ = cb.Call(func() error { return errors.New("error") }) 
+	_ = cb.Call(func() error { return errors.New("error") })
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = cb.Call(func() error { 
+		_ = cb.Call(func() error {
 			return nil
 		})
 	}
@@ -425,7 +424,7 @@ func BenchmarkCircuitBreaker_ConcurrentCalls(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_ = cb.Call(func() error { 
+			_ = cb.Call(func() error {
 				return nil
 			})
 		}

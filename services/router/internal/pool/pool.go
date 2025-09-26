@@ -219,20 +219,20 @@ type pooledConn struct {
 // NewPool creates a new connection pool.
 func NewPool(config Config, factory Factory, logger *zap.Logger) (*Pool, error) {
 	config = validateAndNormalizePoolConfig(config)
-	
+
 	p := createPoolStruct(config, factory, logger)
-	
+
 	// Start background workers
 	startBackgroundWorkers(p)
-	
+
 	// Initialize minimum connections
 	err := initializeMinimumConnections(p, config, logger)
 	if err != nil {
 		return p, err
 	}
-	
+
 	logPoolCreation(logger, config)
-	
+
 	return p, nil
 }
 

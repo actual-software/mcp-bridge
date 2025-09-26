@@ -349,7 +349,7 @@ func (m *ConnectionManager) EstablishManagedConnection(
 
 	// Try to get from pool first.
 	if conn, err := m.connectionPool.GetConnection(ctx); err == nil {
-		if m.isConnectionValid(conn) { 
+		if m.isConnectionValid(conn) {
 			return conn, nil
 		}
 	}

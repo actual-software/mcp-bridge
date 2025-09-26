@@ -153,7 +153,7 @@ func testConcurrentConnectionsWithLimit(t *testing.T, gateway *httptest.Server, 
 func establishConcurrentConnections(t *testing.T, gateway *httptest.Server, headers http.Header,
 	count int) ([]*websocket.Conn, int) {
 	t.Helper()
-	
+
 	connections := make([]*websocket.Conn, count)
 	errors := make([]error, count)
 
@@ -468,7 +468,7 @@ func startTestGateway(t *testing.T, config *GatewayConfig) *httptest.Server {
 func handleGatewayRequest(t *testing.T, w http.ResponseWriter, r *http.Request, config *GatewayConfig,
 	upgrader websocket.Upgrader, connectionCounts map[string]int, connMutex *sync.Mutex) {
 	t.Helper()
-	
+
 	if r.URL.Path == "/health" {
 		handleHealthEndpoint(t, w)
 

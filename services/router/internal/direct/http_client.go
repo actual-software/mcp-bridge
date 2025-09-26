@@ -119,6 +119,7 @@ func NewHTTPClientWithMemoryOptimizer(
 ) (*HTTPClient, error) {
 	return CreateOptimizedHTTPClient(name, serverURL, config, logger, memoryOptimizer)
 }
+
 // Connect establishes connection to the HTTP MCP server.
 func (c *HTTPClient) Connect(ctx context.Context) error {
 	c.mu.Lock()

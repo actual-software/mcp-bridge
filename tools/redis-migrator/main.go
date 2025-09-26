@@ -19,9 +19,9 @@ import (
 const (
 	// retryDelay is the delay between migration retry attempts.
 	retryDelay = 100 * time.Millisecond
-	
+
 	// File permissions.
-	dirPermissions = 0o750
+	dirPermissions  = 0o750
 	filePermissions = 0o600
 )
 
@@ -54,7 +54,7 @@ type Migrator struct {
 	client     *redis.Client
 	migrations []Migration
 	config     Config
-	ctx        context.Context 
+	ctx        context.Context
 }
 
 // Config holds migrator configuration.
@@ -71,19 +71,19 @@ type Config struct {
 
 func main() {
 	config, cmd := parseFlags()
-	
+
 	if cmd.create != "" {
 		handleCreate(cmd.create, config.MigrationsPath)
 
 		return
 	}
-	
+
 	client := connectRedis(config)
-	
+
 	defer func() { _ = client.Close() }()
-	
+
 	migrator := setupMigrator(client, config)
-	
+
 	executeCommand(migrator, cmd, client)
 }
 
@@ -164,7 +164,7 @@ func setupMigrator(client *redis.Client, config Config) *Migrator {
 
 	if err := migrator.loadMigrations(); err != nil {
 		_ = client.Close()
-		
+
 		log.Fatalf("Failed to load migrations: %v", err)
 	}
 
@@ -179,30 +179,30 @@ func executeCommand(migrator *Migrator, cmd commandFlags, client *redis.Client) 
 	case cmd.rollback != "":
 		if err := migrator.rollbackTo(cmd.rollback); err != nil {
 			_ = client.Close()
-			
+
 			log.Fatalf("Rollback failed: %v", err)
 		}
 
 	case migrator.config.ValidateOnly:
 		if err := migrator.validate(); err != nil {
 			_ = client.Close()
-			
+
 			log.Fatalf("Validation failed: %v", err)
 		}
-		
+
 		log.Println("All migrations are valid")
 
 	default:
 		if err := migrator.migrate(); err != nil {
 			_ = client.Close()
-			
+
 			log.Fatalf("Migration failed: %v", err)
 		}
 	}
 }
 
 func loadConfig(path string, config *Config) error {
-	data, err := os.ReadFile(path) //nolint:gosec // Tool for controlled migration 
+	data, err := os.ReadFile(path) //nolint:gosec // Tool for controlled migration
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (m *Migrator) loadMigrations() error {
 
 // loadMigration loads a single migration file.
 func (m *Migrator) loadMigration(path string) (*Migration, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // Tool for controlled migration 
+	data, err := os.ReadFile(path) //nolint:gosec // Tool for controlled migration
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +341,7 @@ func (m *Migrator) applyMigration(migration *Migration) error {
 
 	if err := result.Err(); err != nil {
 		// Record failure
-		_ = m.recordMigration(migration, false, err.Error()) 
+		_ = m.recordMigration(migration, false, err.Error())
 
 		return err
 	}
@@ -460,7 +460,7 @@ func (m *Migrator) executeRollbacks(toRollback []Migration) error {
 
 		// Remove from history
 		key := fmt.Sprintf("%s:%s", m.config.HistoryKey, migration.ID)
-		_ = m.client.Del(m.ctx, key).Err() 
+		_ = m.client.Del(m.ctx, key).Err()
 	}
 
 	log.Println("Rollback completed successfully")
@@ -526,7 +526,7 @@ func (m *Migrator) showStatus() {
 
 // createBackup creates a Redis backup.
 func (m *Migrator) createBackup() error {
-	if err := os.MkdirAll(m.config.BackupPath, dirPermissions); err != nil { 
+	if err := os.MkdirAll(m.config.BackupPath, dirPermissions); err != nil {
 		return err
 	}
 
@@ -615,11 +615,11 @@ return 0
 		return err
 	}
 
-	if err := os.MkdirAll(path, dirPermissions); err != nil { 
+	if err := os.MkdirAll(path, dirPermissions); err != nil {
 		return err
 	}
 
-	if err := os.WriteFile(filename, data, filePermissions); err != nil { 
+	if err := os.WriteFile(filename, data, filePermissions); err != nil {
 		return err
 	}
 

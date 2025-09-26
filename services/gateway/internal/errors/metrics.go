@@ -3,7 +3,7 @@ package errors
 import (
 	"errors"
 	"time"
-	
+
 	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
 )
 
@@ -23,7 +23,7 @@ func RecordErrorMetrics(err *GatewayError, registry *metrics.Registry) {
 	if codeVal, ok := err.Context["code"].(string); ok {
 		code = codeVal
 	}
-	
+
 	if code == "" {
 		code = unknownValue
 	}
@@ -33,7 +33,7 @@ func RecordErrorMetrics(err *GatewayError, registry *metrics.Registry) {
 	if component == "" {
 		component = unknownValue
 	}
-	
+
 	operation := err.Operation
 	if operation == "" {
 		operation = unknownValue
@@ -71,7 +71,7 @@ func RecordErrorWithLatency(err error, registry *metrics.Registry, startTime tim
 	var gwErr *GatewayError
 	if errors.As(err, &gwErr) {
 		RecordErrorMetrics(gwErr, registry)
-		
+
 		// Record error handling latency
 		duration := time.Since(startTime)
 		registry.RecordErrorLatency(string(gwErr.Type), gwErr.Component, duration)
@@ -81,12 +81,12 @@ func RecordErrorWithLatency(err error, registry *metrics.Registry, startTime tim
 // RecordErrorRecovery records when an error is recovered from.
 func RecordErrorRecovery(err error, recovered bool, registry *metrics.Registry) {
 	var gwErr *GatewayError
-	
+
 	errorType := unknownValue
 	if errors.As(err, &gwErr) {
 		errorType = string(gwErr.Type)
 	}
-	
+
 	registry.IncrementErrorRecovery(recovered, errorType)
 }
 
@@ -102,6 +102,6 @@ func getSeverityString(severity Severity) string {
 	case SeverityCritical:
 		return "critical"
 	default:
-		return "unknown_" + string(severity )
+		return "unknown_" + string(severity)
 	}
 }

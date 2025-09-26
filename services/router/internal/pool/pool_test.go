@@ -16,8 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-
-
 // mockConnection implements the Connection interface.
 type mockConnection struct {
 	id     string
@@ -84,7 +82,7 @@ func (f *mockFactory) GetCreateCount() int32 {
 	return atomic.LoadInt32(&f.createCount)
 }
 
-func TestNewPool(t *testing.T) { 
+func TestNewPool(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 
@@ -102,11 +100,11 @@ func TestNewPool(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, pool)
 
-  defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+		defer func() {
+			if err := pool.Close(); err != nil {
+				t.Logf("Failed to close pool: %v", err)
+			}
+		}()
 
 		// Should create MinSize connections.
 		time.Sleep(testIterations * time.Millisecond)
@@ -134,11 +132,11 @@ func TestNewPool(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, pool)
 
-  defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+		defer func() {
+			if err := pool.Close(); err != nil {
+				t.Logf("Failed to close pool: %v", err)
+			}
+		}()
 
 		assert.Equal(t, 0, pool.config.MinSize)
 		assert.Equal(t, 10, pool.config.MaxSize)
@@ -154,18 +152,18 @@ func TestNewPool(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, pool)
 
-  defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+		defer func() {
+			if err := pool.Close(); err != nil {
+				t.Logf("Failed to close pool: %v", err)
+			}
+		}()
 
 		assert.Equal(t, 5, pool.config.MinSize)
 		assert.Equal(t, 5, pool.config.MaxSize)
 	})
 }
 
-func TestPoolAcquireRelease(t *testing.T) { 
+func TestPoolAcquireRelease(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := Config{
@@ -177,7 +175,7 @@ func TestPoolAcquireRelease(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -226,7 +224,7 @@ func TestPoolAcquireRelease(t *testing.T) {
 	})
 }
 
-func TestPoolExhaustion(t *testing.T) { 
+func TestPoolExhaustion(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := Config{
@@ -238,7 +236,7 @@ func TestPoolExhaustion(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -295,7 +293,7 @@ func TestPoolExhaustion(t *testing.T) {
 	_ = pool.Release(conn3)
 }
 
-func TestPoolWaiters(t *testing.T) { 
+func TestPoolWaiters(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := Config{
@@ -307,7 +305,7 @@ func TestPoolWaiters(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -348,7 +346,7 @@ func TestPoolWaiters(t *testing.T) {
 	_ = pool.Release(waiterConn)
 }
 
-func TestPoolInvalidConnection(t *testing.T) { 
+func TestPoolInvalidConnection(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := DefaultConfig()
@@ -356,7 +354,7 @@ func TestPoolInvalidConnection(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -396,7 +394,7 @@ func TestPoolInvalidConnection(t *testing.T) {
 	assert.Greater(t, statsAfter.ClosedCount, statsBefore.ClosedCount)
 }
 
-func TestPoolHealthCheck(t *testing.T) { 
+func TestPoolHealthCheck(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := Config{
@@ -409,7 +407,7 @@ func TestPoolHealthCheck(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -449,7 +447,7 @@ func TestPoolHealthCheck(t *testing.T) {
 		shortPool, err := NewPool(shortConfig, factory, logger)
 		require.NoError(t, err)
 
-  defer func() { _ = shortPool.Close() }()
+		defer func() { _ = shortPool.Close() }()
 
 		// Wait for initial connection.
 		require.Eventually(t, func() bool {
@@ -470,7 +468,7 @@ func TestPoolHealthCheck(t *testing.T) {
 	})
 }
 
-func TestPoolConcurrentAccess(t *testing.T) { 
+func TestPoolConcurrentAccess(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := Config{
@@ -482,7 +480,7 @@ func TestPoolConcurrentAccess(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -520,7 +518,7 @@ func TestPoolConcurrentAccess(t *testing.T) {
 		}()
 	}
 
- wg.Wait()
+	wg.Wait()
 	close(errors)
 
 	// Check for errors.
@@ -535,7 +533,7 @@ func TestPoolConcurrentAccess(t *testing.T) {
 	_ = pool.Release(conn)
 }
 
-func TestPoolClose(t *testing.T) { 
+func TestPoolClose(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := DefaultConfig()
@@ -573,7 +571,7 @@ func TestPoolClose(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestPoolStats(t *testing.T) { 
+func TestPoolStats(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := Config{
@@ -584,7 +582,7 @@ func TestPoolStats(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -613,7 +611,7 @@ func TestPoolStats(t *testing.T) {
 	assert.GreaterOrEqual(t, stats.IdleConnections, int64(1))
 }
 
-func TestPoolFactoryError(t *testing.T) { 
+func TestPoolFactoryError(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{
 		createErr: errors.New("factory error"),
@@ -626,7 +624,7 @@ func TestPoolFactoryError(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -643,7 +641,7 @@ func TestPoolFactoryError(t *testing.T) {
 	assert.Positive(t, stats.FailedCount)
 }
 
-func TestPoolValidation(t *testing.T) { 
+func TestPoolValidation(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := DefaultConfig()
@@ -651,7 +649,7 @@ func TestPoolValidation(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -677,7 +675,7 @@ func TestPoolValidation(t *testing.T) {
 // Enhanced tests for better coverage.
 
 // Test connection lifecycle with different aging scenarios.
-func TestPoolConnectionLifecycle(t *testing.T) { 
+func TestPoolConnectionLifecycle(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 
@@ -686,18 +684,18 @@ func TestPoolConnectionLifecycle(t *testing.T) {
 			MinSize:             1,
 			MaxSize:             3,
 			MaxLifetime:         testIterations * time.Millisecond, // Very short lifetime
-			MaxIdleTime:         1 * time.Second,        // Longer than lifetime
+			MaxIdleTime:         1 * time.Second,                   // Longer than lifetime
 			HealthCheckInterval: testTimeout * time.Millisecond,
 		}
 
 		pool, err := NewPool(config, factory, logger)
 		require.NoError(t, err)
 
-  defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+		defer func() {
+			if err := pool.Close(); err != nil {
+				t.Logf("Failed to close pool: %v", err)
+			}
+		}()
 
 		// Wait for initial connection.
 		require.Eventually(t, func() bool {
@@ -728,7 +726,7 @@ func TestPoolConnectionLifecycle(t *testing.T) {
 		config := Config{
 			MinSize:             1,
 			MaxSize:             3,
-			MaxLifetime:         1 * time.Hour,         // Very long lifetime
+			MaxLifetime:         1 * time.Hour,                  // Very long lifetime
 			MaxIdleTime:         testTimeout * time.Millisecond, // Short idle time
 			HealthCheckInterval: 30 * time.Millisecond,
 		}
@@ -736,11 +734,11 @@ func TestPoolConnectionLifecycle(t *testing.T) {
 		pool, err := NewPool(config, factory, logger)
 		require.NoError(t, err)
 
-  defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+		defer func() {
+			if err := pool.Close(); err != nil {
+				t.Logf("Failed to close pool: %v", err)
+			}
+		}()
 
 		ctx := context.Background()
 
@@ -763,7 +761,7 @@ func TestPoolConnectionLifecycle(t *testing.T) {
 }
 
 // Test pool behavior under stress.
-func TestPoolStressScenarios(t *testing.T) { 
+func TestPoolStressScenarios(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 
@@ -861,7 +859,7 @@ func runConnectionFailureDuringOperations(t *testing.T, factory *mockFactory, lo
 }
 
 // Test edge cases in pool operations.
-func TestPoolEdgeCases(t *testing.T) { 
+func TestPoolEdgeCases(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 
@@ -1013,7 +1011,7 @@ func runConcurrentCloseAndOperationsTest(t *testing.T, factory *mockFactory, log
 }
 
 // Test pool statistics accuracy.
-func TestPoolStatisticsAccuracy(t *testing.T) { 
+func TestPoolStatisticsAccuracy(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 	config := Config{
@@ -1026,7 +1024,7 @@ func TestPoolStatisticsAccuracy(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -1078,7 +1076,7 @@ func TestPoolStatisticsAccuracy(t *testing.T) {
 }
 
 // Test pool maintenance and background operations.
-func TestPoolMaintenance(t *testing.T) { 
+func TestPoolMaintenance(t *testing.T) {
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 
@@ -1093,11 +1091,11 @@ func TestPoolMaintenance(t *testing.T) {
 		pool, err := NewPool(config, factory, logger)
 		require.NoError(t, err)
 
-  defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+		defer func() {
+			if err := pool.Close(); err != nil {
+				t.Logf("Failed to close pool: %v", err)
+			}
+		}()
 
 		// Wait for initial connections.
 		require.Eventually(t, func() bool {
@@ -1132,11 +1130,11 @@ func TestPoolMaintenance(t *testing.T) {
 		pool, err := NewPool(config, factory, logger)
 		require.NoError(t, err)
 
-  defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+		defer func() {
+			if err := pool.Close(); err != nil {
+				t.Logf("Failed to close pool: %v", err)
+			}
+		}()
 
 		ctx := context.Background()
 
@@ -1190,7 +1188,7 @@ func BenchmarkPoolAcquireRelease(b *testing.B) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(b, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			b.Logf("Failed to close pool: %v", err)
 		}
@@ -1229,7 +1227,7 @@ func BenchmarkPoolConcurrentAccess(b *testing.B) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(b, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			b.Logf("Failed to close pool: %v", err)
 		}

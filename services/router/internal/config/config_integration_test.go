@@ -110,7 +110,7 @@ func TestConfig_LoadFromJSON(t *testing.T) {
 
 func setupJSONTestEnv(t *testing.T) {
 	t.Helper()
-	
+
 	if err := os.Setenv("JSON_TEST_TOKEN", "json-token-value"); err != nil {
 		t.Fatalf("Failed to set environment variable: %v", err)
 	}
@@ -120,7 +120,7 @@ func setupJSONTestEnv(t *testing.T) {
 
 func createJSONConfigFile(t *testing.T) string {
 	t.Helper()
-	
+
 	configJSON := `{
 		"version": 1,
 		"gateway_pool": {
@@ -156,32 +156,32 @@ func createJSONConfigFile(t *testing.T) string {
 			"endpoint": "localhost:9092"
 		}
 	}`
-	
+
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.json")
-	
+
 	err := os.WriteFile(configPath, []byte(configJSON), 0o600)
 	if err != nil {
 		t.Fatalf("Failed to write JSON config: %v", err)
 	}
-	
+
 	return configPath
 }
 
 func loadAndVerifyJSONConfig(t *testing.T, configPath string) *Config {
 	t.Helper()
-	
+
 	cfg, err := Load(configPath)
 	if err != nil {
 		t.Fatalf("Failed to load JSON config: %v", err)
 	}
-	
+
 	return cfg
 }
 
 func verifyJSONConfigContents(t *testing.T, cfg *Config) {
 	t.Helper()
-	
+
 	if cfg.Version != 1 {
 		t.Errorf("Expected version 1, got %d", cfg.Version)
 	}
@@ -205,7 +205,7 @@ func verifyJSONConfigContents(t *testing.T, cfg *Config) {
 	}
 }
 
-func TestConfig_ComplexSecurityScenarios(t *testing.T) { 
+func TestConfig_ComplexSecurityScenarios(t *testing.T) {
 	runner := CreateSecurityTestRunner(t)
 
 	// Add multi-endpoint scenario.
@@ -445,7 +445,7 @@ func createEnvironmentOverrideTestCases() []struct {
 	}
 }
 
-func TestConfig_EnvironmentOverridePrecedence(t *testing.T) { 
+func TestConfig_EnvironmentOverridePrecedence(t *testing.T) {
 	// Test environment variable override precedence and inheritance.
 	baseConfig := `
 version: 1
@@ -501,7 +501,7 @@ func TestConfig_ConfigFileFormats(t *testing.T) {
 
 func setupFormatTestEnv(t *testing.T) {
 	t.Helper()
-	
+
 	if err := os.Setenv("FORMAT_TEST_TOKEN", "format-token"); err != nil {
 		t.Fatalf("Failed to set environment variable: %v", err)
 	}
@@ -573,7 +573,7 @@ func runFileFormatTests(t *testing.T, configData map[string]interface{}, tests [
 	marshal  func(interface{}) ([]byte, error)
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			configPath := createTestConfigFile(t, tt, configData)
@@ -589,7 +589,7 @@ func createTestConfigFile(t *testing.T, tt struct {
 	marshal  func(interface{}) ([]byte, error)
 }, configData map[string]interface{}) string {
 	t.Helper()
-	
+
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, tt.filename)
 
@@ -602,24 +602,24 @@ func createTestConfigFile(t *testing.T, tt struct {
 	if err != nil {
 		t.Fatalf("Failed to write config file: %v", err)
 	}
-	
+
 	return configPath
 }
 
 func loadAndValidateConfig(t *testing.T, configPath, formatName string) *Config {
 	t.Helper()
-	
+
 	cfg, err := Load(configPath)
 	if err != nil {
 		t.Fatalf("Failed to load %s config: %v", formatName, err)
 	}
-	
+
 	return cfg
 }
 
 func verifyFormatTestProperties(t *testing.T, cfg *Config) {
 	t.Helper()
-	
+
 	// Verify common properties
 	if cfg.Version != 1 {
 		t.Errorf("Expected version 1, got %d", cfg.Version)
@@ -639,7 +639,7 @@ func verifyFormatTestProperties(t *testing.T, cfg *Config) {
 	}
 }
 
-func TestConfig_SecurityValidation(t *testing.T) { 
+func TestConfig_SecurityValidation(t *testing.T) {
 	// Test security-related validation scenarios.
 	securityTests := createSecurityValidationTests()
 	runSecurityValidationTests(t, securityTests)
@@ -710,7 +710,7 @@ func runSecurityValidationTests(t *testing.T, securityTests []struct {
 	errorMsg    string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range securityTests {
 		t.Run(tt.name, func(t *testing.T) {
 			setupSecurityTestEnvironment(t, tt.envVars)
@@ -722,7 +722,7 @@ func runSecurityValidationTests(t *testing.T, securityTests []struct {
 
 func setupSecurityTestEnvironment(t *testing.T, envVars map[string]string) {
 	t.Helper()
-	
+
 	// Set environment variables.
 	for k, v := range envVars {
 		if err := os.Setenv(k, v); err != nil {
@@ -734,7 +734,7 @@ func setupSecurityTestEnvironment(t *testing.T, envVars map[string]string) {
 
 func processSecurityConfigYAML(t *testing.T, configYAML string) string {
 	t.Helper()
-	
+
 	if strings.Contains(configYAML, "%s") {
 		// Create a token file if needed.
 		tempDir := t.TempDir()
@@ -747,7 +747,7 @@ func processSecurityConfigYAML(t *testing.T, configYAML string) string {
 
 func validateSecurityConfig(t *testing.T, configYAML string, expectError bool, errorMsg string) {
 	t.Helper()
-	
+
 	configPath, cleanup := testutil.TempFile(t, configYAML)
 	defer cleanup()
 
@@ -767,7 +767,7 @@ func validateSecurityConfig(t *testing.T, configYAML string, expectError bool, e
 func BenchmarkConfig_LoadComplex(b *testing.B) {
 	// Benchmark loading a complex configuration.
 	complexConfig := generateComplexBenchmarkConfig()
-	
+
 	setupIntegrationBenchmarkEnvironment(b)
 
 	defer cleanupBenchmarkEnvironment()
@@ -784,7 +784,7 @@ func generateComplexBenchmarkConfig() string {
 
 func setupIntegrationBenchmarkEnvironment(b *testing.B) {
 	b.Helper()
-	
+
 	if err := os.Setenv("BENCHMARK_TOKEN", "benchmark-token"); err != nil {
 		b.Fatalf("Failed to set environment variable: %v", err)
 	}

@@ -1,7 +1,5 @@
 package server
 
-
-
 import (
 	"context"
 	"crypto/tls"
@@ -588,7 +586,7 @@ func (s *GatewayServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Authenticate request
-	
+
 	authClaims, err := s.authenticateWebSocketRequest(ctx, w, r, clientIP, traceID, requestID)
 	if err != nil {
 		return
@@ -598,14 +596,14 @@ func (s *GatewayServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	enrichedCtx := logging.ContextWithUserInfo(ctx, authClaims.Subject, "")
 
 	// Upgrade to WebSocket and create session
-	
+
 	conn, sess, err := s.upgradeAndCreateSession(enrichedCtx, w, r, authClaims, traceID, requestID)
 	if err != nil {
 		return
 	}
 
 	// Setup and register connection
-	
+
 	s.setupAndRegisterConnection(enrichedCtx, conn, sess, authClaims, clientIP, r.RemoteAddr)
 }
 
@@ -616,10 +614,10 @@ func (s *GatewayServer) initializeWebSocketRequest(
 	traceID := logging.GenerateTraceID()
 	requestID := logging.GenerateRequestID()
 	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
-	
+
 	r.Body = http.MaxBytesReader(w, r.Body, defaultBufferSize*defaultBufferSize)
 	clientIP := getIPFromAddr(r.RemoteAddr)
-	
+
 	return ctx, traceID, requestID, clientIP
 }
 
@@ -631,7 +629,7 @@ func (s *GatewayServer) handleConnectionLimitError(
 ) {
 	logging.LogError(ctx, s.logger, "Connection limit reached", err,
 		zap.String("client_ip", clientIP))
-		
+
 	var gatewayErr *customerrors.GatewayError
 	if errors.As(err, &gatewayErr) {
 		http.Error(w, gatewayErr.Message, gatewayErr.HTTPStatus)
@@ -651,7 +649,7 @@ func (s *GatewayServer) authenticateWebSocketRequest(
 		logging.LogError(ctx, s.logger, "Authentication failed", err,
 			zap.String("remote_addr", r.RemoteAddr),
 			zap.String("client_ip", clientIP))
-		
+
 		authErr := customerrors.WrapWithType(err, customerrors.TypeUnauthorized, "authentication failed").
 			WithComponent("server").
 			WithOperation("websocket_auth").
@@ -659,13 +657,13 @@ func (s *GatewayServer) authenticateWebSocketRequest(
 			WithContext("trace_id", traceID).
 			WithContext("request_id", requestID)
 		customerrors.RecordError(authErr, s.metrics)
-		
+
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		s.metrics.IncrementAuthFailures("invalid_token")
-		
+
 		return nil, err
 	}
-	
+
 	return authClaims, nil
 }
 
@@ -680,7 +678,7 @@ func (s *GatewayServer) upgradeAndCreateSession(
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logging.LogError(ctx, s.logger, "WebSocket upgrade failed", err)
-		
+
 		upgradeErr := customerrors.Wrap(err, "WebSocket upgrade failed").
 			WithComponent("server").
 			WithOperation("websocket_upgrade").
@@ -688,7 +686,7 @@ func (s *GatewayServer) upgradeAndCreateSession(
 			WithContext("trace_id", traceID).
 			WithContext("request_id", requestID)
 		customerrors.RecordError(upgradeErr, s.metrics)
-		
+
 		return nil, nil, err
 	}
 
@@ -696,7 +694,7 @@ func (s *GatewayServer) upgradeAndCreateSession(
 	sess, err := s.sessions.CreateSession(authClaims)
 	if err != nil {
 		logging.LogError(ctx, s.logger, "Failed to create session", err)
-		
+
 		sessionErr := customerrors.Wrap(err, "session creation failed").
 			WithComponent("server").
 			WithOperation("create_session").
@@ -708,7 +706,7 @@ func (s *GatewayServer) upgradeAndCreateSession(
 		if closeErr := conn.Close(); closeErr != nil {
 			logging.LogDebug(ctx, s.logger, "Error closing connection", zap.Error(closeErr))
 		}
-		
+
 		return nil, nil, err
 	}
 
@@ -737,7 +735,7 @@ func (s *GatewayServer) setupAndRegisterConnection(
 
 	// Start connection handlers
 	s.wg.Add(wsHandlerCount)
-	
+
 	go s.handleClientRead(clientConn, clientIP)
 	go s.handleClientWrite(clientConn)
 
@@ -878,14 +876,14 @@ func (s *GatewayServer) handleWriteError(
 	attempt, maxRetries int,
 	operation string,
 ) bool {
-	client.Logger.Warn("WebSocket " + operation + " error, retrying",
+	client.Logger.Warn("WebSocket "+operation+" error, retrying",
 		zap.Error(err),
 		zap.Int("attempt", attempt+1),
 		zap.Int("max_retries", maxRetries))
 
 	// Check if we should retry
 	if attempt >= maxRetries-1 {
-		client.Logger.Error("WebSocket " + operation + " failed after retries, closing connection",
+		client.Logger.Error("WebSocket "+operation+" failed after retries, closing connection",
 			zap.Error(err))
 
 		return false
@@ -901,7 +899,7 @@ func (s *GatewayServer) handleWriteError(
 	}
 
 	// Non-temporary error
-	client.Logger.Error("WebSocket " + operation + " error is not temporary, closing connection",
+	client.Logger.Error("WebSocket "+operation+" error is not temporary, closing connection",
 		zap.Error(err))
 
 	return false
@@ -1098,7 +1096,7 @@ func (s *GatewayServer) sendErrorResponse(client *ClientConnection, id interface
 	if s.metrics != nil {
 		customerrors.RecordError(err, s.metrics)
 	}
-	
+
 	// Increment client error count
 	atomic.AddUint64(&client.errorCount, 1)
 
@@ -1123,7 +1121,7 @@ func mapErrorToMCPCode(err error) int {
 	if !errors.As(err, &gatewayErr) {
 		return mcp.ErrorCodeInternalError
 	}
-	
+
 	return getErrorCodeForType(gatewayErr.Type)
 }
 
@@ -1133,7 +1131,7 @@ func getErrorCodeForType(errorType customerrors.ErrorType) int {
 	if code, exists := getSimpleErrorMappings()[errorType]; exists {
 		return code
 	}
-	
+
 	// Handle special cases
 	return handleSpecialErrorCases(errorType)
 }
@@ -1141,14 +1139,14 @@ func getErrorCodeForType(errorType customerrors.ErrorType) int {
 // getSimpleErrorMappings returns the simple one-to-one error type mappings.
 func getSimpleErrorMappings() map[customerrors.ErrorType]int {
 	return map[customerrors.ErrorType]int{
-		customerrors.TypeValidation:   mcp.ErrorCodeInvalidRequest,
-		customerrors.TypeNotFound:     mcp.ErrorCodeMethodNotFound,
-		customerrors.TypeTimeout:      mcp.ErrorCodeRequestTimeout,
-		customerrors.TypeRateLimit:    mcp.ErrorCodeRateLimitExceeded,
-		customerrors.TypeInternal:     mcp.ErrorCodeInternalError,
-		customerrors.TypeCanceled:     mcp.ErrorCodeInternalError,
-		customerrors.TypeConflict:     mcp.ErrorCodeInvalidRequest,
-		customerrors.TypeUnavailable:  mcp.ErrorCodeBackendUnavailable,
+		customerrors.TypeValidation:  mcp.ErrorCodeInvalidRequest,
+		customerrors.TypeNotFound:    mcp.ErrorCodeMethodNotFound,
+		customerrors.TypeTimeout:     mcp.ErrorCodeRequestTimeout,
+		customerrors.TypeRateLimit:   mcp.ErrorCodeRateLimitExceeded,
+		customerrors.TypeInternal:    mcp.ErrorCodeInternalError,
+		customerrors.TypeCanceled:    mcp.ErrorCodeInternalError,
+		customerrors.TypeConflict:    mcp.ErrorCodeInvalidRequest,
+		customerrors.TypeUnavailable: mcp.ErrorCodeBackendUnavailable,
 	}
 }
 
@@ -1158,7 +1156,7 @@ func handleSpecialErrorCases(errorType customerrors.ErrorType) int {
 	if errorType == customerrors.TypeUnauthorized || errorType == customerrors.TypeForbidden {
 		return mcp.ErrorCodeUnauthorized
 	}
-	
+
 	// Default case
 	return mcp.ErrorCodeInternalError
 }
@@ -1556,7 +1554,7 @@ func (s *GatewayServer) createTLSConfig() (*tls.Config, error) {
 	}
 
 	// Create base TLS config
-	tlsConfig := &tls.Config{ 
+	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   minVersion,
 	}
@@ -1599,7 +1597,7 @@ func (s *GatewayServer) getTLSMinVersion(version string) (uint16, error) {
 	case "1.3":
 		return tls.VersionTLS13, nil
 	default:
-		return 0, customerrors.New(customerrors.TypeValidation, "unsupported TLS min_version: " + version ).
+		return 0, customerrors.New(customerrors.TypeValidation, "unsupported TLS min_version: "+version).
 			WithComponent("server")
 	}
 }
@@ -1627,7 +1625,7 @@ func (s *GatewayServer) parseCipherSuites(suites []string) ([]uint16, error) {
 	for _, suite := range suites {
 		cipherSuite := getCipherSuite(suite)
 		if cipherSuite == 0 {
-			return nil, customerrors.New(customerrors.TypeValidation, "unsupported cipher suite: " + suite ).
+			return nil, customerrors.New(customerrors.TypeValidation, "unsupported cipher suite: "+suite).
 				WithComponent("server")
 		}
 
@@ -1660,7 +1658,7 @@ func (s *GatewayServer) configureClientAuth(tlsConfig *tls.Config, cfg config.TL
 	case "require":
 		return s.configureRequiredClientAuth(tlsConfig, cfg)
 	default:
-		return customerrors.New(customerrors.TypeValidation, "unsupported client_auth: " + cfg.ClientAuth ).
+		return customerrors.New(customerrors.TypeValidation, "unsupported client_auth: "+cfg.ClientAuth).
 			WithComponent("server")
 	}
 }
@@ -1674,7 +1672,7 @@ func (s *GatewayServer) configureRequiredClientAuth(tlsConfig *tls.Config, cfg c
 			WithComponent("server")
 	}
 
-	caCert, err := os.ReadFile(cfg.CAFile) 
+	caCert, err := os.ReadFile(cfg.CAFile)
 	if err != nil {
 		return customerrors.Wrap(err, "failed to read CA file").
 			WithComponent("server")
@@ -1737,8 +1735,8 @@ func (s *GatewayServer) securityHeadersMiddleware(next http.Handler) http.Handle
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-		w.Header().Set("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=()," +
-				"magnetometer=(), microphone=(), payment=(), usb=()")
+		w.Header().Set("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(),"+
+			"magnetometer=(), microphone=(), payment=(), usb=()")
 
 		// Add HSTS header for HTTPS connections
 		if r.TLS != nil {
@@ -1746,8 +1744,8 @@ func (s *GatewayServer) securityHeadersMiddleware(next http.Handler) http.Handle
 		}
 
 		// Add CSP header - restrictive policy for WebSocket gateway
-		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none';" +
-				"base-uri 'none'; form-action 'none';")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none';"+
+			"base-uri 'none'; form-action 'none';")
 
 		// Add CORS headers if needed (WebSocket handshake)
 		if origin := r.Header.Get("Origin"); origin != "" && s.isAllowedOrigin(origin) {

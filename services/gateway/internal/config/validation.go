@@ -198,7 +198,7 @@ func validateServerProtocol(protocol string) error {
 	validProtocols := []string{"websocket", "tcp", "both", "stdio"}
 	if !contains(validProtocols, protocol) {
 		return customerrors.NewValidationError(
-		fmt.Sprintf("invalid protocol: %s, must be one of %v", protocol, validProtocols))
+			fmt.Sprintf("invalid protocol: %s, must be one of %v", protocol, validProtocols))
 	}
 
 	return nil
@@ -225,17 +225,17 @@ func validateServerTimeouts(config *ServerConfig) error {
 func validateConnectionLimits(config *ServerConfig) error {
 	if config.MaxConnections < 0 {
 		return customerrors.NewValidationError(
-		fmt.Sprintf("max connections cannot be negative, got %d", config.MaxConnections))
+			fmt.Sprintf("max connections cannot be negative, got %d", config.MaxConnections))
 	}
 
 	if config.MaxConnectionsPerIP < 0 {
 		return customerrors.NewValidationError(
-		fmt.Sprintf("max connections per IP cannot be negative, got %d", config.MaxConnectionsPerIP))
+			fmt.Sprintf("max connections per IP cannot be negative, got %d", config.MaxConnectionsPerIP))
 	}
 
 	if config.ConnectionBufferSize < 0 {
 		return customerrors.NewValidationError(
-		fmt.Sprintf("connection buffer size cannot be negative, got %d", config.ConnectionBufferSize))
+			fmt.Sprintf("connection buffer size cannot be negative, got %d", config.ConnectionBufferSize))
 	}
 
 	return nil
@@ -262,7 +262,7 @@ func ValidateTLSConfig(config *TLSConfig) error {
 		validModes := []string{"none", "request", "require"}
 		if !contains(validModes, config.ClientAuth) {
 			return customerrors.NewValidationError(
-			fmt.Sprintf("invalid client auth mode: %s, must be one of %v", config.ClientAuth, validModes))
+				fmt.Sprintf("invalid client auth mode: %s, must be one of %v", config.ClientAuth, validModes))
 		}
 	}
 
@@ -271,7 +271,7 @@ func ValidateTLSConfig(config *TLSConfig) error {
 		validVersions := []string{"TLS1.2", "TLS1.3"}
 		if !contains(validVersions, config.MinVersion) {
 			return customerrors.NewValidationError(
-			fmt.Sprintf("TLS version too old or invalid: %s, must be one of %v", config.MinVersion, validVersions))
+				fmt.Sprintf("TLS version too old or invalid: %s, must be one of %v", config.MinVersion, validVersions))
 		}
 	}
 
@@ -311,7 +311,7 @@ func ValidateStdioFrontendModeConfig(config *StdioFrontendModeConfig) error {
 	validTypes := []string{"unix_socket", "stdin_stdout", "named_pipes"}
 	if !contains(validTypes, config.Type) {
 		return customerrors.NewValidationError(
-		fmt.Sprintf("invalid stdio mode type: %s, must be one of %v", config.Type, validTypes))
+			fmt.Sprintf("invalid stdio mode type: %s, must be one of %v", config.Type, validTypes))
 	}
 
 	if config.Type == socketTypeUnix && config.Path == "" {
@@ -332,7 +332,7 @@ func ValidateAuthConfig(config *AuthConfig) error {
 	validProviders := []string{"none", "jwt", "oauth2"}
 	if !contains(validProviders, config.Provider) {
 		return customerrors.NewValidationError(
-		fmt.Sprintf("invalid auth provider: %s, must be one of %v", config.Provider, validProviders))
+			fmt.Sprintf("invalid auth provider: %s, must be one of %v", config.Provider, validProviders))
 	}
 
 	switch config.Provider {
@@ -399,7 +399,7 @@ func ValidateSessionConfig(config *SessionConfig) error {
 		validProviders := []string{"redis", "memory"}
 		if !contains(validProviders, config.Provider) {
 			return customerrors.NewValidationError(
-			fmt.Sprintf("invalid session provider: %s, must be one of %v", config.Provider, validProviders))
+				fmt.Sprintf("invalid session provider: %s, must be one of %v", config.Provider, validProviders))
 		}
 	}
 
@@ -420,7 +420,7 @@ func ValidateRoutingConfig(config *RoutingConfig) error {
 		validStrategies := []string{"round_robin", "least_connections", "weighted", "random", "hash"}
 		if !contains(validStrategies, config.Strategy) {
 			return customerrors.NewValidationError(
-					fmt.Sprintf("invalid routing strategy: %s, must be one of %v", config.Strategy, validStrategies))
+				fmt.Sprintf("invalid routing strategy: %s, must be one of %v", config.Strategy, validStrategies))
 		}
 	}
 
@@ -650,12 +650,12 @@ func ValidateCircuitBreakerConfig(config *CircuitBreakerConfig) error {
 
 	if config.FailureThreshold <= 0 {
 		return customerrors.NewValidationError(
-				fmt.Sprintf("failure threshold must be positive, got %d", config.FailureThreshold))
+			fmt.Sprintf("failure threshold must be positive, got %d", config.FailureThreshold))
 	}
 
 	if config.SuccessThreshold <= 0 {
 		return customerrors.NewValidationError(
-				fmt.Sprintf("success threshold must be positive, got %d", config.SuccessThreshold))
+			fmt.Sprintf("success threshold must be positive, got %d", config.SuccessThreshold))
 	}
 
 	if config.TimeoutSeconds < 0 {
@@ -682,12 +682,12 @@ func ValidateRateLimitConfig(config *RateLimitConfig) error {
 	validProviders := []string{"redis", "memory"}
 	if !contains(validProviders, config.Provider) {
 		return customerrors.NewValidationError(
-				fmt.Sprintf("invalid rate limit provider: %s, must be one of %v", config.Provider, validProviders))
+			fmt.Sprintf("invalid rate limit provider: %s, must be one of %v", config.Provider, validProviders))
 	}
 
 	if config.RequestsPerSec <= 0 {
 		return customerrors.NewValidationError(
-				fmt.Sprintf("requests per second must be positive, got %d", config.RequestsPerSec))
+			fmt.Sprintf("requests per second must be positive, got %d", config.RequestsPerSec))
 	}
 
 	if config.Burst < 0 {
@@ -706,7 +706,7 @@ func ValidateRateLimitConfig(config *RateLimitConfig) error {
 
 	if config.CleanupInterval < 0 {
 		return customerrors.NewValidationError(
-				fmt.Sprintf("cleanup interval cannot be negative, got %d", config.CleanupInterval))
+			fmt.Sprintf("cleanup interval cannot be negative, got %d", config.CleanupInterval))
 	}
 
 	return nil
@@ -727,7 +727,7 @@ func ValidateMetricsConfig(config *MetricsConfig) error {
 	}
 
 	if !strings.HasPrefix(config.Path, "/") {
-		return customerrors.NewValidationError("path must start with /, got: " + config.Path )
+		return customerrors.NewValidationError("path must start with /, got: " + config.Path)
 	}
 
 	return nil
@@ -739,7 +739,7 @@ func ValidateLoggingConfig(config *LoggingConfig) error {
 		validLevels := []string{"debug", "info", "warn", "error", "fatal", "panic"}
 		if !contains(validLevels, config.Level) {
 			return customerrors.NewValidationError(
-					fmt.Sprintf("invalid log level: %s, must be one of %v", config.Level, validLevels))
+				fmt.Sprintf("invalid log level: %s, must be one of %v", config.Level, validLevels))
 		}
 	}
 
@@ -747,7 +747,7 @@ func ValidateLoggingConfig(config *LoggingConfig) error {
 		validFormats := []string{"json", "text", "console"}
 		if !contains(validFormats, config.Format) {
 			return customerrors.NewValidationError(
-					fmt.Sprintf("invalid log format: %s, must be one of %v", config.Format, validFormats))
+				fmt.Sprintf("invalid log format: %s, must be one of %v", config.Format, validFormats))
 		}
 	}
 
@@ -784,7 +784,7 @@ func validateTracingExporter(config *TracingConfig) error {
 	validExporters := []string{"otlp", "jaeger", "zipkin", "stdout"}
 	if !contains(validExporters, config.ExporterType) {
 		return customerrors.NewValidationError(
-				fmt.Sprintf("invalid exporter type: %s, must be one of %v", config.ExporterType, validExporters))
+			fmt.Sprintf("invalid exporter type: %s, must be one of %v", config.ExporterType, validExporters))
 	}
 
 	if config.ExporterType == "otlp" && config.OTLPEndpoint != "" {
@@ -813,14 +813,14 @@ func validateOTLPEndpoint(endpoint string) error {
 func validateTracingSampler(config *TracingConfig) error {
 	if config.SamplerParam < 0 || config.SamplerParam > 1 {
 		return customerrors.NewValidationError(
-				fmt.Sprintf("sampler param must be between 0 and 1, got %f", config.SamplerParam))
+			fmt.Sprintf("sampler param must be between 0 and 1, got %f", config.SamplerParam))
 	}
 
 	if config.SamplerType != "" {
 		validSamplers := []string{"const", "probabilistic", "rateLimiting", "remote"}
 		if !contains(validSamplers, config.SamplerType) {
 			return customerrors.NewValidationError(
-					fmt.Sprintf("invalid sampler type: %s, must be one of %v", config.SamplerType, validSamplers))
+				fmt.Sprintf("invalid sampler type: %s, must be one of %v", config.SamplerType, validSamplers))
 		}
 	}
 

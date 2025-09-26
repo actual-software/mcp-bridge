@@ -13,9 +13,7 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/internal/config"
 )
 
-
-
-func TestTCPConnection(t *testing.T) { 
+func TestTCPConnection(t *testing.T) {
 	t.Parallel()
 	// Test the TCP connection wrapper using the new generic implementation.
 	conn := NewGenericConnection(nil) // nil client for testing
@@ -34,7 +32,7 @@ func TestTCPConnection(t *testing.T) {
 	assert.False(t, conn.IsAlive())
 }
 
-func TestTCPFactory(t *testing.T) { 
+func TestTCPFactory(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -64,7 +62,7 @@ func TestTCPFactory(t *testing.T) {
 	assert.Contains(t, err.Error(), "not alive")
 }
 
-func TestNewTCPPool(t *testing.T) { 
+func TestNewTCPPool(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -82,7 +80,7 @@ func TestNewTCPPool(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, pool)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -93,7 +91,7 @@ func TestNewTCPPool(t *testing.T) {
 	assert.Equal(t, int64(0), stats.TotalConnections)
 }
 
-func TestTCPPoolIntegration(t *testing.T) { 
+func TestTCPPoolIntegration(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -112,7 +110,7 @@ func TestTCPPoolIntegration(t *testing.T) {
 	pool, err := NewTCPPool(poolConfig, gwConfig, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}
@@ -131,7 +129,7 @@ func TestTCPPoolIntegration(t *testing.T) {
 	assert.Positive(t, stats.FailedCount)
 }
 
-func TestTCPPoolWithTLS(t *testing.T) { 
+func TestTCPPoolWithTLS(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -163,11 +161,11 @@ func TestTCPPoolWithTLS(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, pool)
 
-   defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+			defer func() {
+				if err := pool.Close(); err != nil {
+					t.Logf("Failed to close pool: %v", err)
+				}
+			}()
 
 			// Verify the pool was created successfully (factory config is not directly accessible).
 			stats := pool.Stats()

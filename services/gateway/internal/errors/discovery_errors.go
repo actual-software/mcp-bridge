@@ -30,7 +30,7 @@ const (
 
 // NewServiceNotFoundError creates an error for service not found.
 func NewServiceNotFoundError(serviceName, namespace string) *GatewayError {
-	return New(TypeNotFound, "service " + serviceName + " not found in namespace " + namespace).
+	return New(TypeNotFound, "service "+serviceName+" not found in namespace "+namespace).
 		WithComponent("discovery").
 		WithContext("service_name", serviceName).
 		WithContext("namespace", namespace).
@@ -40,7 +40,7 @@ func NewServiceNotFoundError(serviceName, namespace string) *GatewayError {
 
 // NewNoHealthyInstancesError creates an error when no healthy instances are available.
 func NewNoHealthyInstancesError(serviceName, namespace string, totalInstances int) *GatewayError {
-	return New(TypeUnavailable, "no healthy instances for service " + serviceName ).
+	return New(TypeUnavailable, "no healthy instances for service "+serviceName).
 		WithComponent("discovery").
 		WithContext("service_name", serviceName).
 		WithContext("namespace", namespace).
@@ -90,7 +90,7 @@ func WrapWatchError(ctx context.Context, err error, serviceName string) *Gateway
 
 // NewInvalidServiceConfigError creates an error for invalid service configuration.
 func NewInvalidServiceConfigError(reason string, serviceName string) *GatewayError {
-	return New(TypeValidation, "invalid service configuration: " + reason ).
+	return New(TypeValidation, "invalid service configuration: "+reason).
 		WithComponent("discovery").
 		WithContext("service_name", serviceName).
 		WithContext("reason", reason).
@@ -100,7 +100,7 @@ func NewInvalidServiceConfigError(reason string, serviceName string) *GatewayErr
 
 // NewProviderUnavailableError creates an error when the discovery provider is unavailable.
 func NewProviderUnavailableError(provider string, reason string) *GatewayError {
-	return New(TypeUnavailable, "discovery provider " + provider + " unavailable: " + reason ).
+	return New(TypeUnavailable, "discovery provider "+provider+" unavailable: "+reason).
 		WithComponent("discovery").
 		WithContext("provider", provider).
 		WithContext("reason", reason).
@@ -110,7 +110,7 @@ func NewProviderUnavailableError(provider string, reason string) *GatewayError {
 
 // NewInvalidEndpointError creates an error for invalid endpoint configuration.
 func NewInvalidEndpointError(endpoint, reason string) *GatewayError {
-	return New(TypeValidation, "invalid endpoint " + endpoint + ": " + reason ).
+	return New(TypeValidation, "invalid endpoint "+endpoint+": "+reason).
 		WithComponent("discovery").
 		WithContext("endpoint", endpoint).
 		WithContext("reason", reason).

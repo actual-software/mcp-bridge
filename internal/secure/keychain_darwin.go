@@ -1,5 +1,4 @@
 //go:build darwin
-// +build darwin
 
 package secure
 
@@ -17,7 +16,6 @@ type keychainStore struct {
 	service string
 }
 
-
 //nolint:ireturn // Returns interface for consistency with other platform stores
 func newKeychainStore(appName string) TokenStore {
 	return &keychainStore{
@@ -28,15 +26,15 @@ func newKeychainStore(appName string) TokenStore {
 func (k *keychainStore) Store(key, token string) error {
 	// Validate inputs to prevent command injection
 	if !isValidKeychainParam(key) {
-		return errors.New("invalid key parameter") 
+		return errors.New("invalid key parameter")
 	}
 
 	if !isValidKeychainParam(token) {
-		return errors.New("invalid token parameter") 
+		return errors.New("invalid token parameter")
 	}
 
 	// First, try to delete existing entry (ignore error if key doesn't exist)
-	
+
 	_ = k.Delete(key)
 
 	// Add new entry to keychain
@@ -58,7 +56,7 @@ func (k *keychainStore) Store(key, token string) error {
 func (k *keychainStore) Retrieve(key string) (string, error) {
 	// Validate input to prevent command injection
 	if !isValidKeychainParam(key) {
-		return "", errors.New("invalid key parameter") 
+		return "", errors.New("invalid key parameter")
 	}
 
 	// #nosec G204 - input is validated above
@@ -70,7 +68,7 @@ func (k *keychainStore) Retrieve(key string) (string, error) {
 	output, err := cmd.Output()
 	if err != nil {
 		if strings.Contains(err.Error(), "could not be found") {
-			return "", fmt.Errorf("token not found: %s", key) 
+			return "", fmt.Errorf("token not found: %s", key)
 		}
 
 		return "", fmt.Errorf("failed to retrieve token from keychain: %w", err)
@@ -85,7 +83,7 @@ func (k *keychainStore) Retrieve(key string) (string, error) {
 func (k *keychainStore) Delete(key string) error {
 	// Validate input to prevent command injection
 	if !isValidKeychainParam(key) {
-		return errors.New("invalid key parameter") 
+		return errors.New("invalid key parameter")
 	}
 
 	// #nosec G204 - input is validated above

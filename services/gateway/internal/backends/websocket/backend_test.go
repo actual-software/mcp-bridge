@@ -1,4 +1,3 @@
-
 package websocket
 
 import (
@@ -135,7 +134,7 @@ func TestWebSocketBackend_StartWithInvalidEndpoint(t *testing.T) {
 	err := backend.Start(context.Background())
 	assert.NoError(t, err) // Connection failures are logged but don't fail startup
 
-	_ = backend.Stop(context.Background()) 
+	_ = backend.Stop(context.Background())
 }
 
 func TestWebSocketBackend_SendRequest(t *testing.T) {
@@ -162,7 +161,7 @@ func TestWebSocketBackend_SendRequest(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	// Give time for connections to establish
 	time.Sleep(httpStatusOK * time.Millisecond)
@@ -199,7 +198,7 @@ func TestWebSocketBackend_SendRequestWithTimeout(t *testing.T) {
 			return
 		}
 
-		defer func() { _ = conn.Close() }() 
+		defer func() { _ = conn.Close() }()
 
 		// Read messages but don't respond
 		for {
@@ -228,7 +227,7 @@ func TestWebSocketBackend_SendRequestWithTimeout(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
 
@@ -296,7 +295,7 @@ func TestWebSocketBackend_Health(t *testing.T) {
 	err = backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
 
@@ -370,7 +369,7 @@ func TestWebSocketBackend_ConnectionPool(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
 
@@ -418,7 +417,7 @@ func TestWebSocketBackend_MultipleEndpoints(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
 
@@ -459,7 +458,7 @@ func createTestWebSocketServer(t *testing.T) *httptest.Server {
 			return
 		}
 
-		defer func() { _ = conn.Close() }() 
+		defer func() { _ = conn.Close() }()
 
 		for {
 			// Read message

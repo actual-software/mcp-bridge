@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -500,7 +499,7 @@ func testConfigValidation(t *testing.T, tt struct {
 	errorContains string
 }) {
 	t.Helper()
-	
+
 	err := validate(tt.config)
 
 	if tt.wantError {
@@ -582,7 +581,7 @@ func testLoadSecretsScenario(t *testing.T, tt struct {
 	wantPass  string
 }) {
 	t.Helper()
-	
+
 	originalViper := viper.GetViper()
 	defer viper.Reset()
 

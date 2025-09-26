@@ -289,7 +289,7 @@ func (t *Tracer) Shutdown(ctx context.Context) error {
 	}
 
 	// Create timeout context for shutdown.
-	shutdownCtx, cancel := context.WithTimeout(ctx, defaultRetryCount * time.Second)
+	shutdownCtx, cancel := context.WithTimeout(ctx, defaultRetryCount*time.Second)
 	defer cancel()
 
 	t.logger.Info("Shutting down OpenTelemetry tracer")

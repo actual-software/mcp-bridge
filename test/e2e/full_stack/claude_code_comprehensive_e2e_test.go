@@ -60,7 +60,6 @@ func TestComprehensiveClaudeCodeE2E(t *testing.T) {
 // ORIGINAL HIGH-COMPLEXITY VERSION BELOW - Preserved as TestComprehensiveClaudeCodeE2E_Original
 // Cyclomatic complexity was 21, now reduced to 3 by extracting to helper functions
 
-
 //nolint:gocognit,cyclop,funlen,maintidx // Comprehensive E2E test requires complex flow
 func TestComprehensiveClaudeCodeE2E_Original(t *testing.T) {
 	if testing.Short() {

@@ -1,4 +1,3 @@
-
 package wire
 
 import (
@@ -22,8 +21,8 @@ func createConnectedTransports(t *testing.T) (clientTransport, serverTransport *
 	serverTransport = NewTransport(server)
 
 	t.Cleanup(func() {
-		_ = clientTransport.Close() 
-		_ = serverTransport.Close() 
+		_ = clientTransport.Close()
+		_ = serverTransport.Close()
 	})
 
 	return
@@ -298,7 +297,7 @@ func TestTransport_Deadlines(t *testing.T) {
 
 	// Send and receive should work again
 	go func() {
-		_ = server.SendHealthCheck() 
+		_ = server.SendHealthCheck()
 	}()
 
 	msgType, _, err := client.ReceiveMessage()
@@ -310,16 +309,16 @@ func TestTransport_InvalidMessage(t *testing.T) {
 	// Create a mock connection that returns invalid data
 	client, server := net.Pipe()
 
-	defer func() { _ = client.Close() }() 
-	defer func() { _ = server.Close() }() 
+	defer func() { _ = client.Close() }()
+	defer func() { _ = server.Close() }()
 
 	transport := NewTransport(client)
 
 	// Write invalid data directly to the pipe
 	go func() {
 		// Write something that's not a valid frame
-		_, _ = server.Write([]byte("invalid data")) 
-		_ = server.Close()                          
+		_, _ = server.Write([]byte("invalid data"))
+		_ = server.Close()
 	}()
 
 	// Try to receive - should get error

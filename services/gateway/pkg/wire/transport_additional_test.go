@@ -1,4 +1,3 @@
-
 package wire
 
 import (

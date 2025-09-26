@@ -1,4 +1,3 @@
-
 package stdio
 
 import (
@@ -157,7 +156,7 @@ done`)
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	// Give process time to start
 	time.Sleep(testIterations * time.Millisecond)
@@ -198,7 +197,7 @@ done`)
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(testIterations * time.Millisecond)
 
@@ -259,7 +258,7 @@ done`)
 	err = backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(testIterations * time.Millisecond)
 
@@ -330,7 +329,7 @@ echo "TEST_VAR=$TEST_VAR"`)
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	// Verify environment variable was set
 	assert.Equal(t, "test_value", backend.config.Env["TEST_VAR"])
@@ -358,7 +357,7 @@ func createTestScript(t *testing.T, content string) string {
 	tmpDir := t.TempDir()
 	scriptPath := filepath.Join(tmpDir, "test_script.sh")
 
-	err := os.WriteFile(scriptPath, []byte(content), 0o755) 
+	err := os.WriteFile(scriptPath, []byte(content), 0o755)
 	require.NoError(t, err)
 
 	return scriptPath

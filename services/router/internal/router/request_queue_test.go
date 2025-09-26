@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestRequestQueue_EnqueueDequeue(t *testing.T) { 
+func TestRequestQueue_EnqueueDequeue(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	queue := NewRequestQueue(10, logger)
 
@@ -32,7 +32,7 @@ func TestRequestQueue_EnqueueDequeue(t *testing.T) {
 	assert.Equal(t, 0, queue.Size())
 }
 
-func TestRequestQueue_MaxSize(t *testing.T) { 
+func TestRequestQueue_MaxSize(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	queue := NewRequestQueue(2, logger)
 
@@ -54,7 +54,7 @@ func TestRequestQueue_MaxSize(t *testing.T) {
 	assert.Contains(t, err.Error(), "queue full")
 }
 
-func TestRequestQueue_Clear(t *testing.T) { 
+func TestRequestQueue_Clear(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	queue := NewRequestQueue(10, logger)
 
@@ -89,7 +89,7 @@ func TestRequestQueue_Clear(t *testing.T) {
 	}
 }
 
-func TestRequestQueue_Metrics(t *testing.T) { 
+func TestRequestQueue_Metrics(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	queue := NewRequestQueue(2, logger)
 

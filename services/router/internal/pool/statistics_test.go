@@ -10,9 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-
-
-func TestPoolStatisticsAccounting(t *testing.T) { 
+func TestPoolStatisticsAccounting(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -26,7 +24,7 @@ func TestPoolStatisticsAccounting(t *testing.T) {
 	pool, err := NewPool(config, factory, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := pool.Close(); err != nil {
 			t.Logf("Failed to close pool: %v", err)
 		}

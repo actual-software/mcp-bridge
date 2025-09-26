@@ -1,5 +1,4 @@
 //go:build windows
-// +build windows
 
 package secure
 
@@ -10,7 +9,6 @@ import (
 	"sync"
 	"syscall"
 	"testing"
-	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -287,9 +285,9 @@ func runCredentialStoreStoreTests(t *testing.T, store *windowsCredentialStore, t
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			setupMockForStoreTest(tt.mockError)
-			
+
 			err := store.Store(tt.key, tt.token)
-			
+
 			validateStoreTestResult(t, err, tt.wantErr, tt.errMsg)
 		})
 	}
@@ -393,9 +391,9 @@ func runCredentialStoreRetrieveTests(t *testing.T, store *windowsCredentialStore
 		t.Run(tt.name, func(t *testing.T) {
 			setupTokenForRetrieveTest(t, store, tt.key, tt.setupToken)
 			setupMockForRetrieveTest(tt.mockError, tt.setupToken, tt.key)
-			
+
 			token, err := store.Retrieve(tt.key)
-			
+
 			validateRetrieveTestResult(t, token, err, tt.wantErr, tt.errMsg, tt.expectToken)
 		})
 	}
@@ -428,7 +426,7 @@ func validateRetrieveTestResult(t *testing.T, token string, err error, wantErr b
 	} else {
 		require.NoError(t, err)
 		assert.Equal(t, expectToken, token)
-		
+
 		// Verify API calls
 		assert.Greater(t, mockAPI.getCallCount("credRead"), 0)
 		assert.Greater(t, mockAPI.getCallCount("credFree"), 0)
@@ -499,9 +497,9 @@ func runCredentialStoreDeleteTests(t *testing.T, store *windowsCredentialStore, 
 		t.Run(tt.name, func(t *testing.T) {
 			setupTokenForDeleteTest(t, store, tt.key, tt.setupToken)
 			setupMockForDeleteTest(tt.mockError)
-			
+
 			err := store.Delete(tt.key)
-			
+
 			validateDeleteTestResult(t, err, tt.wantErr, tt.errMsg)
 		})
 	}

@@ -12,8 +12,7 @@ const (
 	testIterations = 100
 )
 
-
-func TestNewRequest(t *testing.T) { 
+func TestNewRequest(t *testing.T) {
 	tests := []struct {
 		name   string
 		method string
@@ -66,7 +65,7 @@ func TestNewRequest(t *testing.T) {
 	}
 }
 
-func TestNewResponse(t *testing.T) { 
+func TestNewResponse(t *testing.T) {
 	tests := []struct {
 		name   string
 		result interface{}
@@ -116,7 +115,7 @@ func TestNewResponse(t *testing.T) {
 	}
 }
 
-func TestNewErrorResponse(t *testing.T) { 
+func TestNewErrorResponse(t *testing.T) {
 	tests := createErrorResponseTests()
 
 	for _, tt := range tests {
@@ -203,7 +202,7 @@ func validateErrorResponse(t *testing.T, resp *Response, tt struct {
 	}
 }
 
-func TestRequest_JSONMarshaling(t *testing.T) { 
+func TestRequest_JSONMarshaling(t *testing.T) {
 	req := &Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "tools/call",
@@ -249,7 +248,7 @@ func TestRequest_JSONMarshaling(t *testing.T) {
 	}
 }
 
-func TestResponse_JSONMarshaling(t *testing.T) { 
+func TestResponse_JSONMarshaling(t *testing.T) {
 	tests := []struct {
 		name     string
 		response *Response
@@ -317,7 +316,7 @@ func TestResponse_JSONMarshaling(t *testing.T) {
 	}
 }
 
-func TestError_StandardCodes(t *testing.T) { 
+func TestError_StandardCodes(t *testing.T) {
 	// Verify standard error codes match JSON-RPC 2.0 spec
 	if ErrorCodeParseError != -32700 {
 		t.Errorf("Parse error code should be -32700, got %d", ErrorCodeParseError)
@@ -340,7 +339,7 @@ func TestError_StandardCodes(t *testing.T) {
 	}
 }
 
-func TestInitializeParams_Marshaling(t *testing.T) { 
+func TestInitializeParams_Marshaling(t *testing.T) {
 	params := InitializeParams{
 		ProtocolVersion: "1.0",
 		Capabilities: Capabilities{
@@ -391,7 +390,7 @@ func TestInitializeParams_Marshaling(t *testing.T) {
 	}
 }
 
-func TestTool_Marshaling(t *testing.T) { 
+func TestTool_Marshaling(t *testing.T) {
 	tool := Tool{
 		Name:        "example-tool",
 		Description: "An example tool for testing",
@@ -439,7 +438,7 @@ func TestTool_Marshaling(t *testing.T) {
 	}
 }
 
-func TestToolContent_Types(t *testing.T) { 
+func TestToolContent_Types(t *testing.T) {
 	tests := createToolContentTestCases()
 
 	for _, tt := range tests {
@@ -491,7 +490,7 @@ func createToolContentTestCases() []struct {
 // testToolContentSerialization tests marshaling and unmarshaling of ToolContent.
 func testToolContentSerialization(t *testing.T, content ToolContent) ToolContent {
 	t.Helper()
-	
+
 	// Marshal
 	data, err := json.Marshal(content)
 	if err != nil {
@@ -510,7 +509,7 @@ func testToolContentSerialization(t *testing.T, content ToolContent) ToolContent
 // validateToolContentType verifies that the content type matches expectations.
 func validateToolContentType(t *testing.T, expected, decoded ToolContent) {
 	t.Helper()
-	
+
 	if decoded.Type != expected.Type {
 		t.Errorf("Type mismatch: expected %s, got %s", expected.Type, decoded.Type)
 	}
@@ -519,7 +518,7 @@ func validateToolContentType(t *testing.T, expected, decoded ToolContent) {
 // validateToolContentFields verifies type-specific fields match expectations.
 func validateToolContentFields(t *testing.T, expected, decoded ToolContent) {
 	t.Helper()
-	
+
 	switch expected.Type {
 	case "text":
 		validateTextContent(t, expected, decoded)
@@ -533,7 +532,7 @@ func validateToolContentFields(t *testing.T, expected, decoded ToolContent) {
 // validateTextContent validates text-specific fields.
 func validateTextContent(t *testing.T, expected, decoded ToolContent) {
 	t.Helper()
-	
+
 	if decoded.Text != expected.Text {
 		t.Error("Text content mismatch")
 	}
@@ -542,7 +541,7 @@ func validateTextContent(t *testing.T, expected, decoded ToolContent) {
 // validateImageContent validates image-specific fields.
 func validateImageContent(t *testing.T, expected, decoded ToolContent) {
 	t.Helper()
-	
+
 	if decoded.MimeType != expected.MimeType {
 		t.Error("MimeType mismatch")
 	}
@@ -555,13 +554,13 @@ func validateImageContent(t *testing.T, expected, decoded ToolContent) {
 // validateResourceContent validates resource-specific fields.
 func validateResourceContent(t *testing.T, expected, decoded ToolContent) {
 	t.Helper()
-	
+
 	if decoded.Resource == nil {
 		t.Error("Resource is nil")
 	}
 }
 
-func TestCallToolResult_Marshaling(t *testing.T) { 
+func TestCallToolResult_Marshaling(t *testing.T) {
 	result := CallToolResult{
 		{
 			Type: "text",
@@ -604,7 +603,7 @@ func TestCallToolResult_Marshaling(t *testing.T) {
 	}
 }
 
-func TestCapabilities_OmitEmpty(t *testing.T) { 
+func TestCapabilities_OmitEmpty(t *testing.T) {
 	// Test that omitempty works correctly.
 	caps := Capabilities{
 		Resources: true,
@@ -635,7 +634,7 @@ func TestCapabilities_OmitEmpty(t *testing.T) {
 	}
 }
 
-func TestRequest_NilParams(t *testing.T) { 
+func TestRequest_NilParams(t *testing.T) {
 	// Test that nil params are handled correctly.
 	req := NewRequest("test/method", nil, 1)
 

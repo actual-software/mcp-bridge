@@ -115,7 +115,7 @@ advanced:
     pprof_port: 6061
 `
 
-func TestLoad_DefaultConfig(t *testing.T) { 
+func TestLoad_DefaultConfig(t *testing.T) {
 	// Test that validate function works correctly with empty gateway_pool.endpoints
 	testValidateEmptyConfig(t)
 
@@ -270,7 +270,7 @@ func validateConfigDefaults(t *testing.T, cfg *Config) {
 	}
 }
 
-func TestLoad_ValidConfig(t *testing.T) { 
+func TestLoad_ValidConfig(t *testing.T) {
 	configContent := `
 version: 1
 gateway_pool:
@@ -402,7 +402,7 @@ func validateAuthTestResult(t *testing.T, cfg *Config, err error, wantError bool
 	}
 }
 
-func TestLoad_AuthTypes(t *testing.T) { 
+func TestLoad_AuthTypes(t *testing.T) {
 	tests := createAuthTypeTests()
 	runAuthTypeTests(t, tests)
 }
@@ -623,7 +623,7 @@ func runAuthTypeTests(t *testing.T, tests []struct {
 	checkToken string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envCleanup := setupAuthTestEnvironment(t, tt.envVars)
@@ -642,7 +642,7 @@ func runAuthTypeTests(t *testing.T, tests []struct {
 	}
 }
 
-func TestLoad_InvalidYAML(t *testing.T) { 
+func TestLoad_InvalidYAML(t *testing.T) {
 	configContent := `
 invalid yaml content
   - this is not valid
@@ -716,7 +716,7 @@ func validateEnvironmentOverrides(t *testing.T, cfg *Config) {
 	}
 }
 
-func TestLoad_EnvironmentOverride(t *testing.T) { 
+func TestLoad_EnvironmentOverride(t *testing.T) {
 	configContent := `
 version: 1
 gateway_pool:
@@ -751,7 +751,7 @@ logging:
 	validateEnvironmentOverrides(t, cfg)
 }
 
-func TestLoad_ConfigPaths(t *testing.T) { 
+func TestLoad_ConfigPaths(t *testing.T) {
 	// Test that Load searches in the correct paths.
 	homeDir, _ := os.UserHomeDir()
 	paths := []string{
@@ -770,7 +770,7 @@ func TestLoad_ConfigPaths(t *testing.T) {
 	}
 }
 
-func TestExpandPath(t *testing.T) { 
+func TestExpandPath(t *testing.T) {
 	homeDir, _ := os.UserHomeDir()
 
 	tests := []struct {
@@ -793,7 +793,7 @@ func TestExpandPath(t *testing.T) {
 	}
 }
 
-func TestConfig_HelperMethods(t *testing.T) { 
+func TestConfig_HelperMethods(t *testing.T) {
 	cfg := &Config{
 		Local: LocalConfig{
 			RequestTimeoutMs: 15000,
@@ -809,7 +809,7 @@ func TestConfig_HelperMethods(t *testing.T) {
 	}
 }
 
-func TestLoad_CompleteConfig(t *testing.T) { 
+func TestLoad_CompleteConfig(t *testing.T) {
 	configContent := generateCompleteConfigContent()
 
 	// Setup test environment.
@@ -859,7 +859,7 @@ func generateCompleteConfigContent() string {
 	return completeConfigContentYAML
 }
 
-func TestLoad_MissingConfigFile(t *testing.T) { 
+func TestLoad_MissingConfigFile(t *testing.T) {
 	// When no config file exists and no env vars set, should use defaults.
 	// but fail validation because gateway_pool.endpoints is required
 	// Ensure no config file exists in current directory.
@@ -1237,7 +1237,7 @@ gateway_pool:
 	}
 }
 
-func TestConfig_EdgeCases(t *testing.T) { 
+func TestConfig_EdgeCases(t *testing.T) {
 	tests := getEdgeCaseTests()
 
 	for _, tt := range tests {
@@ -1257,7 +1257,7 @@ func TestConfig_EdgeCases(t *testing.T) {
 
 func setupTestEnvironmentWithVars(t *testing.T, envVars map[string]string) func() {
 	t.Helper()
-	
+
 	// Save original environment state for this test.
 	origEnv := make(map[string]string)
 
@@ -1402,7 +1402,7 @@ func createEnvironmentOverrideTestCasesLocal() []struct {
 	}
 }
 
-func TestConfig_EnvironmentVariableOverrides(t *testing.T) { 
+func TestConfig_EnvironmentVariableOverrides(t *testing.T) {
 	// Test comprehensive environment variable override scenarios.
 	tests := createEnvironmentOverrideTestCasesLocal()
 
@@ -1435,7 +1435,7 @@ gateway_pool:
 	}
 }
 
-func TestConfig_ValidationFailures(t *testing.T) { 
+func TestConfig_ValidationFailures(t *testing.T) {
 	tests := []struct {
 		name       string
 		configYAML string
@@ -1496,7 +1496,7 @@ gateway_pool:
 
 // validateSecureEnvToken validates secure environment token.
 func validateSecureEnvToken(token string) error {
-	if token != "secure-env-token-123" { 
+	if token != "secure-env-token-123" {
 		return fmt.Errorf("expected secure-env-token-123, got %s", token)
 	}
 
@@ -1563,7 +1563,7 @@ gateway_pool:
 	}
 }
 
-func TestConfig_CredentialLoadingSecurity(t *testing.T) { 
+func TestConfig_CredentialLoadingSecurity(t *testing.T) {
 	// Test secure credential loading scenarios.
 	tests := createCredentialTestCases()
 
@@ -1573,7 +1573,7 @@ func TestConfig_CredentialLoadingSecurity(t *testing.T) {
 			defer cleanup()
 
 			configYAML := createCredentialConfig(t, tt)
-			
+
 			configPath, configCleanup := testutil.TempFile(t, configYAML)
 			defer configCleanup()
 
@@ -1676,7 +1676,7 @@ func validateAdvancedFeatures(t *testing.T, cfg *Config) {
 	}
 }
 
-func TestConfig_AdvancedFeatures(t *testing.T) { 
+func TestConfig_AdvancedFeatures(t *testing.T) {
 	configYAML := `
 version: 1
 gateway_pool:
@@ -1890,7 +1890,7 @@ func BenchmarkLoad_ComplexConfig(b *testing.B) {
 
 func setupBenchmarkEnvironment(b *testing.B, envVars map[string]string) func() {
 	b.Helper()
-	
+
 	// Save original environment state.
 	origEnv := make(map[string]string)
 

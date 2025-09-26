@@ -283,8 +283,8 @@ func (r *LocalRouter) Run(ctx context.Context) error {
 	r.cancel = cancel
 
 	// Start focused components.
-	r.connMgr.Start() 
-	r.msgRouter.Start() 
+	r.connMgr.Start()
+	r.msgRouter.Start()
 
 	// Start direct client manager if enabled.
 	if r.directManager != nil {
@@ -412,7 +412,7 @@ func (r *LocalRouter) signalReady() error {
 		if err := file.Close(); err != nil {
 			r.logger.Warn("Failed to close file", zap.Error(err))
 		}
-	}() 
+	}()
 
 	// Write timestamp to show when router became ready.
 	if _, err := fmt.Fprintf(file, "ready at %s\n", time.Now().Format(time.RFC3339)); err != nil {

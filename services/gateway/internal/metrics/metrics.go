@@ -49,15 +49,15 @@ type Registry struct {
 	TCPMessageDuration   *prometheus.HistogramVec
 
 	// Error metrics
-	ErrorsTotal         *prometheus.CounterVec
-	ErrorsByType        *prometheus.CounterVec
-	ErrorsByComponent   *prometheus.CounterVec
-	ErrorRetryable      *prometheus.CounterVec
-	ErrorsByHTTPStatus  *prometheus.CounterVec
-	ErrorsBySeverity    *prometheus.CounterVec
-	ErrorsByOperation   *prometheus.CounterVec
-	ErrorRecoveryTotal  *prometheus.CounterVec
-	ErrorLatency        *prometheus.HistogramVec
+	ErrorsTotal        *prometheus.CounterVec
+	ErrorsByType       *prometheus.CounterVec
+	ErrorsByComponent  *prometheus.CounterVec
+	ErrorRetryable     *prometheus.CounterVec
+	ErrorsByHTTPStatus *prometheus.CounterVec
+	ErrorsBySeverity   *prometheus.CounterVec
+	ErrorsByOperation  *prometheus.CounterVec
+	ErrorRecoveryTotal *prometheus.CounterVec
+	ErrorLatency       *prometheus.HistogramVec
 }
 
 // createConnectionMetrics creates connection-related metrics.
@@ -150,7 +150,7 @@ func InitializeMetricsRegistry() *Registry {
 	connTotal, connActive, connRejected := createConnectionMetrics(factory)
 	reqTotal, reqDuration, reqInFlight := createRequestMetrics(factory)
 	tcpConnTotal, tcpConnActive, tcpMsgTotal, tcpBytes, tcpErrors, tcpDuration := createTCPMetrics(factory)
-	
+
 	errorMetrics := createErrorMetrics(factory)
 	authMetrics := createAuthMetrics(factory)
 	routingMetrics := createRoutingMetrics(factory)
@@ -436,11 +436,11 @@ func (r *Registry) IncrementErrorsByOperation(operation, component string) {
 	if operation == "" {
 		operation = unknownValue
 	}
-	
+
 	if component == "" {
 		component = unknownValue
 	}
-	
+
 	r.ErrorsByOperation.WithLabelValues(operation, component).Inc()
 }
 
@@ -450,7 +450,7 @@ func (r *Registry) IncrementErrorRecovery(recovered bool, errorType string) {
 	if recovered {
 		recoveredStr = "true"
 	}
-	
+
 	r.ErrorRecoveryTotal.WithLabelValues(recoveredStr, errorType).Inc()
 }
 

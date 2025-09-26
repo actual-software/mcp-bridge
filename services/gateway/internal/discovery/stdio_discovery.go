@@ -230,7 +230,7 @@ func (s *StdioDiscovery) createMetadata(service *config.StdioServiceConfig) map[
 
 // GetAllEndpoints returns all endpoints from all namespaces.
 func (s *StdioDiscovery) GetAllEndpoints() map[string][]Endpoint {
-	endpoints, _ := s.GetServices(context.Background()) 
+	endpoints, _ := s.GetServices(context.Background())
 	result := make(map[string][]Endpoint)
 
 	for _, endpoint := range endpoints {
@@ -253,7 +253,7 @@ func (s *StdioDiscovery) Stop() {
 
 // GetEndpoints returns endpoints for a specific namespace.
 func (s *StdioDiscovery) GetEndpoints(namespace string) []Endpoint {
-	endpoints, _ := s.GetServices(context.Background()) 
+	endpoints, _ := s.GetServices(context.Background())
 
 	var result []Endpoint
 
@@ -268,7 +268,7 @@ func (s *StdioDiscovery) GetEndpoints(namespace string) []Endpoint {
 
 // ListNamespaces returns all available namespaces.
 func (s *StdioDiscovery) ListNamespaces() []string {
-	endpoints, _ := s.GetServices(context.Background()) 
+	endpoints, _ := s.GetServices(context.Background())
 	namespaces := make(map[string]bool)
 
 	for _, endpoint := range endpoints {

@@ -291,7 +291,7 @@ func (u *SystemStatusUpdater) buildSystemResources(
 			HeapObjects:    memStats.HeapObjects,
 			StackBytes:     memStats.StackSys,
 			GCStats: GCInfo{
-				NumGC:      memStats.NumGC,
+				NumGC: memStats.NumGC,
 				PauseTotal: func() time.Duration {
 					if memStats.PauseTotalNs <= math.MaxInt64 {
 						return time.Duration(memStats.PauseTotalNs)

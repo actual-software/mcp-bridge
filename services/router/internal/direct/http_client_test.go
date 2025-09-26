@@ -78,7 +78,7 @@ func newMockHTTPServer() *httptest.Server {
 	}))
 }
 
-func TestNewHTTPClient(t *testing.T) { 
+func TestNewHTTPClient(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	testCases := []struct {
@@ -139,7 +139,7 @@ func TestNewHTTPClient(t *testing.T) {
 	}
 }
 
-func TestHTTPClientDefaults(t *testing.T) { 
+func TestHTTPClientDefaults(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := HTTPClientConfig{} // Empty config to test defaults
 
@@ -158,11 +158,11 @@ func TestHTTPClientDefaults(t *testing.T) {
 	assert.Equal(t, "application/json", client.config.Headers["Content-Type"])
 }
 
-func TestHTTPClientConnectAndClose(t *testing.T) { 
+func TestHTTPClientConnectAndClose(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockHTTPServer()
- defer mockServer.Close()
+	defer mockServer.Close()
 
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,
@@ -197,11 +197,11 @@ func TestHTTPClientConnectAndClose(t *testing.T) {
 	require.NoError(t, err) // Should not error
 }
 
-func TestHTTPClientSendRequest(t *testing.T) { 
+func TestHTTPClientSendRequest(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockHTTPServer()
- defer mockServer.Close()
+	defer mockServer.Close()
 
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,
@@ -250,7 +250,7 @@ func TestHTTPClientSendRequest(t *testing.T) {
 	assert.Positive(t, metrics.AverageLatency)
 }
 
-func TestHTTPClientSendRequestNotConnected(t *testing.T) { 
+func TestHTTPClientSendRequestNotConnected(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := HTTPClientConfig{
 		URL: fmt.Sprintf("http://localhost:%d", constants.TestHTTPPort),
@@ -272,20 +272,20 @@ func TestHTTPClientSendRequestNotConnected(t *testing.T) {
 	assert.Contains(t, err.Error(), "not connected")
 }
 
-func TestHTTPClientSendRequestTimeout(t *testing.T) { 
+func TestHTTPClientSendRequestTimeout(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Create a server that responds slowly.
 	slowServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(2 * constants.TestSleepShort) // Sleep longer than client timeout
 		w.WriteHeader(http.StatusOK)
-  _ = json.NewEncoder(w).Encode(mcp.Response{
+		_ = json.NewEncoder(w).Encode(mcp.Response{
 			JSONRPC: constants.TestJSONRPCVersion,
 			Result:  "slow response",
 			ID:      "test",
 		})
 	}))
- defer slowServer.Close()
+	defer slowServer.Close()
 
 	config := HTTPClientConfig{
 		URL:     slowServer.URL,
@@ -326,14 +326,14 @@ func TestHTTPClientSendRequestTimeout(t *testing.T) {
 	// Could be timeout or request error depending on timing.
 }
 
-func TestHTTPClientSendRequestHTTPError(t *testing.T) { 
+func TestHTTPClientSendRequestHTTPError(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Create a server that returns HTTP errors.
 	errorServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Server Error", http.StatusInternalServerError)
 	}))
- defer errorServer.Close()
+	defer errorServer.Close()
 
 	config := HTTPClientConfig{
 		URL:     errorServer.URL,
@@ -379,11 +379,11 @@ func TestHTTPClientSendRequestHTTPError(t *testing.T) {
 	assert.Equal(t, uint64(1), metrics.ErrorCount)
 }
 
-func TestHTTPClientHealth(t *testing.T) { 
+func TestHTTPClientHealth(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockHTTPServer()
- defer mockServer.Close()
+	defer mockServer.Close()
 
 	config := HTTPClientConfig{
 		URL: mockServer.URL,
@@ -423,11 +423,11 @@ func TestHTTPClientHealth(t *testing.T) {
 	assert.False(t, metrics.LastHealthCheck.IsZero())
 }
 
-func TestHTTPClientHealthCheck(t *testing.T) { 
+func TestHTTPClientHealthCheck(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockHTTPServer()
- defer mockServer.Close()
+	defer mockServer.Close()
 
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,
@@ -462,7 +462,7 @@ func TestHTTPClientHealthCheck(t *testing.T) {
 	assert.True(t, metrics.IsHealthy)
 }
 
-func TestHTTPClientGetStatus(t *testing.T) { 
+func TestHTTPClientGetStatus(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := HTTPClientConfig{
 		URL: fmt.Sprintf("http://localhost:%d/mcp", constants.TestHTTPPort),
@@ -478,7 +478,7 @@ func TestHTTPClientGetStatus(t *testing.T) {
 	assert.Equal(t, StateDisconnected, status.State)
 }
 
-func TestHTTPClientConnectInvalidURL(t *testing.T) { 
+func TestHTTPClientConnectInvalidURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := HTTPClientConfig{
 		URL:     "http://nonexistent.invalid:12345",
@@ -541,7 +541,7 @@ func createHeaderTestConfig(url string) HTTPClientConfig {
 
 func runHeaderTest(t *testing.T, client *HTTPClient) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 
 	// Connect should succeed with proper headers.
@@ -580,7 +580,7 @@ func TestHTTPClientHeaders(t *testing.T) {
 	runHeaderTest(t, client)
 }
 
-func TestHTTPClientURL(t *testing.T) { 
+func TestHTTPClientURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := HTTPClientConfig{
 		URL: fmt.Sprintf("http://example.com:%d/path", constants.TestHTTPPort),
@@ -593,7 +593,7 @@ func TestHTTPClientURL(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("http://example.com:%d/path", constants.TestHTTPPort), client.GetURL())
 }
 
-func TestHTTPClientMethods(t *testing.T) { 
+func TestHTTPClientMethods(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	testCases := []struct {
@@ -625,7 +625,7 @@ func TestHTTPClientMethods(t *testing.T) {
 				}
 				_ = json.NewEncoder(w).Encode(resp)
 			}))
-   defer methodServer.Close()
+			defer methodServer.Close()
 
 			config := HTTPClientConfig{
 				URL:    methodServer.URL,
@@ -643,10 +643,10 @@ func TestHTTPClientMethods(t *testing.T) {
 			require.NoError(t, err)
 
 			defer func() {
-		if err := client.Close(ctx); err != nil {
-			t.Logf("Failed to close client: %v", err)
-		}
-	}()
+				if err := client.Close(ctx); err != nil {
+					t.Logf("Failed to close client: %v", err)
+				}
+			}()
 
 			// Verify method is used correctly.
 			assert.Equal(t, tc.wantMethod, client.config.Method)
@@ -693,7 +693,7 @@ func runRedirectTest(t *testing.T, tc struct {
 	expectFinalResponse bool
 }, redirectURL string, logger *zap.Logger) {
 	t.Helper()
-	
+
 	config := HTTPClientConfig{
 		URL: redirectURL,
 		Client: HTTPTransportConfig{
@@ -743,7 +743,7 @@ func runRedirectTest(t *testing.T, tc struct {
 
 func TestHTTPClientRedirects(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	
+
 	finalServer, redirectServer := createRedirectTestServers()
 	defer finalServer.Close()
 	defer redirectServer.Close()
@@ -814,13 +814,13 @@ func runPerformanceOptimizationTest(t *testing.T, tc struct {
 	config HTTPPerformanceConfig
 }, logger *zap.Logger) {
 	t.Helper()
-	
+
 	mockServer := newMockHTTPServer()
 	defer mockServer.Close()
-	
+
 	client := setupPerformanceTestClient(t, tc, mockServer, logger)
 	defer closePerformanceTestClient(t, client)
-	
+
 	connectTime := measureConnectionTime(t, client)
 	requestTimes := runPerformanceRequests(t, client)
 	verifyPerformanceResults(t, tc.name, connectTime, requestTimes)
@@ -831,7 +831,7 @@ func setupPerformanceTestClient(t *testing.T, tc struct {
 	config HTTPPerformanceConfig
 }, mockServer *httptest.Server, logger *zap.Logger) *HTTPClient {
 	t.Helper()
-	
+
 	config := HTTPClientConfig{
 		URL:         mockServer.URL,
 		Timeout:     5 * time.Second,
@@ -843,31 +843,31 @@ func setupPerformanceTestClient(t *testing.T, tc struct {
 
 	client, err := NewHTTPClient("perf-client", config.URL, config, logger)
 	require.NoError(t, err)
-	
+
 	return client
 }
 
 func closePerformanceTestClient(t *testing.T, client *HTTPClient) {
 	t.Helper()
-	
+
 	err := client.Close(context.Background())
 	require.NoError(t, err)
 }
 
 func measureConnectionTime(t *testing.T, client *HTTPClient) time.Duration {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	start := time.Now()
 	err := client.Connect(ctx)
 	require.NoError(t, err)
-	
+
 	return time.Since(start)
 }
 
 func runPerformanceRequests(t *testing.T, client *HTTPClient) []time.Duration {
 	t.Helper()
-	
+
 	const numRequests = 15
 
 	ctx := context.Background()
@@ -887,13 +887,13 @@ func runPerformanceRequests(t *testing.T, client *HTTPClient) []time.Duration {
 		require.NoError(t, err)
 		assert.NotNil(t, resp)
 	}
-	
+
 	return requestTimes
 }
 
 func verifyPerformanceResults(t *testing.T, testName string, connectTime time.Duration, requestTimes []time.Duration) {
 	t.Helper()
-	
+
 	// Verify performance characteristics.
 	assert.Less(t, connectTime, 2*time.Second, "Connection should be fast: %v", connectTime)
 
@@ -923,7 +923,7 @@ func TestHTTPClientPerformanceOptimizations(t *testing.T) {
 }
 
 // TestHTTPClientConcurrentOperations tests concurrent request handling.
-func TestHTTPClientConcurrentOperations(t *testing.T) { 
+func TestHTTPClientConcurrentOperations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockHTTPServer()
@@ -943,7 +943,7 @@ func TestHTTPClientConcurrentOperations(t *testing.T) {
 
 func setupConcurrentHTTPClient(t *testing.T, mockServer *httptest.Server, logger *zap.Logger) *HTTPClient {
 	t.Helper()
-	
+
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,
 		Timeout: 10 * time.Second,
@@ -966,13 +966,13 @@ func setupConcurrentHTTPClient(t *testing.T, mockServer *httptest.Server, logger
 	ctx := context.Background()
 	err = client.Connect(ctx)
 	require.NoError(t, err)
-	
+
 	return client
 }
 
 func closeConcurrentHTTPClient(t *testing.T, client *HTTPClient) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -984,7 +984,7 @@ func runConcurrentHTTPOperations(
 	numGoroutines, requestsPerGoroutine int,
 ) ([]error, []*mcp.Response) {
 	t.Helper()
-	
+
 	var wg sync.WaitGroup
 
 	ctx := context.Background()
@@ -1045,7 +1045,7 @@ func runConcurrentHTTPOperations(
 	for resp := range responseChan {
 		responses = append(responses, resp)
 	}
-	
+
 	return errors, responses
 }
 
@@ -1057,7 +1057,7 @@ func verifyConcurrentHTTPResults(
 	numGoroutines, requestsPerGoroutine int,
 ) {
 	t.Helper()
-	
+
 	assert.Empty(t, errors, "No errors should occur during concurrent operations")
 	assert.Len(t, responses, numGoroutines*requestsPerGoroutine, "All requests should receive responses")
 
@@ -1072,7 +1072,7 @@ func BenchmarkHTTPClientSendRequest(b *testing.B) {
 	logger := zaptest.NewLogger(b)
 
 	mockServer := newMockHTTPServer()
- defer mockServer.Close()
+	defer mockServer.Close()
 
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,

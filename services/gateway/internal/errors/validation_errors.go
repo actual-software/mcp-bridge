@@ -24,7 +24,7 @@ const (
 
 // NewEmptyFieldError creates an error for empty required fields.
 func NewEmptyFieldError(field string) *GatewayError {
-	return New(TypeValidation, field + " cannot be empty").
+	return New(TypeValidation, field+" cannot be empty").
 		WithComponent("validation").
 		WithContext("field", field).
 		WithContext("code", ErrCodeEmptyField).
@@ -44,7 +44,7 @@ func NewFieldTooLongError(field string, length, maxLength int) *GatewayError {
 
 // NewInvalidUTF8Error creates an error for invalid UTF-8 in fields.
 func NewInvalidUTF8Error(field string) *GatewayError {
-	return New(TypeValidation, field + " contains invalid UTF-8").
+	return New(TypeValidation, field+" contains invalid UTF-8").
 		WithComponent("validation").
 		WithContext("field", field).
 		WithContext("code", ErrCodeInvalidUTF8).
@@ -53,7 +53,7 @@ func NewInvalidUTF8Error(field string) *GatewayError {
 
 // NewInvalidCharactersError creates an error for invalid characters in fields.
 func NewInvalidCharactersError(field, value string) *GatewayError {
-	return New(TypeValidation, field + " contains invalid characters: " + value).
+	return New(TypeValidation, field+" contains invalid characters: "+value).
 		WithComponent("validation").
 		WithContext("field", field).
 		WithContext("value", value).
@@ -63,7 +63,7 @@ func NewInvalidCharactersError(field, value string) *GatewayError {
 
 // NewDirectoryTraversalError creates an error for directory traversal attempts.
 func NewDirectoryTraversalError(field string) *GatewayError {
-	return New(TypeValidation, field + " contains directory traversal").
+	return New(TypeValidation, field+" contains directory traversal").
 		WithComponent("validation").
 		WithContext("field", field).
 		WithContext("code", ErrCodeDirectoryTraversal).
@@ -72,7 +72,7 @@ func NewDirectoryTraversalError(field string) *GatewayError {
 
 // NewInvalidIDTypeError creates an error for invalid ID types.
 func NewInvalidIDTypeError(idType string) *GatewayError {
-	return New(TypeValidation, "invalid ID type: " + idType ).
+	return New(TypeValidation, "invalid ID type: "+idType).
 		WithComponent("validation").
 		WithContext("type", idType).
 		WithContext("code", ErrCodeInvalidIDType).
@@ -81,7 +81,7 @@ func NewInvalidIDTypeError(idType string) *GatewayError {
 
 // NewInvalidURLError creates an error for invalid URLs.
 func NewInvalidURLError(url string, reason string) *GatewayError {
-	return New(TypeValidation, "invalid URL: " + reason ).
+	return New(TypeValidation, "invalid URL: "+reason).
 		WithComponent("validation").
 		WithContext("url", url).
 		WithContext("reason", reason).
@@ -91,7 +91,7 @@ func NewInvalidURLError(url string, reason string) *GatewayError {
 
 // NewInvalidSchemeError creates an error for invalid URL schemes.
 func NewInvalidSchemeError(scheme string) *GatewayError {
-	return New(TypeValidation, "invalid URL scheme: " + scheme ).
+	return New(TypeValidation, "invalid URL scheme: "+scheme).
 		WithComponent("validation").
 		WithContext("scheme", scheme).
 		WithContext("code", ErrCodeInvalidScheme).
@@ -108,7 +108,7 @@ func NewMissingHostError() *GatewayError {
 
 // NewInvalidHostnameError creates an error for invalid hostnames.
 func NewInvalidHostnameError(hostname string) *GatewayError {
-	return New(TypeValidation, "invalid hostname: " + hostname ).
+	return New(TypeValidation, "invalid hostname: "+hostname).
 		WithComponent("validation").
 		WithContext("hostname", hostname).
 		WithContext("code", ErrCodeInvalidHostname).
@@ -117,7 +117,7 @@ func NewInvalidHostnameError(hostname string) *GatewayError {
 
 // NewInvalidIPError creates an error for invalid IP addresses.
 func NewInvalidIPError(ip string) *GatewayError {
-	return New(TypeValidation, "invalid IP address: " + ip ).
+	return New(TypeValidation, "invalid IP address: "+ip).
 		WithComponent("validation").
 		WithContext("ip", ip).
 		WithContext("code", ErrCodeInvalidIP).
@@ -126,7 +126,7 @@ func NewInvalidIPError(ip string) *GatewayError {
 
 // NewInvalidTokenError creates an error for invalid tokens.
 func NewInvalidTokenError(reason string) *GatewayError {
-	return New(TypeValidation, "token " + reason ).
+	return New(TypeValidation, "token "+reason).
 		WithComponent("validation").
 		WithContext("reason", reason).
 		WithContext("code", ErrCodeInvalidToken).

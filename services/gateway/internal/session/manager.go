@@ -1,8 +1,6 @@
 // Package session provides session management functionality for tracking authenticated user sessions.
 package session
 
-
-
 import (
 	"context"
 	"crypto/rand"
@@ -86,7 +84,7 @@ func CreateSessionStorageManager(ctx context.Context, cfg config.SessionConfig, 
 	default:
 		return nil, customerrors.New(
 			customerrors.TypeValidation,
-			"unsupported session provider: " + cfg.Provider,
+			"unsupported session provider: "+cfg.Provider,
 		).WithComponent("session").
 			WithContext("provider", cfg.Provider)
 	}

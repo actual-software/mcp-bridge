@@ -7,7 +7,7 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	
+
 	"github.com/poiley/mcp-bridge/services/gateway/internal/errors"
 )
 
@@ -53,7 +53,7 @@ func WithError(err error) []zap.Field {
 // WithRequestContext adds request context to logger fields.
 func WithRequestContext(ctx context.Context) []zap.Field {
 	fields := []zap.Field{}
-	
+
 	// Define context keys to extract
 	contextKeys := []struct {
 		key   loggingContextKey
@@ -66,14 +66,14 @@ func WithRequestContext(ctx context.Context) []zap.Field {
 		{loggingContextKeyNamespace, "namespace"},
 		{loggingContextKeyMethod, "method"},
 	}
-	
+
 	// Extract each context value
 	for _, ck := range contextKeys {
 		if value := extractStringFromContext(ctx, ck.key); value != "" {
 			fields = append(fields, zap.String(ck.field, value))
 		}
 	}
-	
+
 	return fields
 }
 
@@ -84,7 +84,7 @@ func extractStringFromContext(ctx context.Context, key loggingContextKey) string
 			return str
 		}
 	}
-	
+
 	return ""
 }
 
@@ -96,7 +96,7 @@ func LogError(ctx context.Context, logger *zap.Logger, msg string, err error, ad
 
 	// Determine log level based on error severity
 	level := getLogLevelForError(err)
-	
+
 	// Log at appropriate level
 	logAtLevel(logger, level, msg, fields)
 }
@@ -107,7 +107,7 @@ func getLogLevelForError(err error) zapcore.Level {
 	if !stderrors.As(err, &gatewayErr) {
 		return zapcore.ErrorLevel
 	}
-	
+
 	switch gatewayErr.Severity {
 	case errors.SeverityLow:
 		return zapcore.WarnLevel
@@ -164,7 +164,7 @@ func EnhanceLogger(ctx context.Context, logger *zap.Logger) *zap.Logger {
 	if len(fields) > 0 {
 		return logger.With(fields...)
 	}
-	
+
 	return logger
 }
 
@@ -176,7 +176,7 @@ const (
 )
 
 // ErrorSampler creates a zapcore sampler for errors based on severity.
-func ErrorSampler(core zapcore.Core) zapcore.Core { 
+func ErrorSampler(core zapcore.Core) zapcore.Core {
 	// Sample low severity errors more aggressively
 	return zapcore.NewSamplerWithOptions(
 		core,

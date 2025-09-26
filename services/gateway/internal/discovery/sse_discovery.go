@@ -302,7 +302,7 @@ func (s *SSEDiscovery) checkSSEEndpoint(ctx context.Context, streamURL string, s
 	// Check content type
 	contentType := resp.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "text/event-stream") {
-		return customerrors.New(customerrors.TypeValidation, "invalid content type for SSE: " + contentType ).
+		return customerrors.New(customerrors.TypeValidation, "invalid content type for SSE: "+contentType).
 			WithComponent("discovery_sse").
 			WithContext("content_type", contentType)
 	}
@@ -385,7 +385,7 @@ func (s *SSEDiscovery) createMetadata(service *config.SSEServiceConfig) map[stri
 
 // GetAllEndpoints returns all endpoints from all namespaces.
 func (s *SSEDiscovery) GetAllEndpoints() map[string][]Endpoint {
-	endpoints, _ := s.GetServices(context.Background()) 
+	endpoints, _ := s.GetServices(context.Background())
 	result := make(map[string][]Endpoint)
 
 	for _, endpoint := range endpoints {
@@ -406,7 +406,7 @@ func (s *SSEDiscovery) Stop() {
 
 // GetEndpoints returns endpoints for a specific namespace.
 func (s *SSEDiscovery) GetEndpoints(namespace string) []Endpoint {
-	endpoints, _ := s.GetServices(context.Background()) 
+	endpoints, _ := s.GetServices(context.Background())
 
 	var result []Endpoint
 
@@ -421,7 +421,7 @@ func (s *SSEDiscovery) GetEndpoints(namespace string) []Endpoint {
 
 // ListNamespaces returns all available namespaces.
 func (s *SSEDiscovery) ListNamespaces() []string {
-	endpoints, _ := s.GetServices(context.Background()) 
+	endpoints, _ := s.GetServices(context.Background())
 	namespaces := make(map[string]bool)
 
 	for _, endpoint := range endpoints {

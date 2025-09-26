@@ -1,4 +1,3 @@
-
 package auth
 
 import (
@@ -502,7 +501,7 @@ func TestOAuth2Provider_ValidateToken_WithCache(t *testing.T) {
 	introspectServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
 
-		_ = json.NewEncoder(w).Encode(introspectionResponse{ 
+		_ = json.NewEncoder(w).Encode(introspectionResponse{
 			Active:    true,
 			Scope:     "mcp:k8s:read",
 			Sub:       "user123",
@@ -714,7 +713,7 @@ func TestOAuth2Provider_ValidateToken_WithJWKS(t *testing.T) {
 
 	// Create a mock introspection server for fallback
 	introspectServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(introspectionResponse{ 
+		_ = json.NewEncoder(w).Encode(introspectionResponse{
 			Active:    true,
 			Scope:     "mcp:k8s:read",
 			Sub:       "user123",
@@ -891,7 +890,7 @@ func runCompleteFlowValidation(t *testing.T, provider *OAuth2Provider, callCount
 	t.Helper()
 
 	token := "valid-token"
-	
+
 	result, err := provider.ValidateToken(token)
 	require.NoError(t, err)
 	assert.NotNil(t, result)

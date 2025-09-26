@@ -1,4 +1,3 @@
-
 // Package weather provides Kubernetes manifest generation for E2E testing
 package weather
 
@@ -85,7 +84,6 @@ func (suite *WeatherE2ETestSuite) createNamespace(t interface{}) {
 		return
 	}
 }
-
 
 // createGatewayConfigMap creates ConfigMap for MCP Gateway.
 //
@@ -603,11 +601,11 @@ func (suite *WeatherE2ETestSuite) getRouterPodMeta() metav1.ObjectMeta {
 
 func (suite *WeatherE2ETestSuite) getRouterPodSpec() corev1.PodSpec {
 	return corev1.PodSpec{
-		ServiceAccountName: "mcp-router",
-		InitContainers:     suite.getRouterInitContainers(),
-		Containers:         suite.getRouterContainers(),
-		Volumes:            suite.getRouterVolumes(),
-		Affinity:           suite.getRouterAffinity(),
+		ServiceAccountName:        "mcp-router",
+		InitContainers:            suite.getRouterInitContainers(),
+		Containers:                suite.getRouterContainers(),
+		Volumes:                   suite.getRouterVolumes(),
+		Affinity:                  suite.getRouterAffinity(),
 		TopologySpreadConstraints: suite.getRouterTopologyConstraints(),
 	}
 }
@@ -1975,7 +1973,7 @@ func (suite *WeatherE2ETestSuite) validateImagePaths(dockerfilePath, contextPath
 
 func (suite *WeatherE2ETestSuite) buildDockerImage(dockerfilePath, contextPath, fullImageName string) error {
 	// #nosec G204 -- This is a test environment with controlled input paths
-	buildCmd := exec.CommandContext(suite.ctx, "docker", "build", 
+	buildCmd := exec.CommandContext(suite.ctx, "docker", "build",
 		"-f", filepath.Clean(dockerfilePath),
 		"-t", fullImageName,
 		filepath.Clean(contextPath))
@@ -2083,7 +2081,7 @@ func (suite *WeatherE2ETestSuite) setupPortForwarding(t *testing.T, serviceName 
 	if strings.Contains(serviceName, " ") || strings.Contains(suite.namespace, " ") {
 		t.Fatalf("Invalid service name or namespace: %s, %s", serviceName, suite.namespace)
 	}
-	
+
 	// #nosec G204 -- This is a test environment with validated service name and namespace
 	cmd := exec.CommandContext(suite.ctx, "kubectl", "port-forward",
 		"service/"+serviceName,

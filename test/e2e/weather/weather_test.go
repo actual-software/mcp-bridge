@@ -1,4 +1,3 @@
-
 // Package weather provides unit tests for the Weather MCP server components
 package weather
 

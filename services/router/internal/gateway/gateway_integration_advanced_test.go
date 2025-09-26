@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"io"
 	"net"
 	"strings"
@@ -14,6 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -172,7 +173,7 @@ func runLoadBalancingClients(t *testing.T, addresses []string, numClients, reque
 	wg.Wait()
 }
 
-func TestGatewayClient_LoadBalancing(t *testing.T) { 
+func TestGatewayClient_LoadBalancing(t *testing.T) {
 	_, addresses, requestCounts, cleanup := createLoadBalancingServers(t, 3)
 	defer cleanup()
 
@@ -218,7 +219,7 @@ func TestGatewayClient_LoadBalancing(t *testing.T) {
 func TestGatewayClient_FailoverScenarios(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	tests := createFailoverScenarioTests()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runFailoverScenarioTest(t, logger, tt)
@@ -237,7 +238,7 @@ type failoverScenarioTest struct {
 func createFailoverScenarioTests() []failoverScenarioTest {
 	tests := make([]failoverScenarioTest, 0, 3)
 	tests = append(tests, createServerShutdownTest())
-	tests = append(tests, createCorruptionTest()) 
+	tests = append(tests, createCorruptionTest())
 	tests = append(tests, createSlowResponseTest())
 	return tests
 }
@@ -326,7 +327,7 @@ func createSlowResponseTest() failoverScenarioTest {
 				return
 			}
 			time.Sleep(100 * time.Millisecond)
-			
+
 			var wireMsg struct {
 				ID         interface{}     `json:"id"`
 				MCPPayload json.RawMessage `json:"mcp_payload"`
@@ -334,7 +335,7 @@ func createSlowResponseTest() failoverScenarioTest {
 			if err := json.Unmarshal(frame.Payload, &wireMsg); err != nil {
 				return
 			}
-			
+
 			resp := mcp.Response{
 				JSONRPC: constants.TestJSONRPCVersion,
 				ID:      wireMsg.ID,
@@ -361,7 +362,7 @@ func createSlowResponseTest() failoverScenarioTest {
 
 func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenarioTest) {
 	t.Helper()
-	
+
 	server := newMockTCPServerBench(t, tt.serverBehavior)
 
 	addr, err := server.Start()
@@ -369,19 +370,19 @@ func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenar
 		t.Fatalf("Failed to start server: %v", err)
 	}
 	defer server.Stop()
-	
+
 	cfg := config.GatewayConfig{
 		URL: "tcp://" + addr,
 		Connection: common.ConnectionConfig{
 			TimeoutMs: 5000,
 		},
 	}
-	
+
 	client, err := NewTCPClient(cfg, logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	
+
 	ctx := context.Background()
 	if err := client.Connect(ctx); err != nil {
 		if !tt.expectedSuccess && tt.expectedError != "" && containsError(err.Error(), tt.expectedError) {
@@ -392,7 +393,7 @@ func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenar
 	}
 
 	defer func() { _ = client.Close() }()
-	
+
 	err = tt.clientOps(client)
 	validateFailoverResult(t, err, tt)
 }
@@ -414,7 +415,7 @@ func validateFailoverResult(t *testing.T, err error, tt failoverScenarioTest) {
 }
 
 // TestGatewayClient_CircuitBreakerBehavior tests circuit breaker functionality.
-func TestGatewayClient_CircuitBreakerBehavior(t *testing.T) { 
+func TestGatewayClient_CircuitBreakerBehavior(t *testing.T) {
 	handler := CreateCircuitBreakerTestHandler(t)
 	handler.ExecuteTest()
 }
@@ -423,15 +424,15 @@ func TestGatewayClient_CircuitBreakerBehavior(t *testing.T) {
 func TestGatewayClient_ConcurrentFailover(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	serverCounters := createServerCounters()
-	
+
 	server := createFailoverTestServer(t, serverCounters)
 
 	addr := startFailoverServer(t, server)
 	defer server.Stop()
-	
+
 	cfg := createFailoverClientConfig(addr)
 	clientCounters := runConcurrentFailoverTest(t, cfg, logger)
-	
+
 	validateConcurrentFailoverResults(t, serverCounters, clientCounters)
 }
 
@@ -459,14 +460,14 @@ func createFailoverTestServer(t *testing.T, counters *serverCounters) *mockTCPSe
 	return newMockTCPServerBench(t, func(conn net.Conn) {
 		atomic.AddInt64(counters.requestCount, 1)
 		currentCount := atomic.LoadInt64(counters.requestCount)
-		
+
 		if currentCount%3 == 0 {
 			atomic.AddInt64(counters.errorCount, 1)
 
 			_ = conn.Close()
 			return
 		}
-		
+
 		handleSuccessfulConnection(conn, counters.successCount)
 	})
 }
@@ -482,7 +483,7 @@ func handleSuccessfulConnection(conn net.Conn, successCount *int64) {
 	if frame.MessageType == MessageTypeVersionNegotiation {
 		sendIntegrationVersionAck(conn)
 	}
-	
+
 	for {
 		frame, err := ReadBinaryFrame(reader)
 		if err != nil {
@@ -504,7 +505,7 @@ func processRequestFrame(conn net.Conn, frame BinaryFrame) {
 	if err := json.Unmarshal(frame.Payload, &wireMsg); err != nil {
 		return
 	}
-	
+
 	resp := mcp.Response{
 		JSONRPC: constants.TestJSONRPCVersion,
 		ID:      wireMsg.ID,
@@ -535,13 +536,13 @@ func runConcurrentFailoverTest(t *testing.T, cfg config.GatewayConfig, logger *z
 		numGoroutines          = 20
 		operationsPerGoroutine = 5
 	)
-	
+
 	counters := &clientCounters{
 		successes: new(int64),
 		errors:    new(int64),
 		total:     numGoroutines * operationsPerGoroutine,
 	}
-	
+
 	var wg sync.WaitGroup
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
@@ -554,7 +555,7 @@ func runConcurrentFailoverTest(t *testing.T, cfg config.GatewayConfig, logger *z
 	}
 
 	wg.Wait()
-	
+
 	return counters
 }
 
@@ -582,24 +583,24 @@ func runSingleOperation(
 	}
 
 	defer func() { _ = client.Close() }()
-	
+
 	ctx := context.Background()
 	if err := client.Connect(ctx); err != nil {
 		atomic.AddInt64(counters.errors, 1)
 		return
 	}
-	
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  fmt.Sprintf("concurrent_%d_%d", goroutineID, opIdx),
 		ID:      fmt.Sprintf("req_%d_%d", goroutineID, opIdx),
 	}
-	
+
 	if err := client.SendRequest(req); err != nil {
 		atomic.AddInt64(counters.errors, 1)
 		return
 	}
-	
+
 	_, err = client.ReceiveResponse()
 	if err != nil {
 		atomic.AddInt64(counters.errors, 1)
@@ -611,7 +612,7 @@ func runSingleOperation(
 func validateConcurrentFailoverResults(t *testing.T, serverCounters *serverCounters, clientCounters *clientCounters) {
 	clientSuccesses := atomic.LoadInt64(clientCounters.successes)
 	clientErrors := atomic.LoadInt64(clientCounters.errors)
-	
+
 	t.Logf("Concurrent failover test results:")
 	t.Logf("  Total operations attempted: %d", clientCounters.total)
 	t.Logf("  Client successes: %d", clientSuccesses)
@@ -619,7 +620,7 @@ func validateConcurrentFailoverResults(t *testing.T, serverCounters *serverCount
 	t.Logf("  Server request count: %d", atomic.LoadInt64(serverCounters.requestCount))
 	t.Logf("  Server success count: %d", atomic.LoadInt64(serverCounters.successCount))
 	t.Logf("  Server error count: %d", atomic.LoadInt64(serverCounters.errorCount))
-	
+
 	if clientSuccesses == 0 {
 		t.Error("Expected some successful operations in concurrent failover test")
 	}
@@ -627,7 +628,7 @@ func validateConcurrentFailoverResults(t *testing.T, serverCounters *serverCount
 	if clientErrors == 0 {
 		t.Error("Expected some errors due to simulated server failures")
 	}
-	
+
 	successRate := float64(clientSuccesses) / float64(clientCounters.total)
 	if successRate < 0.3 {
 		t.Errorf("Success rate %.2f%% too low for concurrent failover test", successRate*100)

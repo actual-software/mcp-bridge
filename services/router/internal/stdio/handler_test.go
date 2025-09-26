@@ -6,13 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"io"
 	"os"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"go.uber.org/zap"
 
@@ -27,7 +28,7 @@ const (
 	httpStatusInternalError = 500
 )
 
-func TestNewHandler(t *testing.T) { 
+func TestNewHandler(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	stdinChan := make(chan []byte, 10)
 	stdoutChan := make(chan []byte, 10)
@@ -59,7 +60,7 @@ func TestNewHandler(t *testing.T) {
 	}
 }
 
-func TestHandler_handleStdin(t *testing.T) { 
+func TestHandler_handleStdin(t *testing.T) {
 	tests := createHandleStdinTests()
 
 	for _, tt := range tests {
@@ -222,7 +223,7 @@ func validateStdinResults(t *testing.T, tt struct {
 	}
 }
 
-func TestHandler_handleStdin_ErrorHandling(t *testing.T) { 
+func TestHandler_handleStdin_ErrorHandling(t *testing.T) {
 	// Test EOF handling.
 	t.Run("EOF handling", func(t *testing.T) {
 		logger := testutil.NewTestLogger(t)
@@ -286,7 +287,7 @@ func TestHandler_handleStdin_ErrorHandling(t *testing.T) {
 	})
 }
 
-func TestHandler_handleStdout(t *testing.T) { 
+func TestHandler_handleStdout(t *testing.T) {
 	tests := createHandleStdoutTests()
 
 	for _, tt := range tests {
@@ -301,7 +302,7 @@ func TestHandler_handleStdout(t *testing.T) {
 			go handler.handleStdout(ctx, wg)
 
 			sendStdoutMessages(t, stdoutChan, tt, cancel)
-			
+
 			// Allow time for processing.
 			time.Sleep(testTimeout * time.Millisecond)
 			cancel()
@@ -353,13 +354,13 @@ func createHandleStdoutTests() []struct {
 
 func setupStdoutHandler(t *testing.T) (*bytes.Buffer, *Handler, chan []byte, context.Context, context.CancelFunc) {
 	t.Helper()
-	
+
 	var outputBuf bytes.Buffer
 
 	writer := bufio.NewWriter(&outputBuf)
 	logger := testutil.NewTestLogger(t)
 	stdoutChan := make(chan []byte, 10)
-	
+
 	handler := &Handler{
 		logger:     logger,
 		stdoutChan: stdoutChan,
@@ -378,7 +379,7 @@ func sendStdoutMessages(t *testing.T, stdoutChan chan []byte, tt struct {
 	cancelAt  int
 }, cancel context.CancelFunc) {
 	t.Helper()
-	
+
 	// Send messages.
 	for i, msg := range tt.messages {
 		if msg == "" {
@@ -408,7 +409,7 @@ func verifyStdoutOutput(t *testing.T, tt struct {
 	cancelAt  int
 }, outputBuf *bytes.Buffer) {
 	t.Helper()
-	
+
 	// Verify output.
 	output := outputBuf.String()
 	if output != tt.expected {
@@ -416,7 +417,7 @@ func verifyStdoutOutput(t *testing.T, tt struct {
 	}
 }
 
-func TestHandler_handleStdout_WriteErrorf(t *testing.T) { 
+func TestHandler_handleStdout_WriteErrorf(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	stdoutChan := make(chan []byte, 10)
 
@@ -444,7 +445,7 @@ func TestHandler_handleStdout_WriteErrorf(t *testing.T) {
 	// Should handle error gracefully (logged but not crash).
 }
 
-func TestHandler_Run(t *testing.T) { 
+func TestHandler_Run(t *testing.T) {
 	// Create mock stdin/stdout.
 	stdinReader := strings.NewReader("input1\ninput2\n")
 
@@ -493,7 +494,7 @@ func TestHandler_Run(t *testing.T) {
 	}
 }
 
-func TestHandler_WriteErrorf(t *testing.T) { 
+func TestHandler_WriteErrorf(t *testing.T) {
 	handler := &Handler{}
 
 	// Capture stderr.
@@ -524,7 +525,7 @@ func TestHandler_WriteErrorf(t *testing.T) {
 	}
 }
 
-func TestHandler_ConcurrentAccess(t *testing.T) { 
+func TestHandler_ConcurrentAccess(t *testing.T) {
 	stdinChan := make(chan []byte, testIterations)
 	stdoutChan := make(chan []byte, testIterations)
 

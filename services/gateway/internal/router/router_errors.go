@@ -34,7 +34,7 @@ const (
 
 // NewNoEndpointsError creates an error for when no endpoints are available.
 func NewNoEndpointsError(namespace string) *errors.GatewayError {
-	return errors.New(errors.TypeUnavailable, "no endpoints available for namespace: " + namespace ).
+	return errors.New(errors.TypeUnavailable, "no endpoints available for namespace: "+namespace).
 		WithComponent("router").
 		WithContext("namespace", namespace).
 		WithContext("code", ErrCodeNoEndpoints).
@@ -43,7 +43,7 @@ func NewNoEndpointsError(namespace string) *errors.GatewayError {
 
 // NewNoHealthyEndpointsError creates an error for when no healthy endpoints are available.
 func NewNoHealthyEndpointsError(namespace string) *errors.GatewayError {
-	return errors.New(errors.TypeUnavailable, "no healthy endpoints available for namespace: " + namespace ).
+	return errors.New(errors.TypeUnavailable, "no healthy endpoints available for namespace: "+namespace).
 		WithComponent("router").
 		WithContext("namespace", namespace).
 		WithContext("code", ErrCodeNoHealthyEndpoints).
@@ -52,7 +52,7 @@ func NewNoHealthyEndpointsError(namespace string) *errors.GatewayError {
 
 // NewUnsupportedSchemeError creates an error for unsupported endpoint schemes.
 func NewUnsupportedSchemeError(scheme string, endpoint *discovery.Endpoint) *errors.GatewayError {
-	return errors.New(errors.TypeValidation, "unsupported endpoint scheme: " + scheme ).
+	return errors.New(errors.TypeValidation, "unsupported endpoint scheme: "+scheme).
 		WithComponent("router").
 		WithContext("scheme", scheme).
 		WithContext("endpoint", endpoint.Address).
@@ -94,7 +94,7 @@ func WrapWebSocketError(
 ) *errors.GatewayError {
 	return errors.WrapContextf(ctx, err, "WebSocket %s failed", operation).
 		WithComponent("router").
-		WithOperation("websocket_" + operation ).
+		WithOperation("websocket_"+operation).
 		WithContext("endpoint", fmt.Sprintf("%s:%d", endpoint.Address, endpoint.Port)).
 		WithContext("code", ErrCodeWebSocketFailed)
 }
@@ -108,7 +108,7 @@ func WrapHTTPError(
 ) *errors.GatewayError {
 	return errors.WrapContextf(ctx, err, "HTTP %s failed", operation).
 		WithComponent("router").
-		WithOperation("http_" + operation ).
+		WithOperation("http_"+operation).
 		WithContext("endpoint", fmt.Sprintf("%s:%d", endpoint.Address, endpoint.Port)).
 		WithContext("code", ErrCodeHTTPFailed)
 }

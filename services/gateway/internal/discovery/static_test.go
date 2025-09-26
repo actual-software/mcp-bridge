@@ -1,4 +1,3 @@
-
 package discovery
 
 import (
@@ -142,7 +141,7 @@ func verifyLoadedEndpoints(t *testing.T, sd *StaticDiscovery) {
 	t.Helper()
 	// Verify endpoints were loaded correctly
 	allEndpoints := sd.GetAllEndpoints()
-	
+
 	// Count total endpoints across all namespaces
 	totalCount := 0
 	for _, endpoints := range allEndpoints {

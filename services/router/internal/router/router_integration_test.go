@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +28,7 @@ const (
 
 // TestRouterIntegration_ConnectionEstablishment tests the router's ability to establish.
 // WebSocket connections to the gateway.
-func TestRouterIntegration_ConnectionEstablishment(t *testing.T) { 
+func TestRouterIntegration_ConnectionEstablishment(t *testing.T) {
 	// Create mock gateway.
 	gateway := newMockGateway(t, func(conn *websocket.Conn) {
 		// Simply accept connection and close.
@@ -59,7 +60,7 @@ func TestRouterIntegration_ConnectionEstablishment(t *testing.T) {
 
 // TestRouterIntegration_MessageFlow tests the complete request/response flow.
 // through the router.
-func TestRouterIntegration_MessageFlow(t *testing.T) { 
+func TestRouterIntegration_MessageFlow(t *testing.T) {
 	responseReceived := make(chan mcp.Response, 1)
 	done := make(chan struct{})
 
@@ -87,14 +88,14 @@ func TestRouterIntegration_MessageFlow(t *testing.T) {
 
 func setupIntegrationTest(t *testing.T) (*LocalRouter, context.Context, context.CancelFunc) {
 	t.Helper()
-	
+
 	gateway := createMockGatewayWithHandler(t)
 	t.Cleanup(func() { gateway.Close() })
 
 	// Setup router with longer-lived context
 	router := createTestRouter(t, gateway.URL)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	
+
 	return router, ctx, cancel
 }
 
@@ -109,7 +110,7 @@ func createTestRequest() mcp.Request {
 
 func monitorForResponse(t *testing.T, router *LocalRouter, responseReceived chan mcp.Response, done chan struct{}) {
 	t.Helper()
-	
+
 	// Monitor for response with proper synchronization.
 	responseCtx, responseCancel := context.WithTimeout(context.Background(), 2*time.Second)
 	t.Cleanup(responseCancel)
@@ -138,7 +139,7 @@ func monitorForResponse(t *testing.T, router *LocalRouter, responseReceived chan
 
 func verifyIntegrationResponse(t *testing.T, testRequest mcp.Request, responseReceived chan mcp.Response) {
 	t.Helper()
-	
+
 	// Verify response.
 	select {
 	case response := <-responseReceived:
@@ -215,7 +216,6 @@ func sendMockGatewayResponse(t *testing.T, conn *websocket.Conn, wireMsg gateway
 	}
 }
 
-
 // sendInitializationRequest sends initialization request and waits for response.
 func sendInitializationRequest(t *testing.T, router *LocalRouter) {
 	t.Helper()
@@ -242,7 +242,7 @@ func sendInitializationRequest(t *testing.T, router *LocalRouter) {
 
 // TestRouterIntegration_GracefulShutdown tests that the router shuts down cleanly.
 // when the context is canceled.
-func TestRouterIntegration_GracefulShutdown(t *testing.T) { 
+func TestRouterIntegration_GracefulShutdown(t *testing.T) {
 	// Create mock gateway.
 	gateway := newMockGateway(t, func(conn *websocket.Conn) {
 		// Keep connection alive until closed.

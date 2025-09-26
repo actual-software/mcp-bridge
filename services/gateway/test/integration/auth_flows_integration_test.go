@@ -1,4 +1,3 @@
-
 //go:build integration
 // +build integration
 
@@ -157,7 +156,7 @@ func (s *AuthTestSuite) generateTestCertificates() *TestCertificates {
 	caKey, caCertDER := s.generateCACertificate()
 	clientKey, clientCertDER := s.generateClientCertificate(caCertDER, caKey)
 	serverKey, serverCertDER := s.generateServerCertificate(caCertDER, caKey)
-	
+
 	return s.encodeTestCertificates(caKey, caCertDER, clientKey, clientCertDER, serverKey, serverCertDER)
 }
 
@@ -764,7 +763,7 @@ type testGateway struct {
 func (s *AuthTestSuite) createGatewayWithAuth(t *testing.T, authConfig *AuthConfig) *testGateway {
 	cfg := s.buildGatewayConfig(authConfig)
 	s.setAuthEnvironmentVariables(authConfig)
-	
+
 	components := s.initializeGatewayComponents(t, cfg)
 	gatewayServer := s.createGatewayServer(cfg, components)
 	serverAddr := s.startGatewayServer(t, gatewayServer, cfg)

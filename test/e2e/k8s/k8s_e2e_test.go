@@ -1,4 +1,3 @@
-
 package k8se2e
 
 import (
@@ -25,10 +24,10 @@ import (
 )
 
 const (
-	unknownValue          = "unknown"
-	podDisruptionMethod   = "pod-disruption"
-	networkPolicyMethod   = "networkpolicy"
-	resilienceMethod      = "resilience"
+	unknownValue        = "unknown"
+	podDisruptionMethod = "pod-disruption"
+	networkPolicyMethod = "networkpolicy"
+	resilienceMethod    = "resilience"
 )
 
 // TestKubernetesEndToEnd validates the complete MCP protocol flow in Kubernetes
@@ -77,66 +76,66 @@ func setupKubernetesInfrastructure(
 	logger.Info("Starting Kubernetes stack")
 
 	stack := NewKubernetesStack(t)
-	
+
 	err := stack.Start(ctx)
 	require.NoError(t, err, "Failed to start Kubernetes stack")
-	
+
 	// Phase 2: Service Readiness Verification
 	logger.Info("Waiting for services to be ready")
 	logger.Info("Checking HTTPS health endpoint")
-	
+
 	err = stack.WaitForHTTPEndpoint(ctx, stack.GetGatewayHTTPURL()+"/healthz")
 	require.NoError(t, err, "Gateway HTTPS health check failed")
-	
+
 	// Phase 3: Router Setup and Authentication
 	logger.Info("Setting up test suite with shared infrastructure")
-	
+
 	config := &e2e.TestConfig{
 		GatewayURL:  stack.GetGatewayURL(),
 		TestTimeout: 30 * time.Second,
 	}
-	
+
 	testSuite := e2e.NewTestSuite(t, config)
 	defer testSuite.Teardown()
-	
+
 	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
-	
+
 	client := testSuite.GetClient()
-	
+
 	// Initialize the client once for all tests
 	initResp, err := client.Initialize()
 	require.NoError(t, err, "Failed to initialize MCP client")
 	require.NotNil(t, initResp, "Initialize response is nil")
 	require.True(t, client.IsInitialized(), "Client should be initialized")
 	logger.Info("MCP client initialized successfully")
-	
+
 	return stack, client
 }
 
 func runKubernetesTestScenarios(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack) {
 	t.Helper()
-	
+
 	// Test 1: Basic Protocol Flow in Kubernetes
 	t.Run("BasicMCPFlow", func(t *testing.T) {
 		testBasicMCPFlowWithoutInit(t, client)
 	})
-	
+
 	// Test 2: Load Balancing Verification
 	t.Run("LoadBalancing", func(t *testing.T) {
 		testKubernetesLoadBalancing(t, client)
 	})
-	
+
 	// Test 3: Multiple Tool Execution
 	t.Run("MultipleToolExecution", func(t *testing.T) {
 		testMultipleToolExecution(t, client)
 	})
-	
+
 	// Test 4: Error Handling in Distributed Environment
 	t.Run("ErrorHandling", func(t *testing.T) {
 		testErrorHandling(t, client)
 	})
-	
+
 	// Test 5: Kubernetes-specific Features
 	t.Run("KubernetesFeatures", func(t *testing.T) {
 		testKubernetesFeatures(t, stack)
@@ -147,7 +146,7 @@ func runKubernetesTestScenarios(t *testing.T, client *e2e.MCPClient, stack *Kube
 // executeEchoToolAndExtractBackend executes echo tool and extracts backend ID from response.
 func executeEchoToolAndExtractBackend(t *testing.T, client *e2e.MCPClient) string {
 	t.Helper()
-	
+
 	response, err := client.CallTool("echo", map[string]interface{}{
 		"message": "load balancing test",
 	})
@@ -203,7 +202,7 @@ func parseBackendIDFromEchoText(text string) string {
 // validateLoadBalancingResults validates that load balancing worked correctly.
 func validateLoadBalancingResults(t *testing.T, backendHits map[string]int) {
 	t.Helper()
-	
+
 	// We should have at least some distribution (not requiring perfect balance)
 	require.NotEmpty(t, backendHits, "Should have backend responses")
 
@@ -261,18 +260,9 @@ func testKubernetesFeatures(t *testing.T, stack *KubernetesStack) {
 	})
 }
 
-
-
-
-
-
-
-
 // testKubernetesResourceMonitoring tests resource utilization monitoring.
 
-
 // testKubernetesScaling tests scaling behavior.
-
 
 // testKubernetesNetworkPerformance tests network performance in K8s environment.
 
@@ -284,12 +274,12 @@ func testKubernetesNetworkPerformance(t *testing.T, client *e2e.MCPClient) {
 
 	perfConfig := NewPerformanceConfig(t)
 	latencies := measureNetworkLatencies(t, client, perfConfig)
-	
+
 	// Analyze performance results
 	performanceStats := calculatePerformanceStats(latencies)
 	logPerformanceResults(logger, performanceStats, perfConfig)
 	validateNetworkPerformance(t, performanceStats, perfConfig)
-	
+
 	// Test large message handling
 	testLargeMessageThroughput(t, client, logger, perfConfig)
 }
@@ -298,7 +288,7 @@ func measureNetworkLatencies(t *testing.T, client *e2e.MCPClient, perfConfig *Pe
 	t.Helper()
 
 	latencies := make([]time.Duration, 0, perfConfig.LatencyTestCount)
-	
+
 	for i := 0; i < perfConfig.LatencyTestCount; i++ {
 		start := time.Now()
 		response, err := client.CallTool("echo", map[string]interface{}{
@@ -306,11 +296,11 @@ func measureNetworkLatencies(t *testing.T, client *e2e.MCPClient, perfConfig *Pe
 		})
 		latency := time.Since(start)
 		latencies = append(latencies, latency)
-		
+
 		require.NoError(t, err, "Network request should succeed")
 		require.NotNil(t, response, "Response should not be nil")
 	}
-	
+
 	return latencies
 }
 
@@ -325,12 +315,12 @@ func calculatePerformanceStats(latencies []time.Duration) PerformanceStats {
 	sort.Slice(latencies, func(i, j int) bool {
 		return latencies[i] < latencies[j]
 	})
-	
+
 	var totalLatency time.Duration
 	for _, lat := range latencies {
 		totalLatency += lat
 	}
-	
+
 	return PerformanceStats{
 		P50:        latencies[len(latencies)*50/100],
 		P95:        latencies[len(latencies)*95/100],
@@ -366,20 +356,20 @@ func testLargeMessageThroughput(
 	t.Helper()
 
 	largeMessage := strings.Repeat("This is a large message for network throughput testing. ", 100)
-	
+
 	start := time.Now()
 	response, err := client.CallTool("echo", map[string]interface{}{
 		"message": largeMessage,
 	})
 	largeMessageLatency := time.Since(start)
-	
+
 	require.NoError(t, err, "Large message should be handled successfully")
 	require.NotNil(t, response, "Large message response should not be nil")
-	
+
 	maxLargeMessageLatency := time.Duration(float64(10*time.Second) * perfConfig.ResourceConstraintFactor)
 	require.Less(t, largeMessageLatency, maxLargeMessageLatency,
 		"Large message latency %v should be reasonable (under %v)", largeMessageLatency, maxLargeMessageLatency)
-	
+
 	logger.Info("Large message test completed",
 		zap.Duration("latency", largeMessageLatency),
 		zap.Int("message_size", len(largeMessage)),
@@ -388,21 +378,11 @@ func testLargeMessageThroughput(
 
 // testKubernetesPodFailover tests pod failure and recovery scenarios.
 
-
-
-
-
-
-
-
 // testKubernetesServiceEndpoints tests service endpoint updates during pod restarts.
-
 
 // testKubernetesRollingUpdate tests rolling update behavior.
 
-
 // testKubernetesNetworkPartition tests network partition handling (simulated).
-
 
 // testNetworkResilience tests network resilience without network policies.
 func testNetworkResilience(t *testing.T, client *e2e.MCPClient, logger *zap.Logger) error {
@@ -484,28 +464,28 @@ func setupPerformanceTestCluster(
 
 	readinessCtx, readinessCancel := context.WithTimeout(ctx, clusterConfig.TestTimeout)
 	defer readinessCancel()
-	
+
 	err = stack.WaitForHTTPEndpoint(readinessCtx, stack.GetGatewayHTTPURL()+"/healthz")
 	require.NoError(t, err, "Gateway HTTPS health check failed")
-	
+
 	// Setup and initialize test client
 	config := &e2e.TestConfig{
 		GatewayURL:  stack.GetGatewayURL(),
 		TestTimeout: 30 * time.Second,
 	}
-	
+
 	testSuite := e2e.NewTestSuite(t, config)
 	defer testSuite.Teardown()
-	
+
 	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
-	
+
 	client := testSuite.GetClient()
 	initResp, err := client.Initialize()
 	require.NoError(t, err, "Failed to initialize MCP client")
 	require.NotNil(t, initResp, "Initialize response is nil")
 	require.True(t, client.IsInitialized(), "Client should be initialized")
-	
+
 	return stack, client, clusterConfig
 }
 
@@ -513,14 +493,14 @@ func runPerformanceTestScenarios(
 	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, logger *zap.Logger,
 ) {
 	t.Helper()
-	
+
 	perfAdaptations := adaptTestForCluster(clusterConfig, "performance", logger)
-	
+
 	// Test high throughput with multiple replicas (adaptive)
 	t.Run("HighThroughputWithReplicas", func(t *testing.T) {
 		testKubernetesHighThroughputAdaptive(t, client, stack, clusterConfig, perfAdaptations)
 	})
-	
+
 	// Conditional resource utilization monitoring
 	if clusterConfig.SupportsMetricsServer {
 		t.Run("ResourceUtilizationMonitoring", func(t *testing.T) {
@@ -530,7 +510,7 @@ func runPerformanceTestScenarios(
 	} else {
 		t.Log("Skipping resource monitoring tests - metrics server not available")
 	}
-	
+
 	// Conditional scaling behavior tests
 	if clusterConfig.ReplicaCount > 1 || !clusterConfig.ResourceConstraints {
 		t.Run("ScalingBehavior", func(t *testing.T) {
@@ -540,7 +520,7 @@ func runPerformanceTestScenarios(
 	} else {
 		t.Log("Skipping scaling tests - insufficient resources or single replica configuration")
 	}
-	
+
 	// Network performance (always run but with adaptive expectations)
 	t.Run("NetworkPerformance", func(t *testing.T) {
 		testKubernetesNetworkPerformance(t, client)
@@ -600,19 +580,19 @@ func setupFailoverTestCluster(
 		GatewayURL:  stack.GetGatewayURL(),
 		TestTimeout: 30 * time.Second,
 	}
-	
+
 	testSuite := e2e.NewTestSuite(t, config)
 	defer testSuite.Teardown()
-	
+
 	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
-	
+
 	client := testSuite.GetClient()
 	initResp, err := client.Initialize()
 	require.NoError(t, err, "Failed to initialize MCP client")
 	require.NotNil(t, initResp, "Initialize response is nil")
 	require.True(t, client.IsInitialized(), "Client should be initialized")
-	
+
 	return stack, client, clusterConfig
 }
 
@@ -620,24 +600,24 @@ func runFailoverTestScenarios(
 	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, logger *zap.Logger,
 ) {
 	t.Helper()
-	
+
 	failoverAdaptations := adaptTestForCluster(clusterConfig, "failover", logger)
-	
+
 	// Test pod failure and recovery (adaptive)
 	t.Run("PodFailureAndRecovery", func(t *testing.T) {
 		testKubernetesPodFailoverAdaptive(t, client, stack, clusterConfig, failoverAdaptations)
 	})
-	
+
 	// Test service endpoint updates during pod restarts (adaptive)
 	t.Run("ServiceEndpointUpdates", func(t *testing.T) {
 		testKubernetesServiceEndpointsAdaptive(t, client, stack, clusterConfig, failoverAdaptations)
 	})
-	
+
 	// Test rolling updates (adaptive)
 	t.Run("RollingUpdates", func(t *testing.T) {
 		testKubernetesRollingUpdateAdaptive(t, client, stack, clusterConfig, failoverAdaptations)
 	})
-	
+
 	// Test network partition handling (adaptive based on cluster capabilities)
 	t.Run("NetworkPartitionHandling", func(t *testing.T) {
 		networkAdaptations := adaptTestForCluster(clusterConfig, "network_partition", logger)
@@ -666,7 +646,7 @@ func saveKubernetesLogs(stack *KubernetesStack) {
 
 	// Create logs directory if it doesn't exist
 	logsDir := "test-logs"
-	if err := os.MkdirAll(logsDir, 0750); err != nil { 
+	if err := os.MkdirAll(logsDir, 0750); err != nil {
 		logger.Error("Failed to create logs directory", zap.Error(err))
 
 		return
@@ -785,13 +765,12 @@ func collectServiceLog(stack *KubernetesStack, serviceName, logsDir string, logg
 
 // saveKubernetesEvents saves pod events with timestamp sorting.
 
-
 // detectNamespace attempts to detect the namespace from the current cluster context.
 func detectNamespace(logger *zap.Logger) string {
 	// Try to get namespaces that match our test pattern
 	ctx := context.Background()
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "get", "namespaces", "-o", "jsonpath={.items[*].metadata.name}") 
+	cmd := exec.CommandContext(ctx, "kubectl", "get", "namespaces", "-o", "jsonpath={.items[*].metadata.name}")
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -845,12 +824,12 @@ func getServiceLogsWithRetry(
 func writeLogFile(filename, content string, logger *zap.Logger) error {
 	// Ensure directory exists
 	dir := filepath.Dir(filename)
-	if err := os.MkdirAll(dir, 0750); err != nil { 
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
 	// Write file with appropriate permissions
-	if err := os.WriteFile(filename, []byte(content), 0600); err != nil { 
+	if err := os.WriteFile(filename, []byte(content), 0600); err != nil {
 		return fmt.Errorf("failed to write file %s: %w", filename, err)
 	}
 
@@ -1016,13 +995,13 @@ func fetchMetricsContent(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch metrics: %w", err)
 	}
 
-	defer func() { _ = resp.Body.Close() }() 
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -1133,7 +1112,6 @@ func parseMetricValue(line string) (float64, error) {
 
 // validatePerformanceMetrics validates that performance metrics are within reasonable bounds.
 
-
 // validatePodResourceUsage validates pod resource usage via kubectl.
 
 func validatePodResourceUsage(stack *KubernetesStack, logger *zap.Logger) (*ResourceData, error) {
@@ -1150,9 +1128,9 @@ func validatePodResourceUsage(stack *KubernetesStack, logger *zap.Logger) (*Reso
 	if err != nil {
 		return resourceData, err
 	}
-	
+
 	collectPodResourceLimits(ctx, stack, resourceData, logger)
-	
+
 	return resourceData, nil
 }
 
@@ -1161,7 +1139,7 @@ func collectPodResourceMetrics(
 ) error {
 	// #nosec G204 - command with controlled test inputs
 	cmd := exec.CommandContext(ctx, "kubectl", "top", "pods", "-n", stack.namespace, "--no-headers")
-	
+
 	output, err := cmd.Output()
 	if err != nil {
 		logger.Warn("Could not get pod resource usage (metrics-server may not be available)", zap.Error(err))
@@ -1188,7 +1166,7 @@ func collectPodResourceMetrics(
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1197,8 +1175,8 @@ func collectPodResourceLimits(
 ) {
 	// #nosec G204 - kubectl command with controlled test inputs
 	limitsCmd := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", stack.namespace,
-		"-o", "jsonpath={range .items[*]}{.metadata.name}{':'}" +
-			"{.spec.containers[0].resources.limits.cpu}{','}" +
+		"-o", "jsonpath={range .items[*]}{.metadata.name}{':'}"+
+			"{.spec.containers[0].resources.limits.cpu}{','}"+
 			"{.spec.containers[0].resources.limits.memory}{'\\n'}{end}")
 
 	limitsOutput, err := limitsCmd.Output()
@@ -1267,7 +1245,6 @@ func validateResourceConsumption(stack *KubernetesStack, data *ResourceData, log
 
 // validateResourceEfficiency validates that resources are being used efficiently.
 
-
 // NetworkCapabilities represents the network capabilities of the cluster.
 type NetworkCapabilities struct {
 	SupportsNetworkPolicies bool
@@ -1294,7 +1271,7 @@ spec:
   - Ingress`
 
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-") 
+	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
 
 	cmd.Stdin = strings.NewReader(testPolicy)
 	if err := cmd.Run(); err != nil {
@@ -1305,9 +1282,9 @@ spec:
 
 	// Clean up test policy
 	// #nosec G204 - command with controlled test inputs
-	deleteCmd := exec.CommandContext(ctx, "kubectl", "delete", "networkpolicy", "test-capability-check", 
-		"-n", stack.namespace) 
-	_ = deleteCmd.Run() 
+	deleteCmd := exec.CommandContext(ctx, "kubectl", "delete", "networkpolicy", "test-capability-check",
+		"-n", stack.namespace)
+	_ = deleteCmd.Run()
 
 	return true
 }
@@ -1340,7 +1317,7 @@ func identifyClusterFromNodeNames(nodeNames string) string {
 
 func detectClusterType() string {
 	ctx := context.Background()
-	
+
 	// #nosec G204 - kubectl command with controlled test inputs
 	nodes, err := exec.CommandContext(ctx, "kubectl", "get", "nodes", "-o", "jsonpath={.items[*].metadata.name}").Output()
 	if err != nil {
@@ -1353,7 +1330,7 @@ func detectClusterType() string {
 // detectCNIProvider detects the CNI provider being used.
 func detectCNIProvider() string {
 	ctx := context.Background()
-	
+
 	// Check for CNI provider from node info
 	if provider := detectCNIFromNodeInfo(ctx); provider != "unknown" {
 		return provider
@@ -1369,12 +1346,12 @@ func detectCNIProvider() string {
 
 func detectCNIFromNodeInfo(ctx context.Context) string {
 	// #nosec G204 - kubectl command with controlled test inputs
-	cniInfo, err := exec.CommandContext(ctx, "kubectl", "get", "nodes", 
+	cniInfo, err := exec.CommandContext(ctx, "kubectl", "get", "nodes",
 		"-o", "jsonpath={.items[0].status.nodeInfo.containerRuntimeVersion}").Output()
 	if err != nil {
 		return unknownValue
 	}
-	
+
 	cniVersion := string(cniInfo)
 
 	return identifyCNIProvider(cniVersion)
@@ -1389,7 +1366,7 @@ func detectCNIFromPods(ctx context.Context) string {
 	if err != nil {
 		return unknownValue
 	}
-	
+
 	podNames := string(pods)
 
 	return identifyCNIProviderFromPods(podNames)
@@ -1435,7 +1412,7 @@ spec:
       privileged: true`
 
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-") 
+	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
 
 	cmd.Stdin = strings.NewReader(testPod)
 	if err := cmd.Run(); err != nil {
@@ -1449,8 +1426,8 @@ spec:
 	deletePodCmd := exec.CommandContext(
 		ctx, "kubectl", "delete", "pod", "test-privileged-check",
 		"-n", stack.namespace, "--force", "--grace-period=0",
-	) 
-	_ = deletePodCmd.Run() 
+	)
+	_ = deletePodCmd.Run()
 
 	return true
 }
@@ -1488,7 +1465,6 @@ func detectNetworkCapabilities(stack *KubernetesStack, logger *zap.Logger) (*Net
 
 // selectPartitionMethod selects the best network partition method based on capabilities.
 
-
 // testNetworkPolicyPartition tests network partition using NetworkPolicies.
 
 func testNetworkPolicyPartition(
@@ -1500,26 +1476,26 @@ func testNetworkPolicyPartition(
 ) error {
 	t.Helper()
 	logger.Info("Testing network partition using NetworkPolicies")
-	
+
 	if err := applyNetworkPartitionPolicy(stack, logger); err != nil {
 		return err
 	}
-	
+
 	successfulRequests, failedRequests := testConnectivityDuringPartition(client)
-	
+
 	if err := cleanupNetworkPolicy(stack, logger); err != nil {
 		logger.Warn("Failed to cleanup network policy", zap.Error(err))
 	}
-	
+
 	verifyNetworkRecovery(t, client)
 	validatePartitionResults(t, logger, successfulRequests, failedRequests)
-	
+
 	return nil
 }
 
 func applyNetworkPartitionPolicy(stack *KubernetesStack, logger *zap.Logger) error {
 	ctx := context.Background()
-	
+
 	// Create a restrictive network policy that blocks external traffic
 	restrictivePolicy := fmt.Sprintf(`
 apiVersion: networking.k8s.io/v1
@@ -1545,16 +1521,16 @@ spec:
         matchLabels:
           app: mcp-gateway
 `, stack.namespace)
-	
+
 	// Apply the network policy
 	// #nosec G204 - command with controlled test inputs
 	applyCmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
 	applyCmd.Stdin = strings.NewReader(restrictivePolicy)
-	
+
 	if err := applyCmd.Run(); err != nil {
 		return fmt.Errorf("failed to apply network policy: %w", err)
 	}
-	
+
 	// Give time for policy to take effect
 	time.Sleep(10 * time.Second)
 
@@ -1563,21 +1539,21 @@ spec:
 
 func testConnectivityDuringPartition(client *e2e.MCPClient) (int, int) {
 	var successfulRequests, failedRequests int
-	
+
 	for i := 0; i < 20; i++ {
 		response, err := client.CallTool("echo", map[string]interface{}{
 			"message": fmt.Sprintf("partition test %d", i),
 		})
-		
+
 		if err == nil && response != nil {
 			successfulRequests++
 		} else {
 			failedRequests++
 		}
-		
+
 		time.Sleep(200 * time.Millisecond)
 	}
-	
+
 	return successfulRequests, failedRequests
 }
 
@@ -1587,7 +1563,7 @@ func cleanupNetworkPolicy(stack *KubernetesStack, logger *zap.Logger) error {
 	deleteCmd := exec.CommandContext(
 		ctx, "kubectl", "delete", "networkpolicy", "test-network-partition", "-n", stack.namespace,
 	)
-	
+
 	if err := deleteCmd.Run(); err != nil {
 		return err
 	}
@@ -1613,7 +1589,7 @@ func validatePartitionResults(t *testing.T, logger *zap.Logger, successfulReques
 	logger.Info("NetworkPolicy partition test results",
 		zap.Int("successful_requests", successfulRequests),
 		zap.Int("failed_requests", failedRequests))
-	
+
 	// We expect some level of disruption but not complete failure
 	totalRequests := successfulRequests + failedRequests
 	successRate := float64(successfulRequests) / float64(totalRequests) * 100
@@ -1772,11 +1748,11 @@ func deletePods(podNames []string, namespace string, logger *zap.Logger) {
 	}
 
 	for i := 0; i < halfCount && i < len(podNames); i++ {
-	// #nosec G204 - command with controlled test inputs
-	deleteCmd := exec.CommandContext(
-		ctx, "kubectl", "delete", "pod", podNames[i], "-n", namespace,
-		"--force", "--grace-period=0",
-	)
+		// #nosec G204 - command with controlled test inputs
+		deleteCmd := exec.CommandContext(
+			ctx, "kubectl", "delete", "pod", podNames[i], "-n", namespace,
+			"--force", "--grace-period=0",
+		)
 		if err := deleteCmd.Run(); err != nil {
 			logger.Warn("Failed to delete pod", zap.String("pod", podNames[i]), zap.Error(err))
 		} else {
@@ -1812,7 +1788,7 @@ func waitForPodsRecreation(namespace string, expectedCount int, logger *zap.Logg
 	ctx := context.Background()
 	for i := 0; i < 30; i++ {
 		// #nosec G204 - kubectl command with controlled test inputs
-		checkCmd := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", namespace, "-l", "app=test-mcp-server", 
+		checkCmd := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", namespace, "-l", "app=test-mcp-server",
 			"-o", "jsonpath={.items[?(@.status.phase==\"Running\")].metadata.name}")
 		output, _ := checkCmd.Output()
 
@@ -1969,7 +1945,7 @@ func detectClusterConfiguration(
 func detectClusterBasics(ctx context.Context, config *ClusterConfig, logger *zap.Logger) error {
 	// Get node count and basic info
 	// #nosec G204 - command with controlled test inputs
-	nodeCmd := exec.CommandContext(ctx, "kubectl", "get", "nodes", "-o", "jsonpath={.items[*].metadata.name}") 
+	nodeCmd := exec.CommandContext(ctx, "kubectl", "get", "nodes", "-o", "jsonpath={.items[*].metadata.name}")
 	if output, err := nodeCmd.Output(); err == nil {
 		nodes := strings.Fields(strings.TrimSpace(string(output)))
 		config.NodeCount = len(nodes)
@@ -1977,7 +1953,7 @@ func detectClusterBasics(ctx context.Context, config *ClusterConfig, logger *zap
 
 	// Get Kubernetes version
 	// #nosec G204 - command with controlled test inputs
-	versionCmd := exec.CommandContext(ctx, "kubectl", "version", "--client=false", "-o", "json") 
+	versionCmd := exec.CommandContext(ctx, "kubectl", "version", "--client=false", "-o", "json")
 	if output, err := versionCmd.Output(); err == nil {
 		// Simple parsing - in production you'd use proper JSON parsing
 		versionStr := string(output)
@@ -1989,7 +1965,7 @@ func detectClusterBasics(ctx context.Context, config *ClusterConfig, logger *zap
 
 	// Estimate cluster resources
 	// #nosec G204 - command with controlled test inputs
-	resourceCmd := exec.CommandContext(ctx, "kubectl", "describe", "nodes") 
+	resourceCmd := exec.CommandContext(ctx, "kubectl", "describe", "nodes")
 	if output, err := resourceCmd.Output(); err == nil {
 		resourceInfo := string(output)
 
@@ -2022,7 +1998,7 @@ func detectClusterFeatures(ctx context.Context, config *ClusterConfig, logger *z
 
 	// Check for HPA support
 	// #nosec G204 - command with controlled test inputs
-	hpaCmd := exec.CommandContext(ctx, "kubectl", "api-versions") 
+	hpaCmd := exec.CommandContext(ctx, "kubectl", "api-versions")
 	if output, err := hpaCmd.Output(); err == nil {
 		apiVersions := string(output)
 		if strings.Contains(apiVersions, "autoscaling/v2") {
@@ -2047,23 +2023,23 @@ spec:
 `
 
 	// #nosec G204 - command with controlled test inputs
-	applyCmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-") 
+	applyCmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
 	applyCmd.Stdin = strings.NewReader(testLBService)
 
 	if err := applyCmd.Run(); err == nil {
 		config.SupportsLoadBalancer = true
 
 		// Clean up test service
-	// #nosec G204 - command with controlled test inputs
-	deleteCmd := exec.CommandContext(ctx, "kubectl", "delete", "service", "test-lb-check", "-n", "default") 
-		_ = deleteCmd.Run() 
+		// #nosec G204 - command with controlled test inputs
+		deleteCmd := exec.CommandContext(ctx, "kubectl", "delete", "service", "test-lb-check", "-n", "default")
+		_ = deleteCmd.Run()
 
 		logger.Info("LoadBalancer services are supported")
 	}
 
 	// Check for Ingress support
 	// #nosec G204 - command with controlled test inputs
-	ingressCmd := exec.CommandContext(ctx, "kubectl", "get", "ingressclass") 
+	ingressCmd := exec.CommandContext(ctx, "kubectl", "get", "ingressclass")
 	if err := ingressCmd.Run(); err == nil {
 		config.SupportsIngress = true
 
@@ -2072,7 +2048,7 @@ spec:
 
 	// Check for StorageClass support
 	// #nosec G204 - command with controlled test inputs
-	storageCmd := exec.CommandContext(ctx, "kubectl", "get", "storageclass") 
+	storageCmd := exec.CommandContext(ctx, "kubectl", "get", "storageclass")
 	if err := storageCmd.Run(); err == nil {
 		config.SupportsStorageClass = true
 
@@ -2195,18 +2171,18 @@ func validateClusterReadiness(
 	logger *zap.Logger,
 ) error {
 	logger.Info("Validating cluster readiness for testing")
-	
+
 	if err := validateNodeReadiness(ctx, config, logger); err != nil {
 		return err
 	}
-	
+
 	if err := validateNamespaceExists(ctx, stack, logger); err != nil {
 		return err
 	}
-	
+
 	validateResourceConstraints(config, logger)
 	validateDNSFunctionality(ctx, stack, logger)
-	
+
 	logger.Info("Cluster readiness validation completed")
 
 	return nil
@@ -2219,17 +2195,17 @@ func validateNodeReadiness(ctx context.Context, config *ClusterConfig, logger *z
 		ctx, "kubectl", "get", "nodes", "-o",
 		"jsonpath={.items[?(@.status.conditions[?(@.type==\\\"Ready\\\")].status==\\\"True\\\")].metadata.name}",
 	)
-	
+
 	output, err := readyNodesCmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to check node readiness: %w", err)
 	}
-	
+
 	readyNodes := strings.Fields(strings.TrimSpace(string(output)))
 	if len(readyNodes) < config.NodeCount {
 		return fmt.Errorf("only %d/%d nodes are ready", len(readyNodes), config.NodeCount)
 	}
-	
+
 	logger.Info("Node readiness validated",
 		zap.Int("ready_nodes", len(readyNodes)),
 		zap.Int("total_nodes", config.NodeCount),
@@ -2242,13 +2218,13 @@ func validateNamespaceExists(ctx context.Context, stack *KubernetesStack, logger
 	if stack.namespace == "" {
 		return nil
 	}
-	
+
 	// #nosec G204 - command with controlled test inputs
 	nsCmd := exec.CommandContext(ctx, "kubectl", "get", "namespace", stack.namespace)
 	if err := nsCmd.Run(); err != nil {
 		return fmt.Errorf("test namespace %s does not exist: %w", stack.namespace, err)
 	}
-	
+
 	logger.Info("Namespace validation passed", zap.String("namespace", stack.namespace))
 
 	return nil
@@ -2275,11 +2251,11 @@ spec:
     command: ['nslookup', 'kubernetes.default.svc.cluster.local']
   restartPolicy: Never
 `, stack.namespace)
-	
+
 	// #nosec G204 - command with controlled test inputs
 	applyCmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
 	applyCmd.Stdin = strings.NewReader(dnsTestPod)
-	
+
 	if err := applyCmd.Run(); err == nil {
 		checkDNSTestResults(ctx, stack, logger)
 		cleanupDNSTestPod(ctx, stack)
@@ -2289,7 +2265,7 @@ spec:
 func checkDNSTestResults(ctx context.Context, stack *KubernetesStack, logger *zap.Logger) {
 	// Wait a bit for pod to complete
 	time.Sleep(5 * time.Second)
-	
+
 	// Check if DNS test passed
 	// #nosec G204 - command with controlled test inputs
 	logsCmd := exec.CommandContext(ctx, "kubectl", "logs", "dns-test", "-n", stack.namespace)
@@ -2325,7 +2301,7 @@ func testKubernetesHighThroughputAdaptive(
 	logger.Info("Testing Kubernetes high throughput performance (adaptive)")
 
 	perfConfig := configureAdaptivePerformanceTest(t, clusterConfig, adaptations, logger)
-	
+
 	successCount, errorCount, backendHits, duration := executeAdaptiveHighThroughputTest(t, client, perfConfig)
 	verifyAdaptiveHighThroughputResults(t, logger, perfConfig, clusterConfig, successCount, errorCount, duration)
 	verifyAdaptiveLoadBalancing(t, logger, clusterConfig, backendHits)
@@ -2372,7 +2348,7 @@ func executeAdaptiveHighThroughputTest(
 	t.Helper()
 
 	var wg sync.WaitGroup
-	
+
 	var successCount, errorCount int64
 
 	backendHits := &sync.Map{}
@@ -2397,7 +2373,7 @@ func createAdaptiveRequestChannel(requestCount int) chan int {
 	for i := 0; i < requestCount; i++ {
 		requestChan <- i
 	}
-	
+
 	close(requestChan)
 
 	return requestChan
@@ -2468,7 +2444,7 @@ func verifyAdaptiveHighThroughputResults(
 	duration time.Duration,
 ) {
 	t.Helper()
-	
+
 	totalRequests := successCount + errorCount
 	successRate := float64(successCount) / float64(totalRequests) * 100
 	throughput := float64(successCount) / duration.Seconds()
@@ -2500,7 +2476,7 @@ func verifyAdaptiveLoadBalancing(
 	backendHits *sync.Map,
 ) {
 	t.Helper()
-	
+
 	backendCount := 0
 
 	backendHits.Range(func(key, value interface{}) bool {
@@ -2527,7 +2503,7 @@ func testKubernetesResourceMonitoringAdaptive(
 	adaptations map[string]interface{},
 ) {
 	t.Helper()
-	
+
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes resource utilization monitoring (adaptive)")
 
@@ -2579,14 +2555,14 @@ func testKubernetesScalingAdaptive(
 	adaptations map[string]interface{},
 ) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes scaling behavior (adaptive)")
 
 	scalingConfig := configureAdaptiveScalingTest(clusterConfig, adaptations, logger)
 	currentReplicas := getCurrentReplicaCount(t, ctx, stack, logger)
-	
+
 	if shouldPerformScaling(scalingConfig, clusterConfig) {
 		performAdaptiveScalingTest(t, ctx, client, stack, scalingConfig, currentReplicas)
 	} else {
@@ -2664,10 +2640,10 @@ func performAdaptiveScalingTest(
 	t.Helper()
 	scaleUpDeployment(t, ctx, stack, scalingConfig)
 	waitForScaleUpCompletion(t, ctx, stack, scalingConfig)
-	
+
 	backendHits := testLoadDistributionAfterScaling(t, client, scalingConfig)
 	verifyScalingResults(t, scalingConfig, backendHits)
-	
+
 	scaleDownDeployment(t, ctx, stack, currentReplicas)
 	waitForScaleDownCompletion(t, ctx, stack, scalingConfig)
 }
@@ -2711,7 +2687,7 @@ func testLoadDistributionAfterScaling(
 	scalingConfig *adaptiveScalingConfig,
 ) map[string]int {
 	t.Helper()
-	
+
 	backendHits := make(map[string]int)
 	numTestRequests := 20
 
@@ -2837,7 +2813,7 @@ func getAdaptiveParameters(adaptations map[string]interface{}) (time.Duration, i
 
 func verifySystemWorking(t *testing.T, client *e2e.MCPClient, message string) {
 	t.Helper()
-	
+
 	response, err := client.CallTool("echo", map[string]interface{}{
 		"message": message,
 	})
@@ -2858,7 +2834,7 @@ func getAndDeleteTargetPod(
 	cmd := exec.CommandContext(
 		ctx, "kubectl", "get", "pods", "-n", stack.namespace, "-l", "app=test-mcp-server",
 		"-o", "jsonpath={.items[*].metadata.name}",
-	) 
+	)
 	output, err := cmd.Output()
 	require.NoError(t, err, "Should be able to get pod list")
 
@@ -2872,7 +2848,7 @@ func getAndDeleteTargetPod(
 	// #nosec G204 - command with controlled test inputs
 	deleteCmd := exec.CommandContext(
 		ctx, "kubectl", "delete", "pod", targetPod, "-n", stack.namespace, "--grace-period=0", "--force",
-	) 
+	)
 	err = deleteCmd.Run()
 	require.NoError(t, err, "Should be able to delete pod")
 
@@ -2907,7 +2883,7 @@ func waitForPodRecreation(t *testing.T, stack *KubernetesStack, recoveryTimeout 
 func isPodReady(stack *KubernetesStack, logger *zap.Logger) bool {
 	ctx := context.Background()
 	// #nosec G204 - kubectl command with controlled test inputs
-	checkCmd := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", stack.namespace, "-l", "app=test-mcp-server", 
+	checkCmd := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", stack.namespace, "-l", "app=test-mcp-server",
 		"-o", "jsonpath={.items[?(@.status.phase==\"Running\")].metadata.name}")
 
 	checkOutput, checkErr := checkCmd.Output()
@@ -2969,7 +2945,7 @@ func testKubernetesServiceEndpointsAdaptive(
 	adaptations map[string]interface{},
 ) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes service endpoint updates (adaptive)")
@@ -2989,26 +2965,26 @@ func testKubernetesServiceEndpointsAdaptive(
 
 func getEndpointsBeforeRestart(t *testing.T, ctx context.Context, stack *KubernetesStack) []byte {
 	t.Helper()
-	
+
 	// #nosec G204 - command with controlled test inputs
-	endpointsCmd := exec.CommandContext(ctx, "kubectl", "get", "endpoints", "test-mcp-server", 
-		"-n", stack.namespace, "-o", "yaml") 
+	endpointsCmd := exec.CommandContext(ctx, "kubectl", "get", "endpoints", "test-mcp-server",
+		"-n", stack.namespace, "-o", "yaml")
 	beforeOutput, err := endpointsCmd.Output()
 	require.NoError(t, err, "Should be able to get endpoints before restart")
 
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Endpoints before restart", zap.String("endpoints", string(beforeOutput)))
-	
+
 	return beforeOutput
 }
 
 func performServiceRestart(t *testing.T, ctx context.Context, stack *KubernetesStack, clusterConfig *ClusterConfig) {
 	t.Helper()
-	
+
 	// Scale down deployment
 	// #nosec G204 - command with controlled test inputs
-	scaleDownCmd := exec.CommandContext(ctx, "kubectl", "scale", "deployment", "test-mcp-server", 
-		"--replicas=0", "-n", stack.namespace) 
+	scaleDownCmd := exec.CommandContext(ctx, "kubectl", "scale", "deployment", "test-mcp-server",
+		"--replicas=0", "-n", stack.namespace)
 	err := scaleDownCmd.Run()
 	require.NoError(t, err, "Should be able to scale down deployment")
 
@@ -3025,7 +3001,7 @@ func performServiceRestart(t *testing.T, ctx context.Context, stack *KubernetesS
 	scaleUpCmd := exec.CommandContext(
 		ctx, "kubectl", "scale", "deployment", "test-mcp-server",
 		fmt.Sprintf("--replicas=%d", clusterConfig.ReplicaCount), "-n", stack.namespace,
-	) 
+	)
 	err = scaleUpCmd.Run()
 	require.NoError(t, err, "Should be able to scale up deployment")
 
@@ -3034,23 +3010,23 @@ func performServiceRestart(t *testing.T, ctx context.Context, stack *KubernetesS
 	rolloutCmd := exec.CommandContext(
 		ctx, "kubectl", "rollout", "status", "deployment/test-mcp-server", "-n", stack.namespace,
 		fmt.Sprintf("--timeout=%v", clusterConfig.ScaleTimeout*2),
-	) 
+	)
 	err = rolloutCmd.Run()
 	require.NoError(t, err, "Deployment rollout should complete successfully")
 }
 
 func getEndpointsAfterRestart(t *testing.T, ctx context.Context, stack *KubernetesStack) []byte {
 	t.Helper()
-	
+
 	// #nosec G204 - command with controlled test inputs
-	endpointsCmd := exec.CommandContext(ctx, "kubectl", "get", "endpoints", "test-mcp-server", 
+	endpointsCmd := exec.CommandContext(ctx, "kubectl", "get", "endpoints", "test-mcp-server",
 		"-n", stack.namespace, "-o", "yaml")
 	afterOutput, err := endpointsCmd.Output()
 	require.NoError(t, err, "Should be able to get endpoints after restart")
 
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Endpoints after restart", zap.String("endpoints", string(afterOutput)))
-	
+
 	return afterOutput
 }
 
@@ -3063,7 +3039,7 @@ func verifyEndpointsUpdated(
 	logger *zap.Logger,
 ) {
 	t.Helper()
-	
+
 	// Verify service endpoints have been updated (different pod IPs)
 	require.NotEqual(t, string(beforeOutput), string(afterOutput), "Endpoints should be different after pod restart")
 
@@ -3099,7 +3075,7 @@ func testKubernetesRollingUpdateAdaptive(
 	adaptations map[string]interface{},
 ) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes rolling update (adaptive)")
@@ -3108,7 +3084,7 @@ func testKubernetesRollingUpdateAdaptive(
 	logger.Info("Current deployment image", zap.String("image", currentImage))
 	triggerAdaptiveRollingUpdate(t, ctx, stack, logger)
 	waitForRollingUpdateCompletion(t, ctx, stack, clusterConfig)
-	
+
 	successfulRequests, failedRequests := testServiceDuringRollingUpdate(t, client, clusterConfig, logger)
 	verifyAdaptiveRollingUpdateResults(t, logger, clusterConfig, successfulRequests, failedRequests)
 
@@ -3251,7 +3227,7 @@ func testKubernetesNetworkPartitionAdaptive(
 	adaptations map[string]interface{},
 ) {
 	t.Helper()
-	
+
 	logger, _ := zap.NewDevelopment()
 	logger.Info("Testing Kubernetes network partition handling (adaptive)")
 
@@ -3365,7 +3341,7 @@ func testPodDisruptionPartitionAdaptive(
 	logger.Info("Testing network partition using pod disruption (adaptive)")
 
 	// Use adaptive timeouts and fewer requests in constrained environments
-	_ = 25 
+	_ = 25
 
 	if clusterConfig.ResourceConstraints {
 		logger.Info("Using constrained environment parameters for pod disruption")
@@ -3495,7 +3471,6 @@ func validatePerformanceMetricsAdaptive(
 	return nil
 }
 
-
 func validatePodResourceUsageAdaptive(
 	stack *KubernetesStack,
 	clusterConfig *ClusterConfig,
@@ -3610,7 +3585,7 @@ type SystemInfo struct {
 func NewPerformanceConfig(t *testing.T) *PerformanceConfig {
 	t.Helper()
 
-	_, _ = zap.NewDevelopment() 
+	_, _ = zap.NewDevelopment()
 
 	// Detect system capabilities
 	sysInfo := detectSystemInfo()
@@ -3668,7 +3643,7 @@ func detectCores() int {
 	ctx := context.Background()
 	defaultCores := 4
 
-	cmd := exec.CommandContext(ctx, "nproc") 
+	cmd := exec.CommandContext(ctx, "nproc")
 	if cmd == nil {
 		return defaultCores
 	}
@@ -3691,7 +3666,7 @@ func detectMemoryGB() float64 {
 	ctx := context.Background()
 	defaultMemoryGB := 8.0
 
-	cmd := exec.CommandContext(ctx, "sh", "-c", "free -m | grep '^Mem:' | awk '{print $2}'") 
+	cmd := exec.CommandContext(ctx, "sh", "-c", "free -m | grep '^Mem:' | awk '{print $2}'")
 	if cmd == nil {
 		return defaultMemoryGB
 	}

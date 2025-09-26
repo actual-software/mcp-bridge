@@ -25,7 +25,7 @@ func InitializeTLSConfiguration(client *Client) *TLSConfigurationBuilder {
 		client: client,
 		tlsConfig: &tls.Config{
 			InsecureSkipVerify: !client.config.TLS.Verify, // #nosec G402 - user-configurable TLS verification
-			ServerName:         "localhost", // Ensure hostname verification works for E2E tests
+			ServerName:         "localhost",               // Ensure hostname verification works for E2E tests
 		},
 	}
 }

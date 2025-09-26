@@ -49,7 +49,7 @@ func TestNewGRPCErrorInterceptor(t *testing.T) {
 		t.Fatal("NewGRPCErrorInterceptor returned nil")
 	}
 
-	if interceptor.logger != logger { 
+	if interceptor.logger != logger {
 		t.Error("Logger not set correctly")
 	}
 }
@@ -626,10 +626,10 @@ func TestInterceptor_IntegrationFlow(t *testing.T) {
 
 	// Set up integration test components
 	handler, info, ctx := setupIntegrationFlowTest()
-	
+
 	// Execute interceptor flow
 	resp, err := executeInterceptorFlow(interceptor, ctx, handler, info)
-	
+
 	// Verify complete integration flow results
 	verifyIntegrationFlowResults(t, resp, err)
 }
@@ -655,7 +655,7 @@ func executeInterceptorFlow(interceptor *GRPCErrorInterceptor, ctx context.Conte
 	handler grpc.UnaryHandler, info *grpc.UnaryServerInfo) (interface{}, error) {
 	// Simulate a complete flow from unary interceptor to error conversion
 	unaryIntercept := interceptor.UnaryServerInterceptor()
-	
+
 	return unaryIntercept(ctx, map[string]string{"token": "expired-token"}, info, handler)
 }
 

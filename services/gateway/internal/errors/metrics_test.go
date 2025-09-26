@@ -39,9 +39,9 @@ func getErrorMetricsTestCases() []struct {
 	validateRegistry := getValidateRegistryFunc()
 	basicCases := getBasicErrorTestCases(validateRegistry)
 	advancedCases := getAdvancedErrorTestCases(validateRegistry)
-	
+
 	basicCases = append(basicCases, advancedCases...)
-	
+
 	return basicCases
 }
 

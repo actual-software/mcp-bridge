@@ -127,7 +127,7 @@ func TestRecordValue(t *testing.T) {
 	}
 }
 
-func TestCalculateErrorBudget(t *testing.T) { 
+func TestCalculateErrorBudget(t *testing.T) {
 	t.Parallel()
 
 	tests := getErrorBudgetTestCases()
@@ -215,7 +215,7 @@ func verifyErrorBudget(t *testing.T, tt errorBudgetTestCase) {
 			TicketBurnRate: 0, // No ticket burn rate configured
 		}, // No alert configuration for this test
 	}
-	
+
 	calc := slo.NewCalculator(config)
 
 	gotBudget := calc.CalculateErrorBudget(tt.currentSLI)
@@ -381,14 +381,14 @@ func TestFormatBurnRateAlert(t *testing.T) {
 func TestComplexScenario(t *testing.T) {
 	t.Parallel()
 	// Test a realistic scenario with mixed success/failure patterns
-	
+
 	config := createComplexScenarioConfig()
 	calc := slo.NewCalculator(config)
 	ctx := context.Background()
 
 	// Simulate a day of requests with varying performance patterns
 	simulateComplexTrafficPatterns(calc, ctx)
-	
+
 	// Validate final metrics
 	validateComplexScenarioResults(t, calc)
 }
@@ -414,10 +414,10 @@ func createComplexScenarioConfig() slo.Config {
 func simulateComplexTrafficPatterns(calc *slo.Calculator, ctx context.Context) {
 	// Morning: Good performance (99.5% success)
 	simulateMorningTraffic(calc, ctx)
-	
+
 	// Afternoon: Degraded performance (98% success)
 	simulateAfternoonTraffic(calc, ctx)
-	
+
 	// Evening: Recovery (99.9% success)
 	simulateEveningTraffic(calc, ctx)
 }

@@ -39,7 +39,7 @@ func (m *MockHealthChecker) GetComponentName() string {
 	return m.componentName
 }
 
-func TestNewCompositeHealthChecker(t *testing.T) { 
+func TestNewCompositeHealthChecker(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -55,7 +55,7 @@ func TestNewCompositeHealthChecker(t *testing.T) {
 	}
 }
 
-func TestCompositeHealthChecker_AddChecker(t *testing.T) { 
+func TestCompositeHealthChecker_AddChecker(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -78,7 +78,7 @@ func TestCompositeHealthChecker_AddChecker(t *testing.T) {
 	}
 }
 
-func TestCompositeHealthChecker_RemoveChecker(t *testing.T) { 
+func TestCompositeHealthChecker_RemoveChecker(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -104,7 +104,7 @@ func TestCompositeHealthChecker_RemoveChecker(t *testing.T) {
 	}
 }
 
-func TestCompositeHealthChecker_CheckHealth(t *testing.T) { 
+func TestCompositeHealthChecker_CheckHealth(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -147,7 +147,7 @@ func TestCompositeHealthChecker_CheckHealth(t *testing.T) {
 	}
 }
 
-func TestCompositeHealthChecker_GetOverallHealth(t *testing.T) { 
+func TestCompositeHealthChecker_GetOverallHealth(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -158,7 +158,7 @@ func TestCompositeHealthChecker_GetOverallHealth(t *testing.T) {
 			t.Parallel()
 
 			checker := setupCompositeHealthChecker(logger, tt.checkerStates)
-			
+
 			ctx := context.Background()
 			result := checker.GetOverallHealth(ctx)
 
@@ -268,7 +268,7 @@ func (m *MockGatewayPool) GetStats() map[string]interface{} {
 	return m.stats
 }
 
-func TestGatewayPoolHealthChecker(t *testing.T) { 
+func TestGatewayPoolHealthChecker(t *testing.T) {
 	t.Parallel()
 
 	tests := createGatewayPoolHealthTests()
@@ -388,7 +388,7 @@ func (m *MockConnectionManager) GetRetryCount() uint64 {
 	return m.retryCount
 }
 
-func TestConnectionManagerHealthChecker(t *testing.T) { 
+func TestConnectionManagerHealthChecker(t *testing.T) {
 	t.Parallel()
 
 	tests := createConnectionManagerHealthTests()
@@ -485,7 +485,7 @@ func validateConnectionManagerHealthResult(t *testing.T, tt struct {
 	}
 }
 
-func TestCustomHealthChecker(t *testing.T) { 
+func TestCustomHealthChecker(t *testing.T) {
 	t.Parallel()
 
 	customCheck := func(ctx context.Context) HealthCheckResult {

@@ -142,7 +142,7 @@ func (i *GRPCErrorInterceptor) convertToGRPCError(ctx context.Context, mcpErr *M
 
 // mapAuthErrorToGRPC maps authentication and authorization errors to gRPC codes.
 func (i *GRPCErrorInterceptor) mapAuthErrorToGRPC(code ErrorCode) (codes.Code, bool) {
-	switch code { 
+	switch code {
 	case GTW_AUTH_MISSING, GTW_AUTH_INVALID, GTW_AUTH_EXPIRED, GTW_AUTH_REVOKED,
 		GTW_AUTH_METHOD_UNK, GTW_AUTH_CERT_FAIL, GTW_AUTH_OAUTH_FAIL:
 		return codes.Unauthenticated, true
@@ -165,7 +165,7 @@ func (i *GRPCErrorInterceptor) mapAuthErrorToGRPC(code ErrorCode) (codes.Code, b
 
 // mapConnectionErrorToGRPC maps connection-related errors to gRPC codes.
 func (i *GRPCErrorInterceptor) mapConnectionErrorToGRPC(code ErrorCode) (codes.Code, bool) {
-	switch code { 
+	switch code {
 	case CMN_INT_TIMEOUT, GTW_CONN_TIMEOUT:
 		return codes.DeadlineExceeded, true
 	case GTW_CONN_REFUSED, GTW_CONN_CLOSED, GTW_CONN_LIMIT,
@@ -175,7 +175,7 @@ func (i *GRPCErrorInterceptor) mapConnectionErrorToGRPC(code ErrorCode) (codes.C
 		return codes.FailedPrecondition, true
 	case RTR_CONN_CIRCUIT_OPEN:
 		return codes.Unavailable, true
-	// Non-connection errors - return false to indicate not handled  
+	// Non-connection errors - return false to indicate not handled
 	case CMN_INT_UNKNOWN, CMN_INT_PANIC, CMN_INT_CONTEXT_CANC, CMN_INT_NOT_IMPL,
 		CMN_VAL_INVALID_REQ, CMN_VAL_MISSING_FLD, CMN_VAL_INVALID_TYPE, CMN_VAL_OUT_OF_RANGE, CMN_VAL_PATTERN_FAIL,
 		CMN_PROTO_INVALID_VER, CMN_PROTO_PARSE_ERR, CMN_PROTO_MARSHAL_ERR, CMN_PROTO_METHOD_UNK, CMN_PROTO_BATCH_ERR,

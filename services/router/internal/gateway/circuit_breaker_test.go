@@ -11,8 +11,6 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 )
 
-
-
 // MockGatewayClient implements GatewayClient for testing.
 type MockGatewayClient struct {
 	connectErr     error
@@ -83,7 +81,7 @@ func (m *MockGatewayClient) Close() error {
 	return nil
 }
 
-func TestNewCircuitBreaker(t *testing.T) { 
+func TestNewCircuitBreaker(t *testing.T) {
 	client := NewMockGatewayClient()
 	config := CircuitBreakerConfig{
 		FailureThreshold: 5,
@@ -110,7 +108,7 @@ func TestNewCircuitBreaker(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_SuccessfulOperations(t *testing.T) { 
+func TestCircuitBreaker_SuccessfulOperations(t *testing.T) {
 	client := NewMockGatewayClient()
 	client.isConnected = true
 
@@ -175,7 +173,7 @@ func TestCircuitBreaker_SuccessfulOperations(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_FailureHandling(t *testing.T) { 
+func TestCircuitBreaker_FailureHandling(t *testing.T) {
 	client := NewMockGatewayClient()
 	testErr := errors.New("test error")
 	client.connectErr = testErr
@@ -224,7 +222,7 @@ func TestCircuitBreaker_FailureHandling(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_Recovery(t *testing.T) { 
+func TestCircuitBreaker_Recovery(t *testing.T) {
 	client := NewMockGatewayClient()
 	testErr := errors.New("test error")
 	client.sendRequestErr = testErr
@@ -283,7 +281,7 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_Timeout(t *testing.T) { 
+func TestCircuitBreaker_Timeout(t *testing.T) {
 	client := NewMockGatewayClient()
 	client.shouldBlock = true
 	client.blockDuration = httpStatusOK * time.Millisecond
@@ -319,7 +317,7 @@ func TestCircuitBreaker_Timeout(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_ForceStateChanges(t *testing.T) { 
+func TestCircuitBreaker_ForceStateChanges(t *testing.T) {
 	client := NewMockGatewayClient()
 	config := DefaultCircuitBreakerConfig()
 	logger := zap.NewNop()
@@ -352,7 +350,7 @@ func TestCircuitBreaker_ForceStateChanges(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_IsConnected(t *testing.T) { 
+func TestCircuitBreaker_IsConnected(t *testing.T) {
 	client := NewMockGatewayClient()
 	config := DefaultCircuitBreakerConfig()
 	logger := zap.NewNop()
@@ -382,7 +380,7 @@ func TestCircuitBreaker_IsConnected(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_ForceFail(t *testing.T) { 
+func TestCircuitBreaker_ForceFail(t *testing.T) {
 	client := NewMockGatewayClient()
 	config := CircuitBreakerConfig{
 		FailureThreshold: 2,

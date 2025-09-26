@@ -24,7 +24,7 @@ const (
 	httpStatusInternalError = 500
 )
 
-func TestPrometheusExporter_MetricsEndpoint(t *testing.T) { 
+func TestPrometheusExporter_MetricsEndpoint(t *testing.T) {
 	exporter := createTestPrometheusExporter(t)
 
 	ctx, cancel := startPrometheusServer(t, exporter)
@@ -169,7 +169,7 @@ func validatePrometheusHistograms(t *testing.T, metrics string) {
 	}
 }
 
-func TestPrometheusExporter_HealthEndpoint(t *testing.T) { 
+func TestPrometheusExporter_HealthEndpoint(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	exporter := NewPrometheusExporter(":0", logger)
@@ -220,7 +220,7 @@ func TestPrometheusExporter_HealthEndpoint(t *testing.T) {
 	}
 }
 
-func TestPrometheusExporter_EmptyMetrics(t *testing.T) { 
+func TestPrometheusExporter_EmptyMetrics(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	exporter := NewPrometheusExporter(":0", logger)
@@ -266,7 +266,7 @@ func TestPrometheusExporter_EmptyMetrics(t *testing.T) {
 	}
 }
 
-func TestPrometheusExporter_RequestDurationHistogram(t *testing.T) { 
+func TestPrometheusExporter_RequestDurationHistogram(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	exporter := NewPrometheusExporter(":0", logger)
 
@@ -300,10 +300,9 @@ func createRequestDurationTestMetrics() *RouterMetrics {
 	}
 }
 
-
 func getPrometheusMetrics(t *testing.T, ctx context.Context, addr string) string {
 	t.Helper()
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://%s/metrics", addr), nil)
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
@@ -326,7 +325,7 @@ func getPrometheusMetrics(t *testing.T, ctx context.Context, addr string) string
 
 func validateRequestDurationHistogram(t *testing.T, metrics string) {
 	t.Helper()
-	
+
 	// Parse histogram buckets.
 	buckets := map[string]int{
 		`le="0.005"`: 1, // 5ms
@@ -363,7 +362,7 @@ func validateRequestDurationHistogram(t *testing.T, metrics string) {
 	}
 }
 
-func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) { 
+func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	exporter := NewPrometheusExporter(":0", logger)
@@ -441,7 +440,7 @@ func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 	}
 }
 
-func TestPrometheusExporter_ConcurrentAccess(t *testing.T) { 
+func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	exporter := NewPrometheusExporter(":0", logger)
@@ -523,7 +522,7 @@ func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 	}
 }
 
-func TestPrometheusExporter_ServerShutdown(t *testing.T) { 
+func TestPrometheusExporter_ServerShutdown(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	exporter := NewPrometheusExporter(":0", logger)
@@ -558,7 +557,7 @@ func TestPrometheusExporter_ServerShutdown(t *testing.T) {
 	}
 }
 
-func TestPrometheusExporter_InvalidEndpoint(t *testing.T) { 
+func TestPrometheusExporter_InvalidEndpoint(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Try to bind to an invalid address.

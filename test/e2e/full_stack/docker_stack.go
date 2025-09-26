@@ -80,7 +80,7 @@ func (ds *DockerStack) Start(ctx context.Context) error {
 		// Use a new context for cleanup since the original might be cancelled
 		cleanupCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 		defer cancel()
-		
+
 		ds.Stop(cleanupCtx)
 	})
 

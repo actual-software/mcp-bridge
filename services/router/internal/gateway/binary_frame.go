@@ -96,7 +96,6 @@ func (f *BinaryFrame) Write(w io.Writer) error {
 	return f.WriteToWriter(w)
 }
 
-
 // ReadBinaryFrame reads a frame from the reader.
 func ReadBinaryFrame(r io.Reader) (*BinaryFrame, error) {
 	// Read and verify magic bytes.

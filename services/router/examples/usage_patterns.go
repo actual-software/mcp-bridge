@@ -15,7 +15,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
 	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"github.com/poiley/mcp-bridge/services/router/internal/gateway"
 	"github.com/poiley/mcp-bridge/services/router/internal/metrics"
@@ -26,9 +25,9 @@ import (
 
 const (
 	defaultTimeoutSeconds = 30
-	defaultRetryCount = 10
+	defaultRetryCount     = 10
 	defaultMaxConnections = 5
-	defaultMaxRetries = 100
+	defaultMaxRetries     = 100
 )
 
 // ConnectionPoolExample demonstrates advanced connection pool usage patterns.
@@ -61,12 +60,12 @@ func ConnectionPoolExample() {
 	if err != nil {
 		log.Fatalf("Failed to create pool: %v", err)
 	}
- defer func() { _ = p.Close() }()
+	defer func() { _ = p.Close() }()
 
 	// Example: Concurrent request processing with pool.
 	for i := 0; i < 10; i++ {
 		go func(requestID int) {
-			ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutSeconds * time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutSeconds*time.Second)
 			defer cancel()
 
 			// Acquire connection from pool.

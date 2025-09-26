@@ -307,7 +307,7 @@ func (p *CircuitBreakerPolicy) RecordSuccess() {
 
 	case CircuitOpen:
 		// No action needed for open state on success
-	} 
+	}
 }
 
 // RecordFailure records a failed operation.

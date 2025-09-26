@@ -1,4 +1,3 @@
-
 package protocol
 
 import (
@@ -305,7 +304,7 @@ func TestConverter_Batching(t *testing.T) {
 	time.Sleep(150 * time.Millisecond)
 
 	// Clean up
-	_ = converter.Shutdown(ctx) 
+	_ = converter.Shutdown(ctx)
 }
 
 func TestMessageBatcher_AddMessage(t *testing.T) {
@@ -519,5 +518,5 @@ func BenchmarkConverter_BatchedConvert(b *testing.B) {
 		}
 	}
 
-	_ = converter.Shutdown(ctx) 
+	_ = converter.Shutdown(ctx)
 }

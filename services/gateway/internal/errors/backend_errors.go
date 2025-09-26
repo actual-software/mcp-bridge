@@ -52,7 +52,7 @@ func CreateConnectionError(backendName, protocol, message string, cause error) *
 
 // CreateConnectionTimeoutError creates an error for connection timeouts.
 func CreateConnectionTimeoutError(backendName string, timeout time.Duration) *GatewayError {
-	return NewTimeoutError("connection to backend " + backendName , nil).
+	return NewTimeoutError("connection to backend "+backendName, nil).
 		WithComponent("backend").
 		WithContext("backend_name", backendName).
 		WithContext("timeout", timeout.String()).
@@ -80,7 +80,7 @@ func WrapReadError(ctx context.Context, err error, backendName string) *GatewayE
 
 // CreateProtocolMismatchError creates an error for protocol mismatches.
 func CreateProtocolMismatchError(expected, actual string) *GatewayError {
-	return New(TypeValidation, "protocol mismatch: expected " + expected + ", got " + actual).
+	return New(TypeValidation, "protocol mismatch: expected "+expected+", got "+actual).
 		WithComponent("backend").
 		WithContext("expected_protocol", expected).
 		WithContext("actual_protocol", actual).
@@ -90,7 +90,7 @@ func CreateProtocolMismatchError(expected, actual string) *GatewayError {
 
 // CreateBackendUnavailableError creates an error when backend is unavailable.
 func CreateBackendUnavailableError(backendName string, reason string) *GatewayError {
-	return New(TypeUnavailable, "backend " + backendName + " unavailable: " + reason).
+	return New(TypeUnavailable, "backend "+backendName+" unavailable: "+reason).
 		WithComponent("backend").
 		WithContext("backend_name", backendName).
 		WithContext("reason", reason).
@@ -100,7 +100,7 @@ func CreateBackendUnavailableError(backendName string, reason string) *GatewayEr
 
 // CreateBackendOverloadedError creates an error when backend is overloaded.
 func CreateBackendOverloadedError(backendName string, queueSize int) *GatewayError {
-	return New(TypeRateLimit, "backend " + backendName + " is overloaded").
+	return New(TypeRateLimit, "backend "+backendName+" is overloaded").
 		WithComponent("backend").
 		WithContext("backend_name", backendName).
 		WithContext("queue_size", queueSize).
@@ -122,7 +122,7 @@ func WrapInvalidResponseError(ctx context.Context, err error, backendName string
 func WrapStreamError(ctx context.Context, err error, backendName, operation string) *GatewayError {
 	return WrapContextf(ctx, err, "stream %s failed", operation).
 		WithComponent("backend").
-		WithOperation("stream_" + operation ).
+		WithOperation("stream_"+operation).
 		WithContext("backend_name", backendName).
 		WithContext("code", ErrCodeStreamError)
 }
@@ -158,7 +158,7 @@ func WrapSSEConnectionError(ctx context.Context, err error, backendName string) 
 func WrapStdioError(ctx context.Context, err error, operation string) *GatewayError {
 	return WrapContextf(ctx, err, "stdio %s failed", operation).
 		WithComponent("backend_stdio").
-		WithOperation("stdio_" + operation ).
+		WithOperation("stdio_"+operation).
 		WithContext("code", ErrCodeStdioFailed)
 }
 

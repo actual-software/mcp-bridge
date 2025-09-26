@@ -254,7 +254,7 @@ func (tt *TimeoutTuner) getTimeoutConfigByProfile() AdaptiveTimeoutConfig {
 			LearningPeriod: DefaultLearningPeriod,
 		}
 	}
-	
+
 	// This should never be reached due to exhaustive cases above.
 	return AdaptiveTimeoutConfig{}
 }
@@ -273,7 +273,7 @@ func (tt *TimeoutTuner) getRetryConfigByProfile() AdaptiveRetryConfig {
 	case RetryProfileDefault:
 		return tt.getDefaultRetryConfig()
 	}
-	
+
 	// This should never be reached due to exhaustive cases above.
 	return AdaptiveRetryConfig{}
 }

@@ -1,13 +1,14 @@
 package direct
 
 import (
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 	"github.com/stretchr/testify/assert"
@@ -123,7 +124,7 @@ func (m *MockDirectClient) GetMetrics() ClientMetrics {
 	}
 }
 
-func TestNewDirectClientManager(t *testing.T) { 
+func TestNewDirectClientManager(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 30 * time.Second,
@@ -142,7 +143,7 @@ func TestNewDirectClientManager(t *testing.T) {
 	assert.Implements(t, (*DirectClientManagerInterface)(nil), manager)
 }
 
-func TestNewDirectClientManagerDefaults(t *testing.T) { 
+func TestNewDirectClientManagerDefaults(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{} // Empty config to test defaults
 
@@ -153,7 +154,7 @@ func TestNewDirectClientManagerDefaults(t *testing.T) {
 	assert.Implements(t, (*DirectClientManagerInterface)(nil), manager)
 }
 
-func TestDirectClientManagerStartStop(t *testing.T) { 
+func TestDirectClientManagerStartStop(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 5 * time.Second,
@@ -186,7 +187,7 @@ func TestDirectClientManagerStartStop(t *testing.T) {
 	require.NoError(t, err) // Should not error
 }
 
-func TestDirectClientManagerWithHealthCheck(t *testing.T) { 
+func TestDirectClientManagerWithHealthCheck(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 5 * time.Second,
@@ -219,7 +220,7 @@ func TestDirectClientManagerWithHealthCheck(t *testing.T) {
 // This test has been removed as it tests internal implementation details.
 // that are not exposed through the DirectClientManagerInterface
 
-func TestDirectClientManagerGetClientNotRunning(t *testing.T) { 
+func TestDirectClientManagerGetClientNotRunning(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{}
 	manager := NewDirectClientManager(config, logger)
@@ -234,7 +235,7 @@ func TestDirectClientManagerGetClientNotRunning(t *testing.T) {
 // This test has been removed as it tests internal implementation details.
 // that are not exposed through the DirectClientManagerInterface
 
-func TestDirectClientManagerProtocolDetection(t *testing.T) { 
+func TestDirectClientManagerProtocolDetection(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	manager := setupProtocolDetectionManager(t, logger)
@@ -246,7 +247,7 @@ func TestDirectClientManagerProtocolDetection(t *testing.T) {
 
 func setupProtocolDetectionManager(t *testing.T, logger *zap.Logger) DirectClientManagerInterface {
 	t.Helper()
-	
+
 	config := DirectConfig{
 		DefaultTimeout: 5 * time.Second,
 		MaxConnections: 10,
@@ -260,13 +261,13 @@ func setupProtocolDetectionManager(t *testing.T, logger *zap.Logger) DirectClien
 
 	err := manager.Start(ctx)
 	require.NoError(t, err)
-	
+
 	return manager
 }
 
 func closeProtocolDetectionManager(t *testing.T, manager DirectClientManagerInterface) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	err := manager.Stop(ctx)
 	require.NoError(t, err)
@@ -324,9 +325,9 @@ func runProtocolDetectionTests(t *testing.T, manager DirectClientManagerInterfac
 	errorMsg  string
 }) {
 	t.Helper()
-	
+
 	ctx := context.Background()
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Test that GetClient attempts to create appropriate client type.
@@ -346,7 +347,7 @@ func runProtocolDetectionTests(t *testing.T, manager DirectClientManagerInterfac
 	}
 }
 
-func TestDirectClientManagerConcurrentAccess(t *testing.T) { 
+func TestDirectClientManagerConcurrentAccess(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -396,7 +397,7 @@ func TestDirectClientManagerConcurrentAccess(t *testing.T) {
 		}(i)
 	}
 
- wg.Wait()
+	wg.Wait()
 	close(errChan)
 
 	// Count errors - we expect most/all to fail since URLs are fake.
@@ -412,7 +413,7 @@ func TestDirectClientManagerConcurrentAccess(t *testing.T) {
 	assert.NotNil(t, manager)
 }
 
-func TestConnectionState(t *testing.T) { 
+func TestConnectionState(t *testing.T) {
 	testCases := []struct {
 		state    ConnectionState
 		expected string
@@ -435,7 +436,7 @@ func TestConnectionState(t *testing.T) {
 	}
 }
 
-func TestDirectClientManagerValidURLs(t *testing.T) { 
+func TestDirectClientManagerValidURLs(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	manager := setupValidURLsManager(t, logger)
@@ -447,7 +448,7 @@ func TestDirectClientManagerValidURLs(t *testing.T) {
 
 func setupValidURLsManager(t *testing.T, logger *zap.Logger) DirectClientManagerInterface {
 	t.Helper()
-	
+
 	config := DirectConfig{
 		DefaultTimeout: 2 * time.Second,
 		HealthCheck: HealthCheckConfig{
@@ -459,13 +460,13 @@ func setupValidURLsManager(t *testing.T, logger *zap.Logger) DirectClientManager
 
 	err := manager.Start(ctx)
 	require.NoError(t, err)
-	
+
 	return manager
 }
 
 func closeValidURLsManager(t *testing.T, manager DirectClientManagerInterface) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	err := manager.Stop(ctx)
 	require.NoError(t, err)
@@ -529,9 +530,9 @@ func runValidURLsTests(t *testing.T, manager DirectClientManagerInterface, testC
 	description string
 }) {
 	t.Helper()
-	
+
 	ctx := context.Background()
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := manager.GetClient(ctx, tc.serverURL)
@@ -548,7 +549,7 @@ func runValidURLsTests(t *testing.T, manager DirectClientManagerInterface, testC
 	}
 }
 
-func TestDirectClientManagerLifecycleIntegration(t *testing.T) { 
+func TestDirectClientManagerLifecycleIntegration(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 2 * time.Second,
@@ -654,7 +655,7 @@ func BenchmarkDirectClientManagerStartStop(b *testing.B) {
 }
 
 // Additional test for connection pool management.
-func TestDirectClientManagerConnectionPoolLimits(t *testing.T) { 
+func TestDirectClientManagerConnectionPoolLimits(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 2 * time.Second,
@@ -704,7 +705,7 @@ func TestDirectClientManagerConnectionPoolLimits(t *testing.T) {
 		}(i)
 	}
 
- wg.Wait()
+	wg.Wait()
 	close(results)
 
 	// Collect results.
@@ -722,7 +723,7 @@ func TestDirectClientManagerConnectionPoolLimits(t *testing.T) {
 }
 
 // Test protocol detection with caching.
-func TestDirectClientManagerProtocolCaching(t *testing.T) { 
+func TestDirectClientManagerProtocolCaching(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -770,7 +771,7 @@ func TestDirectClientManagerProtocolCaching(t *testing.T) {
 }
 
 // Test adaptive timeout mechanisms.
-func TestDirectClientManagerAdaptiveTimeout(t *testing.T) { 
+func TestDirectClientManagerAdaptiveTimeout(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 2 * time.Second,
@@ -811,7 +812,7 @@ func TestDirectClientManagerAdaptiveTimeout(t *testing.T) {
 }
 
 // Test memory optimization features basic.
-func TestDirectClientManagerMemoryOptimizationBasic(t *testing.T) { 
+func TestDirectClientManagerMemoryOptimizationBasic(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -840,7 +841,7 @@ func TestDirectClientManagerMemoryOptimizationBasic(t *testing.T) {
 }
 
 // Test observability and metrics collection.
-func TestDirectClientManagerObservability(t *testing.T) { 
+func TestDirectClientManagerObservability(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -875,7 +876,7 @@ func TestDirectClientManagerObservability(t *testing.T) {
 }
 
 // Test error propagation and handling.
-func TestDirectClientManagerErrorHandling(t *testing.T) { 
+func TestDirectClientManagerErrorHandling(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 500 * time.Millisecond, // Short timeout for testing
@@ -939,7 +940,7 @@ func TestDirectClientManagerErrorHandling(t *testing.T) {
 }
 
 // Test health check functionality.
-func TestDirectClientManagerHealthChecks(t *testing.T) { 
+func TestDirectClientManagerHealthChecks(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -969,7 +970,7 @@ func TestDirectClientManagerHealthChecks(t *testing.T) {
 }
 
 // Test concurrent protocol detection.
-func TestDirectClientManagerConcurrentProtocolDetection(t *testing.T) { 
+func TestDirectClientManagerConcurrentProtocolDetection(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 2 * time.Second,
@@ -1026,7 +1027,7 @@ func TestDirectClientManagerConcurrentProtocolDetection(t *testing.T) {
 	done := make(chan struct{})
 
 	go func() {
-  wg.Wait()
+		wg.Wait()
 		close(done)
 	}()
 
@@ -1043,7 +1044,7 @@ func TestDirectClientManagerConcurrentProtocolDetection(t *testing.T) {
 // ============================================================================
 
 // Test comprehensive metrics collection and management.
-func TestDirectClientManagerMetricsCollection(t *testing.T) { 
+func TestDirectClientManagerMetricsCollection(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -1100,7 +1101,7 @@ func TestDirectClientManagerMetricsCollection(t *testing.T) {
 }
 
 // Test client lifecycle management in detail.
-func TestDirectClientManagerClientLifecycle(t *testing.T) { 
+func TestDirectClientManagerClientLifecycle(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -1120,9 +1121,7 @@ func TestDirectClientManagerClientLifecycle(t *testing.T) {
 
 	mgr := NewDirectClientManager(config, logger)
 
-
 	manager, ok := mgr.(*DirectClientManager)
-
 
 	require.True(t, ok, "Expected *DirectClientManager type")
 
@@ -1154,7 +1153,7 @@ func TestDirectClientManagerClientLifecycle(t *testing.T) {
 func TestDirectClientManagerProtocolDetectionComprehensive(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	manager := setupConcreteProtocolDetectionManager(t, logger)
-	
+
 	ctx := context.Background()
 	err := manager.Start(ctx)
 	require.NoError(t, err)
@@ -1171,7 +1170,7 @@ func TestDirectClientManagerProtocolDetectionComprehensive(t *testing.T) {
 
 func setupConcreteProtocolDetectionManager(t *testing.T, logger *zap.Logger) *DirectClientManager {
 	t.Helper()
-	
+
 	config := DirectConfig{
 		DefaultTimeout: 100 * time.Millisecond, // Much shorter timeout for tests
 		HealthCheck: HealthCheckConfig{
@@ -1189,7 +1188,7 @@ func setupConcreteProtocolDetectionManager(t *testing.T, logger *zap.Logger) *Di
 	mgr := NewDirectClientManager(config, logger)
 	manager, ok := mgr.(*DirectClientManager)
 	require.True(t, ok, "Expected *DirectClientManager type")
-	
+
 	return manager
 }
 
@@ -1232,7 +1231,7 @@ func createProtocolDetectionTestCases() []protocolDetectionTestCase {
 			testCacheHit:  false,
 		},
 	}
-	
+
 	additionalCases := createAdditionalProtocolTestCases()
 	return append(basicCases, additionalCases...)
 }
@@ -1277,7 +1276,7 @@ func runConcreteProtocolDetectionTests(
 	testCases []protocolDetectionTestCase,
 ) {
 	t.Helper()
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Test GetClient which internally calls protocol detection.
@@ -1299,7 +1298,7 @@ func runConcreteProtocolDetectionTests(
 
 func testProtocolDetectionCacheExpiration(t *testing.T, manager *DirectClientManager, ctx context.Context) {
 	t.Helper()
-	
+
 	// Test cache expiration - wait for TTL to expire.
 	time.Sleep(1100 * time.Millisecond) // Wait for cache TTL to expire
 
@@ -1434,12 +1433,12 @@ func validateDefaultConfig(t *testing.T, mgr DirectClientManagerInterface) {
 func TestDirectClientManagerErrorHandlingComprehensive(t *testing.T) {
 	manager := setupErrorHandlingTestManager(t)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
 
 	defer func() { _ = manager.Stop(ctx) }()
-	
+
 	errorTestCases := createErrorHandlingTestCases()
 	runErrorHandlingTests(t, manager, ctx, errorTestCases)
 }
@@ -1457,7 +1456,7 @@ func setupErrorHandlingTestManager(t *testing.T) DirectClientManagerInterface {
 			Timeout: 100 * time.Millisecond,
 		},
 	}
-	
+
 	mgr := NewDirectClientManager(config, logger)
 	manager, ok := mgr.(*DirectClientManager)
 	require.True(t, ok, "Expected *DirectClientManager type")
@@ -1533,11 +1532,11 @@ func runErrorHandlingTests(
 	testCases []errorHandlingTestCase,
 ) {
 	t.Helper()
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := manager.GetClient(ctx, tc.url)
-			
+
 			if tc.expectError {
 				require.Error(t, err, tc.description)
 
@@ -1553,7 +1552,7 @@ func runErrorHandlingTests(
 }
 
 // Test health check integration and monitoring.
-func TestDirectClientManagerHealthCheckIntegration(t *testing.T) { 
+func TestDirectClientManagerHealthCheckIntegration(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 1 * time.Second,
@@ -1570,9 +1569,7 @@ func TestDirectClientManagerHealthCheckIntegration(t *testing.T) {
 
 	mgr := NewDirectClientManager(config, logger)
 
-
 	manager, ok := mgr.(*DirectClientManager)
-
 
 	require.True(t, ok, "Expected *DirectClientManager type")
 
@@ -1620,12 +1617,12 @@ func TestDirectClientManagerHealthCheckIntegration(t *testing.T) {
 func TestDirectClientManagerAdaptiveMechanisms(t *testing.T) {
 	manager := setupAdaptiveTestManager(t)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
 
 	defer func() { _ = manager.Stop(ctx) }()
-	
+
 	testAdaptiveStats(t, manager)
 	testOptimizedConfigurations(t, manager)
 	testAdaptiveRequestSending(t, manager, ctx)
@@ -1635,7 +1632,7 @@ func setupAdaptiveTestManager(t *testing.T) *DirectClientManager {
 	t.Helper()
 	logger := zaptest.NewLogger(t)
 	config := createAdaptiveTestConfig()
-	
+
 	mgr := NewDirectClientManager(config, logger)
 	manager, ok := mgr.(*DirectClientManager)
 	require.True(t, ok, "Expected *DirectClientManager type")
@@ -1682,10 +1679,10 @@ func createAdaptiveTestConfig() DirectConfig {
 
 func testAdaptiveStats(t *testing.T, manager *DirectClientManager) {
 	t.Helper()
-	
+
 	adaptiveStats := manager.GetAdaptiveStats()
 	assert.NotNil(t, adaptiveStats)
-	
+
 	timeoutStats := manager.GetTimeoutTuningStats()
 	assert.NotNil(t, timeoutStats)
 	assert.Contains(t, timeoutStats, "timeout_profile")
@@ -1695,14 +1692,14 @@ func testAdaptiveStats(t *testing.T, manager *DirectClientManager) {
 
 func testOptimizedConfigurations(t *testing.T, manager *DirectClientManager) {
 	t.Helper()
-	
+
 	protocols := []string{"stdio", "http", "websocket", "sse"}
 	for _, protocol := range protocols {
 		timeoutConfig := manager.GetOptimizedTimeoutConfig(protocol)
 		assert.Greater(t, timeoutConfig.BaseTimeout, time.Duration(0))
 		assert.LessOrEqual(t, timeoutConfig.MinTimeout, timeoutConfig.BaseTimeout)
 		assert.GreaterOrEqual(t, timeoutConfig.MaxTimeout, timeoutConfig.BaseTimeout)
-		
+
 		retryConfig := manager.GetOptimizedRetryConfig(protocol)
 		assert.Positive(t, retryConfig.MaxRetries)
 		assert.Greater(t, retryConfig.BaseDelay, time.Duration(0))
@@ -1711,13 +1708,13 @@ func testOptimizedConfigurations(t *testing.T, manager *DirectClientManager) {
 
 func testAdaptiveRequestSending(t *testing.T, manager *DirectClientManager, ctx context.Context) {
 	t.Helper()
-	
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "test",
 		ID:      "test-123",
 	}
-	
+
 	_, err := manager.SendRequestWithAdaptive(ctx, "http://fake-test.com", req)
 	if err != nil {
 		assert.NotContains(t, err.Error(), "panic")
@@ -1728,12 +1725,12 @@ func testAdaptiveRequestSending(t *testing.T, manager *DirectClientManager, ctx 
 func TestDirectClientManagerMemoryOptimizationAdvanced(t *testing.T) {
 	manager := setupMemoryOptimizedTestManager(t)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
 
 	defer func() { _ = manager.Stop(ctx) }()
-	
+
 	testMemoryOptimizationFeatures(t, manager, ctx)
 }
 
@@ -1741,7 +1738,7 @@ func setupMemoryOptimizedTestManager(t *testing.T) *DirectClientManager {
 	t.Helper()
 	logger := zaptest.NewLogger(t)
 	config := createMemoryOptimizedConfig()
-	
+
 	mgr := NewDirectClientManager(config, logger)
 	manager, ok := mgr.(*DirectClientManager)
 	require.True(t, ok, "Expected *DirectClientManager type")
@@ -1784,12 +1781,12 @@ func createMemoryOptimizedConfig() DirectConfig {
 
 func testMemoryOptimizationFeatures(t *testing.T, manager *DirectClientManager, ctx context.Context) {
 	t.Helper()
-	
+
 	assert.NotNil(t, manager)
-	
+
 	detailedMetrics := manager.GetDetailedMetrics()
 	assert.NotNil(t, detailedMetrics)
-	
+
 	for i := 0; i < constants.TestBatchSize; i++ {
 		testURL := fmt.Sprintf("echo test-memory-%d", i)
 
@@ -1804,12 +1801,12 @@ func testMemoryOptimizationFeatures(t *testing.T, manager *DirectClientManager, 
 func TestDirectClientManagerConnectionPoolEdgeCases(t *testing.T) {
 	manager := setupConnectionPoolTestManager(t)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
 
 	defer func() { _ = manager.Stop(ctx) }()
-	
+
 	testRapidConnectionRequests(t, manager, ctx)
 	testPoolCleanupAndStats(t, manager)
 }
@@ -1833,7 +1830,7 @@ func setupConnectionPoolTestManager(t *testing.T) *DirectClientManager {
 			CleanupInterval:       50 * time.Millisecond,
 		},
 	}
-	
+
 	mgr := NewDirectClientManager(config, logger)
 	manager, ok := mgr.(*DirectClientManager)
 	require.True(t, ok, "Expected *DirectClientManager type")
@@ -1844,11 +1841,11 @@ func testRapidConnectionRequests(t *testing.T, manager *DirectClientManager, ctx
 	t.Helper()
 
 	const numRequests = 10
-	
+
 	results := make(chan error, numRequests)
 
 	var wg sync.WaitGroup
-	
+
 	for i := 0; i < numRequests; i++ {
 		wg.Add(1)
 
@@ -1861,26 +1858,26 @@ func testRapidConnectionRequests(t *testing.T, manager *DirectClientManager, ctx
 			results <- err
 		}(i)
 	}
-	
+
 	wg.Wait()
 	close(results)
-	
+
 	completedRequests := 0
 	for range results {
 		completedRequests++
 	}
-	
+
 	assert.Equal(t, numRequests, completedRequests, "All requests should complete")
 }
 
 func testPoolCleanupAndStats(t *testing.T, manager *DirectClientManager) {
 	t.Helper()
-	
+
 	time.Sleep(150 * time.Millisecond)
-	
+
 	metrics := manager.GetMetrics()
 	assert.GreaterOrEqual(t, metrics.TotalClients, 0)
-	
+
 	err := manager.RemoveClient("echo pool-test-1", ClientTypeStdio)
 	if err != nil {
 		t.Logf("RemoveClient returned expected error: %v", err)
@@ -1891,12 +1888,12 @@ func testPoolCleanupAndStats(t *testing.T, manager *DirectClientManager) {
 func TestDirectClientManagerProtocolSpecificCreation(t *testing.T) {
 	manager := setupProtocolSpecificTestManager(t)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
 
 	defer func() { _ = manager.Stop(ctx) }()
-	
+
 	testProtocolSpecificClientCreation(t, manager, ctx)
 }
 
@@ -1904,7 +1901,7 @@ func setupProtocolSpecificTestManager(t *testing.T) *DirectClientManager {
 	t.Helper()
 	logger := zaptest.NewLogger(t)
 	config := createFullProtocolConfig()
-	
+
 	mgr := NewDirectClientManager(config, logger)
 	manager, ok := mgr.(*DirectClientManager)
 	require.True(t, ok, "Expected *DirectClientManager type")
@@ -1918,12 +1915,12 @@ func createFullProtocolConfig() DirectConfig {
 			Enabled: false,
 		},
 	}
-	
+
 	config.Stdio = createFullStdioConfig()
 	config.WebSocket = createFullWebSocketConfig()
 	config.HTTP = createFullHTTPConfig()
 	config.SSE = createFullSSEConfig()
-	
+
 	return config
 }
 
@@ -2046,7 +2043,7 @@ func testProtocolSpecificClientCreation(t *testing.T, manager *DirectClientManag
 	t.Helper()
 
 	protocolTests := createProtocolCreationTestCases()
-	
+
 	for _, tc := range protocolTests {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := manager.GetClient(ctx, tc.url)
@@ -2059,7 +2056,7 @@ func testProtocolSpecificClientCreation(t *testing.T, manager *DirectClientManag
 }
 
 // Test cache expiration and cleanup.
-func TestDirectClientManagerCacheManagement(t *testing.T) { 
+func TestDirectClientManagerCacheManagement(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
 		DefaultTimeout: 500 * time.Millisecond,
@@ -2076,9 +2073,7 @@ func TestDirectClientManagerCacheManagement(t *testing.T) {
 
 	mgr := NewDirectClientManager(config, logger)
 
-
 	manager, ok := mgr.(*DirectClientManager)
-
 
 	require.True(t, ok, "Expected *DirectClientManager type")
 
@@ -2128,19 +2123,19 @@ func TestDirectClientManagerCacheManagement(t *testing.T) {
 // Test manager stop behavior under various conditions.
 func TestDirectClientManagerStopBehavior(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	
+
 	t.Run("Stop when not started", func(t *testing.T) {
 		testStopWhenNotStarted(t, logger)
 	})
-	
+
 	t.Run("Stop with active connections", func(t *testing.T) {
 		testStopWithActiveConnections(t, logger)
 	})
-	
+
 	t.Run("Multiple stop calls", func(t *testing.T) {
 		testMultipleStopCalls(t, logger)
 	})
-	
+
 	t.Run("Stop with context timeout", func(t *testing.T) {
 		testStopWithContextTimeout(t, logger)
 	})
@@ -2152,7 +2147,7 @@ func testStopWhenNotStarted(t *testing.T, logger *zap.Logger) {
 	config := DirectConfig{}
 	manager := NewDirectClientManager(config, logger)
 	ctx := context.Background()
-	
+
 	err := manager.Stop(ctx)
 	require.NoError(t, err)
 }
@@ -2169,17 +2164,17 @@ func testStopWithActiveConnections(t *testing.T, logger *zap.Logger) {
 	}
 	manager := NewDirectClientManager(config, logger)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
-	
+
 	for i := 0; i < 3; i++ {
 		_, _ = manager.GetClient(ctx, fmt.Sprintf("echo stop-test-%d", i))
 	}
-	
+
 	err = manager.Stop(ctx)
 	require.NoError(t, err)
-	
+
 	_, err = manager.GetClient(ctx, "echo after-stop")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not running")
@@ -2191,13 +2186,13 @@ func testMultipleStopCalls(t *testing.T, logger *zap.Logger) {
 	config := DirectConfig{}
 	manager := NewDirectClientManager(config, logger)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
-	
+
 	err = manager.Stop(ctx)
 	require.NoError(t, err)
-	
+
 	err = manager.Stop(ctx)
 	require.NoError(t, err)
 }
@@ -2213,24 +2208,24 @@ func testStopWithContextTimeout(t *testing.T, logger *zap.Logger) {
 	}
 	manager := NewDirectClientManager(config, logger)
 	ctx := context.Background()
-	
+
 	err := manager.Start(ctx)
 	require.NoError(t, err)
-	
+
 	stopCtx, cancel := context.WithTimeout(ctx, 1*time.Millisecond)
 	defer cancel()
-	
+
 	err = manager.Stop(stopCtx)
 	if err != nil {
 		assert.Contains(t, err.Error(), "context deadline exceeded")
 	}
-	
+
 	err = manager.Stop(context.Background())
 	require.NoError(t, err)
 }
 
 // Test interface compliance and method coverage.
-func TestDirectClientManagerInterfaceCompliance(t *testing.T) { 
+func TestDirectClientManagerInterfaceCompliance(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{}
 

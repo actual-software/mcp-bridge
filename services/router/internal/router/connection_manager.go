@@ -187,7 +187,7 @@ func (cm *ConnectionManager) maintainConnection() {
 
 // connect establishes the WebSocket connection.
 func (cm *ConnectionManager) connect() error {
-	ctx, cancel := context.WithTimeout(cm.ctx, defaultTimeoutSeconds * time.Second)
+	ctx, cancel := context.WithTimeout(cm.ctx, defaultTimeoutSeconds*time.Second)
 	defer cancel()
 
 	return cm.gwClient.Connect(ctx)

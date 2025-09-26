@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -195,7 +194,7 @@ func createTestHealthChecker(healthy bool) *health.Checker {
 		// Manually set healthy endpoints for readiness checks using reflection
 		checkerValue := reflect.ValueOf(checker).Elem()
 		statusField := checkerValue.FieldByName("status")
-		statusField = reflect.NewAt(statusField.Type(), unsafe.Pointer(statusField.UnsafeAddr())).Elem() 
+		statusField = reflect.NewAt(statusField.Type(), unsafe.Pointer(statusField.UnsafeAddr())).Elem()
 		healthyEndpointsField := statusField.FieldByName("HealthyEndpoints")
 		healthyEndpointsField.SetInt(1)
 	} else {

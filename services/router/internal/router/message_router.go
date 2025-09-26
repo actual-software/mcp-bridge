@@ -1,9 +1,9 @@
 package router
 
 import (
-	"errors"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -459,7 +459,7 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 	config direct.DirectConfig,
 ) error {
 	var lastErr error
-	
+
 	for attempt := 0; attempt <= config.Fallback.MaxRetries; attempt++ {
 		if attempt > 0 {
 			select {
@@ -467,19 +467,19 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 			case <-mr.ctx.Done():
 				return errors.New("context canceled during retry")
 			}
-			
+
 			mr.logger.Debug("Retrying direct connection",
 				zap.Any("request_id", req.ID),
 				zap.String("method", req.Method),
 				zap.Int("attempt", attempt+1),
 			)
 		}
-		
+
 		ctx, cancel := context.WithTimeout(mr.ctx, config.Fallback.DirectTimeout)
 		err := mr.processDirectRequestWithContext(ctx, req, data, startTime)
-		
+
 		cancel()
-		
+
 		if err == nil {
 			if attempt > 0 {
 				mr.logger.Info("Direct connection succeeded after retries",
@@ -489,9 +489,9 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 			}
 			return nil
 		}
-		
+
 		lastErr = err
-		
+
 		if !mr.isRetryableDirectError(err) {
 			mr.logger.Debug("Non-retryable error, skipping retries",
 				zap.Any("request_id", req.ID),
@@ -499,14 +499,14 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 			)
 			break
 		}
-		
+
 		mr.logger.Debug("Direct attempt failed",
 			zap.Any("request_id", req.ID),
 			zap.Int("attempt", attempt+1),
 			zap.Error(err),
 		)
 	}
-	
+
 	return lastErr
 }
 
@@ -523,14 +523,14 @@ func (mr *MessageRouter) handleFallbackToGateway(
 		zap.String("method", req.Method),
 		zap.Error(directErr),
 	)
-	
+
 	fallbackStart := time.Now()
-	
+
 	mr.logger.Info("Attempting gateway fallback",
 		zap.Any("request_id", req.ID),
 		zap.Duration("direct_duration", fallbackStart.Sub(startTime)),
 	)
-	
+
 	err := mr.processGatewayRequest(req, data, fallbackStart)
 	if err != nil {
 		mr.logger.Error("Both direct and gateway failed",
@@ -538,19 +538,19 @@ func (mr *MessageRouter) handleFallbackToGateway(
 			zap.Error(directErr),
 			zap.NamedError("fallback_error", err),
 		)
-		
+
 		mr.metricsCol.IncrementFallbackFailures()
-		
+
 		return fmt.Errorf("direct failed (%w), gateway failed: %w", directErr, err)
 	}
-	
+
 	mr.logger.Info("Gateway fallback succeeded",
 		zap.Any("request_id", req.ID),
 		zap.Duration("total_duration", time.Since(startTime)),
 	)
-	
+
 	mr.metricsCol.IncrementFallbackSuccesses()
-	
+
 	return nil
 }
 
@@ -616,7 +616,7 @@ func (mr *MessageRouter) isRetryableDirectError(err error) bool {
 func (mr *MessageRouter) setupDirectRequest(req *mcp.Request) func() {
 	respChan := make(chan *mcp.Response, 1)
 	mr.pendingReqs.Store(req.ID, respChan)
-	
+
 	return func() {
 		if ch, ok := mr.pendingReqs.LoadAndDelete(req.ID); ok {
 			if respCh, ok := ch.(chan *mcp.Response); ok {
@@ -849,7 +849,7 @@ func (mr *MessageRouter) extractURLFromParams(params map[string]interface{}, req
 		return url
 	}
 
-	// Try target_url  
+	// Try target_url
 	if url := mr.tryExtractURL(params, "target_url", requestID); url != "" {
 		return url
 	}

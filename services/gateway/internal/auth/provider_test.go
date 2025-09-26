@@ -1,4 +1,3 @@
-
 package auth
 
 import (
@@ -162,9 +161,9 @@ func getRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
 }
 
 func createJWTValidateTokenTestCases(
-	logger *zap.Logger, 
-	secretKey []byte, 
-	tmpFile *os.File, 
+	logger *zap.Logger,
+	secretKey []byte,
+	tmpFile *os.File,
 	privateKey *rsa.PrivateKey,
 ) []jwtValidateTokenTestCase {
 	return []jwtValidateTokenTestCase{
@@ -213,8 +212,8 @@ func createValidHMACTokenTestCase(logger *zap.Logger, secretKey []byte) jwtValid
 }
 
 func createValidRSATokenTestCase(
-	logger *zap.Logger, 
-	tmpFile *os.File, 
+	logger *zap.Logger,
+	tmpFile *os.File,
 	privateKey *rsa.PrivateKey,
 ) jwtValidateTokenTestCase {
 	return jwtValidateTokenTestCase{

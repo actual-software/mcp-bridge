@@ -1,8 +1,6 @@
 // Package router provides HTTP request routing and load balancing functionality for the MCP gateway.
 package router
 
-
-
 import (
 	"bytes"
 	"context"
@@ -160,7 +158,7 @@ func (r *Router) executeWithCircuitBreaker(
 
 	err := breaker.Call(func() error {
 		var err error
-		
+
 		resp, err = r.forwardRequest(ctx, endpoint, req)
 
 		return err
@@ -198,7 +196,7 @@ func (r *Router) RouteRequest(ctx context.Context, req *mcp.Request, targetNames
 		if r.metrics != nil {
 			errors.RecordError(wrappedErr, r.metrics)
 		}
-		
+
 		return nil, wrappedErr
 	}
 

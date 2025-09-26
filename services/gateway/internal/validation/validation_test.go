@@ -1,4 +1,3 @@
-
 package validation
 
 import (
@@ -26,18 +25,18 @@ func createNamespaceValidationTests() []struct {
 	basicTests := createBasicNamespaceTests()
 	errorTests := createNamespaceErrorTests()
 	edgeCaseTests := createNamespaceEdgeCaseTests()
-	
+
 	tests := make([]struct {
 		name      string
 		namespace string
 		wantErr   bool
 		errMsg    string
 	}, 0, len(basicTests)+len(errorTests)+len(edgeCaseTests))
-	
+
 	tests = append(tests, basicTests...)
 	tests = append(tests, errorTests...)
 	tests = append(tests, edgeCaseTests...)
-	
+
 	return tests
 }
 
@@ -160,7 +159,7 @@ func runNamespaceValidationTests(t *testing.T, tests []struct {
 	errMsg    string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateNamespace(tt.namespace)
@@ -189,18 +188,18 @@ func createMethodValidationTests() []struct {
 	basicTests := createBasicMethodTests()
 	errorTests := createMethodErrorTests()
 	edgeCaseTests := createMethodEdgeCaseTests()
-	
+
 	tests := make([]struct {
 		name    string
 		method  string
 		wantErr bool
 		errMsg  string
 	}, 0, len(basicTests)+len(errorTests)+len(edgeCaseTests))
-	
+
 	tests = append(tests, basicTests...)
 	tests = append(tests, errorTests...)
 	tests = append(tests, edgeCaseTests...)
-	
+
 	return tests
 }
 
@@ -323,7 +322,7 @@ func runMethodValidationTests(t *testing.T, tests []struct {
 	errMsg  string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateMethod(tt.method)
@@ -351,17 +350,17 @@ func createRequestIDValidationTests() []struct {
 } {
 	validTests := createValidRequestIDTests()
 	errorTests := createRequestIDErrorTests()
-	
+
 	tests := make([]struct {
 		name    string
 		id      interface{}
 		wantErr bool
 		errMsg  string
 	}, 0, len(validTests)+len(errorTests))
-	
+
 	tests = append(tests, validTests...)
 	tests = append(tests, errorTests...)
-	
+
 	return tests
 }
 
@@ -456,7 +455,7 @@ func runRequestIDValidationTests(t *testing.T, tests []struct {
 	errMsg  string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateRequestID(tt.id)
@@ -484,17 +483,17 @@ func createTokenValidationTests() []struct {
 } {
 	validTests := createValidTokenTests()
 	errorTests := createTokenErrorTests()
-	
+
 	tests := make([]struct {
 		name    string
 		token   string
 		wantErr bool
 		errMsg  string
 	}, 0, len(validTests)+len(errorTests))
-	
+
 	tests = append(tests, validTests...)
 	tests = append(tests, errorTests...)
-	
+
 	return tests
 }
 
@@ -511,7 +510,7 @@ func createValidTokenTests() []struct {
 		errMsg  string
 	}{
 		{
-			name:    "valid JWT token",
+			name: "valid JWT token",
 			token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0Ijo" +
 				"xNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
 			wantErr: false,
@@ -587,7 +586,7 @@ func runTokenValidationTests(t *testing.T, tests []struct {
 	errMsg  string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateToken(tt.token)
@@ -615,17 +614,17 @@ func createURLValidationTests() []struct {
 } {
 	validTests := createValidURLTests()
 	errorTests := createURLErrorTests()
-	
+
 	tests := make([]struct {
 		name    string
 		url     string
 		wantErr bool
 		errMsg  string
 	}, 0, len(validTests)+len(errorTests))
-	
+
 	tests = append(tests, validTests...)
 	tests = append(tests, errorTests...)
-	
+
 	return tests
 }
 
@@ -742,7 +741,7 @@ func runURLValidationTests(t *testing.T, tests []struct {
 	errMsg  string
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateURL(tt.url)
@@ -825,16 +824,16 @@ func createHostnameValidationTests() []struct {
 } {
 	validTests := createValidHostnameTests()
 	invalidTests := createInvalidHostnameTests()
-	
+
 	tests := make([]struct {
 		name     string
 		hostname string
 		want     bool
 	}, 0, len(validTests)+len(invalidTests))
-	
+
 	tests = append(tests, validTests...)
 	tests = append(tests, invalidTests...)
-	
+
 	return tests
 }
 
@@ -930,7 +929,7 @@ func runHostnameValidationTests(t *testing.T, tests []struct {
 	want     bool
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isValidHostname(tt.hostname); got != tt.want {
@@ -1059,21 +1058,21 @@ func TestValidationPatterns(t *testing.T) {
 func BenchmarkValidateNamespace(b *testing.B) {
 	namespace := "test-namespace-123"
 	for i := 0; i < b.N; i++ {
-		_ = ValidateNamespace(namespace) 
+		_ = ValidateNamespace(namespace)
 	}
 }
 
 func BenchmarkValidateMethod(b *testing.B) {
 	method := "tools/list"
 	for i := 0; i < b.N; i++ {
-		_ = ValidateMethod(method) 
+		_ = ValidateMethod(method)
 	}
 }
 
 func BenchmarkValidateRequestID(b *testing.B) {
 	id := "req-12345-abcdef"
 	for i := 0; i < b.N; i++ {
-		_ = ValidateRequestID(id) 
+		_ = ValidateRequestID(id)
 	}
 }
 
@@ -1081,15 +1080,15 @@ func BenchmarkValidateToken(b *testing.B) {
 	const testJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0Ijo" +
 		"xNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 
-	token := testJWT 
+	token := testJWT
 	for i := 0; i < b.N; i++ {
-		_ = ValidateToken(token) 
+		_ = ValidateToken(token)
 	}
 }
 
 func BenchmarkValidateURL(b *testing.B) {
 	url := "https://example.com/api/v1/resources?param=value"
 	for i := 0; i < b.N; i++ {
-		_ = ValidateURL(url) 
+		_ = ValidateURL(url)
 	}
 }

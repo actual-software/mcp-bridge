@@ -1,9 +1,9 @@
 package stdio
 
 import (
-	"errors"
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -185,6 +185,6 @@ func (h *Handler) handleStdout(ctx context.Context, wg *sync.WaitGroup) {
 // WriteErrorf writes an error message to stderr.
 func (h *Handler) WriteErrorf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
- // Ignoring error: writing to stderr in error path.
+	// Ignoring error: writing to stderr in error path.
 	_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", msg)
 }

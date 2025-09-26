@@ -69,7 +69,7 @@ func TestNewRunner(t *testing.T) {
 		t.Fatal("NewRunner returned nil")
 	}
 
-	if runner.config.Name != config.Name { 
+	if runner.config.Name != config.Name {
 		t.Errorf("Expected config name %s, got %s", config.Name, runner.config.Name)
 	}
 
@@ -101,7 +101,7 @@ func TestNewRunner(t *testing.T) {
 	runner.cancel()
 }
 
-func TestRunner_BasicBenchmark(t *testing.T) { 
+func TestRunner_BasicBenchmark(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := Config{
 		Name:        "basic-test",
@@ -128,8 +128,8 @@ func TestRunner_BasicBenchmark(t *testing.T) {
 
 func validateBenchmarkResult(t *testing.T, result *Result, config Config) {
 	t.Helper()
-	
-	if result.Name != config.Name { 
+
+	if result.Name != config.Name {
 		t.Errorf("Expected result name %s, got %s", config.Name, result.Name)
 	}
 
@@ -143,7 +143,7 @@ func validateBenchmarkResult(t *testing.T, result *Result, config Config) {
 
 func validateRequestCounts(t *testing.T, result *Result) {
 	t.Helper()
-	
+
 	if result.TotalRequests <= 0 {
 		t.Error("Expected some requests to be made")
 	}
@@ -160,7 +160,7 @@ func validateRequestCounts(t *testing.T, result *Result) {
 
 func validateLatencyMetrics(t *testing.T, result *Result) {
 	t.Helper()
-	
+
 	// Min latency might be 0 if some requests completed very fast or were canceled
 	if result.MaxLatency < 0 {
 		t.Error("Max latency should not be negative")
@@ -173,7 +173,7 @@ func validateLatencyMetrics(t *testing.T, result *Result) {
 
 func validateFormatOutput(t *testing.T, result *Result) {
 	t.Helper()
-	
+
 	// Test Format method
 	formatted := result.Format()
 	if len(formatted) == 0 {

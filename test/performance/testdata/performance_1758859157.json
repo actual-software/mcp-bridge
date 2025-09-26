@@ -1,0 +1,29 @@
+[
+  {
+    "Name": "MessageThroughput",
+    "Duration": 3083,
+    "MemoryUsed": 275688,
+    "CPUUsage": 0,
+    "Timestamp": "2025-09-25T20:59:17.679278-07:00",
+    "IsRegression": false,
+    "RegressionInfo": ""
+  },
+  {
+    "Name": "MemoryAllocation",
+    "Duration": 0,
+    "MemoryUsed": 18446744073709549512,
+    "CPUUsage": 0,
+    "Timestamp": "2025-09-25T20:59:17.680709-07:00",
+    "IsRegression": false,
+    "RegressionInfo": ""
+  },
+  {
+    "Name": "ConnectionSpeed",
+    "Duration": 458,
+    "MemoryUsed": 0,
+    "CPUUsage": 0,
+    "Timestamp": "2025-09-25T20:59:17.680711-07:00",
+    "IsRegression": false,
+    "RegressionInfo": ""
+  }
+]

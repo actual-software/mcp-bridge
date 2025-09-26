@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -36,11 +35,11 @@ type tlsConfigTest struct {
 
 func createTLSConfigTests(certFile, keyFile, caFile string) []tlsConfigTest {
 	tests := []tlsConfigTest{}
-	
+
 	tests = append(tests, createBasicTLSTests(certFile, keyFile)...)
 	tests = append(tests, createAdvancedTLSTests(certFile, keyFile, caFile)...)
 	tests = append(tests, createTLSErrorTests(certFile, keyFile)...)
-	
+
 	return tests
 }
 
@@ -132,10 +131,10 @@ func createAdvancedTLSTests(certFile, keyFile, caFile string) []tlsConfigTest {
 
 func createTLSErrorTests(certFile, keyFile string) []tlsConfigTest {
 	tests := []tlsConfigTest{}
-	
+
 	tests = append(tests, createTLSValidationErrorTests(certFile, keyFile)...)
 	tests = append(tests, createTLSConfigurationErrorTests(certFile, keyFile)...)
-	
+
 	return tests
 }
 

@@ -63,7 +63,7 @@ func (b *StdioProcessBuilder) createCommand(ctx context.Context) error {
 	}
 
 	// Command from trusted configuration
-	b.cmd = exec.CommandContext(ctx, b.client.config.Command[0], b.client.config.Command[1:]...) 
+	b.cmd = exec.CommandContext(ctx, b.client.config.Command[0], b.client.config.Command[1:]...)
 
 	if b.client.config.WorkingDir != "" {
 		b.cmd.Dir = b.client.config.WorkingDir

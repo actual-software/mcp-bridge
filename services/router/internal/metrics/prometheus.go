@@ -208,7 +208,7 @@ func (e *PrometheusExporter) SetRouterMetrics(fn func() *RouterMetrics) {
 // Start starts the metrics HTTP server.
 func (e *PrometheusExporter) Start(ctx context.Context) error {
 	lc := &net.ListenConfig{}
-	
+
 	listener, err := lc.Listen(ctx, "tcp", e.server.Addr)
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %w", err)
@@ -228,13 +228,13 @@ func (e *PrometheusExporter) Start(ctx context.Context) error {
 		// Background context is appropriate for shutdown - we want to complete shutdown
 		// even if the parent context is cancelled, hence contextcheck is disabled
 		shutdownCtx, cancel := context.WithTimeout(
-			context.Background(), 
+			context.Background(),
 			constants.MetricsShutdownTimeout,
 		)
 		defer cancel()
 
 		// Background context is appropriate for shutdown
-		
+
 		if err := e.server.Shutdown(shutdownCtx); err != nil {
 			e.logger.Error("Failed to shutdown metrics server", zap.Error(err))
 		}

@@ -16,13 +16,12 @@ import (
 	"go.uber.org/zap"
 )
 
-
 // Buffer size constants.
 const (
-	BufferSize64KB = 64
-	BufferSize32KB = 32
+	BufferSize64KB       = 64
+	BufferSize32KB       = 32
 	DefaultRetryAttempts = 10
-	RetryMultiplier = 2
+	RetryMultiplier      = 2
 )
 
 // SSEClientConfig contains configuration for SSE direct client.
@@ -145,6 +144,7 @@ type SSEClient struct {
 func NewSSEClient(name, serverURL string, config SSEClientConfig, logger *zap.Logger) (*SSEClient, error) {
 	return EstablishSSEConnection(name, serverURL, config, logger)
 }
+
 // Connect establishes connection to the SSE MCP server.
 func (c *SSEClient) Connect(ctx context.Context) error {
 	c.mu.Lock()
@@ -404,7 +404,6 @@ func (c *SSEClient) readSSEStream() {
 	reader := CreateSSEStreamReader(c)
 	reader.ReadStreamLoop()
 }
-
 
 // processSSEEvent processes an SSE event and routes MCP responses.
 func (c *SSEClient) processSSEEvent(event *SSEEvent) {

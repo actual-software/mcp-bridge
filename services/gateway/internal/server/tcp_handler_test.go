@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -154,7 +153,7 @@ func (m *MockSessionManager) RedisClient() *redis.Client {
 	return client
 }
 
-func TestTCPHandler_HandleConnection(t *testing.T) { 
+func TestTCPHandler_HandleConnection(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	registry := metrics.InitializeMetricsRegistry()
 
@@ -177,10 +176,10 @@ func TestTCPHandler_HandleConnection(t *testing.T) {
 
 func testTCPHandlerSuccessfulAuth(t *testing.T, logger *zap.Logger, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	handler, mocks := setupSuccessfulAuthMocks(t, logger, registry)
 	clientConn, serverConn := createTCPTestConnection()
-	
+
 	defer func() { _ = clientConn.Close() }()
 	defer func() { _ = serverConn.Close() }()
 
@@ -207,7 +206,7 @@ func setupSuccessfulAuthMocks(
 	t *testing.T, logger *zap.Logger, registry *metrics.Registry,
 ) (*TCPHandler, *tcpTestMocks) {
 	t.Helper()
-	
+
 	// Create mocks
 	authProvider := new(MockAuthProvider)
 	mockRouter := new(MockRouter)
@@ -261,7 +260,7 @@ func createTCPTestConnection() (net.Conn, net.Conn) {
 
 func runTCPHandlerInBackground(t *testing.T, handler *TCPHandler, serverConn net.Conn) chan error {
 	t.Helper()
-	
+
 	// Handle connection in background
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -278,7 +277,7 @@ func runTCPHandlerInBackground(t *testing.T, handler *TCPHandler, serverConn net
 
 func finalizeTCPTest(t *testing.T, done chan error, clientConn net.Conn) {
 	t.Helper()
-	
+
 	// Close connection
 	_ = clientConn.Close()
 
@@ -293,7 +292,7 @@ func finalizeTCPTest(t *testing.T, done chan error, clientConn net.Conn) {
 
 func assertAllMockExpectations(t *testing.T, mocks *tcpTestMocks) {
 	t.Helper()
-	
+
 	mocks.authProvider.AssertExpectations(t)
 	mocks.mockRouter.AssertExpectations(t)
 	mocks.rateLimiter.AssertExpectations(t)
@@ -302,7 +301,7 @@ func assertAllMockExpectations(t *testing.T, mocks *tcpTestMocks) {
 
 func testTCPHandlerAuthFailure(t *testing.T, logger *zap.Logger, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	// Create mocks
 	authProvider := new(MockAuthProvider)
 	mockRouter := new(MockRouter)
@@ -346,7 +345,7 @@ func testTCPHandlerAuthFailure(t *testing.T, logger *zap.Logger, registry *metri
 
 func testTCPHandlerRateLimitExceeded(t *testing.T, logger *zap.Logger, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	// Create mocks
 	authProvider := new(MockAuthProvider)
 	mockRouter := new(MockRouter)
@@ -415,7 +414,7 @@ func testTCPHandlerRateLimitExceeded(t *testing.T, logger *zap.Logger, registry 
 
 func testTCPHandlerHealthCheck(t *testing.T, logger *zap.Logger, registry *metrics.Registry) {
 	t.Helper()
-	
+
 	// Create mocks
 	authProvider := new(MockAuthProvider)
 	mockRouter := new(MockRouter)
@@ -458,7 +457,7 @@ func testTCPHandlerHealthCheck(t *testing.T, logger *zap.Logger, registry *metri
 
 func performVersionNegotiation(t *testing.T, clientTransport *wire.Transport) {
 	t.Helper()
-	
+
 	// First, perform version negotiation
 	versionNeg := &wire.VersionNegotiationPayload{
 		MinVersion: wire.MinVersion,
@@ -481,7 +480,7 @@ func performVersionNegotiation(t *testing.T, clientTransport *wire.Transport) {
 
 func performSuccessfulInitialization(t *testing.T, clientTransport *wire.Transport) {
 	t.Helper()
-	
+
 	// Send initialization request
 	initReq := &mcp.Request{
 		JSONRPC: "2.0",
@@ -508,7 +507,7 @@ func performSuccessfulInitialization(t *testing.T, clientTransport *wire.Transpo
 
 func performFailedInitialization(t *testing.T, clientTransport *wire.Transport) {
 	t.Helper()
-	
+
 	// Send initialization request with bad token
 	initReq := &mcp.Request{
 		JSONRPC: "2.0",
@@ -536,7 +535,7 @@ func performFailedInitialization(t *testing.T, clientTransport *wire.Transport) 
 
 func performSuccessfulRequest(t *testing.T, clientTransport *wire.Transport) {
 	t.Helper()
-	
+
 	// Send actual request
 	testReq := &mcp.Request{
 		JSONRPC: "2.0",
@@ -560,7 +559,7 @@ func performSuccessfulRequest(t *testing.T, clientTransport *wire.Transport) {
 
 func performRateLimitedRequest(t *testing.T, clientTransport *wire.Transport) {
 	t.Helper()
-	
+
 	// Send actual request
 	testReq := &mcp.Request{
 		JSONRPC: "2.0",
@@ -586,7 +585,7 @@ func performRateLimitedRequest(t *testing.T, clientTransport *wire.Transport) {
 
 func performHealthCheck(t *testing.T, clientTransport *wire.Transport) {
 	t.Helper()
-	
+
 	// Send health check
 	err := clientTransport.SendHealthCheck()
 	require.NoError(t, err)

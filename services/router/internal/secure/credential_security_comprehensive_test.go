@@ -20,7 +20,7 @@ const (
 	testTimeout       = 50
 )
 
-func TestCredentialStore_SecurityBoundaries(t *testing.T) { 
+func TestCredentialStore_SecurityBoundaries(t *testing.T) {
 	// Test security boundaries and isolation between different app instances.
 	appName1 := "test-app-security-1"
 	appName2 := "test-app-security-2"
@@ -82,7 +82,7 @@ func TestCredentialStore_SecurityBoundaries(t *testing.T) {
 func TestEncryptedFileStore_MaliciousInputResistance(t *testing.T) {
 	// Test resistance to malicious inputs and attacks
 	tempDir := t.TempDir()
-	
+
 	store := setupMaliciousInputTestStore(t, tempDir)
 	maliciousInputs := createMaliciousInputTestCases()
 
@@ -95,7 +95,7 @@ func TestEncryptedFileStore_MaliciousInputResistance(t *testing.T) {
 
 func setupMaliciousInputTestStore(t *testing.T, tempDir string) TokenStore {
 	t.Helper()
-	
+
 	store, err := newEncryptedFileStore("malicious-test")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
@@ -116,13 +116,13 @@ type maliciousInputTest struct {
 
 func createMaliciousInputTestCases() []maliciousInputTest {
 	var tests []maliciousInputTest
-	
+
 	tests = append(tests, createNullByteTests()...)
 	tests = append(tests, createControlCharacterTests()...)
 	tests = append(tests, createLongInputTests()...)
 	tests = append(tests, createBinaryDataTests()...)
 	tests = append(tests, createInjectionTests()...)
-	
+
 	return tests
 }
 
@@ -198,7 +198,7 @@ func createInjectionTests() []maliciousInputTest {
 
 func runMaliciousInputTest(t *testing.T, store TokenStore, input maliciousInputTest) {
 	t.Helper()
-	
+
 	// Store should handle malicious input gracefully
 	err := store.Store(input.key, input.token)
 	if err != nil {
@@ -224,7 +224,7 @@ func runMaliciousInputTest(t *testing.T, store TokenStore, input maliciousInputT
 
 func validateRetrievedMaliciousInput(t *testing.T, input maliciousInputTest, retrieved string) {
 	t.Helper()
-	
+
 	// Binary data might be transformed during storage/retrieval due to encoding
 	if input.name == "binary data in token" {
 		// Just ensure we got something back without crashing
@@ -237,7 +237,7 @@ func validateRetrievedMaliciousInput(t *testing.T, input maliciousInputTest, ret
 	}
 }
 
-func TestEncryptedFileStore_FileSystemSecurity(t *testing.T) { 
+func TestEncryptedFileStore_FileSystemSecurity(t *testing.T) {
 	tempDir := t.TempDir()
 	store, fileStore := setupFileSystemSecurityTest(t, tempDir)
 
@@ -250,7 +250,7 @@ func TestEncryptedFileStore_FileSystemSecurity(t *testing.T) {
 
 func setupFileSystemSecurityTest(t *testing.T, tempDir string) (TokenStore, *encryptedFileStore) {
 	t.Helper()
-	
+
 	store, err := newEncryptedFileStore("filesystem-security-test")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
@@ -260,13 +260,13 @@ func setupFileSystemSecurityTest(t *testing.T, tempDir string) (TokenStore, *enc
 	require.True(t, ok, "Expected *encryptedFileStore type")
 
 	fileStore.filePath = filepath.Join(tempDir, "filesystem-test.enc")
-	
+
 	return store, fileStore
 }
 
 func storeTokenAndVerifyPermissions(t *testing.T, store TokenStore, fileStore *encryptedFileStore) {
 	t.Helper()
-	
+
 	// Store a token.
 	err := store.Store("test-key", "test-token")
 	if err != nil {
@@ -288,7 +288,7 @@ func storeTokenAndVerifyPermissions(t *testing.T, store TokenStore, fileStore *e
 
 func testDirectoryTraversalProtection(t *testing.T, tempDir string, store TokenStore, fileStore *encryptedFileStore) {
 	t.Helper()
-	
+
 	// Test directory traversal protection.
 	maliciousPath := filepath.Join(tempDir, "../malicious.enc")
 	fileStore.filePath = maliciousPath
@@ -303,7 +303,7 @@ func testDirectoryTraversalProtection(t *testing.T, tempDir string, store TokenS
 
 func verifyNoSensitiveDirectoryEscape(t *testing.T, maliciousPath, tempDir string) {
 	t.Helper()
-	
+
 	// If it didn't fail, verify it didn't create file outside temp dir.
 	if _, err := os.Stat(maliciousPath); err == nil {
 		absPath, _ := filepath.Abs(maliciousPath)
@@ -322,7 +322,7 @@ func verifyNoSensitiveDirectoryEscape(t *testing.T, maliciousPath, tempDir strin
 	}
 }
 
-func TestEncryptedFileStore_CryptographicSecurity(t *testing.T) { 
+func TestEncryptedFileStore_CryptographicSecurity(t *testing.T) {
 	// Test cryptographic security properties.
 	store1, err := newEncryptedFileStore("crypto-test-1")
 	if err != nil {
@@ -385,7 +385,7 @@ func TestEncryptedFileStore_CryptographicSecurity(t *testing.T) {
 	}
 }
 
-func TestTokenStore_RaceConditions(t *testing.T) { 
+func TestTokenStore_RaceConditions(t *testing.T) {
 	store := setupRaceConditionTest(t)
 
 	// Reduced concurrency to avoid overwhelming keychain system.
@@ -510,7 +510,7 @@ func validateRaceConditionResults(t *testing.T, errors chan error) {
 	}
 }
 
-func TestTokenStore_StressTest(t *testing.T) { 
+func TestTokenStore_StressTest(t *testing.T) {
 	// Use descriptive stress test environment instead of complex inline logic.
 	env := EstablishStressTestEnvironment(t, "stress-test", testTimeout)
 	defer env.Cleanup()
@@ -534,7 +534,7 @@ func TestTokenStore_StressTest(t *testing.T) {
 	env.ReportPerformance(operations, totalTime)
 }
 
-func TestTokenStore_MemoryLeaks(t *testing.T) { 
+func TestTokenStore_MemoryLeaks(t *testing.T) {
 	// Test for potential memory leaks.
 	store, err := NewTokenStore("memory-leak-test")
 	if err != nil {
@@ -585,7 +585,7 @@ func TestTokenStore_MemoryLeaks(t *testing.T) {
 	t.Logf("  Stack in use: %d bytes", memStats.StackInuse)
 }
 
-func TestTokenStore_PlatformSpecificBehavior(t *testing.T) { 
+func TestTokenStore_PlatformSpecificBehavior(t *testing.T) {
 	store := setupPlatformTest(t)
 
 	testKey := "platform-test-key"
@@ -632,7 +632,7 @@ func testPlatformListBehavior(t *testing.T, store TokenStore, testKey string) {
 	t.Helper()
 
 	keys, err := store.List()
-	
+
 	if errors.Is(err, ErrListNotSupported) {
 		t.Logf("List not supported on %s (expected)", runtime.GOOS)
 	} else if err != nil {

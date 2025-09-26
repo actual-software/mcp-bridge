@@ -1,4 +1,3 @@
-
 package health
 
 import (
@@ -12,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
 	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
 	"github.com/poiley/mcp-bridge/services/gateway/test/testutil"
+	"go.uber.org/zap"
 )
 
 const testIterations = 100
@@ -281,7 +280,7 @@ func TestChecker_checkServiceDiscovery(t *testing.T) {
 func TestChecker_checkEndpoints(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	tests := createEndpointCheckTests()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runEndpointCheckTest(t, tt, logger)
@@ -570,11 +569,11 @@ type serverHandlerTest struct {
 
 func getServerHandlerTests(mockDiscovery *MockDiscovery, checker *Checker) []serverHandlerTest {
 	var tests []serverHandlerTest
-	
+
 	tests = append(tests, getHealthEndpointTests(mockDiscovery, checker)...)
 	tests = append(tests, getHealthzEndpointTests(checker)...)
 	tests = append(tests, getReadyEndpointTests(checker)...)
-	
+
 	return tests
 }
 

@@ -1,4 +1,3 @@
-
 package tracing_test
 
 import (
@@ -86,7 +85,7 @@ func runOTelTracerTests(t *testing.T, tests []struct {
 	wantErr bool
 }, logger *zap.Logger) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tracer, err := tracing.InitOTelTracer(tt.config, logger)
@@ -117,7 +116,7 @@ func TestOTelTracerOperations(t *testing.T) {
 
 func setupOTelTracer(t *testing.T, logger *zap.Logger) *tracing.OTelTracer {
 	t.Helper()
-	
+
 	cfg := config.TracingConfig{
 		Enabled:        true,
 		ServiceName:    "test-gateway",

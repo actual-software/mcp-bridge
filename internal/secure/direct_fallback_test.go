@@ -79,7 +79,7 @@ func TestDirectEncryptedFileStore(t *testing.T) {
 }
 
 // Test error paths in encrypted operations to improve coverage.
-func TestEncryptedFileStore_ErrorCoverage(t *testing.T) { 
+func TestEncryptedFileStore_ErrorCoverage(t *testing.T) {
 	store, err := newEncryptedFileStore("error-coverage-test")
 	require.NoError(t, err)
 

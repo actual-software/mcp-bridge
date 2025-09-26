@@ -13,7 +13,7 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 )
 
-func TestNewGatewayPool(t *testing.T) { 
+func TestNewGatewayPool(t *testing.T) {
 	logger := zap.NewNop()
 
 	tests := []struct {
@@ -106,7 +106,7 @@ func TestNewGatewayPool(t *testing.T) {
 	}
 }
 
-func TestGatewayPool_LoadBalancing(t *testing.T) { 
+func TestGatewayPool_LoadBalancing(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := &routerConfig.Config{
@@ -181,7 +181,7 @@ func TestGatewayPool_LoadBalancing(t *testing.T) {
 	}
 }
 
-func TestGatewayPool_HealthChecking(t *testing.T) { 
+func TestGatewayPool_HealthChecking(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := &routerConfig.Config{
@@ -226,7 +226,7 @@ func TestGatewayPool_HealthChecking(t *testing.T) {
 	}
 }
 
-func TestGatewayPool_GetEndpointByTags(t *testing.T) { 
+func TestGatewayPool_GetEndpointByTags(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := &routerConfig.Config{
@@ -315,7 +315,7 @@ func TestGatewayPool_GetEndpointByTags(t *testing.T) {
 	}
 }
 
-func TestGatewayPool_ConcurrentAccess(t *testing.T) { 
+func TestGatewayPool_ConcurrentAccess(t *testing.T) {
 	logger := zap.NewNop()
 
 	config := &routerConfig.Config{
@@ -379,7 +379,7 @@ func TestGatewayPool_ConcurrentAccess(t *testing.T) {
 	}
 }
 
-func TestGatewayEndpointWrapper_ConnectionTracking(t *testing.T) { 
+func TestGatewayEndpointWrapper_ConnectionTracking(t *testing.T) {
 	wrapper := &GatewayEndpointWrapper{
 		Health: &EndpointHealth{
 			IsHealthy: true,

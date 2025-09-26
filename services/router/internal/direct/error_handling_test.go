@@ -3,11 +3,12 @@ package direct
 import (
 	"context"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,10 +25,10 @@ func createErrorRecoveryTests(t *testing.T) []struct {
 	description    string
 } {
 	t.Helper()
-	
+
 	stdioTest := createStdioErrorRecoveryTest(t)
 	httpTest := createHTTPErrorRecoveryTest(t)
-	
+
 	return []struct {
 		name           string
 		clientFunc     func() DirectClient
@@ -48,7 +49,7 @@ func runErrorRecoveryTest(t *testing.T, tt struct {
 	description    string
 }) {
 	t.Helper()
-	
+
 	client := tt.clientFunc()
 	require.NotNil(t, client)
 
@@ -110,7 +111,7 @@ func createTimeoutHandlingTests(t *testing.T) []struct {
 	description string
 } {
 	t.Helper()
-	
+
 	return []struct {
 		name        string
 		clientFunc  func() DirectClient
@@ -167,7 +168,7 @@ func runTimeoutHandlingTest(t *testing.T, tt struct {
 	description string
 }) {
 	t.Helper()
-	
+
 	client := tt.clientFunc()
 	require.NotNil(t, client)
 
@@ -229,11 +230,11 @@ func createConnectionFailureTests(t *testing.T) []struct {
 	description string
 } {
 	t.Helper()
-	
+
 	stdioTest := createStdioFailureTest(t)
 	httpTest := createHTTPFailureTest(t)
 	webSocketTest := createWebSocketFailureTest(t)
-	
+
 	return []struct {
 		name        string
 		clientFunc  func() DirectClient
@@ -251,7 +252,7 @@ func runConnectionFailureTest(t *testing.T, tt struct {
 	description string
 }) {
 	t.Helper()
-	
+
 	client := tt.clientFunc()
 	require.NotNil(t, client)
 
@@ -294,13 +295,13 @@ func TestDirectClient_ConnectionFailure(t *testing.T) {
 
 func runConcurrentRequestsTest(t *testing.T) {
 	t.Helper()
-	
+
 	// Test concurrent access to DirectClientManager rather than individual client requests.
 	// This focuses on the concurrency safety of the manager itself.
 	manager := setupConcurrentTestManager(t)
 
 	defer func() { _ = manager.Stop(context.Background()) }()
-	
+
 	results := runConcurrentClientOperations(t, manager)
 	verifyConcurrentResults(t, results)
 }
@@ -372,7 +373,7 @@ func runErrorPropagationTest(t *testing.T, manager DirectClientManagerInterface,
 	description string
 }) {
 	t.Helper()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -508,7 +509,7 @@ func createWebSocketFailureTest(t *testing.T) struct {
 // Helper functions for runConcurrentRequestsTest
 func setupConcurrentTestManager(t *testing.T) DirectClientManagerInterface {
 	t.Helper()
-	
+
 	config := DirectConfig{
 		MaxConnections: 10,
 		DefaultTimeout: 3 * time.Second,
@@ -525,13 +526,13 @@ func setupConcurrentTestManager(t *testing.T) DirectClientManagerInterface {
 
 	err := manager.Start(context.Background())
 	require.NoError(t, err)
-	
+
 	return manager
 }
 
 func runConcurrentClientOperations(t *testing.T, manager DirectClientManagerInterface) chan error {
 	t.Helper()
-	
+
 	const numConcurrent = 5
 
 	var wg sync.WaitGroup
@@ -570,15 +571,15 @@ func runConcurrentClientOperations(t *testing.T, manager DirectClientManagerInte
 
 	wg.Wait()
 	close(results)
-	
+
 	return results
 }
 
 func verifyConcurrentResults(t *testing.T, results chan error) {
 	t.Helper()
-	
+
 	const numConcurrent = 5
-	
+
 	// Check results.
 	successCount := 0
 	errorCount := 0
@@ -609,7 +610,7 @@ func createStdioErrorRecoveryTest(t *testing.T) struct {
 	description    string
 } {
 	t.Helper()
-	
+
 	return struct {
 		name           string
 		clientFunc     func() DirectClient
@@ -652,7 +653,7 @@ func createHTTPErrorRecoveryTest(t *testing.T) struct {
 	description    string
 } {
 	t.Helper()
-	
+
 	return struct {
 		name           string
 		clientFunc     func() DirectClient

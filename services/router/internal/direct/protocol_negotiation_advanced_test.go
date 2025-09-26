@@ -3,7 +3,6 @@ package direct
 import (
 	"context"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
@@ -191,13 +192,13 @@ func createProtocolTestCases() []struct {
 		networkDelay     time.Duration
 		description      string
 	}, 0, 5)
-	
+
 	testCases = append(testCases, createHTTPFirstPreferenceTest())
 	testCases = append(testCases, createWebSocketFallbackTest())
 	testCases = append(testCases, createSSEFallbackTest())
 	testCases = append(testCases, createCustomPreferenceTest())
 	testCases = append(testCases, createNetworkDelayTest())
-	
+
 	return testCases
 }
 
@@ -362,7 +363,6 @@ func createNetworkDelayTest() struct {
 	}
 }
 
-
 func TestAdvancedProtocolNegotiation_MultiProtocolDetection(t *testing.T) {
 	t.Parallel()
 
@@ -395,7 +395,7 @@ func TestAdvancedProtocolNegotiation_MultiProtocolDetection(t *testing.T) {
 }
 
 // TestAdvancedProtocolNegotiation_ConcurrentDetection tests concurrent protocol detection.
-func TestAdvancedProtocolNegotiation_ConcurrentDetection(t *testing.T) { 
+func TestAdvancedProtocolNegotiation_ConcurrentDetection(t *testing.T) {
 	t.Parallel()
 
 	manager := setupConcurrentDetectionManager(t)
@@ -441,7 +441,7 @@ func cleanupConcurrentDetectionManager(t *testing.T, manager *DirectClientManage
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	if err := manager.Stop(ctx); err != nil {
 		t.Logf("Failed to stop manager: %v", err)
 	}
@@ -501,8 +501,8 @@ func runConcurrentDetectionTest(t *testing.T, manager *DirectClientManager, serv
 	verifyConcurrentDetectionResults(t, manager, numWorkers, detectionsPerWorker, successfulDetections, errors)
 }
 
-func runConcurrentDetectionWorker(t *testing.T, wg *sync.WaitGroup, manager *DirectClientManager, 
-	serverURLs []string, ctx context.Context, workerID, detectionsPerWorker int, 
+func runConcurrentDetectionWorker(t *testing.T, wg *sync.WaitGroup, manager *DirectClientManager,
+	serverURLs []string, ctx context.Context, workerID, detectionsPerWorker int,
 	successfulDetections, errors *int64) {
 	defer wg.Done()
 
@@ -660,7 +660,7 @@ func createValidAutoDetectionConfig() DirectConfig {
 
 func setupAllProtocolsFailServer(t *testing.T) (string, func()) {
 	t.Helper()
-	
+
 	// Server that returns HTTP responses but doesn't support WebSocket/SSE
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -671,7 +671,7 @@ func setupAllProtocolsFailServer(t *testing.T) (string, func()) {
 
 func setupSlowResponseServer(t *testing.T) (string, func()) {
 	t.Helper()
-	
+
 	// Server with long response time
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(1 * time.Second) // Longer than timeout
@@ -715,7 +715,7 @@ func runFailureScenarioTest(t *testing.T, tt failureScenarioTest) {
 
 func determineTestURL(t *testing.T, tt failureScenarioTest) string {
 	t.Helper()
-	
+
 	if tt.setupServer != nil {
 		testURL, cleanup := tt.setupServer(t)
 		t.Cleanup(cleanup)
@@ -731,7 +731,7 @@ func runProtocolDetectionTest(
 	testURL, expectedError string,
 ) {
 	t.Helper()
-	
+
 	// Test protocol detection failure
 	_, err := manager.DetectProtocol(ctx, testURL)
 	require.Error(t, err, "Protocol detection should fail")
@@ -746,7 +746,7 @@ func verifyNoCacheForFailures(
 	config DirectConfig,
 ) {
 	t.Helper()
-	
+
 	// Verify that cache doesn't contain failed entries
 	if config.AutoDetection.Enabled && config.AutoDetection.CacheResults {
 		// Try again to ensure it's not cached
@@ -761,7 +761,7 @@ func TestAdvancedProtocolNegotiation_EdgeCases(t *testing.T) {
 
 	logger := zaptest.NewLogger(t)
 	config := createEdgeCaseTestConfig()
-	
+
 	manager := setupEdgeCaseTestManager(t, config, logger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -795,11 +795,11 @@ func createEdgeCaseTestConfig() DirectConfig {
 
 func setupEdgeCaseTestManager(t *testing.T, config DirectConfig, logger *zap.Logger) *DirectClientManager {
 	t.Helper()
-	
+
 	managerInterface := NewDirectClientManager(config, logger)
 	manager, ok := managerInterface.(*DirectClientManager)
 	require.True(t, ok, "Expected *DirectClientManager type")
-	
+
 	return manager
 }
 
@@ -811,7 +811,7 @@ func runEdgeCaseTests(
 	logger *zap.Logger,
 ) {
 	t.Helper()
-	
+
 	t.Run("cache_expiration", func(t *testing.T) {
 		testCacheExpiration(t, manager, ctx)
 	})
@@ -831,7 +831,7 @@ func runEdgeCaseTests(
 
 func testCacheExpiration(t *testing.T, manager *DirectClientManager, ctx context.Context) {
 	t.Helper()
-	
+
 	// Setup server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -857,7 +857,7 @@ func testCacheExpiration(t *testing.T, manager *DirectClientManager, ctx context
 
 func testEmptyPreferredOrder(t *testing.T, ctx context.Context, config DirectConfig, logger *zap.Logger) {
 	t.Helper()
-	
+
 	// Create manager with empty preferred order (should use defaults)
 	emptyConfig := config
 	emptyConfig.AutoDetection.PreferredOrder = []string{}
@@ -883,7 +883,7 @@ func testEmptyPreferredOrder(t *testing.T, ctx context.Context, config DirectCon
 
 func testProtocolHintsIntegration(t *testing.T, manager *DirectClientManager, ctx context.Context) {
 	t.Helper()
-	
+
 	// Setup WebSocket server
 	wsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
@@ -911,7 +911,7 @@ func testProtocolHintsIntegration(t *testing.T, manager *DirectClientManager, ct
 
 func testNetworkErrorRecovery(t *testing.T, manager *DirectClientManager, ctx context.Context) {
 	t.Helper()
-	
+
 	// Create a server that will be closed mid-test
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -993,7 +993,7 @@ func cleanupPerformanceTestManager(t *testing.T, manager *DirectClientManager) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	
+
 	if err := manager.Stop(ctx); err != nil {
 		t.Logf("Failed to stop manager: %v", err)
 	}

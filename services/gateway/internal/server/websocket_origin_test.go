@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -34,7 +33,7 @@ func TestWebSocketOriginValidation(t *testing.T) {
 
 func setupWebSocketOriginTestServer(t *testing.T) (*GatewayServer, *httptest.Server) {
 	t.Helper()
-	
+
 	// Create test server with specific allowed origins
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -198,7 +197,7 @@ func TestWebSocketOriginValidation_Wildcard(t *testing.T) {
 
 func setupWildcardOriginTestServer(t *testing.T) (*GatewayServer, *httptest.Server) {
 	t.Helper()
-	
+
 	// Test with wildcard origin
 	cfg := &config.Config{
 		Server: config.ServerConfig{

@@ -158,7 +158,7 @@ func TestGeneratePassword_CompleteEdgeCases(t *testing.T) {
 }
 
 // Test error conditions and edge cases in file operations.
-func TestEncryptedFileStore_FileEdgeCases(t *testing.T) { 
+func TestEncryptedFileStore_FileEdgeCases(t *testing.T) {
 	t.Run("store_and_overwrite", testStoreAndOverwrite)
 	t.Run("multiple_keys_operations", testMultipleKeysOperations)
 	t.Run("store_with_existing_directory", testStoreWithExistingDirectory)

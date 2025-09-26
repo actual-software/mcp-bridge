@@ -175,7 +175,7 @@ func testProtocolPerformanceComparison(t *testing.T, stack *DockerStack) {
 
 	client := NewMCPClient(router)
 	initializeClientForPerformance(t, client)
-	
+
 	duration := runWebSocketPerformanceTest(t, client)
 	logPerformanceResults(t, duration)
 }

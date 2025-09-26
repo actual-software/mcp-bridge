@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -22,7 +21,7 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 )
 
-func TestTCPHandler_MetricsCollection(t *testing.T) { 
+func TestTCPHandler_MetricsCollection(t *testing.T) {
 	// Clear default registry to avoid conflicts
 	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
@@ -343,7 +342,7 @@ func TestTCPHandler_MessageDurationMetrics(t *testing.T) {
 
 	metricsReg, handler := setupDurationMetricsTest(t)
 	clientConn, serverConn := createConnectionPair()
-	
+
 	defer func() { _ = clientConn.Close() }()
 	defer func() { _ = serverConn.Close() }()
 
@@ -355,7 +354,7 @@ func TestTCPHandler_MessageDurationMetrics(t *testing.T) {
 
 func setupDurationMetricsTest(t *testing.T) (*metrics.Registry, *TCPHandler) {
 	t.Helper()
-	
+
 	metricsReg := metrics.InitializeMetricsRegistry()
 	authProvider := new(MockAuthProvider)
 	router := new(MockRouter)
@@ -409,7 +408,7 @@ func createConnectionPair() (net.Conn, net.Conn) {
 
 func runHandlerInBackground(t *testing.T, handler *TCPHandler, serverConn net.Conn) chan struct{} {
 	t.Helper()
-	
+
 	// Run handler
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -426,7 +425,7 @@ func runHandlerInBackground(t *testing.T, handler *TCPHandler, serverConn net.Co
 
 func runDurationMetricsClient(t *testing.T, clientConn net.Conn) {
 	t.Helper()
-	
+
 	// Run client
 	transport := wire.NewTransport(clientConn)
 
@@ -481,7 +480,7 @@ func runDurationMetricsClient(t *testing.T, clientConn net.Conn) {
 
 func waitForHandlerCompletion(t *testing.T, done chan struct{}, clientConn net.Conn) {
 	t.Helper()
-	
+
 	// Close and wait
 	_ = clientConn.Close()
 
@@ -494,7 +493,7 @@ func waitForHandlerCompletion(t *testing.T, done chan struct{}, clientConn net.C
 
 func validateDurationMetrics(t *testing.T, metricsReg *metrics.Registry) {
 	t.Helper()
-	
+
 	// Check duration metrics were recorded
 	// We can't check exact values for histograms easily, but we can verify they exist
 	assert.NotNil(t, metricsReg.TCPMessageDuration)

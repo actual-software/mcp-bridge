@@ -92,7 +92,7 @@ func (f *DefaultFactory) CreateBackend(config BackendConfig) (Backend, error) {
 	case "sse", "server-sent-events":
 		return f.createSSEBackend(config)
 	default:
-		return nil, customerrors.NewValidationError("unsupported backend protocol: " + config.Protocol ).
+		return nil, customerrors.NewValidationError("unsupported backend protocol: " + config.Protocol).
 			WithComponent("backend_factory")
 	}
 }

@@ -1,4 +1,3 @@
-
 package discovery
 
 import (
@@ -264,7 +263,7 @@ func TestSSEDiscovery_Watch(t *testing.T) {
 	go func() {
 		defer close(done)
 
-		_, _ = sseBridge.Watch(ctx) 
+		_, _ = sseBridge.Watch(ctx)
 	}()
 
 	// Cancel context immediately
@@ -302,7 +301,7 @@ func TestStdioDiscovery_Watch(t *testing.T) {
 	go func() {
 		defer close(done)
 
-		_, _ = stdioBridge.Watch(ctx) 
+		_, _ = stdioBridge.Watch(ctx)
 	}()
 
 	// Cancel context immediately
@@ -340,7 +339,7 @@ func TestWebSocketDiscovery_Watch(t *testing.T) {
 	go func() {
 		defer close(done)
 
-		_, _ = wsBridge.Watch(ctx) 
+		_, _ = wsBridge.Watch(ctx)
 	}()
 
 	// Cancel context immediately

@@ -1,4 +1,3 @@
-
 package protocol
 
 import (
@@ -819,11 +818,11 @@ func TestConnectionMultiplexer_Integration(t *testing.T) {
 	// Set up test endpoints and create connections
 	endpoints := createIntegrationTestEndpoints()
 	connections := createMultipleConnections(t, multiplexer, endpoints)
-	
+
 	// Verify initial stats and test connection reuse
 	verifyMultiplexerStats(t, multiplexer, len(endpoints), len(connections))
 	returnAndReuseConnections(t, multiplexer, endpoints, connections)
-	
+
 	// Shutdown and verify cleanup
 	shutdownAndVerifyCleanup(t, multiplexer)
 }

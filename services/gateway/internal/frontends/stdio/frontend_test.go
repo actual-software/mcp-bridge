@@ -1,4 +1,3 @@
-
 package stdio
 
 import (
@@ -360,7 +359,7 @@ func TestStdinStdoutConn(t *testing.T) {
 	assert.Equal(t, "response", string(writer.data))
 
 	// Test close
-	_ = conn.Close() 
+	_ = conn.Close()
 }
 
 type testReader struct {

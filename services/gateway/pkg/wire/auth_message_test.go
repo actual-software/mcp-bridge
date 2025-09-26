@@ -1,4 +1,3 @@
-
 package wire
 
 import (
@@ -191,7 +190,7 @@ func TestAuthMessage_ExtractRequest(t *testing.T) {
 
 func testValidRequestExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Valid request extraction", func(t *testing.T) {
 		originalReq := &mcp.Request{
 			JSONRPC: "2.0",
@@ -220,7 +219,7 @@ func testValidRequestExtraction(t *testing.T) {
 
 func testRawMessageExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Extract request from raw message data", func(t *testing.T) {
 		// Create auth message with raw JSON data
 		rawMessage := map[string]interface{}{
@@ -248,7 +247,7 @@ func testRawMessageExtraction(t *testing.T) {
 
 func testInvalidRequestExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Invalid request extraction", func(t *testing.T) {
 		// Create auth message with non-request data
 		authMsg := &AuthMessage{
@@ -264,7 +263,7 @@ func testInvalidRequestExtraction(t *testing.T) {
 
 func testNilMessageExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Nil message extraction", func(t *testing.T) {
 		authMsg := &AuthMessage{
 			AuthToken: "nil-token",
@@ -290,7 +289,7 @@ func TestAuthMessage_ExtractResponse(t *testing.T) {
 
 func testValidResponseExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Valid response extraction", func(t *testing.T) {
 		originalResp := &mcp.Response{
 			JSONRPC: "2.0",
@@ -317,7 +316,7 @@ func testValidResponseExtraction(t *testing.T) {
 
 func testResponseWithError(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Response with error", func(t *testing.T) {
 		originalResp := &mcp.Response{
 			JSONRPC: "2.0",
@@ -344,7 +343,7 @@ func testResponseWithError(t *testing.T) {
 
 func testRawResponseExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Extract response from raw message data", func(t *testing.T) {
 		rawMessage := map[string]interface{}{
 			"jsonrpc": "2.0",
@@ -370,7 +369,7 @@ func testRawResponseExtraction(t *testing.T) {
 
 func testInvalidResponseExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Invalid response extraction", func(t *testing.T) {
 		authMsg := &AuthMessage{
 			AuthToken: "invalid-resp-token",
@@ -385,7 +384,7 @@ func testInvalidResponseExtraction(t *testing.T) {
 
 func testNilResponseExtraction(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Nil message extraction", func(t *testing.T) {
 		authMsg := &AuthMessage{
 			AuthToken: "nil-resp-token",
@@ -407,7 +406,7 @@ func TestAuthMessage_RoundTrip(t *testing.T) {
 
 func testRequestRoundTrip(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Request round trip", func(t *testing.T) {
 		originalReq := &mcp.Request{
 			JSONRPC: "2.0",
@@ -450,7 +449,7 @@ func testRequestRoundTrip(t *testing.T) {
 
 func testResponseRoundTrip(t *testing.T) {
 	t.Helper()
-	
+
 	t.Run("Response round trip", func(t *testing.T) {
 		originalResp := &mcp.Response{
 			JSONRPC: "2.0",
@@ -502,16 +501,16 @@ func createMarshalUnmarshalTests() []struct {
 } {
 	basicTests := createBasicMarshalTests()
 	complexTests := createComplexMarshalTests()
-	
+
 	tests := make([]struct {
 		name      string
 		authMsg   *AuthMessage
 		wantError bool
 	}, 0, len(basicTests)+len(complexTests))
-	
+
 	tests = append(tests, basicTests...)
 	tests = append(tests, complexTests...)
-	
+
 	return tests
 }
 
@@ -605,7 +604,7 @@ func runMarshalUnmarshalTests(t *testing.T, tests []struct {
 	wantError bool
 }) {
 	t.Helper()
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Marshal
@@ -682,7 +681,7 @@ func BenchmarkUnmarshalAuthMessage(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = UnmarshalAuthMessage(jsonData) 
+		_, _ = UnmarshalAuthMessage(jsonData)
 	}
 }
 
@@ -697,7 +696,7 @@ func BenchmarkExtractRequest(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = authMsg.ExtractRequest() 
+		_, _ = authMsg.ExtractRequest()
 	}
 }
 
@@ -711,6 +710,6 @@ func BenchmarkExtractResponse(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = authMsg.ExtractResponse() 
+		_, _ = authMsg.ExtractResponse()
 	}
 }

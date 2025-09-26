@@ -84,7 +84,7 @@ func TestEncryptedFileStore(t *testing.T) {
 func generateTestToken() string {
 	b := make([]byte, 32)
 	_, _ = rand.Read(b)
-	
+
 	return base64.StdEncoding.EncodeToString(b)
 }
 
@@ -92,7 +92,7 @@ func testStoreAndRetrieveToken(t *testing.T, store TokenStore) {
 	t.Helper()
 
 	testKey := "test-service"
-	testToken := generateTestToken() 
+	testToken := generateTestToken()
 
 	err := store.Store(testKey, testToken)
 	require.NoError(t, err)
@@ -501,7 +501,7 @@ func TestTokenStoreEdgeCases(t *testing.T) {
 	t.Run("unicode characters", func(t *testing.T) {
 		unicodeKey := "key-🔑-unicode"
 		// Use random token with unicode prefix
-		unicodeToken := "🎫-ünïcödé-тест-🚀-" + generateTestToken() 
+		unicodeToken := "🎫-ünïcödé-тест-🚀-" + generateTestToken()
 
 		err := store.Store(unicodeKey, unicodeToken)
 		require.NoError(t, err)

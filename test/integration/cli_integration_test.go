@@ -18,7 +18,7 @@ import (
 // CLIIntegrationTestSuite tests CLI commands for both gateway and router.
 type CLIIntegrationTestSuite struct {
 	suite.Suite
-	ctx context.Context 
+	ctx           context.Context
 	gatewayBinary string
 	routerBinary  string
 	projectRoot   string
@@ -83,11 +83,11 @@ func (s *CLIIntegrationTestSuite) safeExecCommand(ctx context.Context, binary st
 		s.gatewayBinary: true,
 		s.routerBinary:  true,
 	}
-	
+
 	if !allowedBinaries[binary] {
 		s.T().Fatalf("Unexpected binary path: %s", binary)
 	}
-	
+
 	// All args must be hardcoded strings passed by the test, not variables
 	return exec.CommandContext(ctx, binary, args...)
 }

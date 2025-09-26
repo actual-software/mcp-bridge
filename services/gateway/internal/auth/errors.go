@@ -11,7 +11,7 @@ import (
 
 // Error codes for auth operations.
 const (
-	ErrCodeInvalidToken       = "AUTH_INVALID_TOKEN"       //nolint:gosec 
+	ErrCodeInvalidToken       = "AUTH_INVALID_TOKEN"       //nolint:gosec
 	ErrCodeTokenExpired       = "AUTH_TOKEN_EXPIRED"       //nolint:gosec
 	ErrCodeMissingToken       = "AUTH_MISSING_TOKEN"       //nolint:gosec
 	ErrCodeInvalidCredentials = "AUTH_INVALID_CREDENTIALS" //nolint:gosec
@@ -33,7 +33,7 @@ const (
 
 // NewInvalidTokenError creates an error for invalid tokens.
 func NewInvalidTokenError(reason string) *errors.GatewayError {
-	return errors.New(errors.TypeUnauthorized, "invalid token: " + reason).
+	return errors.New(errors.TypeUnauthorized, "invalid token: "+reason).
 		WithComponent("auth").
 		WithContext("code", ErrCodeInvalidToken).
 		WithHTTPStatus(http.StatusUnauthorized)
@@ -95,7 +95,7 @@ func NewProviderError(provider string, err error) *errors.GatewayError {
 
 // NewKeyNotFoundError creates an error for missing signing keys.
 func NewKeyNotFoundError(keyID string) *errors.GatewayError {
-	return errors.New(errors.TypeInternal, "signing key not found: " + keyID).
+	return errors.New(errors.TypeInternal, "signing key not found: "+keyID).
 		WithComponent("auth").
 		WithContext("code", ErrCodeKeyNotFound).
 		WithContext("key_id", keyID).
@@ -112,7 +112,7 @@ func NewInvalidSignatureError(err error) *errors.GatewayError {
 
 // NewInvalidClaimsError creates an error for invalid token claims.
 func NewInvalidClaimsError(claim string) *errors.GatewayError {
-	return errors.New(errors.TypeUnauthorized, "invalid claim: " + claim).
+	return errors.New(errors.TypeUnauthorized, "invalid claim: "+claim).
 		WithComponent("auth").
 		WithContext("code", ErrCodeInvalidClaims).
 		WithContext("invalid_claim", claim).
@@ -121,7 +121,7 @@ func NewInvalidClaimsError(claim string) *errors.GatewayError {
 
 // WrapAuthError wraps an auth error with context.
 func WrapAuthError(ctx context.Context, err error, operation string) *errors.GatewayError {
-	return errors.WrapContext(ctx, err, "auth operation failed: " + operation).
+	return errors.WrapContext(ctx, err, "auth operation failed: "+operation).
 		WithComponent("auth").
 		WithOperation(operation)
 }

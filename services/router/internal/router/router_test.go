@@ -95,7 +95,7 @@ func runNewRouterTest(t *testing.T, tt struct {
 	errorMsg  string
 }) {
 	t.Helper()
-	
+
 	router, err := New(tt.config, tt.logger)
 
 	if tt.wantError {
@@ -131,7 +131,7 @@ func validateNewRouterInitialization(
 	expectedLogger *zap.Logger,
 ) {
 	t.Helper()
-	
+
 	// Verify initialization.
 	if router.config != expectedConfig {
 		t.Error("Config not set correctly")
@@ -168,7 +168,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestConnectionState_String(t *testing.T) { 
+func TestConnectionState_String(t *testing.T) {
 	tests := []struct {
 		state    ConnectionState
 		expected string
@@ -192,7 +192,7 @@ func TestConnectionState_String(t *testing.T) {
 	}
 }
 
-func TestLocalRouter_StateManagement(t *testing.T) { 
+func TestLocalRouter_StateManagement(t *testing.T) {
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
 			Endpoints: []config.GatewayEndpoint{
@@ -235,7 +235,7 @@ func TestLocalRouter_StateManagement(t *testing.T) {
 
 func createMessageProcessingMockServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		// Simple echo server.
 		for {
@@ -269,7 +269,7 @@ func setupMessageProcessingRouter(
 	mockServer *httptest.Server,
 ) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -292,7 +292,7 @@ func setupMessageProcessingRouter(
 
 	// Start router in background.
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Channel to wait for router completion.
 	done := make(chan struct{})
 
@@ -321,7 +321,7 @@ func cleanupMessageProcessingRouter(cancel context.CancelFunc, done <-chan struc
 
 func waitForRouterConnection(t *testing.T, router *LocalRouter) {
 	t.Helper()
-	
+
 	timeout := time.After(constants.TestMediumTimeout)
 
 	ticker := time.NewTicker(constants.TestTickInterval)
@@ -376,7 +376,7 @@ func runMessageProcessingTest(t *testing.T, router *LocalRouter, tt struct {
 	errorContains string
 }) {
 	t.Helper()
-	
+
 	// Send message via stdin channel.
 	router.GetStdinChan() <- []byte(tt.input)
 
@@ -427,7 +427,7 @@ func TestLocalRouter_MessageProcessing(t *testing.T) {
 
 // TestLocalRouter_sendErrorResponse removed - this is now an internal method of MessageRouter.
 
-func TestLocalRouter_ConnectionLifecycle(t *testing.T) { 
+func TestLocalRouter_ConnectionLifecycle(t *testing.T) {
 	connectAttempts := int32(0)
 
 	mockServer := createFailingMockServer(t, &connectAttempts)
@@ -583,7 +583,7 @@ func validateConnectionRetries(t *testing.T, connectAttempts *int32) {
 
 func createInitializationMockServer(t *testing.T, initReceived chan bool) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		var msg gateway.WireMessage
 		if err := conn.ReadJSON(&msg); err != nil {
@@ -633,7 +633,7 @@ func setupInitializationRouter(
 	mockServer *httptest.Server,
 ) (*LocalRouter, context.Context, context.CancelFunc, <-chan struct{}) {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -671,7 +671,7 @@ func setupInitializationRouter(
 
 func cleanupInitializationRouter(t *testing.T, cancel context.CancelFunc, done <-chan struct{}) {
 	t.Helper()
-	
+
 	// Cancel context and wait for router to shutdown properly.
 	if cancel != nil {
 		cancel()
@@ -708,7 +708,7 @@ func sendTestInitializationRequest(router *LocalRouter) {
 
 func validateInitializationReceived(t *testing.T, initReceived chan bool) {
 	t.Helper()
-	
+
 	// Verify initialization was received by the mock server.
 	select {
 	case <-initReceived:
@@ -763,7 +763,7 @@ func TestLocalRouter_Initialization(t *testing.T) {
 //   - Channel-based communication between router and client
 //   - Error handling and timeout management
 
-func TestLocalRouter_Shutdown(t *testing.T) { 
+func TestLocalRouter_Shutdown(t *testing.T) {
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
 			Endpoints: []config.GatewayEndpoint{
@@ -792,7 +792,7 @@ func TestLocalRouter_Shutdown(t *testing.T) {
 	}
 }
 
-func TestExtractNamespace(t *testing.T) { 
+func TestExtractNamespace(t *testing.T) {
 	// This function is in the gateway package, but we can test the concept.
 	tests := []struct {
 		method   string
@@ -980,7 +980,7 @@ func BenchmarkRouter_ProcessMessage(b *testing.B) {
 
 // TestMessageRouter_RequestResponseCorrelation tests that requests and responses.
 // are properly correlated by ID through the message router.
-func TestMessageRouter_RequestResponseCorrelation(t *testing.T) { 
+func TestMessageRouter_RequestResponseCorrelation(t *testing.T) {
 	receivedResponses := make(map[string]bool)
 	responseMu := sync.Mutex{}
 
@@ -994,7 +994,7 @@ func TestMessageRouter_RequestResponseCorrelation(t *testing.T) {
 	waitForRouterConnection(t, router)
 
 	requestIDs := []string{"req-1", "req-2", "req-3", "req-4", "req-5"}
-	
+
 	monitorCorrelationResponses(t, router, ctx, receivedResponses, &responseMu)
 	sendConcurrentRequests(t, router, requestIDs)
 	verifyAllResponsesReceived(t, requestIDs, receivedResponses, &responseMu)
@@ -1002,7 +1002,7 @@ func TestMessageRouter_RequestResponseCorrelation(t *testing.T) {
 
 func createCorrelationMockServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
@@ -1035,7 +1035,7 @@ func createCorrelationMockServer(t *testing.T) *httptest.Server {
 
 func setupCorrelationTest(t *testing.T, serverURL string) (*LocalRouter, context.Context, context.CancelFunc) {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1055,7 +1055,7 @@ func setupCorrelationTest(t *testing.T, serverURL string) (*LocalRouter, context
 
 func startRouterForCorrelation(t *testing.T, router *LocalRouter, ctx context.Context) {
 	t.Helper()
-	
+
 	// Use a wait group to ensure router completely shuts down.
 	var routerWg sync.WaitGroup
 	routerWg.Add(1)
@@ -1079,7 +1079,7 @@ func monitorCorrelationResponses(
 	responseMu *sync.Mutex,
 ) {
 	t.Helper()
-	
+
 	// Monitor responses in a separate goroutine.
 	responseWg := sync.WaitGroup{}
 	responseWg.Add(1)
@@ -1114,7 +1114,7 @@ func monitorCorrelationResponses(
 
 func sendConcurrentRequests(t *testing.T, router *LocalRouter, requestIDs []string) {
 	t.Helper()
-	
+
 	// Send requests concurrently.
 	var wg sync.WaitGroup
 	for _, id := range requestIDs {
@@ -1141,7 +1141,7 @@ func verifyAllResponsesReceived(
 	responseMu *sync.Mutex,
 ) {
 	t.Helper()
-	
+
 	// Wait for all responses with polling instead of channels.
 	timeout := time.Now().Add(5 * time.Second)
 	for _, id := range requestIDs {
@@ -1175,7 +1175,7 @@ func verifyAllResponsesReceived(
 
 // TestMessageRouter_ConnectionStateHandling tests message routing behavior.
 // during different connection states.
-func TestMessageRouter_ConnectionStateHandling(t *testing.T) { 
+func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
 	mockConnectAttempts := int32(0)
 
 	// Create a server that fails first few connection attempts.
@@ -1309,7 +1309,7 @@ func createErrorHandlingTests() []struct {
 
 func createErrorHandlingMockServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
@@ -1341,7 +1341,7 @@ func createErrorHandlingMockServer(t *testing.T) *httptest.Server {
 
 func setupErrorHandlingRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1373,7 +1373,7 @@ func runErrorHandlingTest(t *testing.T, router *LocalRouter, tt struct {
 	errorContains string
 }) {
 	t.Helper()
-	
+
 	// Send request.
 	router.GetStdinChan() <- []byte(tt.input)
 
@@ -1424,7 +1424,7 @@ func TestMessageRouter_ErrorHandling(t *testing.T) {
 // TestMessageRouter_ConcurrentRequests tests handling of multiple concurrent requests.
 func createConcurrentRequestsMockServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
@@ -1453,7 +1453,7 @@ func createConcurrentRequestsMockServer(t *testing.T) *httptest.Server {
 
 func setupConcurrentRequestsRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1481,7 +1481,7 @@ func setupConcurrentRequestsRouter(t *testing.T, mockServer *httptest.Server) *L
 
 func monitorConcurrentResponses(router *LocalRouter, responsesReceived *int32, responseIDs *sync.Map) {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Monitor responses.
 	go func() {
 		defer cancel()
@@ -1538,7 +1538,7 @@ func sendBulkConcurrentRequests(router *LocalRouter, numRequests, numWorkers int
 
 func validateConcurrentResponses(t *testing.T, numRequests int, responsesReceived *int32, responseIDs *sync.Map) {
 	t.Helper()
-	
+
 	// Wait for all responses.
 	timeout := time.After(10 * time.Second)
 
@@ -1599,7 +1599,7 @@ func TestMessageRouter_ConcurrentRequests(t *testing.T) {
 }
 
 // TestMessageRouter_RequestTimeout tests timeout handling for requests.
-func TestMessageRouter_RequestTimeout(t *testing.T) { 
+func TestMessageRouter_RequestTimeout(t *testing.T) {
 	// Create mock server that delays responses.
 	mockServer := createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
@@ -1670,7 +1670,7 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 }
 
 // TestMessageRouter_MetricsCollection tests that metrics are properly collected during routing.
-func TestMessageRouter_MetricsCollection(t *testing.T) { 
+func TestMessageRouter_MetricsCollection(t *testing.T) {
 	// Create mock server.
 	mockServer := createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
@@ -1774,7 +1774,7 @@ func TestMessageRouter_MetricsCollection(t *testing.T) {
 // =====================================================================================
 
 // TestConnectionManager_StateTransitions tests all connection state transitions.
-func TestConnectionManager_StateTransitions(t *testing.T) { 
+func TestConnectionManager_StateTransitions(t *testing.T) {
 	connectAttempt := int32(0)
 	shouldFail := int32(1)
 
@@ -2003,7 +2003,7 @@ func TestRequestQueue_FullLifecycle(t *testing.T) {
 
 func createDelayedConnectionServer(t *testing.T, connectionDelayMs *int32) *httptest.Server {
 	t.Helper()
-	
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Wait before accepting connection
 		time.Sleep(time.Duration(atomic.LoadInt32(connectionDelayMs)) * time.Millisecond)
@@ -2023,7 +2023,7 @@ func createDelayedConnectionServer(t *testing.T, connectionDelayMs *int32) *http
 
 func handleQueuedRequestsLoop(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
-	
+
 	// Handle queued requests
 	for {
 		var msg gateway.WireMessage
@@ -2065,7 +2065,7 @@ func extractMCPPayloadID(mcpPayload interface{}) interface{} {
 
 func setupQueueLifecycleRouter(t *testing.T, serverURL string) *LocalRouter {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -2125,7 +2125,7 @@ func waitForAllQueuedResponses(
 	responseMu *sync.Mutex,
 ) {
 	t.Helper()
-	
+
 	assert.Eventually(t, func() bool {
 		responseMu.Lock()
 		defer responseMu.Unlock()
@@ -2146,7 +2146,7 @@ func verifyQueuedResponsesReceived(
 	responseMu *sync.Mutex,
 ) {
 	t.Helper()
-	
+
 	responseMu.Lock()
 	defer responseMu.Unlock()
 
@@ -2156,7 +2156,7 @@ func verifyQueuedResponsesReceived(
 }
 
 // TestRequestQueue_OverflowHandling tests queue overflow behavior.
-func TestRequestQueue_OverflowHandling(t *testing.T) { 
+func TestRequestQueue_OverflowHandling(t *testing.T) {
 	// Configure small queue size to test overflow.
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -2215,7 +2215,7 @@ func TestRequestQueue_OverflowHandling(t *testing.T) {
 // =====================================================================================
 
 // TestRateLimiting_RequestThrottling tests that rate limiting works correctly.
-func TestRateLimiting_RequestThrottling(t *testing.T) { 
+func TestRateLimiting_RequestThrottling(t *testing.T) {
 	mockServer := createRateLimitMockServer(t)
 	defer mockServer.Close()
 
@@ -2446,7 +2446,7 @@ func processRouteDecision(data []byte, routingDecisions map[string]int32, decisi
 	}
 }
 
-func TestDirectToGatewayFallback(t *testing.T) { 
+func TestDirectToGatewayFallback(t *testing.T) {
 	gatewayServer := setupFallbackGatewayServer(t)
 	defer gatewayServer.Close()
 
@@ -2467,7 +2467,7 @@ func TestDirectToGatewayFallback(t *testing.T) {
 
 func setupFallbackGatewayServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
@@ -2521,7 +2521,7 @@ func createFallbackTestConfig(gatewayURL string) *config.Config {
 
 func setupFallbackRouter(t *testing.T, cfg *config.Config) *LocalRouter {
 	t.Helper()
-	
+
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
 	return router
@@ -2529,9 +2529,9 @@ func setupFallbackRouter(t *testing.T, cfg *config.Config) *LocalRouter {
 
 func monitorFallbackResponses(t *testing.T, ctx context.Context, router *LocalRouter) *int32 {
 	t.Helper()
-	
+
 	fallbackResponses := int32(0)
-	
+
 	// Monitor responses for fallback indication.
 	go func() {
 		for {
@@ -2543,13 +2543,13 @@ func monitorFallbackResponses(t *testing.T, ctx context.Context, router *LocalRo
 			}
 		}
 	}()
-	
+
 	return &fallbackResponses
 }
 
 func sendDirectOnlyRequests(t *testing.T, router *LocalRouter) {
 	t.Helper()
-	
+
 	// Send requests that would try direct first but fall back to gateway.
 	// Use methods that would be routed to direct but will fail and fallback.
 	directOnlyMethods := []string{
@@ -2564,7 +2564,7 @@ func sendDirectOnlyRequests(t *testing.T, router *LocalRouter) {
 
 func verifyFallbackBehavior(t *testing.T, fallbackResponses *int32, router *LocalRouter) {
 	t.Helper()
-	
+
 	// Wait for all fallback responses.
 	// Validate directOnlyMethods length before conversion
 	directOnlyMethods := []string{
@@ -2647,7 +2647,7 @@ func createRoutingDecisionTests() []routingDecisionTest {
 
 func runRoutingDecisionTest(t *testing.T, tt routingDecisionTest) {
 	t.Helper()
-	
+
 	routingDecisions := make(map[string]int32)
 	decisionMu := sync.Mutex{}
 
@@ -2680,7 +2680,7 @@ func runRoutingDecisionTest(t *testing.T, tt routingDecisionTest) {
 
 func setupMockGatewayForRouting(t *testing.T, gatewayRequests *int32) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		handleRoutingGatewayRequests(t, conn, gatewayRequests)
 	})
@@ -2688,7 +2688,7 @@ func setupMockGatewayForRouting(t *testing.T, gatewayRequests *int32) *httptest.
 
 func handleRoutingGatewayRequests(t *testing.T, conn *websocket.Conn, gatewayRequests *int32) {
 	t.Helper()
-	
+
 	for {
 		var msg gateway.WireMessage
 		if err := conn.ReadJSON(&msg); err != nil {
@@ -2719,7 +2719,7 @@ func createRoutingGatewayResponse(msg gateway.WireMessage) gateway.WireMessage {
 
 func createRoutingTestRouter(t *testing.T, serverURL string, tt routingDecisionTest) *LocalRouter {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -2781,7 +2781,7 @@ func validateRoutingDecision(
 	router *LocalRouter,
 ) {
 	t.Helper()
-	
+
 	decisionMu.Lock()
 
 	decisions := make(map[string]int32)
@@ -2801,17 +2801,17 @@ func validateRoutingDecision(
 
 func validateGatewayRouting(t *testing.T, gatewayRequests *int32, decisions map[string]int32) {
 	t.Helper()
-	
+
 	assert.Positive(t, atomic.LoadInt32(gatewayRequests), "Should have routed to gateway")
 	assert.Positive(t, decisions["gateway"], "Should show gateway routing")
 }
 
 func validateDirectRouting(t *testing.T, gatewayRequests *int32, router *LocalRouter, directEnabled bool) {
 	t.Helper()
-	
+
 	// For direct routing, we expect fallback to gateway since no direct server
 	assert.Positive(t, atomic.LoadInt32(gatewayRequests), "Should have fallen back to gateway")
-	
+
 	// But we should see metrics indicating direct attempts
 	if directEnabled {
 		metrics := router.GetMetrics()
@@ -2870,7 +2870,7 @@ func setupProtocolNegotiationServer(
 	protocolMu *sync.Mutex,
 ) *httptest.Server {
 	t.Helper()
-	
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		handleProtocolNegotiationRequests(t, conn, protocolResponses, protocolMu)
 	})
@@ -2883,7 +2883,7 @@ func handleProtocolNegotiationRequests(
 	protocolMu *sync.Mutex,
 ) {
 	t.Helper()
-	
+
 	for {
 		var msg gateway.WireMessage
 		if err := conn.ReadJSON(&msg); err != nil {
@@ -2929,7 +2929,7 @@ func createProtocolResponse(msg gateway.WireMessage) gateway.WireMessage {
 
 func createProtocolTestRouter(t *testing.T, serverURL string) *LocalRouter {
 	t.Helper()
-	
+
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -2948,7 +2948,7 @@ func createProtocolTestRouter(t *testing.T, serverURL string) *LocalRouter {
 func createProtocolMethods() []string {
 	return []string{
 		"initialize",
-		"initialized", 
+		"initialized",
 		"tools/list",
 		"tools/call",
 		"resources/list",
@@ -2974,7 +2974,7 @@ func validateProtocolResponses(
 	protocolMu *sync.Mutex,
 ) {
 	t.Helper()
-	
+
 	protocolMu.Lock()
 	defer protocolMu.Unlock()
 
@@ -2985,7 +2985,7 @@ func validateProtocolResponses(
 
 func validateProtocolMetrics(t *testing.T, router *LocalRouter, protocolMethods []string) {
 	t.Helper()
-	
+
 	metrics := router.GetMetrics()
 	expectedCount := uint64(len(protocolMethods))
 	assert.Equal(t, expectedCount, metrics.RequestsTotal, "Should have processed all protocol requests")

@@ -50,7 +50,7 @@ func TestErrorCodes(t *testing.T) {
 	}
 }
 
-func TestMCPError(t *testing.T) { 
+func TestMCPError(t *testing.T) {
 	t.Parallel()
 	t.Run("Create error with code", testCreateErrorWithCode)
 	t.Run("Create error with details", testCreateErrorWithDetails)

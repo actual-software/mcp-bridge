@@ -15,9 +15,7 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 )
 
-
-
-func TestNewPooledGatewayClient(t *testing.T) { 
+func TestNewPooledGatewayClient(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -101,7 +99,7 @@ func TestNewPooledGatewayClient(t *testing.T) {
 	}
 }
 
-func TestPooledGatewayClientLifecycle(t *testing.T) { 
+func TestPooledGatewayClientLifecycle(t *testing.T) {
 	t.Parallel()
 	// This test verifies the basic lifecycle without actual connections.
 	logger := zap.NewNop()
@@ -118,7 +116,7 @@ func TestPooledGatewayClientLifecycle(t *testing.T) {
 	client, err := NewPooledGatewayClient(poolConfig, gwConfig, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := client.Close(); err != nil {
 			t.Logf("Failed to close client: %v", err)
 		}
@@ -156,7 +154,7 @@ func TestPooledGatewayClientLifecycle(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestPooledGatewayClientAutoConnect(t *testing.T) { 
+func TestPooledGatewayClientAutoConnect(t *testing.T) {
 	t.Parallel()
 	// Test auto-connect behavior with mock factory.
 	logger := zap.NewNop()
@@ -179,7 +177,7 @@ func TestPooledGatewayClientAutoConnect(t *testing.T) {
 		logger:      logger,
 	}
 
- defer func() { _ = pgc.Close() }()
+	defer func() { _ = pgc.Close() }()
 
 	// Test SendRequest triggers auto-connect.
 	req := &mcp.Request{
@@ -192,7 +190,7 @@ func TestPooledGatewayClientAutoConnect(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to auto-connect")
 }
 
-func TestPooledGatewayClientConcurrentAccess(t *testing.T) { 
+func TestPooledGatewayClientConcurrentAccess(t *testing.T) {
 	t.Parallel()
 
 	logger := zap.NewNop()
@@ -209,7 +207,7 @@ func TestPooledGatewayClientConcurrentAccess(t *testing.T) {
 	client, err := NewPooledGatewayClient(poolConfig, gwConfig, logger)
 	require.NoError(t, err)
 
- defer func() {
+	defer func() {
 		if err := client.Close(); err != nil {
 			t.Logf("Failed to close client: %v", err)
 		}

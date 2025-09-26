@@ -1,4 +1,3 @@
-
 // Package weather provides comprehensive E2E testing for MCP Gateway and Router with real Weather MCP server
 package weather
 
@@ -243,19 +242,18 @@ func (suite *WeatherE2ETestSuite) waitForDeployments(t *testing.T) {
 	for _, deploymentName := range deployments {
 		t.Logf("Waiting for deployment %s to be ready...", deploymentName)
 
-		
-		err := wait.PollUntilContextTimeout(suite.ctx, 10*time.Second, 5*time.Minute, true, 
+		err := wait.PollUntilContextTimeout(suite.ctx, 10*time.Second, 5*time.Minute, true,
 			func(ctx context.Context) (bool, error) {
-			deployment, err := suite.k8sClient.AppsV1().Deployments(suite.namespace).Get(
-				ctx, deploymentName, metav1.GetOptions{})
-			if err != nil {
-				t.Logf("Error getting deployment %s: %v", deploymentName, err)
+				deployment, err := suite.k8sClient.AppsV1().Deployments(suite.namespace).Get(
+					ctx, deploymentName, metav1.GetOptions{})
+				if err != nil {
+					t.Logf("Error getting deployment %s: %v", deploymentName, err)
 
-				return false, nil
-			}
+					return false, nil
+				}
 
-			return deployment.Status.ReadyReplicas == *deployment.Spec.Replicas, nil
-		})
+				return deployment.Status.ReadyReplicas == *deployment.Spec.Replicas, nil
+			})
 		if err != nil {
 			t.Fatalf("Deployment %s did not become ready in time: %v", deploymentName, err)
 		}

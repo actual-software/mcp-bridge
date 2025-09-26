@@ -1,7 +1,6 @@
 package direct
 
 import (
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"context"
 	"fmt"
 	"os"
@@ -9,13 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
-
-
 
 // ==============================================================================
 // CROSS-PROTOCOL COMPARISON BENCHMARKS.
@@ -61,7 +60,7 @@ func createProtocolBenchmarkConfigs(b *testing.B, logger *zap.Logger) []protocol
 
 func setupHTTPBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockHTTPServer()
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,
@@ -75,7 +74,7 @@ func setupHTTPBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func())
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewHTTPClient("http-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -86,7 +85,7 @@ func setupHTTPBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func())
 
 func setupWebSocketBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockWebSocketServer(b)
 	config := WebSocketClientConfig{
 		URL:     mockServer.getWebSocketURL(),
@@ -100,7 +99,7 @@ func setupWebSocketBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, fu
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewWebSocketClient("ws-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -111,7 +110,7 @@ func setupWebSocketBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, fu
 
 func setupSSEBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockSSEServer()
 	config := SSEClientConfig{
 		URL:            mockServer.getURL(),
@@ -124,7 +123,7 @@ func setupSSEBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) 
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewSSEClient("sse-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -135,7 +134,7 @@ func setupSSEBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) 
 
 func setupStdioBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	// Create a simple echo script for benchmarking
 	tmpDir := b.TempDir()
 	scriptPath := createSimpleEchoScript(b, tmpDir)
@@ -151,7 +150,7 @@ func setupStdioBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewStdioClient("stdio-bench", "stdio://python3 "+scriptPath, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -162,7 +161,7 @@ func setupStdioBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()
 
 func runProtocolBenchmark(b *testing.B, protocol protocolBenchmarkConfig) {
 	b.Helper()
-	
+
 	client, cleanup := protocol.setup()
 	defer cleanup()
 
@@ -370,7 +369,7 @@ func createConcurrencyBenchmarkConfigs(b *testing.B, logger *zap.Logger) []proto
 
 func setupHTTPConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockHTTPServer()
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,
@@ -382,7 +381,7 @@ func setupHTTPConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClie
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewHTTPClient("http-conc-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -393,7 +392,7 @@ func setupHTTPConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClie
 
 func setupWebSocketConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockWebSocketServer(b)
 	config := WebSocketClientConfig{
 		URL:     mockServer.getWebSocketURL(),
@@ -404,7 +403,7 @@ func setupWebSocketConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (Direc
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewWebSocketClient("ws-conc-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -415,7 +414,7 @@ func setupWebSocketConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (Direc
 
 func setupSSEConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockSSEServer()
 	config := SSEClientConfig{
 		URL:            mockServer.getURL(),
@@ -426,7 +425,7 @@ func setupSSEConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClien
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewSSEClient("sse-conc-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -437,7 +436,7 @@ func setupSSEConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClien
 
 func setupStdioConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	tmpDir := b.TempDir()
 	scriptPath := createConcurrentEchoScript(b, tmpDir)
 
@@ -450,7 +449,7 @@ func setupStdioConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectCli
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewStdioClient("stdio-conc-bench", "stdio://python3 "+scriptPath, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -461,7 +460,7 @@ func setupStdioConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectCli
 
 func runConcurrencyBenchmark(b *testing.B, protocol protocolBenchmarkConfig) {
 	b.Helper()
-	
+
 	client, cleanup := protocol.setup()
 	defer cleanup()
 
@@ -516,7 +515,7 @@ func BenchmarkProtocolPayloadSizes(b *testing.B) {
 
 func runPayloadSizeBenchmark(b *testing.B, logger *zap.Logger, payloadSize int) {
 	b.Helper()
-	
+
 	protocols := createPayloadBenchmarkProtocols(b, logger)
 
 	for _, protocol := range protocols {
@@ -549,7 +548,7 @@ func createPayloadBenchmarkProtocols(b *testing.B, logger *zap.Logger) []protoco
 
 func setupHTTPPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockHTTPServer()
 	config := HTTPClientConfig{
 		URL:     mockServer.URL,
@@ -560,7 +559,7 @@ func setupHTTPPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, 
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewHTTPClient("http-payload-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -571,7 +570,7 @@ func setupHTTPPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, 
 
 func setupWebSocketPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockWebSocketServer(b)
 	config := WebSocketClientConfig{
 		URL:            mockServer.getWebSocketURL(),
@@ -583,7 +582,7 @@ func setupWebSocketPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectCli
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewWebSocketClient("ws-payload-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -594,7 +593,7 @@ func setupWebSocketPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectCli
 
 func setupSSEPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	mockServer := newMockSSEServer()
 	config := SSEClientConfig{
 		URL:            mockServer.getURL(),
@@ -605,7 +604,7 @@ func setupSSEPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, f
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewSSEClient("sse-payload-bench", config.URL, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -616,7 +615,7 @@ func setupSSEPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, f
 
 func setupStdioPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
 	b.Helper()
-	
+
 	tmpDir := b.TempDir()
 	scriptPath := createSimpleEchoScript(b, tmpDir)
 
@@ -631,7 +630,7 @@ func setupStdioPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient,
 		},
 		HealthCheck: HealthCheckConfig{Enabled: false},
 	}
-	
+
 	client, err := NewStdioClient("stdio-payload-bench", "stdio://python3 "+scriptPath, config, logger)
 	if err != nil {
 		b.Fatal(err)
@@ -642,7 +641,7 @@ func setupStdioPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient,
 
 func runSinglePayloadBenchmark(b *testing.B, protocol protocolBenchmarkConfig, payloadSize int) {
 	b.Helper()
-	
+
 	client, cleanup := protocol.setup()
 	defer cleanup()
 
@@ -790,5 +789,5 @@ func createPayload(size int) string {
 
 // writeFile writes content to a file.
 func writeFile(filename, content string) error {
-	return os.WriteFile(filename, []byte(content), 0o755) 
+	return os.WriteFile(filename, []byte(content), 0o755)
 }

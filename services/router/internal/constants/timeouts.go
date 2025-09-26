@@ -20,11 +20,11 @@ const (
 )
 
 const (
-	defaultTimeoutSeconds = 30
+	defaultTimeoutSeconds    = 30
 	defaultMaxTimeoutSeconds = 60
-	defaultRetryCount = 10
-	defaultMaxConnections = 5
-	defaultMaxRetries = 100
+	defaultRetryCount        = 10
+	defaultMaxConnections    = 5
+	defaultMaxRetries        = 100
 )
 
 // These values are critical for network operation reliability.

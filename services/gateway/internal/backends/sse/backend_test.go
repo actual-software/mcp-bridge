@@ -1,4 +1,3 @@
-
 package sse
 
 import (
@@ -165,7 +164,7 @@ func TestSSEBackend_SendRequest(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	// Give time for SSE connection to establish
 	time.Sleep(httpStatusOK * time.Millisecond)
@@ -211,7 +210,7 @@ func TestSSEBackend_SendRequestWithSpecificID(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
 
@@ -251,7 +250,7 @@ func TestSSEBackend_SendRequestWithTimeout(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
 
@@ -316,7 +315,7 @@ func TestSSEBackend_Health(t *testing.T) {
 	err = backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	time.Sleep(httpStatusOK * time.Millisecond)
 
@@ -430,7 +429,7 @@ func TestSSEBackend_CustomHeaders(t *testing.T) {
 	err := backend.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() { _ = backend.Stop(ctx) }() 
+	defer func() { _ = backend.Stop(ctx) }()
 
 	// Verify headers were used (connection should succeed)
 	time.Sleep(httpStatusOK * time.Millisecond)

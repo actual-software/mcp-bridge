@@ -292,5 +292,5 @@ func NewRateLimiter(ratePerSecond float64, burst int, logger *zap.Logger) RateLi
 		return &NoOpLimiter{}
 	}
 
-	return NewTokenBucketLimiter(ratePerSecond, burst, defaultTimeoutSeconds * time.Second, logger)
+	return NewTokenBucketLimiter(ratePerSecond, burst, defaultTimeoutSeconds*time.Second, logger)
 }

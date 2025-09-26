@@ -22,24 +22,24 @@ const (
 	defaultTestTimeout        = 30 * time.Second
 	defaultRateLimitTolerance = 50 * time.Millisecond
 	defaultTestRetryDelay     = 50 * time.Millisecond
-	
+
 	// Test configuration constants.
-	defaultRetryCount = 3
+	defaultRetryCount        = 3
 	defaultConcurrentWorkers = 10
 	defaultPercentMultiplier = 100
-	defaultTimeoutMillis = 50
-	defaultToleranceLower = 0.8
-	defaultToleranceUpper = 1.2
-	testTickerInterval = 10 * time.Millisecond
-	testRateLimitBurst = 5
-	workerSimulationDelay = 100 * time.Millisecond
-	workerTimeoutDuration = 5 * time.Second
+	defaultTimeoutMillis     = 50
+	defaultToleranceLower    = 0.8
+	defaultToleranceUpper    = 1.2
+	testTickerInterval       = 10 * time.Millisecond
+	testRateLimitBurst       = 5
+	workerSimulationDelay    = 100 * time.Millisecond
+	workerTimeoutDuration    = 5 * time.Second
 )
 
 // BaseTestSuite provides consistent test patterns and utilities.
 type BaseTestSuite struct {
 	suite.Suite
-	ctx        context.Context 
+	ctx        context.Context
 	cancel     context.CancelFunc
 	timeout    time.Duration
 	retryCount int
@@ -234,7 +234,7 @@ func (s *ResourceCleanupTestSuite) TestFileResourceCleanup() {
 	})
 
 	// Use the file
-	content, err := os.ReadFile(filename) //nolint:gosec // Test file reading 
+	content, err := os.ReadFile(filename) //nolint:gosec // Test file reading
 	s.Require().NoError(err)
 	s.Equal("test-content", string(content))
 }

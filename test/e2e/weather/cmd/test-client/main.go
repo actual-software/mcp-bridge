@@ -1,4 +1,3 @@
-
 // Package weather provides a test client for manual testing
 package main
 
@@ -20,7 +19,6 @@ const (
 	newYorkLatitude  = 40.7128
 	newYorkLongitude = -74.0060
 )
-
 
 const minRequiredArgs = 2
 

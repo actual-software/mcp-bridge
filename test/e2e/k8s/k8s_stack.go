@@ -1,4 +1,3 @@
-
 package k8se2e
 
 import (
@@ -56,7 +55,7 @@ func NewKubernetesStack(t *testing.T) *KubernetesStack {
 // Start creates the cluster and deploys all services.
 func (ks *KubernetesStack) Start(ctx context.Context) error {
 	ks.logger.Info("Starting Kubernetes test environment")
-	
+
 	// Store context for cleanup operations
 	ks.cleanupCtx = ctx
 
@@ -78,7 +77,7 @@ func (ks *KubernetesStack) Start(ctx context.Context) error {
 
 	// SAFETY: Ensure we're using the correct KinD context, not production clusters
 	// #nosec G204 - kubectl command with controlled test inputs
-	contextCmd := exec.CommandContext(ctx, "kubectl", "config", "use-context", "kind-"+ks.clusterName) 
+	contextCmd := exec.CommandContext(ctx, "kubectl", "config", "use-context", "kind-"+ks.clusterName)
 	if err := contextCmd.Run(); err != nil {
 		return fmt.Errorf("failed to set kubectl context to kind-%s: %w", ks.clusterName, err)
 	}
@@ -148,12 +147,12 @@ func (ks *KubernetesStack) createCluster(ctx context.Context) error {
 func (ks *KubernetesStack) cleanupExistingCluster(ctx context.Context) error {
 	// #nosec G204 - command with controlled test inputs
 	checkCmd := exec.CommandContext(ctx, "kind", "get", "clusters")
-	
+
 	output, err := checkCmd.Output()
 	if err == nil && strings.Contains(string(output), ks.clusterName) {
 		ks.logger.Info("Cluster already exists, deleting it first")
-	// #nosec G204 - command with controlled test inputs
-	deleteCmd := exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", ks.clusterName)
+		// #nosec G204 - command with controlled test inputs
+		deleteCmd := exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", ks.clusterName)
 		_ = deleteCmd.Run()
 	}
 
@@ -226,14 +225,14 @@ func (ks *KubernetesStack) setupKubectlContext(ctx context.Context) error {
 
 	// #nosec G204 - command with controlled test inputs
 	verifyCmd := exec.CommandContext(ctx, "kubectl", "config", "current-context")
-	
+
 	currentContext, err := verifyCmd.Output()
 	if err != nil {
 		return fmt.Errorf("failed to verify kubectl context: %w", err)
 	}
 
 	expectedContext := "kind-" + ks.clusterName
-	
+
 	actualContext := strings.TrimSpace(string(currentContext))
 	if actualContext != expectedContext {
 		return fmt.Errorf("kubectl context verification failed: expected '%s', got '%s'", expectedContext, actualContext)
@@ -249,7 +248,7 @@ func (ks *KubernetesStack) createNamespace(ctx context.Context) error {
 	ks.logger.Info("Creating namespace", zap.String("namespace", ks.namespace))
 
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "create", "namespace", ks.namespace) 
+	cmd := exec.CommandContext(ctx, "kubectl", "create", "namespace", ks.namespace)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to create namespace: %w", err)
 	}
@@ -259,7 +258,7 @@ func (ks *KubernetesStack) createNamespace(ctx context.Context) error {
 
 // checkDocker checks if Docker is available and running.
 func (ks *KubernetesStack) checkDocker(ctx context.Context) error {
-	cmd := exec.CommandContext(ctx, "docker", "version") 
+	cmd := exec.CommandContext(ctx, "docker", "version")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("docker is not available: %w", err)
 	}
@@ -291,7 +290,7 @@ func (ks *KubernetesStack) buildAndLoadSingleImage(
 
 	// Load the image into KinD
 	// #nosec G204 - command with controlled test inputs
-	loadCmd := exec.CommandContext(ctx, "kind", "load", "docker-image", imageName, "--name", ks.clusterName) 
+	loadCmd := exec.CommandContext(ctx, "kind", "load", "docker-image", imageName, "--name", ks.clusterName)
 	if err := loadCmd.Run(); err != nil {
 		return fmt.Errorf("failed to load image %s into KinD: %w", imageName, err)
 	}
@@ -362,8 +361,8 @@ func (ks *KubernetesStack) deployServices(ctx context.Context) error {
 	for i, manifest := range manifests {
 		ks.logger.Info("Applying manifest", zap.Int("index", i+1), zap.Int("total", len(manifests)))
 
-	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-") 
+		// #nosec G204 - command with controlled test inputs
+		cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "-")
 
 		cmd.Stdin = strings.NewReader(manifest)
 		if err := cmd.Run(); err != nil {
@@ -384,7 +383,7 @@ func (ks *KubernetesStack) waitForServices(ctx context.Context) error {
 		ks.logger.Info("Waiting for deployment", zap.String("deployment", deployment))
 
 		// #nosec G204 - kubectl command with controlled test inputs
-		cmd := exec.CommandContext(ctx, "kubectl", "wait", "--for=condition=available", 
+		cmd := exec.CommandContext(ctx, "kubectl", "wait", "--for=condition=available",
 			"deployment/"+deployment,
 			"-n", ks.namespace,
 			"--timeout=180s")
@@ -419,14 +418,13 @@ func (ks *KubernetesStack) GetGatewayHealthURL() string {
 func (ks *KubernetesStack) GetServiceLogs(service string) (string, error) {
 	ctx := context.Background()
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kubectl", "logs", "-n", ks.namespace, "deployment/"+service, "--tail=100") 
+	cmd := exec.CommandContext(ctx, "kubectl", "logs", "-n", ks.namespace, "deployment/"+service, "--tail=100")
 	output, err := cmd.Output()
 
 	return string(output), err
 }
 
 // checkPodStatus checks and logs the status of pods for a deployment.
-
 
 // createHTTPClient creates an HTTP client with appropriate settings.
 func (ks *KubernetesStack) createHTTPClient() *http.Client {
@@ -464,7 +462,7 @@ func (ks *KubernetesStack) checkHTTPEndpointOnce(
 		return err
 	}
 
-	defer func() { _ = resp.Body.Close() }() 
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
 		ks.logger.Info("HTTP endpoint ready", zap.String("url", url))
@@ -476,14 +474,14 @@ func (ks *KubernetesStack) checkHTTPEndpointOnce(
 }
 
 // logFinalDiagnostics logs diagnostics when endpoint check fails.
-func (ks *KubernetesStack) logFinalDiagnostics(ctx context.Context, url string) { 
+func (ks *KubernetesStack) logFinalDiagnostics(ctx context.Context, url string) {
 	ks.logger.Error("HTTP endpoint did not become ready",
 		zap.String("url", url),
 		zap.String("suggestion", "Check pod status with: kubectl get pods -n "+ks.namespace))
 
 	// Try to get pod status for debugging
 	// #nosec G204 - kubectl command with controlled test inputs
-	if statusOutput, err := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", ks.namespace).Output(); err == nil { 
+	if statusOutput, err := exec.CommandContext(ctx, "kubectl", "get", "pods", "-n", ks.namespace).Output(); err == nil {
 		ks.logger.Info("Current pod status", zap.String("pods", string(statusOutput)))
 	}
 }
@@ -531,7 +529,7 @@ func (ks *KubernetesStack) cleanupDockerResources(ctx context.Context) error {
 	ks.logger.Info("Cleaning up Docker resources to free space")
 
 	// Run docker system prune to clean up unused resources
-	pruneCmd := exec.CommandContext(ctx, "docker", "system", "prune", "-af", "--volumes") 
+	pruneCmd := exec.CommandContext(ctx, "docker", "system", "prune", "-af", "--volumes")
 
 	output, err := pruneCmd.CombinedOutput()
 	if err != nil {
@@ -549,14 +547,14 @@ func (ks *KubernetesStack) verifyKubernetesContext(ctx context.Context) error {
 
 	// Get current context
 	// #nosec G204 - command with controlled test inputs
-	currentContextCmd := exec.CommandContext(ctx, "kubectl", "config", "current-context") 
+	currentContextCmd := exec.CommandContext(ctx, "kubectl", "config", "current-context")
 
 	currentContext, err := currentContextCmd.Output()
 	if err != nil {
 		// No current context is fine - we'll create our own
 		ks.logger.Info("No current kubectl context set, safe to proceed")
 
-		return err 
+		return err
 	}
 
 	contextStr := strings.TrimSpace(string(currentContext))
@@ -609,10 +607,10 @@ func (ks *KubernetesStack) destroyCluster(ctx context.Context) {
 	ks.logger.Info("Destroying cluster", zap.String("name", ks.clusterName))
 
 	// #nosec G204 - command with controlled test inputs
-	cmd := exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", ks.clusterName) 
+	cmd := exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", ks.clusterName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	_ = cmd.Run() 
+	_ = cmd.Run()
 }
 
 // generateTLSCertificates generates TLS certificates for the gateway.
@@ -621,12 +619,12 @@ func (ks *KubernetesStack) generateTLSCertificates(ctx context.Context) error {
 
 	// Create temporary directory for certificates
 	certDir := filepath.Join(os.TempDir(), "mcp-e2e-certs")
-	if err := os.MkdirAll(certDir, certDirPermissions); err != nil { 
+	if err := os.MkdirAll(certDir, certDirPermissions); err != nil {
 		return fmt.Errorf("failed to create cert directory: %w", err)
 	}
 
 	ks.cleanup = append(ks.cleanup, func() {
-		_ = os.RemoveAll(certDir) 
+		_ = os.RemoveAll(certDir)
 	})
 
 	keyPath := filepath.Join(certDir, "tls.key")
@@ -636,7 +634,7 @@ func (ks *KubernetesStack) generateTLSCertificates(ctx context.Context) error {
 	// #nosec G204 - openssl command with controlled test inputs
 	keyCmd := exec.CommandContext(
 		ctx, "openssl", "genrsa", "-out", keyPath, "2048",
-	) 
+	)
 	if err := keyCmd.Run(); err != nil {
 		return fmt.Errorf("failed to generate private key: %w", err)
 	}
@@ -655,7 +653,7 @@ func (ks *KubernetesStack) generateTLSCertificates(ctx context.Context) error {
 
 	// Create Kubernetes TLS secret
 	// #nosec G204 - kubectl command with controlled test inputs
-	secretCmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "tls", "gateway-tls", 
+	secretCmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "tls", "gateway-tls",
 		"--cert="+certPath, "--key="+keyPath, "-n", ks.namespace)
 	if err := secretCmd.Run(); err != nil {
 		return fmt.Errorf("failed to create TLS secret: %w", err)
@@ -678,7 +676,7 @@ func (ks *KubernetesStack) getProjectRoot() (string, error) {
 	for {
 		goModPath := filepath.Join(dir, "go.mod")
 		// #nosec G304 - reading go.mod with controlled path in test context
-		if content, err := os.ReadFile(goModPath); err == nil { 
+		if content, err := os.ReadFile(goModPath); err == nil {
 			if strings.Contains(string(content), "module github.com/poiley/mcp-bridge") {
 				return dir, nil
 			}

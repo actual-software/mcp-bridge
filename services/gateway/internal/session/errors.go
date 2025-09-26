@@ -49,7 +49,7 @@ func NewSessionExpiredError(sessionID string, expiredAt time.Time) *errors.Gatew
 
 // NewSessionInvalidError creates an error for invalid sessions.
 func NewSessionInvalidError(reason string) *errors.GatewayError {
-	return errors.New(errors.TypeUnauthorized, "invalid session: " + reason ).
+	return errors.New(errors.TypeUnauthorized, "invalid session: "+reason).
 		WithComponent("session").
 		WithContext("code", ErrCodeSessionInvalid).
 		WithHTTPStatus(http.StatusUnauthorized)
@@ -68,7 +68,7 @@ func WrapSessionCreationError(ctx context.Context, err error, userID string) *er
 func WrapSessionStoreError(ctx context.Context, err error, operation string, sessionID string) *errors.GatewayError {
 	return errors.WrapContextf(ctx, err, "session store %s failed", operation).
 		WithComponent("session").
-		WithOperation("store_" + operation ).
+		WithOperation("store_"+operation).
 		WithContext("session_id", sessionID).
 		WithContext("code", ErrCodeSessionStoreFailed)
 }
@@ -94,7 +94,7 @@ func NewSessionLimitExceededError(userID string, limit int) *errors.GatewayError
 
 // NewSessionTokenInvalidError creates an error for invalid session tokens.
 func NewSessionTokenInvalidError(reason string) *errors.GatewayError {
-	return errors.New(errors.TypeUnauthorized, "invalid session token: " + reason ).
+	return errors.New(errors.TypeUnauthorized, "invalid session token: "+reason).
 		WithComponent("session").
 		WithContext("code", ErrCodeSessionTokenInvalid).
 		WithHTTPStatus(http.StatusUnauthorized)

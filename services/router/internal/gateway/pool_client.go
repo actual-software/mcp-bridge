@@ -281,7 +281,7 @@ func (pc *PoolClient) SelectEndpointByTags(tags []string) error {
 
 	// Connect to the selected endpoint if not already connected.
 	if !selectedEndpoint.Client.IsConnected() {
-		ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutSeconds * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutSeconds*time.Second)
 		defer cancel()
 
 		err = pc.connectToEndpoint(ctx, selectedEndpoint)

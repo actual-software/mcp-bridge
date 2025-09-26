@@ -118,6 +118,7 @@ func NewWebSocketClient(
 ) (*WebSocketClient, error) {
 	return EstablishWebSocketConnection(name, serverURL, config, logger)
 }
+
 // Connect establishes connection to the WebSocket MCP server.
 func (c *WebSocketClient) Connect(ctx context.Context) error {
 	c.mu.Lock()
@@ -146,7 +147,7 @@ func (c *WebSocketClient) Connect(ctx context.Context) error {
 	// Start background routines.
 	c.wg.Add(1)
 
-	go c.readMessages() 
+	go c.readMessages()
 
 	c.wg.Add(1)
 
@@ -168,18 +169,18 @@ func (c *WebSocketClient) Connect(ctx context.Context) error {
 func (c *WebSocketClient) connect(ctx context.Context) error {
 	dialer := c.createDialer()
 	headers := c.prepareHeaders()
-	
+
 	conn, _, err := c.establishConnection(ctx, dialer, headers)
 	if err != nil {
 		return err
 	}
-	
+
 	c.configureConnectionHandlers(conn)
-	
+
 	c.connMu.Lock()
 	c.conn = conn
 	c.connMu.Unlock()
-	
+
 	return nil
 }
 
@@ -206,7 +207,7 @@ func (c *WebSocketClient) establishConnection(
 	headers http.Header,
 ) (*websocket.Conn, *http.Response, error) {
 	conn, resp, err := dialer.DialContext(ctx, c.config.URL, headers)
-	
+
 	if resp != nil {
 		defer func() {
 			if err := resp.Body.Close(); err != nil {
@@ -399,7 +400,7 @@ func (c *WebSocketClient) healthCheckLoop(parentCtx context.Context) {
 				c.logger.Warn("health check failed", zap.Error(err))
 				// Consider reconnection if unhealthy.
 				if c.shouldReconnect() {
-					go c.reconnect() 
+					go c.reconnect()
 				}
 			}
 
@@ -474,7 +475,7 @@ func (c *WebSocketClient) Close(ctx context.Context) error {
 
 	c.signalShutdown()
 	c.closeConnection()
-	
+
 	if err := c.waitForShutdown(ctx); err != nil {
 		return err
 	}
@@ -534,7 +535,7 @@ func (c *WebSocketClient) waitForShutdown(ctx context.Context) error {
 		c.state = StateClosed
 		return ctx.Err()
 	}
-	
+
 	return nil
 }
 

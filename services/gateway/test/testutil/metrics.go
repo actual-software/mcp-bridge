@@ -94,12 +94,12 @@ func CreateTestMetricsRegistry() *metrics.Registry {
 	tcpConnTotal, tcpConnActive, tcpMsgTotal, tcpBytes, tcpErrors, tcpDuration := createTestTCPMetrics()
 
 	registry := &metrics.Registry{
-		ConnectionsTotal:    connTotal,
-		ConnectionsActive:   connActive,
-		ConnectionsRejected: connRejected,
-		RequestsTotal:       reqTotal,
-		RequestDuration:     reqDuration,
-		RequestsInFlight:    reqInFlight,
+		ConnectionsTotal:     connTotal,
+		ConnectionsActive:    connActive,
+		ConnectionsRejected:  connRejected,
+		RequestsTotal:        reqTotal,
+		RequestDuration:      reqDuration,
+		RequestsInFlight:     reqInFlight,
 		TCPConnectionsTotal:  tcpConnTotal,
 		TCPConnectionsActive: tcpConnActive,
 		TCPMessagesTotal:     tcpMsgTotal,

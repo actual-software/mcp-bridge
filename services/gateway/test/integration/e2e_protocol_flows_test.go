@@ -1,4 +1,3 @@
-
 //go:build integration
 // +build integration
 
@@ -51,7 +50,7 @@ type e2eTestClient struct {
 func (c *e2eTestClient) SendRequest(t *testing.T, req mcp.Request) *mcp.Response {
 	// Set read deadline to prevent indefinite blocking
 	deadline := time.Now().Add(30 * time.Second)
-	
+
 	// Wrap in wire message
 	wireMsg := server.WireMessage{
 		ID:              req.ID,
@@ -98,7 +97,7 @@ func (c *e2eTestClient) Close() error {
 func (c *e2eTestClient) SendNotification(t *testing.T, notification mcp.Request) error {
 	// Set write deadline to prevent indefinite blocking
 	deadline := time.Now().Add(30 * time.Second)
-	
+
 	wireMsg := server.WireMessage{
 		ID:              notification.ID,
 		Timestamp:       time.Now().UTC().Format(time.RFC3339),
@@ -109,12 +108,12 @@ func (c *e2eTestClient) SendNotification(t *testing.T, notification mcp.Request)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	err := c.conn.SetWriteDeadline(deadline)
 	if err != nil {
 		return err
 	}
-	
+
 	return c.conn.WriteJSON(wireMsg)
 }
 

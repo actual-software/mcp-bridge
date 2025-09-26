@@ -28,18 +28,18 @@ const (
 	// DefaultDirectoryPermissions for creating directories.
 	DefaultDirectoryPermissions = 0o750
 	// DefaultFilePermissions for creating files.
-	
+
 	// Channel buffer sizes for router controller.
-	requestChannelBufferSize = 100
+	requestChannelBufferSize  = 100
 	responseChannelBufferSize = 100
-	errorChannelBufferSize = 10
-	
+	errorChannelBufferSize    = 10
+
 	// Timeouts.
 	routerHealthCheckTimeout = 5 * time.Second
-	tokenValidityDuration = 24 * time.Hour
-	messageRetryDelay = 100 * time.Millisecond
-	maxRetryAttempts = 2
-	DefaultFilePermissions = 0o600
+	tokenValidityDuration    = 24 * time.Hour
+	messageRetryDelay        = 100 * time.Millisecond
+	maxRetryAttempts         = 2
+	DefaultFilePermissions   = 0o600
 )
 
 // RouterController manages the router binary subprocess and provides stdio interface.
@@ -65,7 +65,7 @@ type RouterController struct {
 	pending   map[string]chan []byte
 
 	// Lifecycle
-	ctx     context.Context 
+	ctx     context.Context
 	cancel  context.CancelFunc
 	done    chan struct{}
 	started bool
@@ -158,7 +158,7 @@ func (rc *RouterController) Start() error {
 	}
 
 	// Start the router process
-	rc.cmd = exec.CommandContext(rc.ctx, rc.binaryPath, //nolint:gosec // Test router startup 
+	rc.cmd = exec.CommandContext(rc.ctx, rc.binaryPath, //nolint:gosec // Test router startup
 		"--config", rc.configPath, "--log-level", "debug")
 
 	// Set environment variable for auth token
@@ -364,8 +364,8 @@ func (rc *RouterController) generateAuthToken() {
 	}
 
 	// Encode header and payload
-	headerJSON, _ := json.Marshal(header)   
-	payloadJSON, _ := json.Marshal(payload) 
+	headerJSON, _ := json.Marshal(header)
+	payloadJSON, _ := json.Marshal(payload)
 
 	headerB64 := base64.RawURLEncoding.EncodeToString(headerJSON)
 	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)

@@ -89,17 +89,17 @@ func NewLoadTestConfig(t *testing.T) *LoadTestConfig {
 		ConnectionsPerSecond: getEnvInt("LOAD_TEST_CONN_RATE",
 			calculateDefaultConnRate(sysInfo)), // Rate of connection establishment
 		// Duration of the load test
-		TestDuration:       getEnvDuration("LOAD_TEST_DURATION", calculateDefaultDuration(sysInfo)),
+		TestDuration: getEnvDuration("LOAD_TEST_DURATION", calculateDefaultDuration(sysInfo)),
 		// Rate of requests per second
-		RequestsPerSecond:  getEnvFloat("LOAD_TEST_REQ_RATE", 50.0),
+		RequestsPerSecond: getEnvFloat("LOAD_TEST_REQ_RATE", 50.0),
 		// Authentication token for requests
-		AuthToken:          generateLoadTestToken(t),
+		AuthToken: generateLoadTestToken(t),
 		// Minimum success rate threshold (set later)
-		MinSuccessRate:     0.0,
+		MinSuccessRate: 0.0,
 		// Maximum error rate threshold (set later)
-		MaxErrorRate:       0.0,
+		MaxErrorRate: 0.0,
 		// Tolerance percentage for thresholds (set later)
-		TolerancePercent:   0.0,
+		TolerancePercent: 0.0,
 		// Skip TLS verification for testing
 		InsecureSkipVerify: getEnvBool("LOAD_TEST_INSECURE", false),
 		ConnectionTimeout: getEnvDuration("LOAD_TEST_CONN_TIMEOUT",

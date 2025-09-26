@@ -56,7 +56,7 @@ func verifyBinaryFrameData(t *testing.T, data []byte, frame *BinaryFrame) {
 	}
 }
 
-func TestBinaryFrame_WriteTo(t *testing.T) { 
+func TestBinaryFrame_WriteTo(t *testing.T) {
 	tests := []struct {
 		name    string
 		frame   *BinaryFrame
@@ -126,7 +126,7 @@ func validateReadBinaryFrameResult(t *testing.T, got *BinaryFrame, want *BinaryF
 	}
 }
 
-func TestReadBinaryFrame(t *testing.T) { 
+func TestReadBinaryFrame(t *testing.T) {
 	tests := createReadBinaryFrameTests()
 
 	for _, tt := range tests {
@@ -251,7 +251,7 @@ func createIncompletePayloadData() []byte {
 	return buf.Bytes()
 }
 
-func TestBinaryFrame_RoundTrip(t *testing.T) { 
+func TestBinaryFrame_RoundTrip(t *testing.T) {
 	frames := []*BinaryFrame{
 		{
 			Version:     0x0001,
@@ -305,7 +305,7 @@ func TestBinaryFrame_RoundTrip(t *testing.T) {
 	}
 }
 
-func TestMessageType_String(t *testing.T) { 
+func TestMessageType_String(t *testing.T) {
 	tests := []struct {
 		msgType MessageType
 		want    string

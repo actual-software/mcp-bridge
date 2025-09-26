@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -53,7 +52,7 @@ func setupPerIPLimitTestServer() *GatewayServer {
 
 func testIPCountIncrementDecrement(t *testing.T, s *GatewayServer) {
 	t.Helper()
-	
+
 	ip := "192.168.1.testIterations"
 
 	count1 := s.incrementIPConnCount(ip)
@@ -76,7 +75,7 @@ func testIPCountIncrementDecrement(t *testing.T, s *GatewayServer) {
 
 func testGetIPFromAddr(t *testing.T) {
 	t.Helper()
-	
+
 	tests := []struct {
 		addr     string
 		expected string
@@ -96,7 +95,7 @@ func testGetIPFromAddr(t *testing.T) {
 
 func testConcurrentIPTracking(t *testing.T, s *GatewayServer) {
 	t.Helper()
-	
+
 	ip := "10.0.0.1"
 	numGoroutines := testTimeout
 	incrementsPerGoroutine := testIterations
@@ -151,7 +150,7 @@ func TestTCPPerIPLimits(t *testing.T) {
 
 func setupTCPPerIPLimitServer(t *testing.T) (*GatewayServer, context.CancelFunc) {
 	t.Helper()
-	
+
 	// Create config with per-IP limits
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -207,7 +206,7 @@ func setupTCPPerIPLimitServer(t *testing.T) (*GatewayServer, context.CancelFunc)
 
 func testPerIPConnectionLimits(t *testing.T, serverAddr string) []net.Conn {
 	t.Helper()
-	
+
 	var conns []net.Conn
 
 	dialer := &net.Dialer{}
@@ -230,7 +229,7 @@ func testPerIPConnectionLimits(t *testing.T, serverAddr string) []net.Conn {
 	if err == nil {
 		// Connection was accepted at TCP level, but should be closed by server
 		// Try to read - should get EOF quickly
-		require.NoError(t, conn4.SetReadDeadline(time.Now().Add(httpStatusInternalError * time.Millisecond)))
+		require.NoError(t, conn4.SetReadDeadline(time.Now().Add(httpStatusInternalError*time.Millisecond)))
 
 		buf := make([]byte, 1)
 		_, err := conn4.Read(buf)
@@ -252,7 +251,7 @@ func cleanupConnections(conns []net.Conn) {
 
 func testPerIPLimitMetrics(t *testing.T, metricsReg *metrics.Registry) {
 	t.Helper()
-	
+
 	// Check metrics
 	rejected := testutil.ToFloat64(metricsReg.ConnectionsRejected)
 	assert.Greater(t, rejected, float64(0), "Should have rejected connections")
@@ -260,7 +259,7 @@ func testPerIPLimitMetrics(t *testing.T, metricsReg *metrics.Registry) {
 
 func testConnectionRecovery(t *testing.T, serverAddr string, conns []net.Conn) {
 	t.Helper()
-	
+
 	// Close one connection
 	require.NoError(t, conns[0].Close())
 	time.Sleep(testIterations * time.Millisecond) // Give server time to process disconnect
@@ -276,7 +275,7 @@ func testConnectionRecovery(t *testing.T, serverAddr string, conns []net.Conn) {
 
 func shutdownServerGracefully(t *testing.T, s *GatewayServer, cancel context.CancelFunc) {
 	t.Helper()
-	
+
 	// Cleanup
 	cancel()
 

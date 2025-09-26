@@ -45,19 +45,19 @@ type NamespaceRoutingConfig struct {
 // DefaultNamespaceRoutingRules returns a set of default routing rules for common MCP patterns.
 func DefaultNamespaceRoutingRules() []NamespaceRoutingRule {
 	var rules []NamespaceRoutingRule
-	
+
 	// Add system rules
 	rules = append(rules, getSystemRoutingRules()...)
-	
+
 	// Add MCP capability rules
 	rules = append(rules, getMCPCapabilityRules()...)
-	
+
 	// Add dotted namespace rules
 	rules = append(rules, getDottedNamespaceRules()...)
-	
+
 	// Add slash namespace rules
 	rules = append(rules, getSlashNamespaceRules()...)
-	
+
 	return rules
 }
 

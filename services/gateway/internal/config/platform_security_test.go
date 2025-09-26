@@ -1,4 +1,3 @@
-
 package config
 
 import (
@@ -282,7 +281,6 @@ func createLinuxSystemdConfig() *Config { //nolint:unused
 	return config
 }
 
-
 func checkLinuxFilePermissions(t *testing.T, config *Config) {
 	t.Helper()
 	// Check Linux file permissions
@@ -309,9 +307,6 @@ func checkLinuxUnixSocketSecurity(t *testing.T, config *Config) {
 }
 
 // macOS-specific configuration generators and checkers
-
-
-
 
 func checkMacOSKeychainSecurity(t *testing.T, config *Config) {
 	t.Helper()
@@ -347,9 +342,6 @@ func checkMacOSSystemSecurity(t *testing.T, config *Config) {
 
 // Unix-like common configuration generators and checkers
 
-
-
-
 func checkUnixSocketPermissions(t *testing.T, config *Config) {
 	t.Helper()
 	// Check Unix socket permissions
@@ -382,16 +374,10 @@ func checkUnixFileSystemSecurity(t *testing.T, config *Config) {
 
 // Security helper functions
 
-
-
-
 func isMacOSAppBundle(path string) bool {
 	return len(path) > 4 && path[len(path)-4:] == ".app" ||
 		(len(path) > 15 && path[len(path)-15:] == ".app/Contents/MacOS")
 }
-
-
-
 
 func isSecureUnixKeyPath(path string) bool {
 	secureLocations := []string{"/etc/ssl/private/", "/usr/local/etc/ssl/private/", "/opt/ssl/private/"}
@@ -441,9 +427,9 @@ func TestEnvironmentSpecificSecurity(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set environment variables
 			for key, value := range tt.envVars {
-				_ = os.Setenv(key, value) 
+				_ = os.Setenv(key, value)
 
-				defer func() { _ = os.Unsetenv(key) }() 
+				defer func() { _ = os.Unsetenv(key) }()
 			}
 
 			config := createEnvironmentAwareConfig()

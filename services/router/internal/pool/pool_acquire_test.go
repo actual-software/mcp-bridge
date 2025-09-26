@@ -10,7 +10,7 @@ import (
 )
 
 // TestPoolAcquire tests the refactored Acquire method.
-func TestPoolAcquire(t *testing.T) { 
+func TestPoolAcquire(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Create a test connection factory.

@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
 	"github.com/gorilla/websocket"
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
@@ -129,7 +130,7 @@ func (m *mockWebSocketServer) close() {
 	m.server.Close()
 }
 
-func TestNewWebSocketClient(t *testing.T) { 
+func TestNewWebSocketClient(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	testCases := []struct {
@@ -190,7 +191,7 @@ func TestNewWebSocketClient(t *testing.T) {
 	}
 }
 
-func TestWebSocketClientDefaults(t *testing.T) { 
+func TestWebSocketClientDefaults(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := WebSocketClientConfig{} // Empty config to test defaults
 
@@ -211,7 +212,7 @@ func TestWebSocketClientDefaults(t *testing.T) {
 	assert.Equal(t, 4096, client.config.Connection.WriteBufferSize)
 }
 
-func TestWebSocketClientConnectAndClose(t *testing.T) { 
+func TestWebSocketClientConnectAndClose(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockWebSocketServer(t)
@@ -250,7 +251,7 @@ func TestWebSocketClientConnectAndClose(t *testing.T) {
 	require.NoError(t, err) // Should not error
 }
 
-func TestWebSocketClientSendRequest(t *testing.T) { 
+func TestWebSocketClientSendRequest(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockWebSocketServer(t)
@@ -306,7 +307,7 @@ func TestWebSocketClientSendRequest(t *testing.T) {
 	assert.Positive(t, metrics.AverageLatency)
 }
 
-func TestWebSocketClientSendRequestNotConnected(t *testing.T) { 
+func TestWebSocketClientSendRequestNotConnected(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := WebSocketClientConfig{
 		URL: fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
@@ -328,7 +329,7 @@ func TestWebSocketClientSendRequestNotConnected(t *testing.T) {
 	assert.Contains(t, err.Error(), "not connected")
 }
 
-func TestWebSocketClientSendRequestTimeout(t *testing.T) { 
+func TestWebSocketClientSendRequestTimeout(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	slowServer := setupWebSocketTimeoutServer(t)
@@ -363,7 +364,7 @@ func setupWebSocketTimeoutServer(t *testing.T) *mockWebSocketServer {
 			}
 		}
 	})
-	
+
 	slowServer.server.Close()
 	slowServer.server = httptest.NewServer(mux)
 	return slowServer
@@ -403,7 +404,7 @@ func runWebSocketTimeoutTest(t *testing.T, client *WebSocketClient) {
 	t.Helper()
 
 	ctx := context.Background()
-	
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "slow_method",
@@ -425,7 +426,7 @@ func verifyWebSocketTimeoutMetrics(t *testing.T, client *WebSocketClient) {
 	assert.Equal(t, uint64(1), metrics.ErrorCount)
 }
 
-func TestWebSocketClientHealth(t *testing.T) { 
+func TestWebSocketClientHealth(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockWebSocketServer(t)
@@ -469,7 +470,7 @@ func TestWebSocketClientHealth(t *testing.T) {
 	assert.False(t, metrics.LastHealthCheck.IsZero())
 }
 
-func TestWebSocketClientHealthCheck(t *testing.T) { 
+func TestWebSocketClientHealthCheck(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockWebSocketServer(t)
@@ -508,7 +509,7 @@ func TestWebSocketClientHealthCheck(t *testing.T) {
 	assert.True(t, metrics.IsHealthy)
 }
 
-func TestWebSocketClientGetStatus(t *testing.T) { 
+func TestWebSocketClientGetStatus(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := WebSocketClientConfig{
 		URL: fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
@@ -524,7 +525,7 @@ func TestWebSocketClientGetStatus(t *testing.T) {
 	assert.Equal(t, StateDisconnected, status.State)
 }
 
-func TestWebSocketClientConnectInvalidURL(t *testing.T) { 
+func TestWebSocketClientConnectInvalidURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := WebSocketClientConfig{
 		URL:              "ws://nonexistent.invalid:12345",
@@ -543,7 +544,7 @@ func TestWebSocketClientConnectInvalidURL(t *testing.T) {
 	assert.Equal(t, StateError, client.GetState())
 }
 
-func TestWebSocketClientHeaders(t *testing.T) { 
+func TestWebSocketClientHeaders(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Create a server that checks headers.
@@ -608,7 +609,7 @@ func TestWebSocketClientHeaders(t *testing.T) {
 	assert.Equal(t, StateConnected, client.GetState())
 }
 
-func TestWebSocketClientURL(t *testing.T) { 
+func TestWebSocketClientURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := WebSocketClientConfig{
 		URL: fmt.Sprintf("ws://example.com:%d/path", constants.TestHTTPPort),
@@ -626,9 +627,9 @@ func TestWebSocketClientURL(t *testing.T) {
 // ==============================================================================
 
 // TestWebSocketClientPingPongMechanism tests ping/pong functionality.
-func TestWebSocketClientPingPongMechanism(t *testing.T) { 
+func TestWebSocketClientPingPongMechanism(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	
+
 	pingReceived, pongReceived, server := setupWebSocketPingPongServer(t)
 	defer server.Close()
 
@@ -765,9 +766,9 @@ func verifyWebSocketPingPongActivity(t *testing.T, client *WebSocketClient) {
 }
 
 // TestWebSocketClientMessageCorrelation tests message correlation and ordering.
-func TestWebSocketClientMessageCorrelation(t *testing.T) { 
+func TestWebSocketClientMessageCorrelation(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	
+
 	server := setupWebSocketCorrelationServer(t)
 	defer server.Close()
 
@@ -895,7 +896,7 @@ func verifyWebSocketCorrelationResponse(t *testing.T, resp *mcp.Response, expect
 }
 
 // TestWebSocketClientConcurrentOperations tests concurrent message handling.
-func TestWebSocketClientConcurrentOperations(t *testing.T) { 
+func TestWebSocketClientConcurrentOperations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	mockServer := newMockWebSocketServer(t)
@@ -954,7 +955,7 @@ func runWebSocketConcurrentOperations(t *testing.T, client *WebSocketClient) {
 
 	errChan, responseChan := setupWebSocketConcurrentChannels(numGoroutines, requestsPerGoroutine)
 	executeWebSocketConcurrentRequests(t, client, numGoroutines, requestsPerGoroutine, errChan, responseChan)
-	
+
 	errors, responses := collectWebSocketConcurrentResults(errChan, responseChan, numGoroutines, requestsPerGoroutine)
 	verifyWebSocketConcurrentResults(t, client, errors, responses, numGoroutines, requestsPerGoroutine)
 }
@@ -1069,7 +1070,7 @@ func verifyWebSocketConcurrentResults(
 }
 
 // TestWebSocketClientReconnectionLogic tests automatic reconnection scenarios.
-func TestWebSocketClientReconnectionLogic(t *testing.T) { 
+func TestWebSocketClientReconnectionLogic(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	serverState, server := setupWebSocketReconnectServer(t)
@@ -1209,7 +1210,7 @@ func runWebSocketReconnectionTest(t *testing.T, client *WebSocketClient, serverS
 	time.Sleep(1 * time.Second)
 
 	enableWebSocketReconnectServer(serverState)
-	
+
 	// Allow time for reconnection attempts
 	time.Sleep(2 * time.Second)
 
@@ -1251,7 +1252,7 @@ func verifyWebSocketReconnectionResult(t *testing.T, client *WebSocketClient) {
 }
 
 // TestWebSocketClientPerformanceOptimizations tests WebSocket-specific performance features.
-func TestWebSocketClientPerformanceOptimizations(t *testing.T) { 
+func TestWebSocketClientPerformanceOptimizations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testCases := getWebSocketPerformanceTestCases()
 
@@ -1397,7 +1398,7 @@ func verifyWebSocketPerformanceResults(
 }
 
 // TestWebSocketClientFrameHandling tests various WebSocket frame types and sizes.
-func TestWebSocketClientFrameHandling(t *testing.T) { 
+func TestWebSocketClientFrameHandling(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testCases := getWebSocketFrameTestCases()
 
@@ -1620,7 +1621,7 @@ func createErrorRecoveryHandler(t *testing.T, errorCount *int) http.HandlerFunc 
 	}
 }
 
-func TestWebSocketClientErrorRecovery(t *testing.T) { 
+func TestWebSocketClientErrorRecovery(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	serverErrorCount := 0
@@ -1672,7 +1673,7 @@ func cleanupWebSocketErrorRecoveryClient(t *testing.T, client *WebSocketClient) 
 
 func runWebSocketErrorRecoveryTests(t *testing.T, client *WebSocketClient) {
 	testCases := getWebSocketErrorRecoveryTestCases()
-	
+
 	successCount, clientErrorCount := executeWebSocketErrorRecoveryRequests(t, client, testCases)
 	verifyWebSocketErrorRecoveryResults(t, client, successCount, clientErrorCount)
 }
@@ -1934,7 +1935,7 @@ func cleanupWebSocketFrameSizeBenchClient(b *testing.B, client *WebSocketClient)
 
 func executeWebSocketFrameSizeBenchmark(b *testing.B, client *WebSocketClient, frameSize int) {
 	ctx := context.Background()
-	
+
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0

@@ -48,6 +48,7 @@ type DockerStackInterface interface {
 //   - Error handling and propagation
 //   - Concurrent request processing
 //   - Network resilience and recovery
+//
 // setupFullStackTest initializes the test environment.
 func setupFullStackTest(t *testing.T, ctx context.Context) (*DockerStack, *e2e.MCPClient) {
 	t.Helper()
@@ -82,7 +83,7 @@ func setupFullStackTest(t *testing.T, ctx context.Context) (*DockerStack, *e2e.M
 	err = router.BuildRouter()
 	require.NoError(t, err, "Failed to build router binary")
 
-	err = router.Start() 
+	err = router.Start()
 	require.NoError(t, err, "Failed to start router")
 
 	// Phase 4: MCP Client Setup

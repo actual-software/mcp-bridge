@@ -1,7 +1,6 @@
 package direct
 
 import (
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"context"
 	"fmt"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func TestNewStdioClient(t *testing.T) { 
+func TestNewStdioClient(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	testCases := []struct {
@@ -73,7 +74,7 @@ func TestNewStdioClient(t *testing.T) {
 	}
 }
 
-func TestStdioClientDefaults(t *testing.T) { 
+func TestStdioClientDefaults(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := StdioClientConfig{} // Empty config to test defaults
 
@@ -89,7 +90,7 @@ func TestStdioClientDefaults(t *testing.T) {
 	assert.Equal(t, 3, client.config.Process.MaxRestarts)
 }
 
-func TestStdioClientConnectAndClose(t *testing.T) { 
+func TestStdioClientConnectAndClose(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := StdioClientConfig{
 		Command: []string{"cat"}, // cat command reads from stdin and writes to stdout
@@ -124,10 +125,10 @@ func TestStdioClientConnectAndClose(t *testing.T) {
 	require.NoError(t, err) // Should not error
 }
 
-func TestStdioClientSendRequest(t *testing.T) { 
+func TestStdioClientSendRequest(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioEchoScript(t)
-	
+
 	client := setupStdioTestClient(t, logger, scriptPath)
 	defer cleanupStdioTestClient(t, client)
 
@@ -205,7 +206,7 @@ func runStdioSendRequestTest(t *testing.T, client *StdioClient) {
 	t.Helper()
 
 	ctx := context.Background()
-	
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "test_method",
@@ -230,7 +231,7 @@ func verifyStdioRequestMetrics(t *testing.T, client *StdioClient) {
 	assert.Positive(t, metrics.AverageLatency)
 }
 
-func TestStdioClientSendRequestNotConnected(t *testing.T) { 
+func TestStdioClientSendRequestNotConnected(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := StdioClientConfig{
 		Command: []string{"cat"},
@@ -252,7 +253,7 @@ func TestStdioClientSendRequestNotConnected(t *testing.T) {
 	assert.Contains(t, err.Error(), "not connected")
 }
 
-func TestStdioClientSendRequestTimeout(t *testing.T) { 
+func TestStdioClientSendRequestTimeout(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Create a slow server script that doesn't respond.
@@ -267,7 +268,7 @@ for line in sys.stdin:
     time.sleep(10)  # Sleep longer than the timeout
 `
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) 
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
 	require.NoError(t, err)
 
 	config := StdioClientConfig{
@@ -312,7 +313,7 @@ for line in sys.stdin:
 	assert.Equal(t, uint64(1), metrics.ErrorCount)
 }
 
-func TestStdioClientHealth(t *testing.T) { 
+func TestStdioClientHealth(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := StdioClientConfig{
 		Command: []string{"cat"},
@@ -352,10 +353,10 @@ func TestStdioClientHealth(t *testing.T) {
 	assert.False(t, metrics.LastHealthCheck.IsZero())
 }
 
-func TestStdioClientHealthCheck(t *testing.T) { 
+func TestStdioClientHealthCheck(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioPingScript(t)
-	
+
 	client := setupStdioHealthCheckClient(t, logger, scriptPath)
 	defer cleanupStdioHealthCheckClient(t, client)
 
@@ -432,7 +433,6 @@ func setupStdioHealthCheckClient(t *testing.T, logger *zap.Logger, scriptPath st
 func cleanupStdioHealthCheckClient(t *testing.T, client *StdioClient) {
 	t.Helper()
 
-
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -447,7 +447,7 @@ func runStdioHealthCheckTest(t *testing.T, client *StdioClient) {
 	assert.True(t, metrics.IsHealthy)
 }
 
-func TestStdioClientGetStatus(t *testing.T) { 
+func TestStdioClientGetStatus(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := StdioClientConfig{
 		Command: []string{"cat"},
@@ -463,7 +463,7 @@ func TestStdioClientGetStatus(t *testing.T) {
 	assert.Equal(t, StateDisconnected, status.State)
 }
 
-func TestStdioClientConnectInvalidCommand(t *testing.T) { 
+func TestStdioClientConnectInvalidCommand(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := StdioClientConfig{
 		Command: []string{"nonexistent-command-12345"},
@@ -481,10 +481,10 @@ func TestStdioClientConnectInvalidCommand(t *testing.T) {
 	assert.Equal(t, StateError, client.GetState())
 }
 
-func TestStdioClientEnvironmentVariables(t *testing.T) { 
+func TestStdioClientEnvironmentVariables(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioEnvScript(t)
-	
+
 	client := setupStdioEnvClient(t, logger, scriptPath)
 	defer cleanupStdioEnvClient(t, client)
 
@@ -557,7 +557,6 @@ func setupStdioEnvClient(t *testing.T, logger *zap.Logger, scriptPath string) *S
 func cleanupStdioEnvClient(t *testing.T, client *StdioClient) {
 	t.Helper()
 
-
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
@@ -567,7 +566,7 @@ func runStdioEnvVariableTest(t *testing.T, client *StdioClient) {
 	t.Helper()
 
 	ctx := context.Background()
-	
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "get_env",
@@ -580,23 +579,21 @@ func runStdioEnvVariableTest(t *testing.T, client *StdioClient) {
 	verifyStdioEnvResponse(t, resp)
 }
 
-
 func verifyStdioEnvResponse(t *testing.T, resp *mcp.Response) {
 	t.Helper()
 
-
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
-	
+
 	envVar, ok := result["env_var"].(string)
 	require.True(t, ok)
 	assert.Equal(t, "test_value_12345", envVar)
 }
 
-func TestStdioClientWorkingDirectory(t *testing.T) { 
+func TestStdioClientWorkingDirectory(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	tmpDir, scriptPath := createStdioWorkingDirScript(t)
-	
+
 	client := setupStdioWorkingDirClient(t, logger, scriptPath, tmpDir)
 	defer cleanupStdioWorkingDirClient(t, client)
 
@@ -676,7 +673,7 @@ func runStdioWorkingDirTest(t *testing.T, client *StdioClient, expectedTmpDir st
 	t.Helper()
 
 	ctx := context.Background()
-	
+
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "get_cwd",
@@ -694,7 +691,7 @@ func verifyStdioWorkingDirResponse(t *testing.T, resp *mcp.Response, expectedTmp
 
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
-	
+
 	cwd, ok := result["cwd"].(string)
 	require.True(t, ok)
 
@@ -710,10 +707,10 @@ func verifyStdioWorkingDirResponse(t *testing.T, resp *mcp.Response, expectedTmp
 // ==============================================================================
 
 // TestStdioClientProcessLifecycle tests complete process lifecycle management.
-func TestStdioClientProcessLifecycle(t *testing.T) { 
+func TestStdioClientProcessLifecycle(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioLifecycleScript(t)
-	
+
 	client := setupStdioLifecycleClient(t, logger, scriptPath)
 	runStdioLifecycleTest(t, client)
 }
@@ -858,10 +855,10 @@ func testStdioLifecycleShutdown(t *testing.T, client *StdioClient, ctx context.C
 }
 
 // TestStdioClientProcessRestart tests process restart scenarios.
-func TestStdioClientProcessRestart(t *testing.T) { 
+func TestStdioClientProcessRestart(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioRestartScript(t)
-	
+
 	client := setupStdioRestartClient(t, logger, scriptPath)
 	defer cleanupStdioRestartClient(t, client)
 
@@ -994,7 +991,7 @@ func waitForStdioRestart(t *testing.T) {
 }
 
 // TestStdioClientPerformanceOptimizations tests stdio-specific performance features.
-func TestStdioClientPerformanceOptimizations(t *testing.T) { 
+func TestStdioClientPerformanceOptimizations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	testCases := createStdioPerformanceTestCases()
 
@@ -1200,10 +1197,10 @@ func analyzeStdioPerformanceResults(
 }
 
 // TestStdioClientConcurrentOperations tests concurrent request handling.
-func TestStdioClientConcurrentOperations(t *testing.T) { 
+func TestStdioClientConcurrentOperations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioConcurrentScript(t)
-	
+
 	client := setupStdioConcurrentClient(t, logger, scriptPath)
 	defer cleanupStdioConcurrentClient(t, client)
 
@@ -1311,7 +1308,7 @@ func runStdioConcurrentOperationsTest(t *testing.T, client *StdioClient) {
 	)
 
 	errChan, responseChan := createStdioConcurrentChannels(numGoroutines, requestsPerGoroutine)
-	
+
 	var wg sync.WaitGroup
 
 	ctx := context.Background()
@@ -1410,10 +1407,10 @@ func verifyStdioConcurrentResults(t *testing.T, client *StdioClient, errors []er
 }
 
 // TestStdioClientMemoryOptimization tests memory optimization features.
-func TestStdioClientMemoryOptimization(t *testing.T) { 
+func TestStdioClientMemoryOptimization(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioMemoryScript(t)
-	
+
 	client := setupStdioMemoryOptimizedClient(t, logger, scriptPath)
 	defer cleanupStdioMemoryOptimizedClient(t, client)
 
@@ -1549,10 +1546,10 @@ func verifyStdioMemoryOptimizationMetrics(t *testing.T, client *StdioClient, exp
 }
 
 // TestStdioClientLargePayloads tests handling of large request/response payloads.
-func TestStdioClientLargePayloads(t *testing.T) { 
+func TestStdioClientLargePayloads(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioLargePayloadScript(t)
-	
+
 	client := setupStdioLargePayloadClient(t, logger, scriptPath)
 	defer cleanupStdioLargePayloadClient(t, client)
 
@@ -1645,7 +1642,7 @@ func runStdioLargePayloadTest(t *testing.T, client *StdioClient) {
 	t.Helper()
 
 	ctx := context.Background()
-	
+
 	largePayload := strings.Repeat("test_data_", 1000) // ~10KB payload
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
@@ -1657,7 +1654,6 @@ func runStdioLargePayloadTest(t *testing.T, client *StdioClient) {
 	resp, err := client.SendRequest(ctx, req)
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
-
 
 	verifyStdioLargePayloadResponse(t, resp)
 }
@@ -1678,10 +1674,10 @@ func verifyStdioLargePayloadResponse(t *testing.T, resp *mcp.Response) {
 }
 
 // TestStdioClientErrorRecovery tests error recovery and process management.
-func TestStdioClientErrorRecovery(t *testing.T) { 
+func TestStdioClientErrorRecovery(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	scriptPath := createStdioErrorRecoveryScript(t)
-	
+
 	client := setupStdioErrorRecoveryClient(t, logger, scriptPath)
 	defer cleanupStdioErrorRecoveryClient(t, client)
 
@@ -1784,7 +1780,7 @@ func runStdioErrorRecoveryTest(t *testing.T, client *StdioClient) {
 
 	testCases := createStdioErrorTestCases()
 	successCount, errorCount := executeStdioErrorTestCases(t, client, testCases)
-	
+
 	verifyStdioErrorRecoveryResults(t, client, successCount, errorCount)
 }
 
@@ -1849,7 +1845,7 @@ func BenchmarkStdioClientSendRequest(b *testing.B) {
 	scriptPath := filepath.Join(tmpDir, "echo_server.py")
 	scriptContent := constants.TestPythonEchoScript
 
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) 
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
 	require.NoError(b, err)
 
 	config := StdioClientConfig{
@@ -1898,7 +1894,7 @@ func BenchmarkStdioClientSendRequest(b *testing.B) {
 func BenchmarkStdioClientConcurrency(b *testing.B) {
 	logger := zaptest.NewLogger(b)
 	scriptPath := createStdioConcurrentBenchScript(b)
-	
+
 	client := setupStdioConcurrentBenchClient(b, logger, scriptPath)
 	defer cleanupStdioConcurrentBenchClient(b, client)
 
@@ -1934,7 +1930,6 @@ def main():
 if __name__ == "__main__":
     main()
 `
-
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755)
 	require.NoError(b, err)
@@ -2006,7 +2001,7 @@ func BenchmarkStdioClientMemoryUsage(b *testing.B) {
 	logger := zaptest.NewLogger(b)
 	memoryOptimizer := createStdioBenchMemoryOptimizer(logger)
 	scriptPath := createStdioMemoryBenchScript(b)
-	
+
 	client := setupStdioMemoryBenchClient(b, logger, scriptPath, memoryOptimizer)
 	defer cleanupStdioMemoryBenchClient(b, client)
 

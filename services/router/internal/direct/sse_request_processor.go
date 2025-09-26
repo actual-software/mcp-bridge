@@ -9,7 +9,6 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 )
 
-
 // Request processor constants.
 const (
 	ProcessorDivider = 2

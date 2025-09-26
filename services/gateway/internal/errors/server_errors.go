@@ -107,7 +107,7 @@ func NewMaxConnectionsError(current, max int) *GatewayError {
 
 // NewProtocolError creates an error for protocol violations.
 func NewProtocolError(reason string, protocol string) *GatewayError {
-	return New(TypeValidation, "protocol error: " + reason ).
+	return New(TypeValidation, "protocol error: "+reason).
 		WithComponent("server").
 		WithContext("reason", reason).
 		WithContext("protocol", protocol).
@@ -117,7 +117,7 @@ func NewProtocolError(reason string, protocol string) *GatewayError {
 
 // NewInvalidRequestError creates an error for invalid requests.
 func NewInvalidRequestError(reason string, path string) *GatewayError {
-	return New(TypeValidation, "invalid request: " + reason ).
+	return New(TypeValidation, "invalid request: "+reason).
 		WithComponent("server").
 		WithContext("reason", reason).
 		WithContext("path", path).

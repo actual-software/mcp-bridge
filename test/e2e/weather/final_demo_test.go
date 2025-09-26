@@ -25,7 +25,7 @@ func TestFinalWeatherMCPDemonstration(t *testing.T) {
 
 func setupDemoInfrastructure(t *testing.T) *WeatherE2ETestSuite {
 	t.Helper()
-	
+
 	// Create a complete test infrastructure for the demo
 	suite := setupE2ETestSuite(t)
 
@@ -33,13 +33,13 @@ func setupDemoInfrastructure(t *testing.T) *WeatherE2ETestSuite {
 	t.Log("🚀 Setting up complete E2E infrastructure for final demonstration")
 
 	deployFullStack(t, suite)
-	
+
 	return suite
 }
 
 func deployFullStack(t *testing.T, suite *WeatherE2ETestSuite) {
 	t.Helper()
-	
+
 	// Step 1: Create namespace
 	suite.createNamespace(t)
 
@@ -64,7 +64,7 @@ func deployFullStack(t *testing.T, suite *WeatherE2ETestSuite) {
 
 func testDemoWebSocketConnection(t *testing.T, suite *WeatherE2ETestSuite) {
 	t.Helper()
-	
+
 	// Connect to the Weather MCP Server through the gateway
 	url := "ws://localhost:8081/mcp"
 
@@ -81,13 +81,13 @@ func testDemoWebSocketConnection(t *testing.T, suite *WeatherE2ETestSuite) {
 	// Test MCP protocol flow
 	testDemoMCPInitialize(t, conn)
 	weatherText := testDemoWeatherRequest(t, conn)
-	
+
 	displayDemoResults(t, weatherText)
 }
 
 func establishWebSocketConnection(t *testing.T, url string) *websocket.Conn {
 	t.Helper()
-	
+
 	conn, resp, err := websocket.DefaultDialer.Dial(url, nil)
 	if resp != nil && resp.Body != nil {
 		defer func() { _ = resp.Body.Close() }()
@@ -102,7 +102,7 @@ func establishWebSocketConnection(t *testing.T, url string) *websocket.Conn {
 
 func testDemoMCPInitialize(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
-	
+
 	// MCP initialize
 	initMessage := map[string]interface{}{
 		"jsonrpc": "2.0",
@@ -138,7 +138,7 @@ func testDemoMCPInitialize(t *testing.T, conn *websocket.Conn) {
 
 func testDemoWeatherRequest(t *testing.T, conn *websocket.Conn) string {
 	t.Helper()
-	
+
 	// Get weather data
 	weatherCall := map[string]interface{}{
 		"jsonrpc": "2.0",
@@ -174,7 +174,7 @@ func testDemoWeatherRequest(t *testing.T, conn *websocket.Conn) string {
 
 func extractWeatherText(t *testing.T, weatherResponse map[string]interface{}) string {
 	t.Helper()
-	
+
 	// Extract weather data
 	result, ok := weatherResponse["result"].(map[string]interface{})
 	if !ok {
@@ -201,7 +201,7 @@ func extractWeatherText(t *testing.T, weatherResponse map[string]interface{}) st
 
 func displayDemoResults(t *testing.T, weatherText string) {
 	t.Helper()
-	
+
 	t.Log("📥 Weather data received from Open-Meteo API:")
 
 	displayText := weatherText

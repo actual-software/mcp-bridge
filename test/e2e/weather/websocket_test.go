@@ -81,7 +81,7 @@ func testMCPInitialize(t *testing.T, conn *websocket.Conn) {
 
 func validateInitializeResponse(t *testing.T, response map[string]interface{}) {
 	t.Helper()
-	
+
 	if response["jsonrpc"] != "2.0" {
 		t.Errorf("Expected jsonrpc 2.0, got %v", response["jsonrpc"])
 	}
@@ -115,7 +115,7 @@ func validateInitializeResponse(t *testing.T, response map[string]interface{}) {
 
 func testToolsList(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
-	
+
 	toolsListMessage := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      2,
@@ -145,7 +145,7 @@ func testToolsList(t *testing.T, conn *websocket.Conn) {
 
 func validateToolsResponse(t *testing.T, toolsResponse map[string]interface{}) {
 	t.Helper()
-	
+
 	toolsResult, ok := toolsResponse["result"].(map[string]interface{})
 	if !ok {
 		t.Fatal("Expected result object in tools response")
@@ -190,7 +190,7 @@ func validateToolsResponse(t *testing.T, toolsResponse map[string]interface{}) {
 
 func testWeatherToolCall(t *testing.T, conn *websocket.Conn) {
 	t.Helper()
-	
+
 	weatherCallMessage := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      3,
@@ -227,7 +227,7 @@ func testWeatherToolCall(t *testing.T, conn *websocket.Conn) {
 
 func validateWeatherResponse(t *testing.T, weatherResponse map[string]interface{}) {
 	t.Helper()
-	
+
 	weatherResult, ok := weatherResponse["result"].(map[string]interface{})
 	if !ok {
 		t.Fatal("Expected result object in weather response")

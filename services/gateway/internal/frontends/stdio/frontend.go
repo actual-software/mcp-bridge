@@ -281,7 +281,7 @@ func (f *Frontend) startUnixSocket(ctx context.Context, mode ModeConfig) error {
 	// Set permissions if specified
 	if mode.Permissions != "" {
 		if err := os.Chmod(mode.Path, unixSocketPermissions); err != nil {
-			_ = listener.Close() 
+			_ = listener.Close()
 
 			return customerrors.Wrap(err, "failed to set socket permissions").
 				WithComponent("frontend_stdio")
@@ -503,7 +503,7 @@ func (f *Frontend) processSingleRequest(ctx context.Context, conn *ClientConnect
 // setReadTimeout sets the read timeout on the connection.
 func (f *Frontend) setReadTimeout(conn *ClientConnection) {
 	if netConn, ok := conn.conn.(net.Conn); ok {
-		_ = netConn.SetReadDeadline(time.Now().Add(f.config.Process.ClientTimeout)) 
+		_ = netConn.SetReadDeadline(time.Now().Add(f.config.Process.ClientTimeout))
 	}
 }
 
@@ -673,7 +673,7 @@ func (f *Frontend) sendErrorResponse(conn *ClientConnection, req *mcp.Request, e
 	}
 
 	conn.mu.Lock()
-	_ = conn.writer.Encode(errorResp) 
+	_ = conn.writer.Encode(errorResp)
 	conn.mu.Unlock()
 }
 
@@ -709,7 +709,7 @@ func (f *Frontend) cleanupIdleConnections() {
 		if now.Sub(lastUsed) > f.config.Process.ClientTimeout {
 			f.logger.Info("closing idle connection", zap.String("client_id", clientID))
 
-			_ = conn.conn.Close() 
+			_ = conn.conn.Close()
 
 			delete(f.connections, clientID)
 			f.updateMetrics(func(m *FrontendMetrics) {
@@ -735,7 +735,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Close Unix socket listener
 	if f.unixListener != nil {
-		_ = f.unixListener.Close() 
+		_ = f.unixListener.Close()
 	}
 
 	// Close all active connections
@@ -744,7 +744,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	for clientID, conn := range f.connections {
 		f.logger.Debug("closing connection", zap.String("client_id", clientID))
 
-		_ = conn.conn.Close() 
+		_ = conn.conn.Close()
 	}
 
 	f.connections = make(map[string]*ClientConnection)

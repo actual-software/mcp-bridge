@@ -50,7 +50,7 @@ func setupLoadBalancingTest(t *testing.T, ctx context.Context) (*DockerStackWith
 	err = router.BuildRouter()
 	require.NoError(t, err, "Failed to build router binary")
 
-	err = router.Start() 
+	err = router.Start()
 	require.NoError(t, err, "Failed to start router")
 
 	client := NewMCPClient(router)

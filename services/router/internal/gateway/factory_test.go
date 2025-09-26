@@ -13,7 +13,7 @@ import (
 	"github.com/poiley/mcp-bridge/test/testutil"
 )
 
-func TestNewGatewayClient(t *testing.T) { 
+func TestNewGatewayClient(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -143,7 +143,7 @@ func TestNewGatewayClient(t *testing.T) {
 	}
 }
 
-func TestGatewayClient_InterfaceCompliance(t *testing.T) { 
+func TestGatewayClient_InterfaceCompliance(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -225,7 +225,7 @@ func verifyClientConfiguration(t *testing.T, client GatewayClient, authType stri
 // setupMTLSCerts creates temporary certificate files for mTLS testing.
 func setupMTLSCerts(t *testing.T) (certFile, keyFile string, cleanup func()) {
 	t.Helper()
-	
+
 	certPem := `-----BEGIN CERTIFICATE-----
 MIIDhTCCAm2gAwIBAgIUcvTZq+m2sj3lim7Yf4B6LFRSFPUwDQYJKoZIhvcNAQEL
 BQAwUjELMAkGA1UEBhMCVVMxDTALBgNVBAgMBFRlc3QxDTALBgNVBAcMBFRlc3Qx
@@ -288,7 +288,7 @@ Zry7yq3lVqE6jyOprjq/HMM=
 	return certFile, keyFile, cleanup
 }
 
-func TestGatewayClient_AuthConfiguration(t *testing.T) { 
+func TestGatewayClient_AuthConfiguration(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -366,7 +366,7 @@ func TestGatewayClient_AuthConfiguration(t *testing.T) {
 	}
 }
 
-func TestGatewayClient_TLSConfiguration(t *testing.T) { 
+func TestGatewayClient_TLSConfiguration(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -443,7 +443,7 @@ PIHoJdYUmhCwEjxX4LniJH2cIHTW5tfdKTm/e+8qsvj/CbEmgjAv5RE=
 	}
 }
 
-func TestGatewayClient_ConnectionConfiguration(t *testing.T) { 
+func TestGatewayClient_ConnectionConfiguration(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 

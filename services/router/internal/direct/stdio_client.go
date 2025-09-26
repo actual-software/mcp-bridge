@@ -20,7 +20,7 @@ import (
 // Stdio buffer size constants.
 const (
 	StdioBufferSize = 64
-	RetryDivider = 2
+	RetryDivider    = 2
 )
 
 // StdioClientConfig contains configuration for stdio direct client.
@@ -135,6 +135,7 @@ func NewStdioClientWithMemoryOptimizer(
 ) (*StdioClient, error) {
 	return InitializeStdioClient(name, serverURL, config, logger, memoryOptimizer)
 }
+
 // Connect establishes connection to the stdio MCP server.
 func (c *StdioClient) Connect(ctx context.Context) error {
 	c.mu.Lock()
@@ -191,7 +192,6 @@ func (c *StdioClient) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.R
 
 	return handler.ProcessRequest(ctx, req)
 }
-
 
 // readResponses continuously reads responses from stdout.
 func (c *StdioClient) readResponses() {
@@ -308,7 +308,7 @@ func (c *StdioClient) healthCheckLoop(parentCtx context.Context) {
 						zap.Int("restart_count", c.restarts),
 						zap.Int("max_restarts", c.config.Process.MaxRestarts))
 
-					go c.restartProcess() 
+					go c.restartProcess()
 				}
 			}
 
@@ -365,7 +365,6 @@ func (c *StdioClient) Close(ctx context.Context) error {
 
 	return closer.GracefulShutdown(ctx)
 }
-
 
 // GetName returns the client name.
 func (c *StdioClient) GetName() string {

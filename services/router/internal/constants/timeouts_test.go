@@ -9,8 +9,7 @@ const (
 	testIterations = 100
 )
 
-
-func TestMetricsTimeouts(t *testing.T) { 
+func TestMetricsTimeouts(t *testing.T) {
 	tests := []struct {
 		name     string
 		timeout  time.Duration
@@ -58,7 +57,7 @@ func TestMetricsTimeouts(t *testing.T) {
 	}
 }
 
-func TestGatewayTimeouts(t *testing.T) { 
+func TestGatewayTimeouts(t *testing.T) {
 	tests := []struct {
 		name     string
 		timeout  time.Duration
@@ -128,7 +127,7 @@ func TestConnectionPoolTimeouts(t *testing.T) {
 	verifyConnectionPoolRelationships(t)
 }
 
-func TestCircuitBreakerTimeouts(t *testing.T) { 
+func TestCircuitBreakerTimeouts(t *testing.T) {
 	tests := []struct {
 		name     string
 		timeout  time.Duration
@@ -185,7 +184,7 @@ func TestCircuitBreakerTimeouts(t *testing.T) {
 	}
 }
 
-func TestRateLimiterTimeouts(t *testing.T) { 
+func TestRateLimiterTimeouts(t *testing.T) {
 	tests := []struct {
 		name     string
 		timeout  time.Duration
@@ -238,7 +237,7 @@ func TestRateLimiterTimeouts(t *testing.T) {
 	}
 }
 
-func TestConnectionTimeouts(t *testing.T) { 
+func TestConnectionTimeouts(t *testing.T) {
 	tests := []struct {
 		name     string
 		timeout  time.Duration
@@ -298,7 +297,7 @@ func TestConnectionTimeouts(t *testing.T) {
 	}
 }
 
-func TestRouterCoreTimeouts(t *testing.T) { 
+func TestRouterCoreTimeouts(t *testing.T) {
 	tests := []struct {
 		name     string
 		timeout  time.Duration
@@ -362,7 +361,7 @@ func TestRouterCoreTimeouts(t *testing.T) {
 	}
 }
 
-func TestAuthenticationTimeouts(t *testing.T) { 
+func TestAuthenticationTimeouts(t *testing.T) {
 	tests := []struct {
 		name     string
 		timeout  time.Duration
@@ -401,7 +400,7 @@ func TestTimeoutConsistency(t *testing.T) {
 	runTimeoutConsistencyTests(t, consistencyTests)
 }
 
-func TestTimeoutScaling(t *testing.T) { 
+func TestTimeoutScaling(t *testing.T) {
 	// Test that timeouts scale appropriately relative to each other.
 	scalingTests := []struct {
 		name      string
@@ -503,7 +502,7 @@ func BenchmarkTimeoutConstants(b *testing.B) {
 	}
 }
 
-func TestTimeoutDocumentation(t *testing.T) { 
+func TestTimeoutDocumentation(t *testing.T) {
 	// Verify that timeout constants have meaningful values based on their documentation.
 	documentationTests := []struct {
 		name     string

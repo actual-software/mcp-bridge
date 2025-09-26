@@ -16,8 +16,8 @@ import (
 
 // Memory optimization constants.
 const (
-	DefaultGCPercent        = 75
-	DefaultAlertThreshold   = 0.8
+	DefaultGCPercent      = 75
+	DefaultAlertThreshold = 0.8
 )
 
 // MemoryOptimizationConfig configures memory usage optimization.
@@ -501,7 +501,7 @@ func DefaultMemoryOptimizationConfig() MemoryOptimizationConfig {
 		EnableObjectPooling: true,
 		BufferPoolConfig: BufferPoolConfig{
 			Enabled:          true,
-			InitialSize:      DefaultPageSize,        // 4KB
+			InitialSize:      DefaultPageSize,                       // 4KB
 			MaxSize:          defaultBufferSize * defaultBufferSize, // 1MB
 			MaxPooledBuffers: DefaultTraceLimit,
 		},
@@ -511,15 +511,15 @@ func DefaultMemoryOptimizationConfig() MemoryOptimizationConfig {
 		},
 		GCConfig: GCConfig{
 			Enabled:         true,
-			GCPercent:       DefaultGCPercent,  // More frequent GC for lower memory usage
+			GCPercent:       DefaultGCPercent,                            // More frequent GC for lower memory usage
 			MemoryLimit:     512 * defaultBufferSize * defaultBufferSize, // 512MB limit
 			ForceGCInterval: constants.CleanupTickerInterval,
 		},
 		MemoryMonitoring: MemoryMonitoringConfig{
 			Enabled:            true,
 			MonitoringInterval: defaultTimeoutSeconds * time.Second,
-			AlertThreshold:     DefaultAlertThreshold,   // 80% of memory limit
-			LogMemoryStats:     false, // Disabled by default to reduce log noise
+			AlertThreshold:     DefaultAlertThreshold, // 80% of memory limit
+			LogMemoryStats:     false,                 // Disabled by default to reduce log noise
 		},
 	}
 }

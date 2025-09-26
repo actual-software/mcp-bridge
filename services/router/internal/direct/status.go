@@ -13,10 +13,9 @@ import (
 
 // Status threshold constants.
 const (
-	ThousandMillisThreshold = 1000
+	ThousandMillisThreshold     = 1000
 	FiveThousandMillisThreshold = 5000
 )
-
 
 // DirectClientStatus contains detailed status information for a direct client.
 type DirectClientStatus struct {
@@ -532,7 +531,7 @@ func (sm *StatusMonitor) calculateHealthScore(
 	score := 100
 
 	const (
-		errorRatePenalty      = 50 // Maximum points deducted for error rate
+		errorRatePenalty       = 50 // Maximum points deducted for error rate
 		unhealthyClientPenalty = 30 // Maximum points deducted for unhealthy clients
 	)
 

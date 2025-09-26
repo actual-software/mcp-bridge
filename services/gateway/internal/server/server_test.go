@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -35,10 +34,10 @@ import (
 func TestBootstrapGatewayServer(t *testing.T) {
 	cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger :=
 		setupBootstrapTestDependencies(t)
-	
+
 	server := BootstrapGatewayServer(
 		cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger)
-	
+
 	validateBootstrappedServer(t, server, cfg, mockHealth, registry, logger)
 }
 
@@ -53,7 +52,7 @@ func setupBootstrapTestDependencies(t *testing.T) (
 	*zap.Logger,
 ) {
 	t.Helper()
-	
+
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:                 8443,
@@ -97,7 +96,7 @@ func validateBootstrappedServer(
 	logger *zap.Logger,
 ) {
 	t.Helper()
-	
+
 	if server == nil {
 		t.Fatal("Expected server to be created")
 	}
@@ -216,7 +215,7 @@ func TestGatewayServer_handleWebSocket_Success(t *testing.T) {
 
 func setupWebSocketTestServer(t *testing.T) *GatewayServer {
 	t.Helper()
-	
+
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:                 8443,
@@ -264,7 +263,7 @@ func setupWebSocketTestServer(t *testing.T) *GatewayServer {
 	server := BootstrapGatewayServer(
 		cfg, mockAuth, mockSessions, testRouter, mockHealth, registry, mockRateLimiter, logger,
 	)
-	
+
 	// Override the upgrader to allow all origins for testing
 	server.upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
@@ -278,7 +277,7 @@ func createWebSocketHTTPServer(server *GatewayServer) *httptest.Server {
 
 func connectWebSocketClient(t *testing.T, testServer *httptest.Server) (*websocket.Conn, *http.Response) {
 	t.Helper()
-	
+
 	// Connect as client
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
 	headers := http.Header{"Authorization": []string{"Bearer test-token"}}
@@ -303,7 +302,7 @@ func closeWebSocketConnection(conn *websocket.Conn, resp *http.Response) {
 
 func validateWebSocketConnection(t *testing.T, server *GatewayServer, resp *http.Response) {
 	t.Helper()
-	
+
 	if resp.StatusCode != http.StatusSwitchingProtocols {
 		t.Errorf("Expected status %d, got %d", http.StatusSwitchingProtocols, resp.StatusCode)
 	}
@@ -659,7 +658,7 @@ func TestClientConnection_Close(t *testing.T) {
 
 		conn, _ := upgrader.Upgrade(w, r, nil)
 
-		defer func() { _ = conn.Close() }() 
+		defer func() { _ = conn.Close() }()
 
 		time.Sleep(testIterations * time.Millisecond)
 	}))

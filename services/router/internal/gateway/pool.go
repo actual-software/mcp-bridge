@@ -167,14 +167,14 @@ func createEndpointWrappers(
 	logger *zap.Logger,
 ) []*GatewayEndpointWrapper {
 	var wrappers []*GatewayEndpointWrapper
-	
+
 	for _, endpointConfig := range endpoints {
 		wrapper := createSingleEndpointWrapper(endpointConfig, cbConfig, logger)
 		if wrapper != nil {
 			wrappers = append(wrappers, wrapper)
 		}
 	}
-	
+
 	return wrappers
 }
 
@@ -213,7 +213,7 @@ func createSingleEndpointWrapper(
 	}
 }
 
-func wrapWithCircuitBreakerIfEnabled( 
+func wrapWithCircuitBreakerIfEnabled(
 	client GatewayClient,
 	endpointConfig config.GatewayEndpoint,
 	cbConfig config.CircuitBreakerConfig,
@@ -230,11 +230,11 @@ func wrapWithCircuitBreakerIfEnabled(
 		TimeoutDuration:  cbConfig.TimeoutDuration,
 		MonitoringWindow: cbConfig.MonitoringWindow,
 	}
-	
+
 	logger.Info("Circuit breaker enabled for endpoint",
 		zap.String("url", endpointConfig.URL),
 		zap.Int("failure_threshold", cbConfig.FailureThreshold))
-	
+
 	return NewCircuitBreaker(client, circuitBreakerConfig, logger.With(zap.String("endpoint", endpointConfig.URL)))
 }
 

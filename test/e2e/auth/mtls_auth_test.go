@@ -7,20 +7,20 @@ import (
 
 func TestMTLSAuth(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test mTLS authentication
 	err := setupMTLSAuth(ctx)
 	if err != nil {
 		t.Fatalf("Failed to setup mTLS auth: %v", err)
 	}
-	
+
 	// Test authentication flow
 	if !authenticateClient(ctx) {
 		t.Error("Client authentication failed")
-		
+
 		return
 	}
-	
+
 	t.Log("mTLS authentication test passed")
 }
 

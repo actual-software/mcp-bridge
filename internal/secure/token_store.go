@@ -130,17 +130,17 @@ type tokenData struct {
 func (s *encryptedFileStore) encrypt(plaintext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(s.password)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	return gcm.Seal(nonce, nonce, plaintext, nil), nil
@@ -149,22 +149,22 @@ func (s *encryptedFileStore) encrypt(plaintext []byte) ([]byte, error) {
 func (s *encryptedFileStore) decrypt(ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(s.password)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(ciphertext) < nonceSize {
-		return nil, errors.New("ciphertext too short") 
+		return nil, errors.New("ciphertext too short")
 	}
 
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
-	return gcm.Open(nil, nonce, ciphertext, nil) 
+	return gcm.Open(nil, nonce, ciphertext, nil)
 }
 
 func (s *encryptedFileStore) load() (*tokenData, error) {
@@ -177,7 +177,7 @@ func (s *encryptedFileStore) load() (*tokenData, error) {
 			return &tokenData{Tokens: make(map[string]string)}, nil
 		}
 
-		return nil, err 
+		return nil, err
 	}
 
 	decrypted, err := s.decrypt(data)
@@ -215,7 +215,7 @@ func (s *encryptedFileStore) save(td *tokenData) error {
 	}
 
 	// Atomic rename
-	return os.Rename(tmpFile, s.filePath) 
+	return os.Rename(tmpFile, s.filePath)
 }
 
 func (s *encryptedFileStore) Store(key, token string) error {
@@ -237,7 +237,7 @@ func (s *encryptedFileStore) Retrieve(key string) (string, error) {
 
 	encoded, ok := tokenData.Tokens[key]
 	if !ok {
-		return "", fmt.Errorf("token not found: %s", key) 
+		return "", fmt.Errorf("token not found: %s", key)
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(encoded)

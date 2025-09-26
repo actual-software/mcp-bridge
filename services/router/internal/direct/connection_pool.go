@@ -412,7 +412,7 @@ func (p *ConnectionPool) performHealthChecks() {
 	var healthyCount, unhealthyCount int
 
 	for _, conn := range connectionsToCheck {
-		ctx, cancel := context.WithTimeout(p.ctx, defaultMaxConnections * time.Second)
+		ctx, cancel := context.WithTimeout(p.ctx, defaultMaxConnections*time.Second)
 
 		if err := conn.Client.Health(ctx); err != nil {
 			conn.SetHealthy(false)

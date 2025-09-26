@@ -617,7 +617,7 @@ func (m *DirectClientManager) getOrCreateClient(
 	protocol ClientType,
 ) (DirectClient, error) {
 	createFunc := m.createClientConnectionFunc(ctx, serverURL, protocol)
-	
+
 	pooledConn, err := m.connectionPool.GetConnection(ctx, serverURL, protocol, createFunc)
 	if err != nil {
 		return nil, err
@@ -638,7 +638,7 @@ func (m *DirectClientManager) createClientConnectionFunc(
 ) func() (DirectClient, error) {
 	return func() (DirectClient, error) {
 		// Create new client based on protocol.
-		client, err := m.createClient(serverURL, protocol) 
+		client, err := m.createClient(serverURL, protocol)
 		if err != nil {
 			m.updateMetrics(func(metrics *ManagerMetrics) {
 				metrics.FailedConnections++
@@ -778,7 +778,6 @@ func (m *DirectClientManager) createStdioClient(serverURL string) (DirectClient,
 	return NewStdioClientWithMemoryOptimizer(clientName, serverURL, stdioConfig, m.logger, m.memoryOptimizer)
 }
 
-
 func (m *DirectClientManager) createWebSocketClient(serverURL string) (DirectClient, error) {
 	// Create WebSocket-specific config from manager config.
 	wsConfig := WebSocketClientConfig{
@@ -826,7 +825,6 @@ func (m *DirectClientManager) createWebSocketClient(serverURL string) (DirectCli
 	return NewWebSocketClient(clientName, serverURL, wsConfig, m.logger)
 }
 
-
 func (m *DirectClientManager) createHTTPClient(serverURL string) (DirectClient, error) {
 	// Create HTTP-specific config from manager config.
 	httpConfig := HTTPClientConfig{
@@ -872,7 +870,6 @@ func (m *DirectClientManager) createHTTPClient(serverURL string) (DirectClient, 
 
 	return NewHTTPClientWithMemoryOptimizer(clientName, serverURL, httpConfig, m.logger, m.memoryOptimizer)
 }
-
 
 func (m *DirectClientManager) createSSEClient(serverURL string) (DirectClient, error) {
 	// Create SSE-specific config from manager config.

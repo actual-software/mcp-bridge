@@ -21,8 +21,7 @@ const (
 	testIterations = 100
 )
 
-
-func TestInit(t *testing.T) { 
+func TestInit(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	tests := createTracingInitTests()
@@ -115,7 +114,7 @@ func validateTracingInitResult(t *testing.T, tt struct {
 	require.NoError(t, err)
 }
 
-func TestTracerOperations(t *testing.T) { 
+func TestTracerOperations(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	tracer := setupTracerForOperationTests(t, logger)
@@ -157,7 +156,7 @@ func TestTracerOperations(t *testing.T) {
 
 func setupTracerForOperationTests(t *testing.T, logger *zap.Logger) *tracing.Tracer {
 	t.Helper()
-	
+
 	cfg := config.TracingConfig{
 		Enabled:        true,
 		ServiceName:    "test-router",
@@ -174,7 +173,7 @@ func setupTracerForOperationTests(t *testing.T, logger *zap.Logger) *tracing.Tra
 
 func testStartSpan(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	spanCtx, span := tracer.StartSpan(ctx, "test-operation")
 	assert.NotNil(t, span)
@@ -192,7 +191,7 @@ func testStartSpan(t *testing.T, tracer *tracing.Tracer) {
 
 func testStartSpanWithKind(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 	spanCtx, span := tracer.StartSpanWithKind(ctx, "test-client", trace.SpanKindClient)
 	assert.NotNil(t, span)
@@ -202,7 +201,7 @@ func testStartSpanWithKind(t *testing.T, tracer *tracing.Tracer) {
 
 func testSetSpanAttributes(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 
 	spanCtx, span := tracer.StartSpan(ctx, "test-attributes")
@@ -220,7 +219,7 @@ func testSetSpanAttributes(t *testing.T, tracer *tracing.Tracer) {
 
 func testAddSpanEvent(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 
 	spanCtx, span := tracer.StartSpan(ctx, "test-events")
@@ -232,7 +231,7 @@ func testAddSpanEvent(t *testing.T, tracer *tracing.Tracer) {
 
 func testRecordError(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 
 	spanCtx, span := tracer.StartSpan(ctx, "test-error")
@@ -244,7 +243,7 @@ func testRecordError(t *testing.T, tracer *tracing.Tracer) {
 
 func testHTTPHeaderPropagation(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 
 	// Create a span.
@@ -271,7 +270,7 @@ func testHTTPHeaderPropagation(t *testing.T, tracer *tracing.Tracer) {
 
 func testMapPropagation(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	ctx := context.Background()
 
 	// Create a span.
@@ -281,7 +280,7 @@ func testMapPropagation(t *testing.T, tracer *tracing.Tracer) {
 	// Inject into map (for WebSocket headers).
 	headers := make(map[string]string)
 	tracer.InjectTraceContextToMap(spanCtx, headers)
-	
+
 	// Check for the header (case-insensitive).
 	found := false
 
@@ -309,11 +308,11 @@ func testMapPropagation(t *testing.T, tracer *tracing.Tracer) {
 
 func testIsEnabled(t *testing.T, tracer *tracing.Tracer) {
 	t.Helper()
-	
+
 	assert.True(t, tracer.IsEnabled())
 }
 
-func TestTracerDisabled(t *testing.T) { 
+func TestTracerDisabled(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -345,7 +344,7 @@ func TestTracerDisabled(t *testing.T) {
 	assert.False(t, tracer.IsEnabled())
 }
 
-func TestSpanAttributesFromError(t *testing.T) { 
+func TestSpanAttributesFromError(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -375,7 +374,7 @@ func TestSpanAttributesFromError(t *testing.T) {
 	}
 }
 
-func TestSpanAttributesFromMap(t *testing.T) { 
+func TestSpanAttributesFromMap(t *testing.T) {
 	t.Parallel()
 
 	m := map[string]interface{}{

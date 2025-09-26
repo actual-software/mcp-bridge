@@ -502,11 +502,11 @@ func (p *ConnectionPool) updateStats(operation string) {
 func (p *ConnectionPool) updateStatsUnsafe(operation string) {
 	p.stats.LastUsed = time.Now()
 	p.stats.TotalConnections = len(p.connections)
-	
+
 	// Copy connections slice to avoid holding pool lock while accessing connection locks
 	connections := make([]*PooledConnection, len(p.connections))
 	copy(connections, p.connections)
-	
+
 	// Update counters while still holding the lock
 	switch operation {
 	case "request_served":
@@ -514,7 +514,7 @@ func (p *ConnectionPool) updateStatsUnsafe(operation string) {
 	case "error":
 		p.stats.ErrorsCount++
 	}
-	
+
 	// Temporarily release pool lock to avoid lock ordering issues
 	p.mu.Unlock()
 

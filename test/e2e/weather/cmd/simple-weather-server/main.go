@@ -1,4 +1,3 @@
-
 // Package main provides a standalone entry point for the Weather MCP server
 package main
 
@@ -12,10 +11,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"go.uber.org/zap"
 	weather "weather-test"
-)
 
+	"go.uber.org/zap"
+)
 
 const defaultServerPort = 8080
 

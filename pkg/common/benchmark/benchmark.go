@@ -89,7 +89,7 @@ type Runner struct {
 	latencies []int64
 
 	// Control
-	ctx       context.Context 
+	ctx       context.Context
 	cancel    context.CancelFunc
 	waitGroup sync.WaitGroup
 }

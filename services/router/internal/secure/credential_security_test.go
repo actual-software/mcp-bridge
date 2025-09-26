@@ -3,19 +3,20 @@ package secure
 import (
 	"context"
 	"fmt"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"runtime"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestCredentialStore_SecurityEdgeCases tests various security edge cases.
-func TestCredentialStore_SecurityEdgeCases(t *testing.T) { 
+func TestCredentialStore_SecurityEdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupFunc   func(t *testing.T) TokenStore
@@ -493,60 +494,60 @@ func testResourceExhaustionHandling(t *testing.T, store TokenStore) {
 
 func runManySmallOperationsTest(t *testing.T, store TokenStore) {
 	t.Helper()
-	
+
 	const numKeys = 1000
 
 	keys := storeMultipleSmallTokens(t, store, numKeys)
-	
+
 	retrievedCount := retrieveAllStoredTokens(t, store, keys)
 	t.Logf("Successfully stored and retrieved %d/%d keys", retrievedCount, numKeys)
-	
+
 	cleanupStoredKeys(t, store, keys)
 }
 
 func storeMultipleSmallTokens(t *testing.T, store TokenStore, numKeys int) []string {
 	t.Helper()
-	
+
 	keys := make([]string, numKeys)
-	
+
 	// Store many small tokens
 	for i := 0; i < numKeys; i++ {
 		key := fmt.Sprintf("resource-test-%d", i)
 		token := fmt.Sprintf("token-%d", i)
 		keys[i] = key
-		
+
 		err := store.Store(key, token)
 		if err != nil {
 			t.Logf("Store failed at key %d (resource limits?): %v", i, err)
 			break
 		}
 	}
-	
+
 	return keys
 }
 
 func retrieveAllStoredTokens(t *testing.T, store TokenStore, keys []string) int {
 	t.Helper()
-	
+
 	retrievedCount := 0
-	
+
 	for _, key := range keys {
 		if key == "" {
 			continue
 		}
-		
+
 		_, err := store.Retrieve(key)
 		if err == nil {
 			retrievedCount++
 		}
 	}
-	
+
 	return retrievedCount
 }
 
 func cleanupStoredKeys(t *testing.T, store TokenStore, keys []string) {
 	t.Helper()
-	
+
 	for _, key := range keys {
 		if key != "" {
 			if err := store.Delete(key); err != nil {
@@ -558,57 +559,57 @@ func cleanupStoredKeys(t *testing.T, store TokenStore, keys []string) {
 
 func runMemoryPressureTest(t *testing.T, store TokenStore) {
 	t.Helper()
-	
+
 	// Force garbage collection before test
 	runtime.GC()
-	
+
 	var memStatsBefore runtime.MemStats
 	runtime.ReadMemStats(&memStatsBefore)
-	
+
 	storedKeys := storeLargeTokensForMemoryPressure(t, store)
-	
+
 	var memStatsAfter runtime.MemStats
 	runtime.ReadMemStats(&memStatsAfter)
-	
+
 	logMemoryPressureResults(t, storedKeys, memStatsBefore, memStatsAfter)
-	
+
 	cleanupStoredKeys(t, store, storedKeys)
 	runtime.GC()
 }
 
 func storeLargeTokensForMemoryPressure(t *testing.T, store TokenStore) []string {
 	t.Helper()
-	
+
 	// Create large tokens to pressure memory
 	const largeTokenSize = 100000 // 100KB
 
 	largeToken := strings.Repeat("x", largeTokenSize)
 	storedKeys := make([]string, 0)
-	
+
 	for i := 0; i < constants.TestConcurrentRoutines; i++ { // Try to store 100 * 100KB = 10MB
 		key := fmt.Sprintf("memory-pressure-%d", i)
-		
+
 		err := store.Store(key, largeToken)
 		if err != nil {
 			t.Logf("Store failed at iteration %d (memory pressure?): %v", i, err)
 			break
 		}
-		
+
 		storedKeys = append(storedKeys, key)
 	}
-	
+
 	return storedKeys
 }
 
 func logMemoryPressureResults(t *testing.T, storedKeys []string, memStatsBefore, memStatsAfter runtime.MemStats) {
 	t.Helper()
-	
+
 	t.Logf("Stored %d large tokens", len(storedKeys))
 	t.Logf("Memory usage before: %d KB", memStatsBefore.Alloc/1024)
 	t.Logf("Memory usage after: %d KB", memStatsAfter.Alloc/1024)
 }
 
-func TestCredentialStore_ErrorBoundaryConditions(t *testing.T) { 
+func TestCredentialStore_ErrorBoundaryConditions(t *testing.T) {
 	store := setupCredentialStore(t)
 	if store == nil {
 		t.Skip("Store setup failed")

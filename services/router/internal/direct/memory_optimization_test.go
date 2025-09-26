@@ -1,7 +1,6 @@
 package direct
 
 import (
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"bytes"
 	"runtime"
 	"runtime/debug"
@@ -9,13 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
 
-func TestMemoryOptimizer_Basic(t *testing.T) { 
+func TestMemoryOptimizer_Basic(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -31,7 +32,7 @@ func TestMemoryOptimizer_Basic(t *testing.T) {
 	assert.True(t, optimizer.config.MemoryMonitoring.Enabled)
 }
 
-func TestMemoryOptimizer_StartStop(t *testing.T) { 
+func TestMemoryOptimizer_StartStop(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -56,7 +57,7 @@ func TestMemoryOptimizer_StartStop(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestMemoryOptimizer_BufferPool(t *testing.T) { 
+func TestMemoryOptimizer_BufferPool(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -73,7 +74,7 @@ func TestMemoryOptimizer_BufferPool(t *testing.T) {
 	assert.GreaterOrEqual(t, buf.Cap(), config.BufferPoolConfig.InitialSize)
 
 	// Write some data.
- _, _ = buf.WriteString("test data")
+	_, _ = buf.WriteString("test data")
 	assert.Equal(t, 9, buf.Len())
 
 	// Return buffer to pool.
@@ -92,7 +93,7 @@ func TestMemoryOptimizer_BufferPool(t *testing.T) {
 	assert.LessOrEqual(t, buf3.Cap(), config.BufferPoolConfig.MaxSize)
 }
 
-func TestMemoryOptimizer_BufferPoolDisabled(t *testing.T) { 
+func TestMemoryOptimizer_BufferPoolDisabled(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -109,7 +110,7 @@ func TestMemoryOptimizer_BufferPoolDisabled(t *testing.T) {
 	optimizer.PutBuffer(buf)
 }
 
-func TestMemoryOptimizer_JSONPool(t *testing.T) { 
+func TestMemoryOptimizer_JSONPool(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -148,7 +149,7 @@ func TestMemoryOptimizer_JSONPool(t *testing.T) {
 	optimizer.PutJSONDecoder(decoder)
 }
 
-func TestMemoryOptimizer_JSONPoolDisabled(t *testing.T) { 
+func TestMemoryOptimizer_JSONPoolDisabled(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -170,7 +171,7 @@ func TestMemoryOptimizer_JSONPoolDisabled(t *testing.T) {
 	optimizer.PutJSONDecoder(decoder)
 }
 
-func TestMemoryOptimizer_GCConfig(t *testing.T) { 
+func TestMemoryOptimizer_GCConfig(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -199,7 +200,7 @@ func TestMemoryOptimizer_GCConfig(t *testing.T) {
 	// The test mainly ensures the Start() method doesn't crash.
 }
 
-func TestMemoryOptimizer_MemoryStats(t *testing.T) { 
+func TestMemoryOptimizer_MemoryStats(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -235,7 +236,7 @@ func TestMemoryOptimizer_MemoryStats(t *testing.T) {
 	assert.Equal(t, config.EnableObjectPooling, report["object_pooling"])
 }
 
-func TestMemoryOptimizer_MemoryReport(t *testing.T) { 
+func TestMemoryOptimizer_MemoryReport(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -268,7 +269,7 @@ func TestMemoryOptimizer_MemoryReport(t *testing.T) {
 	assert.LessOrEqual(t, usagePercent, 100.0)
 }
 
-func TestMemoryOptimizer_ForceGC(t *testing.T) { 
+func TestMemoryOptimizer_ForceGC(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -296,7 +297,7 @@ func TestMemoryOptimizer_ForceGC(t *testing.T) {
 	assert.GreaterOrEqual(t, finalStats.NumGC, initialGCCount)
 }
 
-func TestMemoryOptimizer_OptimizeMemoryUsage(t *testing.T) { 
+func TestMemoryOptimizer_OptimizeMemoryUsage(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -316,7 +317,7 @@ func TestMemoryOptimizer_OptimizeMemoryUsage(t *testing.T) {
 	assert.GreaterOrEqual(t, finalStats.NumGC, initialStats.NumGC)
 }
 
-func TestMemoryOptimizer_ConcurrentAccess(t *testing.T) { 
+func TestMemoryOptimizer_ConcurrentAccess(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 	config := DefaultMemoryOptimizationConfig()
@@ -360,7 +361,7 @@ func runConcurrentBufferOperations(
 	numGoroutines, operationsPerGoroutine int,
 ) {
 	t.Helper()
-	
+
 	// Test concurrent buffer operations
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
@@ -384,7 +385,7 @@ func runConcurrentJSONOperations(
 	numGoroutines, operationsPerGoroutine int,
 ) {
 	t.Helper()
-	
+
 	// Test concurrent JSON operations
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
@@ -419,7 +420,7 @@ func runConcurrentStatsAccess(
 	numGoroutines, operationsPerGoroutine int,
 ) {
 	t.Helper()
-	
+
 	// Test concurrent stats access
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
@@ -435,7 +436,7 @@ func runConcurrentStatsAccess(
 	}
 }
 
-func TestMemoryOptimizer_ConfigDefaults(t *testing.T) { 
+func TestMemoryOptimizer_ConfigDefaults(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
@@ -453,7 +454,7 @@ func TestMemoryOptimizer_ConfigDefaults(t *testing.T) {
 	assert.InEpsilon(t, 0.8, optimizer.config.MemoryMonitoring.AlertThreshold, 0.001)
 }
 
-func TestMemoryOptimizer_DefaultConfig(t *testing.T) { 
+func TestMemoryOptimizer_DefaultConfig(t *testing.T) {
 	defaultConfig := DefaultMemoryOptimizationConfig()
 
 	assert.True(t, defaultConfig.EnableObjectPooling)
@@ -487,7 +488,7 @@ func BenchmarkMemoryOptimizer_BufferOperations(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			buf := optimizer.GetBuffer()
-   _, _ = buf.WriteString("test data for benchmarking")
+			_, _ = buf.WriteString("test data for benchmarking")
 			optimizer.PutBuffer(buf)
 		}
 	})
@@ -548,7 +549,7 @@ func BenchmarkMemoryOptimizer_GetMemoryReport(b *testing.B) {
 }
 
 // Test memory usage patterns.
-func TestMemoryOptimizer_MemoryUsagePattern(t *testing.T) { 
+func TestMemoryOptimizer_MemoryUsagePattern(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping memory usage pattern test in short mode")
 	}
@@ -564,7 +565,7 @@ func TestMemoryOptimizer_MemoryUsagePattern(t *testing.T) {
 	initialMem := recordInitialMemoryStats()
 
 	performMemoryIntensiveOperations(t, optimizer)
-	
+
 	// Let monitoring and GC run
 	time.Sleep(5 * constants.TestSleepShort)
 
@@ -582,7 +583,7 @@ func setupMemoryPatternOptimizer(t *testing.T) *MemoryOptimizer {
 	optimizer := NewMemoryOptimizer(config, logger)
 	err := optimizer.Start()
 	require.NoError(t, err)
-	
+
 	return optimizer
 }
 
@@ -596,7 +597,7 @@ func performMemoryIntensiveOperations(t *testing.T, optimizer *MemoryOptimizer) 
 	t.Helper()
 
 	const numOperations = 1000
-	
+
 	for i := 0; i < numOperations; i++ {
 		performBufferOperations(optimizer)
 		performJSONOperations(optimizer, i)
@@ -648,7 +649,7 @@ func verifyMemoryUsagePattern(t *testing.T, memoryIncrease uint64, optimizer *Me
 	t.Helper()
 
 	const numOperations = 1000
-	
+
 	t.Logf("Memory increase after %d operations: %d bytes", numOperations, memoryIncrease)
 
 	// Memory usage should be reasonable (less than 100MB increase)
@@ -661,7 +662,7 @@ func verifyMemoryUsagePattern(t *testing.T, memoryIncrease uint64, optimizer *Me
 }
 
 // Test object pooling effectiveness.
-func TestMemoryOptimizer_PoolingEffectiveness(t *testing.T) { 
+func TestMemoryOptimizer_PoolingEffectiveness(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping pooling effectiveness test in short mode")
 	}
@@ -674,7 +675,7 @@ func TestMemoryOptimizer_PoolingEffectiveness(t *testing.T) {
 
 	withPoolingIncrease := measureMemoryWithPooling(optimizerWithPooling, numOperations)
 	withoutPoolingIncrease := measureMemoryWithoutPooling(optimizerWithoutPooling, numOperations)
-	
+
 	analyzePoolingEffectiveness(t, withPoolingIncrease, withoutPoolingIncrease)
 }
 
@@ -694,7 +695,7 @@ func createOptimizerWithoutPooling(logger *zap.Logger) *MemoryOptimizer {
 
 func measureMemoryWithPooling(optimizer *MemoryOptimizer, numOperations int) uint64 {
 	runtime.GC()
-	
+
 	var memBefore runtime.MemStats
 	runtime.ReadMemStats(&memBefore)
 
@@ -705,16 +706,16 @@ func measureMemoryWithPooling(optimizer *MemoryOptimizer, numOperations int) uin
 	}
 
 	runtime.GC()
-	
+
 	var memAfter runtime.MemStats
 	runtime.ReadMemStats(&memAfter)
-	
+
 	return memAfter.TotalAlloc - memBefore.TotalAlloc
 }
 
 func measureMemoryWithoutPooling(optimizer *MemoryOptimizer, numOperations int) uint64 {
 	runtime.GC()
-	
+
 	var memBefore runtime.MemStats
 	runtime.ReadMemStats(&memBefore)
 
@@ -725,16 +726,16 @@ func measureMemoryWithoutPooling(optimizer *MemoryOptimizer, numOperations int) 
 	}
 
 	runtime.GC()
-	
+
 	var memAfter runtime.MemStats
 	runtime.ReadMemStats(&memAfter)
-	
+
 	return memAfter.TotalAlloc - memBefore.TotalAlloc
 }
 
 func analyzePoolingEffectiveness(t *testing.T, withPoolingIncrease, withoutPoolingIncrease uint64) {
 	t.Helper()
-	
+
 	t.Logf("Memory allocation with pooling: %d bytes", withPoolingIncrease)
 	t.Logf("Memory allocation without pooling: %d bytes", withoutPoolingIncrease)
 

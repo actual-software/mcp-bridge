@@ -227,6 +227,7 @@ func (rc *RouterController) generateFreshJWT() string {
 }
 
 // Start launches the router binary and sets up communication.
+//
 //nolint:contextcheck // Test harness function
 func (rc *RouterController) Start() error {
 	rc.mu.Lock()

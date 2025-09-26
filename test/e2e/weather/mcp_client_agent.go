@@ -1,4 +1,3 @@
-
 // Package weather provides an intelligent MCP client agent for E2E testing
 package weather
 
@@ -28,28 +27,28 @@ const (
 
 // Agent configuration constants.
 const (
-	requestChannelSize      = 100
-	responseChannelSize     = 100
-	errorChannelSize        = 10
-	numWorkerGoroutines     = 3
-	initRequestTimeout      = 10 // seconds
-	toolsRequestTimeout     = 5  // seconds
-	weatherRequestTimeout   = 10 // seconds
-	forecastDays            = 7
-	forecastRequestTimeout  = 10 // seconds
-	concurrentRequestTimeout = 5 // seconds
-	parisLatitude           = 48.8566
-	parisLongitude          = 2.3522
-	taskCompletionDelay     = 100 // milliseconds
-	baseLatitude            = 40.0
-	baseLongitude           = -74.0
-	latLonIncrement         = 0.1
-	longRequestTimeout      = 30 // seconds
-	shortSleepDelay         = 10 // milliseconds
-	successRateMultiplier   = 100
-	bufferSizeKB            = 1024
-	bufferSizeMB            = 1024 * bufferSizeKB // 1MB
-	defaultTimeout          = 5  // seconds
+	requestChannelSize       = 100
+	responseChannelSize      = 100
+	errorChannelSize         = 10
+	numWorkerGoroutines      = 3
+	initRequestTimeout       = 10 // seconds
+	toolsRequestTimeout      = 5  // seconds
+	weatherRequestTimeout    = 10 // seconds
+	forecastDays             = 7
+	forecastRequestTimeout   = 10 // seconds
+	concurrentRequestTimeout = 5  // seconds
+	parisLatitude            = 48.8566
+	parisLongitude           = 2.3522
+	taskCompletionDelay      = 100 // milliseconds
+	baseLatitude             = 40.0
+	baseLongitude            = -74.0
+	latLonIncrement          = 0.1
+	longRequestTimeout       = 30 // seconds
+	shortSleepDelay          = 10 // milliseconds
+	successRateMultiplier    = 100
+	bufferSizeKB             = 1024
+	bufferSizeMB             = 1024 * bufferSizeKB // 1MB
+	defaultTimeout           = 5                   // seconds
 )
 
 // MCPClientAgent represents an intelligent coding agent that communicates via MCP Router
@@ -159,12 +158,12 @@ func (agent *MCPClientAgent) Connect() error {
 	// Create command to run Router with validation
 	routerPath := filepath.Clean(agent.routerPath)
 	configPath := filepath.Clean(agent.routerConfig)
-	
+
 	// Validate paths to prevent command injection
 	if strings.Contains(routerPath, " ") || strings.Contains(configPath, " ") {
 		return fmt.Errorf("invalid path contains spaces: router=%s, config=%s", routerPath, configPath)
 	}
-	
+
 	// #nosec G204 -- This is a test environment with validated router and config paths
 	agent.cmd = exec.CommandContext(agent.ctx, routerPath, "--config", configPath)
 

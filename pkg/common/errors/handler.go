@@ -220,7 +220,7 @@ func (h *ErrorHandler) logError(_ context.Context, mcpErr *MCPError, requestID s
 //
 
 func (h *ErrorHandler) mapToJSONRPCCode(code ErrorCode) int {
-	switch code { 
+	switch code {
 	case CMN_PROTO_PARSE_ERR:
 		return -32700 // Parse error
 	case CMN_PROTO_METHOD_UNK:

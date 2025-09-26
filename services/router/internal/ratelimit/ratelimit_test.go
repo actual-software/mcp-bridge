@@ -1,7 +1,6 @@
 package ratelimit
 
 import (
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 	"context"
 	"errors"
 	"fmt"
@@ -10,10 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+
 	"go.uber.org/zap/zaptest"
 )
 
-func TestTokenBucketLimiter_Allow(t *testing.T) { 
+func TestTokenBucketLimiter_Allow(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	tests := []struct {
@@ -74,7 +75,7 @@ func TestTokenBucketLimiter_Allow(t *testing.T) {
 	}
 }
 
-func TestTokenBucketLimiter_Wait(t *testing.T) { 
+func TestTokenBucketLimiter_Wait(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Rate of 10 per second, burst of 2.
@@ -106,7 +107,7 @@ func TestTokenBucketLimiter_Wait(t *testing.T) {
 	}
 }
 
-func TestTokenBucketLimiter_WaitContextCancellation(t *testing.T) { 
+func TestTokenBucketLimiter_WaitContextCancellation(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Very slow rate to ensure waiting.
@@ -140,7 +141,7 @@ func TestTokenBucketLimiter_WaitContextCancellation(t *testing.T) {
 	}
 }
 
-func TestTokenBucketLimiter_MaxWait(t *testing.T) { 
+func TestTokenBucketLimiter_MaxWait(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Very slow rate with short max wait.
@@ -160,7 +161,7 @@ func TestTokenBucketLimiter_MaxWait(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_Allow(t *testing.T) { 
+func TestSlidingWindowLimiter_Allow(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	tests := []struct {
@@ -214,7 +215,7 @@ func TestSlidingWindowLimiter_Allow(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_Wait(t *testing.T) { 
+func TestSlidingWindowLimiter_Wait(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Window of 200ms, max 2 events.
@@ -243,7 +244,7 @@ func TestSlidingWindowLimiter_Wait(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_Cleanup(t *testing.T) { 
+func TestSlidingWindowLimiter_Cleanup(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Short window for quick cleanup.
@@ -281,7 +282,7 @@ func TestSlidingWindowLimiter_Cleanup(t *testing.T) {
 	}
 }
 
-func TestNoOpLimiter(t *testing.T) { 
+func TestNoOpLimiter(t *testing.T) {
 	limiter := &NoOpLimiter{}
 	ctx := context.Background()
 
@@ -297,7 +298,7 @@ func TestNoOpLimiter(t *testing.T) {
 	}
 }
 
-func TestNewRateLimiter(t *testing.T) { 
+func TestNewRateLimiter(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	tests := []struct {
@@ -338,7 +339,7 @@ func TestNewRateLimiter(t *testing.T) {
 	}
 }
 
-func TestTokenBucketLimiter_Concurrent(t *testing.T) { 
+func TestTokenBucketLimiter_Concurrent(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// 100 requests per second, burst of 10
@@ -370,7 +371,7 @@ func TestTokenBucketLimiter_Concurrent(t *testing.T) {
 		}()
 	}
 
- wg.Wait()
+	wg.Wait()
 
 	// Should allow burst + some refilled tokens.
 	// With 100/sec rate and ~100ms total time, should get burst + ~10 more.
@@ -382,7 +383,7 @@ func TestTokenBucketLimiter_Concurrent(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_Concurrent(t *testing.T) { 
+func TestSlidingWindowLimiter_Concurrent(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// 1 second window, max 50 events
@@ -414,7 +415,7 @@ func TestSlidingWindowLimiter_Concurrent(t *testing.T) {
 		}(i)
 	}
 
- wg.Wait()
+	wg.Wait()
 
 	elapsed := time.Since(start)
 
@@ -464,7 +465,7 @@ func BenchmarkNoOpLimiter_Allow(b *testing.B) {
 	}
 }
 
-func TestTokenBucketLimiter_EdgeCases(t *testing.T) { 
+func TestTokenBucketLimiter_EdgeCases(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	tests := createTokenBucketEdgeCaseTests()
 
@@ -559,7 +560,7 @@ func validateTokenBucketResult(t *testing.T, tt struct {
 	}
 }
 
-func TestTokenBucketLimiter_BurstRecovery(t *testing.T) { 
+func TestTokenBucketLimiter_BurstRecovery(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Test burst capacity recovery over time.
@@ -594,7 +595,7 @@ func TestTokenBucketLimiter_BurstRecovery(t *testing.T) {
 	}
 }
 
-func TestTokenBucketLimiter_PreciseRateControl(t *testing.T) { 
+func TestTokenBucketLimiter_PreciseRateControl(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Test precise rate control over time.
@@ -630,7 +631,7 @@ func TestTokenBucketLimiter_PreciseRateControl(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_EdgeCases(t *testing.T) { 
+func TestSlidingWindowLimiter_EdgeCases(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	tests := []struct {
@@ -702,7 +703,7 @@ func TestSlidingWindowLimiter_EdgeCases(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_MemoryCleanup(t *testing.T) { 
+func TestSlidingWindowLimiter_MemoryCleanup(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Test that old events are cleaned up to prevent memory leaks.
@@ -739,7 +740,7 @@ func TestSlidingWindowLimiter_MemoryCleanup(t *testing.T) {
 	}
 }
 
-func TestRateLimiter_UnderHighLoad(t *testing.T) { 
+func TestRateLimiter_UnderHighLoad(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	tests := []struct {
@@ -790,7 +791,7 @@ func TestRateLimiter_UnderHighLoad(t *testing.T) {
 				}()
 			}
 
-   wg.Wait()
+			wg.Wait()
 
 			elapsed := time.Since(start)
 
@@ -811,7 +812,7 @@ func TestRateLimiter_UnderHighLoad(t *testing.T) {
 	}
 }
 
-func TestRateLimiter_ContextCancellation(t *testing.T) { 
+func TestRateLimiter_ContextCancellation(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	tests := []struct {
@@ -831,7 +832,7 @@ func TestRateLimiter_ContextCancellation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use up capacity.
-			_ = 			tt.limiter.Allow(context.Background())
+			_ = tt.limiter.Allow(context.Background())
 
 			// Create cancellable context.
 			ctx, cancel := context.WithCancel(context.Background())
@@ -860,7 +861,7 @@ func TestRateLimiter_ContextCancellation(t *testing.T) {
 	}
 }
 
-func TestTokenBucketLimiter_ClockSkew(t *testing.T) { 
+func TestTokenBucketLimiter_ClockSkew(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Test behavior with simulated clock skew.
@@ -884,7 +885,7 @@ func TestTokenBucketLimiter_ClockSkew(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_WindowBoundaryBehavior(t *testing.T) { 
+func TestSlidingWindowLimiter_WindowBoundaryBehavior(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	// Test precise behavior at window boundaries.
@@ -976,7 +977,7 @@ func BenchmarkRateLimiter_Comparison(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				_ = 				bm.limiter.Allow(ctx)
+				_ = bm.limiter.Allow(ctx)
 			}
 		})
 	}

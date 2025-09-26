@@ -88,11 +88,11 @@ func testHighThroughputTesting(t *testing.T, client *MCPClient) {
 
 	numRequests := 1000
 	concurrency := 50
-	
+
 	start := time.Now()
 	results := executeConcurrentRequests(t, client, numRequests, concurrency)
 	duration := time.Since(start)
-	
+
 	successCount, errorCount := countResults(results)
 	validateThroughputResults(t, successCount, errorCount, numRequests, duration)
 }
@@ -131,7 +131,7 @@ func executeConcurrentRequests(t *testing.T, client *MCPClient, numRequests, con
 
 	wg.Wait()
 	close(results)
-	
+
 	return results
 }
 
@@ -143,7 +143,7 @@ func countResults(results chan error) (successCount, errorCount int) {
 			successCount++
 		}
 	}
-	
+
 	return successCount, errorCount
 }
 
@@ -198,7 +198,7 @@ func executePoolingRequests(client *MCPClient) chan map[string]interface{} {
 
 	wg.Wait()
 	close(connectionMetrics)
-	
+
 	return connectionMetrics
 }
 

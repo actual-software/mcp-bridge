@@ -1,4 +1,3 @@
-
 package testutil
 
 import (
@@ -98,7 +97,7 @@ func testValidServerCertificate(t *testing.T) {
 	assert.False(t, serverCert.IsCA)
 	assert.Contains(t, serverCert.Subject.Organization, "Test Server")
 	assert.Contains(t, serverCert.DNSNames, "localhost")
-	
+
 	localhostIP := net.IPv4(LocalhostIP, 0, 0, 1)
 	hasLocalhostIP := false
 
@@ -234,7 +233,7 @@ func TestTLSIntegration(t *testing.T) {
 
 func testTLSConnectionWithTrustedCertificate(t *testing.T) {
 	t.Helper()
-	
+
 	tempDir := t.TempDir()
 	certFile, keyFile, caFile := CreateTestCertificates(t, tempDir)
 
@@ -255,7 +254,7 @@ func testTLSConnectionWithTrustedCertificate(t *testing.T) {
 
 func setupTrustedTLSConfig(t *testing.T, certFile, keyFile, caFile string) (tls.Certificate, *tls.Config) {
 	t.Helper()
-	
+
 	// Load server certificate
 	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	require.NoError(t, err)
@@ -278,7 +277,7 @@ func setupTrustedTLSConfig(t *testing.T, certFile, keyFile, caFile string) (tls.
 
 func performTrustedTLSHandshake(t *testing.T, serverConn, clientConn net.Conn, serverConfig, clientConfig *tls.Config) {
 	t.Helper()
-	
+
 	serverDone := make(chan error, 1)
 	clientDone := make(chan error, 1)
 
@@ -297,7 +296,7 @@ func runTLSServer(serverConn net.Conn, serverConfig *tls.Config, done chan<- err
 
 	err := tlsServerConn.HandshakeContext(context.Background())
 	done <- err
-	
+
 	if err == nil {
 		_ = tlsServerConn.Close()
 	}
@@ -308,7 +307,7 @@ func runTLSClient(clientConn net.Conn, clientConfig *tls.Config, done chan<- err
 
 	err := tlsClientConn.HandshakeContext(context.Background())
 	done <- err
-	
+
 	if err == nil {
 		_ = tlsClientConn.Close()
 	}
@@ -316,7 +315,7 @@ func runTLSClient(clientConn net.Conn, clientConfig *tls.Config, done chan<- err
 
 func waitForTLSHandshakeSuccess(t *testing.T, serverDone, clientDone <-chan error) {
 	t.Helper()
-	
+
 	select {
 	case err := <-serverDone:
 		assert.NoError(t, err)
@@ -334,7 +333,7 @@ func waitForTLSHandshakeSuccess(t *testing.T, serverDone, clientDone <-chan erro
 
 func testTLSRejectionWithUntrustedCertificate(t *testing.T) {
 	t.Helper()
-	
+
 	tempDir := t.TempDir()
 	certFile, keyFile, _ := CreateTestCertificates(t, tempDir)
 
@@ -355,7 +354,7 @@ func testTLSRejectionWithUntrustedCertificate(t *testing.T) {
 
 func setupUntrustedTLSConfig(t *testing.T, certFile, keyFile string) (tls.Certificate, *tls.Config) {
 	t.Helper()
-	
+
 	// Load server certificate
 	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	require.NoError(t, err)
@@ -373,7 +372,7 @@ func performUntrustedTLSHandshake(
 	t *testing.T, serverConn, clientConn net.Conn, serverConfig, clientConfig *tls.Config,
 ) {
 	t.Helper()
-	
+
 	clientDone := make(chan error, 1)
 
 	// Start TLS server
@@ -391,7 +390,7 @@ func performUntrustedTLSHandshake(
 
 func waitForTLSHandshakeFailure(t *testing.T, clientDone <-chan error) {
 	t.Helper()
-	
+
 	select {
 	case err := <-clientDone:
 		assert.Error(t, err)
@@ -418,7 +417,7 @@ func TestCertificateProperties(t *testing.T) {
 
 func testCACertificateIsSelfSigned(t *testing.T) {
 	t.Helper()
-	
+
 	tempDir := t.TempDir()
 	_, _, caFile := CreateTestCertificates(t, tempDir)
 
@@ -431,7 +430,7 @@ func testCACertificateIsSelfSigned(t *testing.T) {
 
 func testCertificatesHaveDifferentSerialNumbers(t *testing.T) {
 	t.Helper()
-	
+
 	tempDir := t.TempDir()
 	certFile, _, caFile := CreateTestCertificates(t, tempDir)
 
@@ -446,7 +445,7 @@ func testCertificatesHaveDifferentSerialNumbers(t *testing.T) {
 
 func testCertificatesUseRSA2048(t *testing.T) {
 	t.Helper()
-	
+
 	tempDir := t.TempDir()
 	certFile, _, caFile := CreateTestCertificates(t, tempDir)
 
@@ -462,7 +461,7 @@ func testCertificatesUseRSA2048(t *testing.T) {
 
 func loadCertificateFromFile(t *testing.T, certFile string) *x509.Certificate {
 	t.Helper()
-	
+
 	certPEM, err := os.ReadFile(certFile)
 	require.NoError(t, err)
 
@@ -477,7 +476,7 @@ func loadCertificateFromFile(t *testing.T, certFile string) *x509.Certificate {
 
 func validateRSAKeySize(t *testing.T, cert *x509.Certificate, certType string) {
 	t.Helper()
-	
+
 	publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
 	require.True(t, ok, "%s certificate should use RSA public key", certType)
 	assert.Equal(t, DefaultRSAKeySize, publicKey.Size()*8, "%s certificate should use RSA-2048", certType)
@@ -519,14 +518,14 @@ func TestUniqueGeneration(t *testing.T) {
 		certFile2, _, caFile2 := CreateTestCertificates(t, tempDir2)
 
 		// Read certificates
-		cert1PEM, err := os.ReadFile(certFile1) 
+		cert1PEM, err := os.ReadFile(certFile1)
 		require.NoError(t, err)
-		cert2PEM, err := os.ReadFile(certFile2) 
+		cert2PEM, err := os.ReadFile(certFile2)
 		require.NoError(t, err)
 
-		ca1PEM, err := os.ReadFile(caFile1) 
+		ca1PEM, err := os.ReadFile(caFile1)
 		require.NoError(t, err)
-		ca2PEM, err := os.ReadFile(caFile2) 
+		ca2PEM, err := os.ReadFile(caFile2)
 		require.NoError(t, err)
 
 		// Certificates should be different

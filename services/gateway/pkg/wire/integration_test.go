@@ -1,4 +1,3 @@
-
 package wire
 
 import (
@@ -38,7 +37,7 @@ func createTestRequest() *mcp.Request {
 
 func runServerSide(t *testing.T, server *Transport, expectedReq *mcp.Request, done chan bool) {
 	t.Helper()
-	
+
 	go func() {
 		// Receive request on server
 		msgType, msg, err := server.ReceiveMessage()
@@ -74,7 +73,7 @@ func runServerSide(t *testing.T, server *Transport, expectedReq *mcp.Request, do
 
 func runClientSide(t *testing.T, client *Transport, req *mcp.Request) {
 	t.Helper()
-	
+
 	// Send request
 	err := client.SendRequest(req)
 	require.NoError(t, err)
@@ -93,7 +92,7 @@ func runClientSide(t *testing.T, client *Transport, req *mcp.Request) {
 
 func waitForCompletion(t *testing.T, done chan bool) {
 	t.Helper()
-	
+
 	// Wait for server to complete
 	select {
 	case <-done:

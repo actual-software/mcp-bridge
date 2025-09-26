@@ -1,7 +1,5 @@
 package websocket
 
-
-
 import (
 	"context"
 	"errors"
@@ -95,9 +93,9 @@ type ConnectionPool struct {
 
 // Backend implements the WebSocket backend for MCP servers.
 type Backend struct {
-	name           string
-	config         Config
-	logger         *zap.Logger
+	name            string
+	config          Config
+	logger          *zap.Logger
 	metricsRegistry *metrics.Registry
 
 	// Connection pool
@@ -321,7 +319,7 @@ func (b *Backend) createConnection(ctx context.Context, endpoint string) (*Conne
 	// Connect
 	conn, resp, err := dialer.DialContext(ctx, endpoint, headers)
 	if resp != nil {
-		defer func() { _ = resp.Body.Close() }() 
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	if err != nil {
@@ -435,7 +433,7 @@ func (b *Backend) selectEndpoint() int {
 	// The result of modulo with endpointCount is always < endpointCount,
 	// which is already an int from len(), so this conversion is safe
 
-	return int(nextID % uint64(endpointCount)) 
+	return int(nextID % uint64(endpointCount))
 }
 
 // SendRequest sends an MCP request over WebSocket.
@@ -475,7 +473,7 @@ func (b *Backend) sendRequestInternal(ctx context.Context, req *mcp.Request) (*m
 
 		return nil, err
 	}
-	
+
 	return resp, nil
 }
 
@@ -596,7 +594,7 @@ func (b *Backend) recordErrorMetric(err error) {
 	b.updateMetrics(func(m *BackendMetrics) {
 		m.ErrorCount++
 	})
-	
+
 	// Record to Prometheus metrics if available
 	if b.metricsRegistry != nil && err != nil {
 		// Check if it's already a GatewayError
@@ -611,7 +609,7 @@ func (b *Backend) recordErrorMetric(err error) {
 			gatewayErr = gatewayErr.WithComponent("websocket_backend").
 				WithContext("backend_name", b.name)
 		}
-		
+
 		customerrors.RecordError(gatewayErr, b.metricsRegistry)
 	}
 }

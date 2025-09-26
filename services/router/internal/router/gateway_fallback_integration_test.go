@@ -20,7 +20,7 @@ import (
 )
 
 // TestMessageRouter_DirectToGatewayFallbackFlow tests the complete fallback flow.
-func TestMessageRouter_DirectToGatewayFallbackFlow(t *testing.T) { 
+func TestMessageRouter_DirectToGatewayFallbackFlow(t *testing.T) {
 	handler := CreateFallbackTestHandler(t)
 	handler.ExecuteTest()
 }
@@ -59,10 +59,10 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 	expectedLatency time.Duration
 }, logger *zap.Logger) {
 	t.Helper()
-	
+
 	cfg := createPerformanceTestConfig(scenario.useDirectMode)
 	mockClients := createMockClientsForPerformance()
-	
+
 	var requestCount int64
 
 	mockClients.gwClient.sendRequestFunc = func(req *mcp.Request) error {
@@ -70,7 +70,7 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 		time.Sleep(5 * time.Millisecond) // Simulate gateway latency
 		return nil
 	}
-	
+
 	mockClients.directManager.getClientFunc = func(ctx context.Context, serverURL string) (direct.DirectClient, error) {
 		return &TestDirectClient{
 			connectFunc: func(ctx context.Context) error { return nil },
@@ -91,7 +91,7 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 	defer msgRouter.Stop()
 
 	performanceMeasurements := measurePerformance(t, msgRouter, scenario.useDirectMode)
-	
+
 	validatePerformanceResults(t, scenario, performanceMeasurements, requestCount)
 }
 
@@ -194,7 +194,7 @@ func measurePerformance(t *testing.T, msgRouter *MessageRouter, useDirectMode bo
 	numRequests  int
 } {
 	t.Helper()
-	
+
 	numRequests := 10
 
 	var totalLatency time.Duration
@@ -256,7 +256,7 @@ func validatePerformanceResults(t *testing.T, scenario struct {
 	numRequests  int
 }, requestCount int64) {
 	t.Helper()
-	
+
 	t.Logf("%s performance results:", scenario.name)
 	t.Logf("  Total time: %v", measurements.duration)
 	t.Logf("  Average latency: %v", measurements.avgLatency)
@@ -284,9 +284,9 @@ func validatePerformanceResults(t *testing.T, scenario struct {
 
 func TestMessageRouter_FallbackPerformanceComparison(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	
+
 	scenarios := createPerformanceTestScenarios()
-	
+
 	for _, scenario := range scenarios {
 		t.Run(scenario.name, func(t *testing.T) {
 			runPerformanceComparisonTest(t, scenario, logger)
@@ -295,7 +295,7 @@ func TestMessageRouter_FallbackPerformanceComparison(t *testing.T) {
 }
 
 // TestMessageRouter_ConcurrentFallbackStressTest stress tests concurrent fallback operations.
-func TestMessageRouter_ConcurrentFallbackStressTest(t *testing.T) { 
+func TestMessageRouter_ConcurrentFallbackStressTest(t *testing.T) {
 	handler := CreateStressTestHandler(t)
 	handler.ExecuteTest()
 }

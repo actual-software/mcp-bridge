@@ -1,4 +1,3 @@
-
 package config
 
 import (
@@ -80,7 +79,7 @@ func createTLSValidationTestCases(certFile, keyFile string) []tlsValidationTestC
 		{"missing certificate file", missingCert, true, "cert file required"},
 		{"missing key file", missingKey, true, "key file required"},
 		{"non-existent certificate file", nonExistentCert, false, ""}, // Validation doesn't check file existence
-		{"weak cipher suites", weakCiphers, false, ""}, // Basic validation doesn't check cipher suite security
+		{"weak cipher suites", weakCiphers, false, ""},                // Basic validation doesn't check cipher suite security
 	}
 }
 
@@ -130,7 +129,7 @@ func createAuthConfigTestCases() []authConfigTestCase {
 			ClientSecretEnv:    "OAUTH2_CLIENT_SECRET",
 			TokenEndpoint:      "https://auth.example.com/oauth/token",
 			IntrospectEndpoint: "https://auth.example.com/oauth/introspect",
-			JWKSEndpoint: "https://auth.example.com/.well-known/jwks.json", Scopes: []string{"read", "write"},
+			JWKSEndpoint:       "https://auth.example.com/.well-known/jwks.json", Scopes: []string{"read", "write"},
 			Issuer: "https://auth.example.com", Audience: "mcp-services",
 		},
 	}
@@ -138,13 +137,13 @@ func createAuthConfigTestCases() []authConfigTestCase {
 	insecureOAuth2 := AuthConfig{
 		Provider: "oauth2",
 		OAuth2: OAuth2Config{
-			ClientID: "client-id",
+			ClientID:      "client-id",
 			TokenEndpoint: "http://insecure.example.com/token", IntrospectEndpoint: "http://insecure.example.com/introspect",
 		},
 	}
 	weakJWT := AuthConfig{
 		Provider: "jwt",
-		JWT: JWTConfig{Issuer: "localhost", Audience: "test", PublicKeyPath: "/path/to/public.key"},
+		JWT:      JWTConfig{Issuer: "localhost", Audience: "test", PublicKeyPath: "/path/to/public.key"},
 	}
 	missingJWT := AuthConfig{Provider: "jwt"}
 	missingOAuth2 := AuthConfig{Provider: "oauth2"}
@@ -154,7 +153,7 @@ func createAuthConfigTestCases() []authConfigTestCase {
 		{"secure OAuth2 configuration", secureOAuth2, false, ""},
 		{"no authentication", noAuth, false, ""},
 		{"insecure HTTP endpoints in OAuth2", insecureOAuth2, false, ""}, // Basic validation doesn't enforce HTTPS
-		{"weak issuer configuration", weakJWT, false, ""}, // Basic validation doesn't enforce strong issuers
+		{"weak issuer configuration", weakJWT, false, ""},                // Basic validation doesn't enforce strong issuers
 		{"missing JWT configuration", missingJWT, true, "issuer cannot be empty"},
 		{"missing OAuth2 configuration", missingOAuth2, true, "OAuth2 client ID required"},
 	}
@@ -284,7 +283,7 @@ func createRateLimitSecurityTests() []struct {
 } {
 	tests := createBasicRateLimitTests()
 	tests = append(tests, createAdvancedRateLimitTests()...)
-	
+
 	return tests
 }
 
@@ -443,7 +442,7 @@ func createInjectionProtectionTestCases() []injectionProtectionTestCase {
 				c := createValidMinimalConfig()
 				c.Auth = AuthConfig{
 					Provider: "jwt",
-					JWT: JWTConfig{Issuer: "*)(uid=*))(|(uid=*", Audience: "test"},
+					JWT:      JWTConfig{Issuer: "*)(uid=*))(|(uid=*", Audience: "test"},
 				}
 
 				return c
@@ -560,17 +559,17 @@ func createResourceLimitSecurityTests() []struct {
 } {
 	secureTests := createSecureResourceLimitTests()
 	insecureTests := createInsecureResourceLimitTests()
-	
+
 	var allTests []struct {
 		name    string
 		config  func() *Config
 		secure  bool
 		comment string
 	}
-	
+
 	allTests = append(allTests, secureTests...)
 	allTests = append(allTests, insecureTests...)
-	
+
 	return allTests
 }
 
@@ -715,7 +714,7 @@ func createTestCertificates(dir string) (certFile, keyFile string, err error) {
 		return "", "", err
 	}
 
-	defer func() { _ = certOut.Close() }() 
+	defer func() { _ = certOut.Close() }()
 
 	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certDER}); err != nil {
 		return "", "", err
@@ -729,7 +728,7 @@ func createTestCertificates(dir string) (certFile, keyFile string, err error) {
 		return "", "", err
 	}
 
-	defer func() { _ = keyOut.Close() }() 
+	defer func() { _ = keyOut.Close() }()
 
 	privateKeyDER, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
@@ -762,7 +761,7 @@ type securityBestPracticeTestCase struct {
 func createSecurityBestPracticeTestCases() []securityBestPracticeTestCase {
 	cases := createCompliantSecurityCases()
 	cases = append(cases, createNonCompliantSecurityCases()...)
-	
+
 	return cases
 }
 
@@ -819,8 +818,8 @@ func createCompliantSecurityCases() []securityBestPracticeTestCase {
 func createNonCompliantSecurityCases() []securityBestPracticeTestCase {
 	return []securityBestPracticeTestCase{
 		{
-			name: "No authentication",
-			config: &Config{Auth: AuthConfig{Provider: "none"}},
+			name:     "No authentication",
+			config:   &Config{Auth: AuthConfig{Provider: "none"}},
 			practice: "Use strong authentication mechanism", compliant: false,
 		},
 		{
@@ -831,8 +830,8 @@ func createNonCompliantSecurityCases() []securityBestPracticeTestCase {
 			practice: "Use HTTPS with modern TLS version", compliant: false,
 		},
 		{
-			name: "No rate limiting",
-			config: &Config{RateLimit: RateLimitConfig{Enabled: false}},
+			name:     "No rate limiting",
+			config:   &Config{RateLimit: RateLimitConfig{Enabled: false}},
 			practice: "Enable rate limiting to prevent abuse", compliant: false,
 		},
 	}

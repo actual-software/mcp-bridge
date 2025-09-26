@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -181,7 +180,7 @@ func TestGracefulShutdownFlow(t *testing.T) {
 func setupGracefulShutdownTest(logger *zap.Logger) (*GatewayServer, context.Context) {
 	// Create cancellable context
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Create a minimal server
 	server := &GatewayServer{
 		logger:         logger,

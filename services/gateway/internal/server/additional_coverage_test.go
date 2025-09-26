@@ -1,4 +1,3 @@
-
 package server
 
 import (
@@ -254,7 +253,7 @@ func TestBootstrapGatewayServerOptions(t *testing.T) {
 
 func testTCPProtocolConfig(t *testing.T, logger *zap.Logger) {
 	t.Helper()
-	
+
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:                 8080,
@@ -281,7 +280,7 @@ func testTCPProtocolConfig(t *testing.T, logger *zap.Logger) {
 
 func testBothProtocolConfig(t *testing.T, logger *zap.Logger) {
 	t.Helper()
-	
+
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:                 8080,
@@ -302,7 +301,7 @@ func testBothProtocolConfig(t *testing.T, logger *zap.Logger) {
 
 func testWebSocketOnlyConfig(t *testing.T, logger *zap.Logger) {
 	t.Helper()
-	
+
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:                 8080,

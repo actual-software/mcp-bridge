@@ -1,4 +1,3 @@
-
 // Package weather provides simplified E2E testing for Weather MCP server deployment
 package weather
 

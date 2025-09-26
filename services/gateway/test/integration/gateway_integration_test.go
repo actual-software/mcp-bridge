@@ -1,4 +1,3 @@
-
 //go:build integration
 // +build integration
 
@@ -9,11 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -78,26 +75,26 @@ func TestGatewayIntegration_FullFlow(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	// Phase 1: Initialize test environment  
+	// Phase 1: Initialize test environment
 	ctx, cancel, logger := setupIntegrationTestEnvironment(t)
 	defer cancel()
-	
+
 	// Phase 2: Set up external dependencies
 	mockRedis := setupMockRedis(t)
 	defer func() { _ = mockRedis.Close() }()
-	
+
 	// Phase 3: Configure and initialize gateway components
 	cfg := createIntegrationTestConfig(mockRedis)
 	authProvider, sessionManager, mockDiscovery := initializeGatewayComponents(t, cfg, logger)
-	
+
 	// Phase 4: Set up test backends and routing
 	testBackends := setupTestBackends(t, mockDiscovery)
 	defer cleanupTestBackends(testBackends)
-	
+
 	// Phase 5: Start gateway server
 	gatewayServer := startGatewayServer(t, cfg, authProvider, sessionManager, mockDiscovery, logger)
 	defer shutdownGatewayServer(gatewayServer)
-	
+
 	// Phase 6: Run comprehensive integration tests
 	runFullIntegrationTestSuite(t, gatewayServer, cfg, mockRedis, logger)
 }
@@ -105,14 +102,14 @@ func TestGatewayIntegration_FullFlow(t *testing.T) {
 func setupIntegrationTestEnvironment(t *testing.T) (context.Context, context.CancelFunc, *zap.Logger) {
 	// Set up cancellation context for cleanup
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Set JWT secret for testing
 	os.Setenv("TEST_JWT_SECRET", "integration-test-secret-key-12345")
 	t.Cleanup(func() { os.Unsetenv("TEST_JWT_SECRET") })
-	
+
 	logger := zaptest.NewLogger(t)
 	t.Log("Phase 1: Initializing integration test environment")
-	
+
 	return ctx, cancel, logger
 }
 
@@ -198,12 +195,12 @@ func initializeGatewayComponents(t *testing.T, cfg *config.Config, logger *zap.L
 
 func setupTestBackends(t *testing.T, mockDiscovery *mockServiceDiscovery) []*httptest.Server {
 	t.Log("Phase 5: Setting up mock service discovery")
-	
+
 	// Start multiple test backends for load balancing testing
 	backends := make([]*httptest.Server, 3)
 	for i := 0; i < 3; i++ {
 		backends[i] = startTestBackend(t)
-		
+
 		// Register backend with service discovery
 		endpoint := discovery.Endpoint{
 			Address:   backends[i].URL,
@@ -211,11 +208,11 @@ func setupTestBackends(t *testing.T, mockDiscovery *mockServiceDiscovery) []*htt
 			Health:    "/health",
 			Tags:      map[string]string{"backend": fmt.Sprintf("test-backend-%d", i)},
 		}
-		
+
 		err := mockDiscovery.RegisterEndpoint("test", endpoint)
 		require.NoError(t, err, "Failed to register test backend")
 	}
-	
+
 	return backends
 }
 
@@ -227,33 +224,33 @@ func cleanupTestBackends(backends []*httptest.Server) {
 
 func startGatewayServer(t *testing.T, cfg *config.Config, authProvider auth.Provider, sessionManager session.Manager, mockDiscovery *mockServiceDiscovery, logger *zap.Logger) *server.Server {
 	t.Log("Phase 6: Starting gateway server")
-	
+
 	// Initialize metrics collector
 	metricsCollector := metrics.NewCollector()
-	
+
 	// Initialize rate limiter
 	rateLimiter, err := ratelimit.NewRateLimiter(cfg.RateLimit, logger)
 	require.NoError(t, err, "Failed to create rate limiter")
-	
+
 	// Initialize health checker
 	healthChecker := health.NewChecker(cfg.Routing.HealthCheckInterval, logger)
-	
+
 	// Initialize request router with all dependencies
 	requestRouter := router.NewRouter(cfg.Routing, mockDiscovery, healthChecker, metricsCollector, logger)
-	
+
 	// Create server with all components
 	srv := server.NewServer(cfg, authProvider, sessionManager, requestRouter, rateLimiter, metricsCollector, logger)
-	
+
 	// Start server in background
 	go func() {
 		if err := srv.Start(); err != nil {
 			t.Logf("Server start error: %v", err)
 		}
 	}()
-	
+
 	// Wait for server to be ready
 	time.Sleep(100 * time.Millisecond)
-	
+
 	return srv
 }
 
@@ -266,7 +263,7 @@ func shutdownGatewayServer(srv *server.Server) {
 func runFullIntegrationTestSuite(t *testing.T, srv *server.Server, cfg *config.Config, mockRedis *miniredis.Miniredis, logger *zap.Logger) {
 	// Get server address for client connections
 	serverAddr := getServerAddress(t, srv)
-	
+
 	// Run comprehensive test scenarios
 	runBasicProtocolTests(t, serverAddr)
 	runConcurrentRequestTests(t, serverAddr)
@@ -432,7 +429,7 @@ func createTestClientNoAuth(t *testing.T, serverAddr string) *testClient {
 func (c *testClient) SendRequest(t *testing.T, req mcp.Request) *mcp.Response {
 	// Set read deadline to prevent indefinite blocking
 	deadline := time.Now().Add(30 * time.Second)
-	
+
 	// Wrap in wire message
 	wireMsg := server.WireMessage{
 		ID:              req.ID,
@@ -471,7 +468,7 @@ func (c *testClient) SendRequest(t *testing.T, req mcp.Request) *mcp.Response {
 }
 
 func (c *testClient) Close() {
-	_ = c.conn.Close() 
+	_ = c.conn.Close()
 }
 
 // Test backend server

@@ -21,7 +21,7 @@ const (
 	defaultMaxTimeoutSeconds = 60
 	defaultRetryCount        = 10
 	defaultMaxRetries        = 100
-	
+
 	// AuthTypeBearerToken represents bearer token authentication.
 	AuthTypeBearerToken = "bearer"
 	// AuthTypeOAuth2 represents OAuth2 authentication.
@@ -225,13 +225,13 @@ func setupViperEnvironment(v *viper.Viper) {
 // bindEnvironmentVariables binds specific environment variables.
 func bindEnvironmentVariables(v *viper.Viper) error {
 	envBindings := map[string]string{
-		"gateway_pool.load_balancer.strategy":       "MCP_LOAD_BALANCER_STRATEGY",
-		"gateway_pool.circuit_breaker.enabled":     "MCP_CIRCUIT_BREAKER_ENABLED",
-		"gateway_pool.service_discovery.enabled":   "MCP_SERVICE_DISCOVERY_ENABLED",
-		"direct.auto_detection.enabled":            "MCP_DIRECT_AUTO_DETECTION_ENABLED",
-		"direct.health_check.enabled":              "MCP_DIRECT_HEALTH_CHECK_ENABLED",
-		"direct.max_connections":                    "MCP_DIRECT_MAX_CONNECTIONS",
-		"logging.level":                             "MCP_LOGGING_LEVEL",
+		"gateway_pool.load_balancer.strategy":    "MCP_LOAD_BALANCER_STRATEGY",
+		"gateway_pool.circuit_breaker.enabled":   "MCP_CIRCUIT_BREAKER_ENABLED",
+		"gateway_pool.service_discovery.enabled": "MCP_SERVICE_DISCOVERY_ENABLED",
+		"direct.auto_detection.enabled":          "MCP_DIRECT_AUTO_DETECTION_ENABLED",
+		"direct.health_check.enabled":            "MCP_DIRECT_HEALTH_CHECK_ENABLED",
+		"direct.max_connections":                 "MCP_DIRECT_MAX_CONNECTIONS",
+		"logging.level":                          "MCP_LOGGING_LEVEL",
 	}
 
 	for key, envVar := range envBindings {
@@ -239,7 +239,7 @@ func bindEnvironmentVariables(v *viper.Viper) error {
 			return fmt.Errorf("failed to bind environment variable %s: %w", envVar, err)
 		}
 	}
-	
+
 	return nil
 }
 

@@ -1,4 +1,3 @@
-
 package config
 
 import (
@@ -395,15 +394,15 @@ type authConfigValidationTestCase struct {
 func createAuthConfigValidationTestCases() []authConfigValidationTestCase {
 	return []authConfigValidationTestCase{
 		{
-			name: "valid auth config - none",
-			config: AuthConfig{Provider: "none"},
+			name:    "valid auth config - none",
+			config:  AuthConfig{Provider: "none"},
 			wantErr: false,
 		},
 		{
 			name: "valid auth config - JWT",
 			config: AuthConfig{
 				Provider: "jwt",
-				JWT: JWTConfig{Issuer: "test-issuer", Audience: "test-audience", PublicKeyPath: "/path/to/public.key"},
+				JWT:      JWTConfig{Issuer: "test-issuer", Audience: "test-audience", PublicKeyPath: "/path/to/public.key"},
 			},
 			wantErr: false,
 		},
@@ -420,15 +419,15 @@ func createAuthConfigValidationTestCases() []authConfigValidationTestCase {
 			wantErr: false,
 		},
 		{
-			name: "invalid auth provider",
-			config: AuthConfig{Provider: invalidValue},
+			name:    "invalid auth provider",
+			config:  AuthConfig{Provider: invalidValue},
 			wantErr: true, errMsg: "invalid auth provider",
 		},
 		{
 			name: "invalid JWT config - missing issuer",
 			config: AuthConfig{
 				Provider: "jwt",
-				JWT: JWTConfig{Audience: "test-audience", PublicKeyPath: "/path/to/public.key"},
+				JWT:      JWTConfig{Audience: "test-audience", PublicKeyPath: "/path/to/public.key"},
 			},
 			wantErr: true, errMsg: "issuer cannot be empty",
 		},
@@ -447,7 +446,7 @@ func createAuthConfigValidationTestCases() []authConfigValidationTestCase {
 			name: "invalid OAuth2 config - malformed URL",
 			config: AuthConfig{
 				Provider: "oauth2",
-				OAuth2: OAuth2Config{ClientID: "test-client", TokenEndpoint: "://invalid-url-with-missing-scheme"},
+				OAuth2:   OAuth2Config{ClientID: "test-client", TokenEndpoint: "://invalid-url-with-missing-scheme"},
 			},
 			wantErr: true, errMsg: "invalid token endpoint URL",
 		},

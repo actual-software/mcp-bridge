@@ -337,7 +337,7 @@ func NewValidationError(message string) *GatewayError {
 }
 
 func NewNotFoundError(resource string) *GatewayError {
-	return New(TypeNotFound, resource + " not found").WithHTTPStatus(http.StatusNotFound)
+	return New(TypeNotFound, resource+" not found").WithHTTPStatus(http.StatusNotFound)
 }
 
 func NewUnauthorizedError(message string) *GatewayError {
@@ -354,12 +354,12 @@ func NewInternalError(message string) *GatewayError {
 
 func NewTimeoutError(operation string, cause error) *GatewayError {
 	if cause != nil {
-		return WrapWithType(cause, TypeTimeout, "operation " + operation + " timed out").
+		return WrapWithType(cause, TypeTimeout, "operation "+operation+" timed out").
 			WithHTTPStatus(http.StatusRequestTimeout).
 			WithOperation(operation)
 	}
 	// If no cause, create a new error
-	return New(TypeTimeout, "operation " + operation + " timed out").
+	return New(TypeTimeout, "operation "+operation+" timed out").
 		WithHTTPStatus(http.StatusRequestTimeout).
 		WithOperation(operation)
 }
@@ -369,7 +369,7 @@ func NewRateLimitError(message string) *GatewayError {
 }
 
 func NewUnavailableError(service string) *GatewayError {
-	return New(TypeUnavailable, "service " + service + " is unavailable").WithHTTPStatus(http.StatusServiceUnavailable)
+	return New(TypeUnavailable, "service "+service+" is unavailable").WithHTTPStatus(http.StatusServiceUnavailable)
 }
 
 // Standard sentinel errors.

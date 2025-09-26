@@ -1,8 +1,8 @@
 package gateway
 
 import (
-	"errors"
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"

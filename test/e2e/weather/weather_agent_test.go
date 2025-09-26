@@ -1,4 +1,3 @@
-
 // Package weather provides agent-based E2E testing for MCP Gateway and Router
 package weather
 
@@ -413,17 +412,17 @@ func BenchmarkAgentThroughput(b *testing.B) {
 
 	routerConfig := createRouterConfig(testEnv.GatewayURL)
 	configPath := filepath.Join(b.TempDir(), "router-config.yaml")
-	_ = os.WriteFile(configPath, []byte(routerConfig), 0600) 
+	_ = os.WriteFile(configPath, []byte(routerConfig), 0600)
 
 	routerPath := getRouterBinaryPath()
 
 	// Create agent
 	agent := NewMCPClientAgent("bench-agent", routerPath, configPath, logger)
-	_ = agent.Connect() 
+	_ = agent.Connect()
 
 	defer func() { _ = agent.Disconnect() }()
 
-	_ = agent.Initialize() 
+	_ = agent.Initialize()
 
 	// Reset timer after setup
 	b.ResetTimer()

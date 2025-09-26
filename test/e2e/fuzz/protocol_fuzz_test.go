@@ -135,7 +135,7 @@ func NewMessageProcessor() *MessageProcessor {
 		validator: NewProtocolValidator(),
 		handlers:  make(map[string]func(map[string]interface{}) (interface{}, error)), // Method handlers map
 		// Mutex for thread-safe access to handlers
-		mu:        sync.RWMutex{},
+		mu: sync.RWMutex{},
 	}
 
 	// Register default handlers
@@ -240,7 +240,7 @@ func FuzzProtocolMessages(f *testing.F) {
 	seedFuzzTestCases(f)
 
 	processor := NewMessageProcessor()
-	
+
 	f.Fuzz(func(t *testing.T, message string) {
 		executeFuzzTest(t, processor, message)
 	})
