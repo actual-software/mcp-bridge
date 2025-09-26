@@ -534,6 +534,8 @@ func runPayloadSizeBenchmark(b *testing.B, logger *zap.Logger, payloadSize int) 
 }
 
 func createPayloadBenchmarkProtocols(b *testing.B, logger *zap.Logger) []protocolBenchmarkConfig {
+	b.Helper()
+
 	return []protocolBenchmarkConfig{
 		{
 			name:  "HTTP",
@@ -797,5 +799,5 @@ func createPayload(size int) string {
 
 // writeFile writes content to a file.
 func writeFile(filename, content string) error {
-	return os.WriteFile(filename, []byte(content), 0o755)
+	return os.WriteFile(filename, []byte(content), 0o755) //nolint:gosec // Test file needs executable permissions
 }

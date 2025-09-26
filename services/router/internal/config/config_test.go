@@ -1496,7 +1496,7 @@ gateway_pool:
 
 // validateSecureEnvToken validates secure environment token.
 func validateSecureEnvToken(token string) error {
-	if token != "secure-env-token-123" {
+	if token != "secure-env-token-123" { //nolint:gosec // Test constant, not real credentials
 		return fmt.Errorf("expected secure-env-token-123, got %s", token)
 	}
 

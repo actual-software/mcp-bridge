@@ -136,6 +136,7 @@ func TestReadBinaryFrame(t *testing.T) {
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReadBinaryFrame() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 
@@ -143,6 +144,7 @@ func TestReadBinaryFrame(t *testing.T) {
 				if err == nil || !strings.Contains(err.Error(), tt.errString) {
 					t.Errorf("ReadBinaryFrame() error = %v, want error containing %q", err, tt.errString)
 				}
+
 				return
 			}
 
