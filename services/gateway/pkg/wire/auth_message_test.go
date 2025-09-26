@@ -611,6 +611,7 @@ func runMarshalUnmarshalTests(t *testing.T, tests []struct {
 			jsonData, err := json.Marshal(tt.authMsg)
 			if tt.wantError {
 				assert.Error(t, err)
+
 				return
 			}
 
