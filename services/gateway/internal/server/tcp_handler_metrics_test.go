@@ -242,7 +242,7 @@ func checkSuccessfulMetrics(t *testing.T, reg *metrics.Registry) {
 	t.Helper()
 	// Check connection metrics
 	tcpConnTotal := prometheus_testutil.ToFloat64(reg.TCPConnectionsTotal)
-	assert.Equal(t, float64(1), tcpConnTotal, "TCP connections total")
+	assert.InEpsilon(t, float64(1), tcpConnTotal, 0.01, "TCP connections total")
 
 	// Check message metrics - be more flexible due to version negotiation
 	inboundRequests := prometheus_testutil.ToFloat64(reg.TCPMessagesTotal.WithLabelValues("inbound", "request"))
@@ -326,11 +326,11 @@ func checkAuthFailureMetrics(t *testing.T, reg *metrics.Registry) {
 	t.Helper()
 	// Check auth failure metrics
 	authFailures := prometheus_testutil.ToFloat64(reg.AuthFailuresTotal.WithLabelValues("invalid_token"))
-	assert.Equal(t, float64(1), authFailures, "Auth failures")
+	assert.InEpsilon(t, float64(1), authFailures, 0.01, "Auth failures")
 
 	// Check message metrics - version negotiation + init request
 	inboundRequests := prometheus_testutil.ToFloat64(reg.TCPMessagesTotal.WithLabelValues("inbound", "request"))
-	assert.Equal(t, float64(1), inboundRequests, "Inbound requests (init)")
+	assert.InEpsilon(t, float64(1), inboundRequests, 0.01, "Inbound requests (init)")
 
 	versionNegs := prometheus_testutil.ToFloat64(reg.TCPMessagesTotal.WithLabelValues("inbound", "version_negotiation"))
 	assert.Equal(t, float64(1), versionNegs, "Version negotiations")

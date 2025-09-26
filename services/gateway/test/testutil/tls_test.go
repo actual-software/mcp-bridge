@@ -104,6 +104,7 @@ func testValidServerCertificate(t *testing.T) {
 	for _, ip := range serverCert.IPAddresses {
 		if ip.Equal(localhostIP) {
 			hasLocalhostIP = true
+
 			break
 		}
 	}

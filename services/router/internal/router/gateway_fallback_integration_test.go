@@ -219,6 +219,7 @@ func measurePerformance(t *testing.T, msgRouter *MessageRouter, useDirectMode bo
 		err = msgRouter.processStdinMessage(reqData)
 		if err != nil {
 			t.Errorf("Request %d failed: %v", i, err)
+
 			continue
 		}
 

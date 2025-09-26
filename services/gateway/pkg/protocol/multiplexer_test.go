@@ -850,6 +850,7 @@ func createMultipleConnections(
 			connections = append(connections, conn)
 		}
 	}
+
 	return connections
 }
 

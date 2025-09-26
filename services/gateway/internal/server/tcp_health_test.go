@@ -371,11 +371,11 @@ func TestTCPHealthServer_Metrics(t *testing.T) {
 
 	// Check inbound message metric
 	inboundCount := testMetrics.GetTCPMessageCount("inbound", "health_check")
-	require.Equal(t, float64(1), inboundCount, "Expected 1 inbound health check message")
+	require.InEpsilon(t, float64(1), inboundCount, 0.01, "Expected 1 inbound health check message")
 
 	// Check outbound message metric
 	outboundCount := testMetrics.GetTCPMessageCount("outbound", "health_check")
-	require.Equal(t, float64(1), outboundCount, "Expected 1 outbound health check response")
+	require.InEpsilon(t, float64(1), outboundCount, 0.01, "Expected 1 outbound health check response")
 
 	// Verify no protocol errors
 	errorCount := testMetrics.GetTCPProtocolErrorCount("health_receive_error")

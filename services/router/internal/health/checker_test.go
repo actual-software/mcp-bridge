@@ -250,6 +250,7 @@ func validateCompositeHealthResult(t *testing.T, tt struct {
 	// Verify details structure.
 	if result.Details == nil {
 		t.Error("Expected non-nil details")
+
 		return
 	}
 
@@ -366,6 +367,7 @@ func validateGatewayPoolHealthResult(t *testing.T, tt struct {
 	// Verify details.
 	if result.Details == nil {
 		t.Error("Expected non-nil details")
+
 		return
 	}
 
