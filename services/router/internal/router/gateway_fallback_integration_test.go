@@ -68,6 +68,7 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 	mockClients.gwClient.sendRequestFunc = func(req *mcp.Request) error {
 		atomic.AddInt64(&requestCount, 1)
 		time.Sleep(5 * time.Millisecond) // Simulate gateway latency
+
 		return nil
 	}
 

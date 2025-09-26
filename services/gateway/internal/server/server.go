@@ -1592,9 +1592,9 @@ func (s *GatewayServer) loadTLSCertificate(cfg config.TLSConfig) (tls.Certificat
 // getTLSMinVersion parses and returns the minimum TLS version.
 func (s *GatewayServer) getTLSMinVersion(version string) (uint16, error) {
 	switch version {
-	case "1.2", "":
+	case "1.2":
 		return tls.VersionTLS12, nil
-	case "1.3":
+	case "1.3", "":
 		return tls.VersionTLS13, nil
 	default:
 		return 0, customerrors.New(customerrors.TypeValidation, "unsupported TLS min_version: "+version).

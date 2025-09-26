@@ -428,12 +428,16 @@ func (b *Backend) selectEndpoint() int {
 		return 0
 	}
 
-	// Safe modulo operation without overflow risk
+	// Safe modulo operation with bounds checking
 	nextID := atomic.AddUint64(&b.requestID, 1)
-	// The result of modulo with endpointCount is always < endpointCount,
-	// which is already an int from len(), so this conversion is safe
-
-	return int(nextID % uint64(endpointCount))
+	
+	// Use modulo to get index within bounds, avoiding overflow concerns
+	// by working with the remainder which is guaranteed < endpointCount
+	remainder := nextID % uint64(endpointCount)
+	
+	// remainder is guaranteed to fit in int since endpointCount comes from len()
+	// and Go slice lengths are bounded by int
+	return int(remainder)
 }
 
 // SendRequest sends an MCP request over WebSocket.
