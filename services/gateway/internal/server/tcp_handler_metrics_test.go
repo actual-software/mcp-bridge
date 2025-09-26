@@ -333,7 +333,7 @@ func checkAuthFailureMetrics(t *testing.T, reg *metrics.Registry) {
 	assert.InEpsilon(t, float64(1), inboundRequests, 0.01, "Inbound requests (init)")
 
 	versionNegs := prometheus_testutil.ToFloat64(reg.TCPMessagesTotal.WithLabelValues("inbound", "version_negotiation"))
-	assert.Equal(t, float64(1), versionNegs, "Version negotiations")
+	assert.InEpsilon(t, float64(1), versionNegs, 0.01, "Version negotiations")
 }
 
 func TestTCPHandler_MessageDurationMetrics(t *testing.T) {

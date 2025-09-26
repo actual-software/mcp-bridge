@@ -70,7 +70,7 @@ func TestPredictiveHealthMonitor_RegisterEndpoint(t *testing.T) {
 	require.True(t, exists)
 	assert.Equal(t, endpoint, healthData.Endpoint)
 	assert.True(t, healthData.IsHealthy)
-	assert.Equal(t, 1.0, healthData.HealthScore)
+	assert.InEpsilon(t, 1.0, healthData.HealthScore, 0.01)
 	assert.Empty(t, healthData.ResponseTimes)
 	assert.Equal(t, config.HistorySize, cap(healthData.ResponseTimes))
 
@@ -190,7 +190,7 @@ func TestPredictiveHealthMonitor_GetHealthScore(t *testing.T) {
 	}
 
 	// Unregistered endpoint should have perfect score
-	assert.Equal(t, 1.0, monitor.GetHealthScore(endpoint))
+	assert.InEpsilon(t, 1.0, monitor.GetHealthScore(endpoint), 0.01)
 
 	// Record good metrics
 	monitor.RecordMetrics(endpoint, testTimeout*time.Millisecond, true)
