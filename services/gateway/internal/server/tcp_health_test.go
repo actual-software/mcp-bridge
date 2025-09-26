@@ -379,11 +379,11 @@ func TestTCPHealthServer_Metrics(t *testing.T) {
 
 	// Verify no protocol errors
 	errorCount := testMetrics.GetTCPProtocolErrorCount("health_receive_error")
-	require.Equal(t, float64(0), errorCount, "Expected no health receive errors")
+	require.InEpsilon(t, float64(0), errorCount, 0.01, "Expected no health receive errors")
 
 	errorCount = testMetrics.GetTCPProtocolErrorCount("health_send_error")
-	require.Equal(t, float64(0), errorCount, "Expected no health send errors")
+	require.InEpsilon(t, float64(0), errorCount, 0.01, "Expected no health send errors")
 
 	errorCount = testMetrics.GetTCPProtocolErrorCount("health_flush_error")
-	require.Equal(t, float64(0), errorCount, "Expected no health flush errors")
+	require.InEpsilon(t, float64(0), errorCount, 0.01, "Expected no health flush errors")
 }

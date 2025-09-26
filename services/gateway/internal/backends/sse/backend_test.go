@@ -93,12 +93,12 @@ func TestSSEBackend_StartStop(t *testing.T) {
 
 	// Test double start (should fail)
 	err = backend.Start(ctx)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "already running")
 
 	// Test stop - FIX: Capture the actual stop error
 	stopErr := backend.Stop(ctx)
-	assert.NoError(t, stopErr)
+	require.NoError(t, stopErr)
 
 	// Verify stopped state
 	backend.mu.RLock()
@@ -138,7 +138,7 @@ func TestSSEBackend_StartWithInvalidEndpoint(t *testing.T) {
 			backend := CreateSSEBackend("test", config, logger, nil)
 
 			err := backend.Start(context.Background())
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
