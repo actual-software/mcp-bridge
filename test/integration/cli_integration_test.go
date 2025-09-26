@@ -39,6 +39,8 @@ func (s *CLIIntegrationTestSuite) SetupSuite() {
 
 // buildBinaries builds the CLI binaries for testing.
 func (s *CLIIntegrationTestSuite) buildBinaries() {
+	s.T().Helper()
+
 	s.T().Log("Building CLI binaries for testing")
 
 	// Build gateway binary

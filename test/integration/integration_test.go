@@ -99,6 +99,8 @@ func (s *FixedIntegrationTestSuite) TearDownSuite() {
 // generateProperJWT creates a proper JWT token using existing E2E secret.
 func (s *FixedIntegrationTestSuite) generateProperJWT() string {
 	// Use the same secret as the E2E gateway configuration
+	s.T().Helper()
+
 	secretKey := "test-jwt-secret-for-e2e-testing-only"
 
 	// Create JWT payload matching E2E configuration
@@ -180,6 +182,8 @@ func (s *FixedIntegrationTestSuite) setupRedisClient() {
 // setupRouterController sets up router using existing RouterController.
 func (s *FixedIntegrationTestSuite) setupRouterController() {
 	// Create router controller using existing E2E infrastructure
+	s.T().Helper()
+
 	s.routerCtrl = e2e.NewRouterController(s.T(), "wss://localhost:8443/ws")
 
 	// Build router binary
@@ -317,6 +321,8 @@ func (s *FixedIntegrationTestSuite) TestConfigurationIntegrationReal() {
 
 // testGatewayHealth tests the actual gateway health endpoint.
 func (s *FixedIntegrationTestSuite) testGatewayHealth() {
+	s.T().Helper()
+
 	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, "http://localhost:9092/health", nil)
 	s.Require().NoError(err)
 
@@ -345,6 +351,8 @@ func (s *FixedIntegrationTestSuite) testGatewayHealth() {
 
 // testGatewayMetrics tests the actual gateway metrics endpoint.
 func (s *FixedIntegrationTestSuite) testGatewayMetrics() {
+	s.T().Helper()
+
 	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, "http://localhost:9091/metrics", nil)
 	s.Require().NoError(err)
 
@@ -368,6 +376,8 @@ func (s *FixedIntegrationTestSuite) testGatewayMetrics() {
 // testGatewayAuthentication tests actual gateway authentication.
 func (s *FixedIntegrationTestSuite) testGatewayAuthentication() {
 	// Test that authentication actually works with real endpoints
+	s.T().Helper()
+
 	testURL := "https://localhost:8443/mcp"
 
 	// Test without authentication (should fail)
@@ -413,6 +423,8 @@ func (s *FixedIntegrationTestSuite) testGatewayAuthentication() {
 // testMCPRequestRouting tests actual MCP request routing through router.
 func (s *FixedIntegrationTestSuite) testMCPRequestRouting() {
 	// Use existing RouterController to send actual MCP requests
+	s.T().Helper()
+
 	req := e2e.MCPRequest{
 		JSONRPC: "2.0",
 		ID:      "test-routing-1",
@@ -491,6 +503,8 @@ func (s *FixedIntegrationTestSuite) testWebSocketRouting() {
 // testRouterAuthentication tests router authentication.
 func (s *FixedIntegrationTestSuite) testRouterAuthentication() {
 	// Router authentication is already tested by RouterController setup
+	s.T().Helper()
+
 	authToken := s.routerCtrl.GetAuthToken()
 	s.NotEmpty(authToken, "Router should have authentication token")
 
@@ -501,6 +515,8 @@ func (s *FixedIntegrationTestSuite) testRouterAuthentication() {
 // testRedisSessionManagement tests realistic session management.
 func (s *FixedIntegrationTestSuite) testRedisSessionManagement() {
 	// Test session creation, storage, and retrieval as gateway would do it
+	s.T().Helper()
+
 	sessionID := "mcp_session_" + strconv.FormatInt(time.Now().Unix(), 10)
 	sessionData := map[string]interface{}{
 		"user_id":       "test-user-integration",
@@ -587,6 +603,8 @@ func (s *FixedIntegrationTestSuite) testRedisRateLimiting() {
 // testRedisConnectionPool tests connection pool behavior under load.
 func (s *FixedIntegrationTestSuite) testRedisConnectionPool() {
 	// Test concurrent Redis operations (simulating gateway load)
+	s.T().Helper()
+
 	var wg sync.WaitGroup
 
 	concurrentOps := 20
@@ -629,6 +647,8 @@ func (s *FixedIntegrationTestSuite) testRedisConnectionPool() {
 
 // testRedisPubSub tests pub/sub for service coordination.
 func (s *FixedIntegrationTestSuite) testRedisPubSub() {
+	s.T().Helper()
+
 	channel := "mcp:service:events"
 	message := map[string]interface{}{
 		"event":     "gateway_ready",
@@ -669,6 +689,8 @@ func (s *FixedIntegrationTestSuite) testRedisPubSub() {
 // testMCPInitialize tests actual MCP initialize endpoint.
 func (s *FixedIntegrationTestSuite) testMCPInitialize() {
 	// Test actual MCP initialize request to gateway
+	s.T().Helper()
+
 	initRequest := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      1,
@@ -717,6 +739,8 @@ func (s *FixedIntegrationTestSuite) testMCPInitialize() {
 // testMCPErrorHandling tests MCP error handling.
 func (s *FixedIntegrationTestSuite) testMCPErrorHandling() {
 	// Test malformed JSON
+	s.T().Helper()
+
 	req, err := http.NewRequestWithContext(s.ctx, http.MethodPost, "https://localhost:8443/mcp",
 		strings.NewReader("{invalid json}"))
 	s.Require().NoError(err)
@@ -780,6 +804,8 @@ func (s *FixedIntegrationTestSuite) testGatewayConfigurationLoading() {
 	// Test that gateway loaded configuration correctly by checking actual behavior
 
 	// Verify metrics port is configured correctly (this should work)
+	s.T().Helper()
+
 	req2, err := http.NewRequestWithContext(s.ctx, http.MethodGet, "http://localhost:9091/metrics", nil)
 	s.Require().NoError(err)
 
@@ -818,6 +844,8 @@ func (s *FixedIntegrationTestSuite) testEnvironmentOverrides() {
 	// Test that gateway uses environment variables from docker-compose
 	// Check that JWT secret is loaded from environment
 	// Generate an intentionally malformed token for testing
+	s.T().Helper()
+
 	invalidToken := s.generateMalformedJWT()
 
 	req, err := http.NewRequestWithContext(s.ctx, http.MethodPost, "https://localhost:8443/mcp",
