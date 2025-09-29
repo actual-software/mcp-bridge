@@ -226,6 +226,7 @@ func createTLSConfigurationErrorTests(certFile, keyFile string) []tlsConfigTest 
 }
 
 func runTLSConfigTests(t *testing.T, tests []tlsConfigTest) {
+	t.Helper()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Log detailed scenario description for better test understanding

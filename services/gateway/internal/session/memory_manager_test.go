@@ -72,7 +72,7 @@ func TestMemoryManager_ExpiredSession(t *testing.T) {
 
 	// Try to get expired session
 	_, err = mgr.GetSession(session.ID)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "expired")
 }
 
@@ -179,11 +179,11 @@ func TestMemoryManager_RemoveSession(t *testing.T) {
 
 	// Remove session
 	err = mgr.RemoveSession(session.ID)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Session should be gone
 	_, err = mgr.GetSession(session.ID)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 }
 

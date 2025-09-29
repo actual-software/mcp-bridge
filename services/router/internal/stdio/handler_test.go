@@ -368,6 +368,7 @@ func setupStdoutHandler(t *testing.T) (*bytes.Buffer, *Handler, chan []byte, con
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	return &outputBuf, handler, stdoutChan, ctx, cancel
 }
 
@@ -397,6 +398,7 @@ func sendStdoutMessages(t *testing.T, stdoutChan chan []byte, tt struct {
 			// Give a bit more time for the message to be processed before cancelling.
 			time.Sleep(20 * time.Millisecond)
 			cancel()
+
 			break
 		}
 	}

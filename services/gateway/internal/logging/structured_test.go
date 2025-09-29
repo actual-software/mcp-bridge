@@ -103,6 +103,16 @@ func validateErrorFields(t *testing.T, fields []zap.Field, err error, expectedFi
 			fieldMap[field.Key] = int(field.Integer)
 		case zapcore.ErrorType:
 			fieldMap[field.Key] = field.Interface
+		case zapcore.UnknownType, zapcore.ArrayMarshalerType, zapcore.ObjectMarshalerType,
+			zapcore.BinaryType, zapcore.ByteStringType, zapcore.Complex128Type,
+			zapcore.Complex64Type, zapcore.DurationType, zapcore.Float64Type,
+			zapcore.Float32Type, zapcore.Int32Type, zapcore.Int16Type,
+			zapcore.Int8Type, zapcore.TimeType, zapcore.TimeFullType,
+			zapcore.Uint64Type, zapcore.Uint32Type, zapcore.Uint16Type,
+			zapcore.Uint8Type, zapcore.UintptrType, zapcore.ReflectType,
+			zapcore.NamespaceType, zapcore.StringerType, zapcore.SkipType,
+			zapcore.InlineMarshalerType:
+			fieldMap[field.Key] = field.Interface
 		default:
 			fieldMap[field.Key] = field.Interface
 		}

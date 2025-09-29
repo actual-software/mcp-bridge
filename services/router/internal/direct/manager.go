@@ -449,7 +449,7 @@ type ManagerMetrics struct {
 
 // NewDirectClientManager creates a new DirectClientManager.
 
-func NewDirectClientManager(config DirectConfig, logger *zap.Logger) DirectClientManagerInterface {
+func NewDirectClientManager(config DirectConfig, logger *zap.Logger) *DirectClientManager {
 	// Use the descriptive builder pattern instead of complex inline initialization.
 	return InitializeClientOrchestrator(config, logger).
 		ApplyOperationalDefaults().

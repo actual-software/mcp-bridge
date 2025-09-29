@@ -1014,12 +1014,12 @@ func collectSSEConcurrentResults(errChan chan error, responseChan chan *mcp.Resp
 	close(errChan)
 	close(responseChan)
 
-	var errors []error
+	errors := make([]error, 0, len(errChan))
 	for err := range errChan {
 		errors = append(errors, err)
 	}
 
-	var responses []*mcp.Response
+	responses := make([]*mcp.Response, 0, len(responseChan))
 	for resp := range responseChan {
 		responses = append(responses, resp)
 	}
@@ -1037,7 +1037,7 @@ func verifySSEConcurrentResults(t *testing.T, client *SSEClient, errors []error,
 	assert.Len(t, responses, expectedCount, "All requests should receive responses")
 
 	metrics := client.GetMetrics()
-	assert.Equal(t, uint64(expectedCount), metrics.RequestCount)
+	assert.Equal(t, safeIntToUint64(expectedCount), metrics.RequestCount)
 	assert.Equal(t, uint64(0), metrics.ErrorCount)
 	assert.True(t, metrics.IsHealthy)
 }

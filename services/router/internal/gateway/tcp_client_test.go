@@ -15,6 +15,7 @@ import (
 
 	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
 	common "github.com/poiley/mcp-bridge/pkg/common/config"
@@ -99,101 +100,122 @@ func (s *mockTCPServer) Stop() {
 // echoHandler echoes back requests as responses.
 func echoHandler(conn net.Conn) {
 	reader := bufio.NewReader(conn)
+	handleEchoVersionNegotiation(conn, reader)
+	handleEchoMessages(conn, reader)
+}
 
-	// Handle version negotiation first.
+func handleEchoVersionNegotiation(conn net.Conn, reader *bufio.Reader) {
 	frame, err := ReadBinaryFrame(reader)
 	if err != nil {
 		return
 	}
 
 	if frame.MessageType == MessageTypeVersionNegotiation {
-		// Send version ack.
-		ackPayload := map[string]interface{}{
-			"agreed_version": 1,
-		}
-		ackData, _ := json.Marshal(ackPayload)
-		ackFrame := &BinaryFrame{
-			Version:     1,
-			MessageType: MessageTypeVersionAck,
-			Payload:     ackData,
-		}
-		_ = ackFrame.Write(conn)
+		sendVersionAck(conn)
 	}
+}
 
-	// Handle regular messages.
+func sendVersionAck(conn net.Conn) {
+	ackPayload := map[string]interface{}{"agreed_version": 1}
+	ackData, _ := json.Marshal(ackPayload)
+	ackFrame := &BinaryFrame{
+		Version:     1,
+		MessageType: MessageTypeVersionAck,
+		Payload:     ackData,
+	}
+	_ = ackFrame.Write(conn)
+}
+
+func handleEchoMessages(conn net.Conn, reader *bufio.Reader) {
 	for {
 		frame, err := ReadBinaryFrame(reader)
 		if err != nil {
 			if !errors.Is(err, io.EOF) {
 				_ = conn.Close()
 			}
-
 			return
 		}
 
-		// Handle ping/pong.
 		if frame.MessageType == MessageTypeHealthCheck {
-			pongFrame := &BinaryFrame{
-				Version:     frame.Version,
-				MessageType: MessageTypeHealthCheck,
-				Payload:     []byte("{}"),
-			}
-			_ = pongFrame.Write(conn)
-
+			sendPong(conn, frame)
 			continue
 		}
 
-		// Parse request.
-		var wireMsg struct {
-			ID         interface{}     `json:"id"`
-			MCPPayload json.RawMessage `json:"mcp_payload"`
-		}
-
-		if err := json.Unmarshal(frame.Payload, &wireMsg); err != nil {
-			continue
-		}
-
-		// Create response.
-		var req mcp.Request
-
-		if err := json.Unmarshal(wireMsg.MCPPayload, &req); err != nil {
-			continue
-		}
-
-		resp := mcp.Response{
-			JSONRPC: constants.TestJSONRPCVersion,
-			ID:      req.ID,
-			Result:  map[string]interface{}{"echo": req.Method},
-		}
-
-		respWire := struct {
-			ID         interface{} `json:"id"`
-			MCPPayload interface{} `json:"mcp_payload"`
-		}{
-			ID:         req.ID,
-			MCPPayload: resp,
-		}
-
-		payload, _ := json.Marshal(respWire)
-		respFrame := &BinaryFrame{
-			Version:     frame.Version,
-			MessageType: MessageTypeResponse,
-			Payload:     payload,
-		}
-
-		_ = respFrame.Write(conn)
+		processEchoRequest(conn, frame)
 	}
+}
+
+func sendPong(conn net.Conn, frame *BinaryFrame) {
+	pongFrame := &BinaryFrame{
+		Version:     frame.Version,
+		MessageType: MessageTypeHealthCheck,
+		Payload:     []byte("{}"),
+	}
+	_ = pongFrame.Write(conn)
+}
+
+func processEchoRequest(conn net.Conn, frame *BinaryFrame) {
+	var wireMsg struct {
+		ID         interface{}     `json:"id"`
+		MCPPayload json.RawMessage `json:"mcp_payload"`
+	}
+
+	if err := json.Unmarshal(frame.Payload, &wireMsg); err != nil {
+		return
+	}
+
+	var req mcp.Request
+	if err := json.Unmarshal(wireMsg.MCPPayload, &req); err != nil {
+		return
+	}
+
+	sendEchoResponse(conn, frame, req)
+}
+
+func sendEchoResponse(conn net.Conn, frame *BinaryFrame, req mcp.Request) {
+	resp := mcp.Response{
+		JSONRPC: constants.TestJSONRPCVersion,
+		ID:      req.ID,
+		Result:  map[string]interface{}{"echo": req.Method},
+	}
+
+	respWire := struct {
+		ID         interface{} `json:"id"`
+		MCPPayload interface{} `json:"mcp_payload"`
+	}{
+		ID:         req.ID,
+		MCPPayload: resp,
+	}
+
+	payload, _ := json.Marshal(respWire)
+	respFrame := &BinaryFrame{
+		Version:     frame.Version,
+		MessageType: MessageTypeResponse,
+		Payload:     payload,
+	}
+	_ = respFrame.Write(conn)
 }
 
 func TestTCPClient_Connect(t *testing.T) {
 	logger := zaptest.NewLogger(t)
+	tests := getTCPConnectTests()
 
-	tests := []struct {
-		name    string
-		handler func(net.Conn)
-		cfg     config.GatewayConfig
-		wantErr bool
-	}{
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testTCPConnect(t, tt, logger)
+		})
+	}
+}
+
+type tcpConnectTest struct {
+	name    string
+	handler func(net.Conn)
+	cfg     config.GatewayConfig
+	wantErr bool
+}
+
+func getTCPConnectTests() []tcpConnectTest {
+	return []tcpConnectTest{
 		{
 			name:    "successful connection",
 			handler: echoHandler,
@@ -209,7 +231,7 @@ func TestTCPClient_Connect(t *testing.T) {
 			name:    "connection refused",
 			handler: nil,
 			cfg: config.GatewayConfig{
-				URL: "tcp://localhost:1", // Port 1 should be refused
+				URL: "tcp://localhost:1",
 				Connection: common.ConnectionConfig{
 					TimeoutMs: testMaxIterations,
 				},
@@ -225,63 +247,94 @@ func TestTCPClient_Connect(t *testing.T) {
 			wantErr: true,
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var server *mockTCPServer
-			if tt.handler != nil {
-				server = newMockTCPServer(t, tt.handler)
+func testTCPConnect(t *testing.T, tt tcpConnectTest, logger *zap.Logger) {
+	t.Helper()
+	server := setupTCPTestServer(t, tt)
+	if server != nil {
+		defer server.Stop()
+	}
 
-				addr, err := server.Start()
-				if err != nil {
-					t.Fatalf("Failed to start server: %v", err)
-				}
+	client := createTCPTestClient(t, tt.cfg, logger)
+	testTCPConnection(t, client, tt.wantErr)
+}
 
-				defer server.Stop()
+func setupTCPTestServer(t *testing.T, tt tcpConnectTest) *mockTCPServer {
+	t.Helper()
+	if tt.handler == nil {
+		return nil
+	}
 
-				tt.cfg.URL = "tcp://" + addr
+	server := newMockTCPServer(t, tt.handler)
+	addr, err := server.Start()
+	if err != nil {
+		t.Fatalf("Failed to start server: %v", err)
+	}
+	tt.cfg.URL = "tcp://" + addr
+	return server
+}
+
+func createTCPTestClient(t *testing.T, cfg config.GatewayConfig, logger *zap.Logger) *TCPClient {
+	t.Helper()
+	client, err := NewTCPClient(cfg, logger)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+	return client
+}
+
+func testTCPConnection(t *testing.T, client *TCPClient, wantErr bool) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	err := client.Connect(ctx)
+	if (err != nil) != wantErr {
+		t.Errorf("Connect() error = %v, wantErr %v", err, wantErr)
+	}
+
+	if err == nil {
+		defer func() {
+			if err := client.Close(); err != nil {
+				t.Logf("Failed to close client: %v", err)
 			}
+		}()
 
-			client, err := NewTCPClient(tt.cfg, logger)
-			if err != nil {
-				t.Fatalf("Failed to create client: %v", err)
-			}
-
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-
-			err = client.Connect(ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Connect() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if err == nil {
-				defer func() {
-					if err := client.Close(); err != nil {
-						t.Logf("Failed to close client: %v", err)
-					}
-				}()
-
-				if !client.IsConnected() {
-					t.Error("Expected client to be connected")
-				}
-			}
-		})
+		if !client.IsConnected() {
+			t.Error("Expected client to be connected")
+		}
 	}
 }
 
 func TestTCPClient_SendRequest(t *testing.T) {
 	logger := zaptest.NewLogger(t)
+	server, client := setupSendRequestTest(t, logger)
+	defer server.Stop()
+	defer closeTCPClient(t, client)
 
+	tests := getSendRequestTests()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testSendRequest(t, client, tt)
+		})
+	}
+}
+
+func setupSendRequestTest(t *testing.T, logger *zap.Logger) (*mockTCPServer, *TCPClient) {
+	t.Helper()
 	server := newMockTCPServer(t, echoHandler)
-
 	addr, err := server.Start()
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
 	}
 
-	defer server.Stop()
+	client := createConnectedTCPClient(t, addr, logger)
+	return server, client
+}
 
+func createConnectedTCPClient(t *testing.T, addr string, logger *zap.Logger) *TCPClient {
+	t.Helper()
 	cfg := config.GatewayConfig{
 		URL: "tcp://" + addr,
 		Auth: common.AuthConfig{
@@ -303,17 +356,24 @@ func TestTCPClient_SendRequest(t *testing.T) {
 		t.Fatalf("Failed to connect: %v", err)
 	}
 
-	defer func() {
-		if err := client.Close(); err != nil {
-			t.Logf("Failed to close client: %v", err)
-		}
-	}()
+	return client
+}
 
-	tests := []struct {
-		name    string
-		req     *mcp.Request
-		wantErr bool
-	}{
+func closeTCPClient(t *testing.T, client *TCPClient) {
+	t.Helper()
+	if err := client.Close(); err != nil {
+		t.Logf("Failed to close client: %v", err)
+	}
+}
+
+type sendRequestTest struct {
+	name    string
+	req     *mcp.Request
+	wantErr bool
+}
+
+func getSendRequestTests() []sendRequestTest {
+	return []sendRequestTest{
 		{
 			name: "valid request",
 			req: &mcp.Request{
@@ -334,14 +394,13 @@ func TestTCPClient_SendRequest(t *testing.T) {
 			wantErr: false,
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := client.SendRequest(tt.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("SendRequest() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+func testSendRequest(t *testing.T, client *TCPClient, tt sendRequestTest) {
+	t.Helper()
+	err := client.SendRequest(tt.req)
+	if (err != nil) != tt.wantErr {
+		t.Errorf("SendRequest() error = %v, wantErr %v", err, tt.wantErr)
 	}
 }
 

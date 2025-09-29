@@ -75,6 +75,7 @@ func runFrameEncodeTests(t *testing.T, tests []struct {
 
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -110,6 +111,7 @@ func validateEncodedFrame(t *testing.T, buf *bytes.Buffer, frame *Frame) {
 	// Check payload length
 	payloadLen := binary.BigEndian.Uint32(data[8:12])
 
+	// #nosec G115 - test code comparing payload lengths
 	assert.Equal(t, uint32(len(frame.Payload)), payloadLen)
 
 	// Check payload
@@ -219,6 +221,7 @@ func buildValidFrameData() []byte {
 	_ = binary.Write(&buf, binary.BigEndian, CurrentVersion)
 	_ = binary.Write(&buf, binary.BigEndian, uint16(MessageTypeRequest))
 	payload := []byte(`{"test":"data"}`)
+	// #nosec G115 - test code writing known test payload length
 	_ = binary.Write(&buf, binary.BigEndian, uint32(len(payload)))
 	_, _ = buf.Write(payload)
 

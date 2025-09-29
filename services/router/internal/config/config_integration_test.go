@@ -740,8 +740,10 @@ func processSecurityConfigYAML(t *testing.T, configYAML string) string {
 		tempDir := t.TempDir()
 		tokenPath := filepath.Join(tempDir, "token.txt")
 		_ = os.WriteFile(tokenPath, []byte("test-token"), 0o600)
+
 		return fmt.Sprintf(configYAML, tokenPath)
 	}
+
 	return configYAML
 }
 

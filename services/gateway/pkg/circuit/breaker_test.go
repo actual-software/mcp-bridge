@@ -308,6 +308,7 @@ func TestCircuitBreaker_ConcurrentCalls(t *testing.T) {
 	// Validate bounds before conversion to prevent overflow
 	totalCallsInt := numGoroutines * callsPerGoroutine
 	require.LessOrEqual(t, totalCallsInt, math.MaxInt32, "Total calls must fit in int32")
+	// #nosec G115 - validated above that totalCallsInt fits in int32
 	totalCalls := int32(totalCallsInt)
 	actualCalls := successCount + failureCount
 

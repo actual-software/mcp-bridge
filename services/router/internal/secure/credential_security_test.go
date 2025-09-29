@@ -86,14 +86,14 @@ func setupCredentialStore(t *testing.T) TokenStore {
 	return store
 }
 
-func testMemoryCorruptionProtection(t *testing.T, store TokenStore) {
-	t.Helper()
-	// Test protection against memory corruption attacks.
-	tests := []struct {
-		name  string
-		key   string
-		token string
-	}{
+type memoryCorruptionTest struct {
+	name  string
+	key   string
+	token string
+}
+
+func getMemoryCorruptionTests() []memoryCorruptionTest {
+	return []memoryCorruptionTest{
 		{
 			name:  "null byte injection in key",
 			key:   "test\x00key",
@@ -125,54 +125,54 @@ func testMemoryCorruptionProtection(t *testing.T, store TokenStore) {
 			token: string([]byte{0x01, 0x02, 0x03, 0xFF, 0xFE, 0xFD}),
 		},
 	}
+}
+
+func testSingleMemoryCorruptionCase(t *testing.T, store TokenStore, tt memoryCorruptionTest) {
+	t.Helper()
+	// Should handle gracefully without crashing.
+	err := store.Store(tt.key, tt.token)
+	// Error is acceptable for malformed input.
+	if err != nil {
+		t.Logf("Store rejected malformed input (expected): %v", err)
+		return
+	}
+
+	// If store succeeded, retrieve should work and match.
+	retrieved, err := store.Retrieve(tt.key)
+	if err != nil {
+		t.Logf("Retrieve failed for stored malformed data: %v", err)
+		return
+	}
+
+	// For binary data, JSON encoding may transform the data.
+	// so we need to be more flexible in our assertion
+	if tt.name == "binary data in token" || tt.name == "binary data in key" {
+		// For binary data, verify the length is preserved at minimum.
+		assert.NotEmpty(t, retrieved, "Retrieved token should not be empty")
+		// The exact format may vary due to JSON encoding, which is acceptable.
+	} else {
+		assert.Equal(t, tt.token, retrieved, "Retrieved token should match stored token")
+	}
+
+	// Cleanup.
+	if err := store.Delete(tt.key); err != nil {
+		t.Logf("Failed to delete from store: %v", err)
+	}
+}
+
+func testMemoryCorruptionProtection(t *testing.T, store TokenStore) {
+	t.Helper()
+	tests := getMemoryCorruptionTests()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Should handle gracefully without crashing.
-			err := store.Store(tt.key, tt.token)
-			// Error is acceptable for malformed input.
-			if err != nil {
-				t.Logf("Store rejected malformed input (expected): %v", err)
-
-				return
-			}
-
-			// If store succeeded, retrieve should work and match.
-			retrieved, err := store.Retrieve(tt.key)
-			if err != nil {
-				t.Logf("Retrieve failed for stored malformed data: %v", err)
-
-				return
-			}
-
-			// For binary data, JSON encoding may transform the data.
-			// so we need to be more flexible in our assertion
-			if tt.name == "binary data in token" || tt.name == "binary data in key" {
-				// For binary data, verify the length is preserved at minimum.
-				assert.NotEmpty(t, retrieved, "Retrieved token should not be empty")
-				// The exact format may vary due to JSON encoding, which is acceptable.
-			} else {
-				assert.Equal(t, tt.token, retrieved, "Retrieved token should match stored token")
-			}
-
-			// Cleanup.
-			if err := store.Delete(tt.key); err != nil {
-				t.Logf("Failed to delete from store: %v", err)
-			}
+			testSingleMemoryCorruptionCase(t, store, tt)
 		})
 	}
 }
 
-func testConcurrentAccessSafety(t *testing.T, store TokenStore) {
-	t.Helper()
-	// Test thread safety under high concurrency.
-	const (
-		numGoroutines = 10
-		numOperations = 5
-	)
-
+func runConcurrentOperations(store TokenStore, numGoroutines, numOperations int) []error {
 	var wg sync.WaitGroup
-
 	errors := make([]error, numGoroutines*numOperations*3) // 3 operations per iteration
 	errorIndex := int64(0)
 
@@ -181,53 +181,57 @@ func testConcurrentAccessSafety(t *testing.T, store TokenStore) {
 
 	appendError := func(err error) {
 		mu.Lock()
-
 		errors[errorIndex] = err
 		errorIndex++
-
 		mu.Unlock()
 	}
 
 	// Concurrent mixed operations.
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
-
 		go func(goroutineID int) {
 			defer wg.Done()
-
-			for j := 0; j < numOperations; j++ {
-				key := fmt.Sprintf("concurrent-key-%d-%d", goroutineID, j)
-				token := fmt.Sprintf("concurrent-token-%d-%d", goroutineID, j)
-
-				// Store.
-				err := store.Store(key, token)
-				appendError(err)
-
-				// Retrieve.
-				retrieved, err := store.Retrieve(key)
-				appendError(err)
-
-				if err == nil && retrieved != token {
-					appendError(fmt.Errorf("token mismatch: expected %s, got %s", token, retrieved))
-				}
-
-				// Delete.
-				err = store.Delete(key)
-				appendError(err)
-			}
+			performConcurrentOperations(store, goroutineID, numOperations, appendError)
 		}(i)
 	}
 
 	wg.Wait()
+	return errors[:errorIndex]
+}
 
+func performConcurrentOperations(store TokenStore, goroutineID, numOperations int, appendError func(error)) {
+	for j := 0; j < numOperations; j++ {
+		key := fmt.Sprintf("concurrent-key-%d-%d", goroutineID, j)
+		token := fmt.Sprintf("concurrent-token-%d-%d", goroutineID, j)
+
+		// Store.
+		err := store.Store(key, token)
+		appendError(err)
+
+		// Retrieve.
+		retrieved, err := store.Retrieve(key)
+		appendError(err)
+
+		if err == nil && retrieved != token {
+			appendError(fmt.Errorf("token mismatch: expected %s, got %s", token, retrieved))
+		}
+
+		// Delete.
+		err = store.Delete(key)
+		appendError(err)
+	}
+}
+
+func verifyConcurrentAccessResults(t *testing.T, errors []error, numGoroutines, numOperations int) {
+	t.Helper()
 	// Check for race conditions or errors.
 	errorCount := 0
 
-	for i := int64(0); i < errorIndex; i++ {
-		if errors[i] != nil {
+	for i, err := range errors {
+		if err != nil {
 			errorCount++
 			if errorCount <= 5 { // Log first few errors
-				t.Logf("Concurrent operation error: %v", errors[i])
+				t.Logf("Concurrent operation error %d: %v", i, err)
 			}
 		}
 	}
@@ -238,15 +242,26 @@ func testConcurrentAccessSafety(t *testing.T, store TokenStore) {
 	assert.Less(t, failureRate, 0.1, "Failure rate should be less than 10%")
 }
 
-func testInjectionAttackProtection(t *testing.T, store TokenStore) {
+func testConcurrentAccessSafety(t *testing.T, store TokenStore) {
 	t.Helper()
-	// Test protection against various injection attacks.
-	injectionTests := []struct {
-		name    string
-		key     string
-		token   string
-		comment string
-	}{
+	const (
+		numGoroutines = 10
+		numOperations = 5
+	)
+
+	errors := runConcurrentOperations(store, numGoroutines, numOperations)
+	verifyConcurrentAccessResults(t, errors, numGoroutines, numOperations)
+}
+
+type injectionAttackTest struct {
+	name    string
+	key     string
+	token   string
+	comment string
+}
+
+func getInjectionAttackTests() []injectionAttackTest {
+	return []injectionAttackTest{
 		{
 			name:    "SQL injection in key",
 			key:     "'; DROP TABLE credentials; --",
@@ -296,32 +311,40 @@ func testInjectionAttackProtection(t *testing.T, store TokenStore) {
 			comment: "Should not parse as XML",
 		},
 	}
+}
+
+func testSingleInjectionAttack(t *testing.T, store TokenStore, tt injectionAttackTest) {
+	t.Helper()
+	// Store should handle injection attempts safely.
+	err := store.Store(tt.key, tt.token)
+	if err != nil {
+		t.Logf("Store rejected injection attempt (acceptable): %v", err)
+		return
+	}
+
+	// If store succeeded, retrieve should work safely.
+	retrieved, err := store.Retrieve(tt.key)
+	if err != nil {
+		t.Logf("Retrieve failed (acceptable for injection test): %v", err)
+		return
+	}
+
+	// Token should be stored as-is, not interpreted.
+	assert.Equal(t, tt.token, retrieved, "Token should be stored literally")
+
+	// Cleanup.
+	if err := store.Delete(tt.key); err != nil {
+		t.Logf("Failed to delete from store: %v", err)
+	}
+}
+
+func testInjectionAttackProtection(t *testing.T, store TokenStore) {
+	t.Helper()
+	injectionTests := getInjectionAttackTests()
 
 	for _, tt := range injectionTests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Store should handle injection attempts safely.
-			err := store.Store(tt.key, tt.token)
-			if err != nil {
-				t.Logf("Store rejected injection attempt (acceptable): %v", err)
-
-				return
-			}
-
-			// If store succeeded, retrieve should work safely.
-			retrieved, err := store.Retrieve(tt.key)
-			if err != nil {
-				t.Logf("Retrieve failed (acceptable for injection test): %v", err)
-
-				return
-			}
-
-			// Token should be stored as-is, not interpreted.
-			assert.Equal(t, tt.token, retrieved, "Token should be stored literally")
-
-			// Cleanup.
-			if err := store.Delete(tt.key); err != nil {
-				t.Logf("Failed to delete from store: %v", err)
-			}
+			testSingleInjectionAttack(t, store, tt)
 		})
 	}
 }

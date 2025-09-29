@@ -17,42 +17,57 @@ import (
 
 func TestNewPooledGatewayClient(t *testing.T) {
 	t.Parallel()
-
 	logger := zap.NewNop()
-	poolConfig := Config{
+	poolConfig := createTestPoolConfig()
+	tests := getPooledGatewayClientTests()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			testPooledGatewayClient(t, tt, poolConfig, logger)
+		})
+	}
+}
+
+func createTestPoolConfig() Config {
+	return Config{
 		MinSize:        1,
 		MaxSize:        5,
 		AcquireTimeout: time.Second,
 	}
+}
 
-	tests := []struct {
-		name        string
-		url         string
-		expectError bool
-		isWebSocket bool
-	}{
+type pooledGatewayTest struct {
+	name        string
+	url         string
+	expectError bool
+	isWebSocket bool
+}
+
+func getPooledGatewayClientTests() []pooledGatewayTest {
+	return []pooledGatewayTest{
 		{
 			name:        "WebSocket URL",
 			url:         fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
-			expectError: true, // Will fail to connect in test
+			expectError: true,
 			isWebSocket: true,
 		},
 		{
 			name:        "WebSocket Secure URL",
 			url:         "wss://localhost:8443",
-			expectError: true, // Will fail to connect in test
+			expectError: true,
 			isWebSocket: true,
 		},
 		{
 			name:        "TCP URL",
 			url:         "tcp://localhost:9000",
-			expectError: true, // Will fail to connect in test
+			expectError: true,
 			isWebSocket: false,
 		},
 		{
 			name:        "TCP Secure URL",
 			url:         "tcps://localhost:9443",
-			expectError: true, // Will fail to connect in test
+			expectError: true,
 			isWebSocket: false,
 		},
 		{
@@ -66,36 +81,30 @@ func TestNewPooledGatewayClient(t *testing.T) {
 			expectError: true,
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+func testPooledGatewayClient(t *testing.T, tt pooledGatewayTest, poolConfig Config, logger *zap.Logger) {
+	gwConfig := config.GatewayConfig{URL: tt.url}
+	client, err := NewPooledGatewayClient(poolConfig, gwConfig, logger)
 
-			gwConfig := config.GatewayConfig{
-				URL: tt.url,
-			}
+	if tt.name == "Invalid URL" || tt.name == "Unsupported Scheme" {
+		require.Error(t, err)
+		return
+	}
 
-			client, err := NewPooledGatewayClient(poolConfig, gwConfig, logger)
+	require.NoError(t, err)
+	require.NotNil(t, client)
+	verifyPoolType(t, client, tt.isWebSocket)
+	_ = client.Close()
+}
 
-			if tt.name == "Invalid URL" || tt.name == "Unsupported Scheme" {
-				require.Error(t, err)
-
-				return
-			}
-
-			require.NoError(t, err)
-			require.NotNil(t, client)
-
-			if tt.isWebSocket {
-				assert.NotNil(t, client.wsPool)
-				assert.Nil(t, client.tcpPool)
-			} else {
-				assert.Nil(t, client.wsPool)
-				assert.NotNil(t, client.tcpPool)
-			}
-
-			_ = client.Close()
-		})
+func verifyPoolType(t *testing.T, client *PooledGatewayClient, isWebSocket bool) {
+	if isWebSocket {
+		assert.NotNil(t, client.wsPool)
+		assert.Nil(t, client.tcpPool)
+	} else {
+		assert.Nil(t, client.wsPool)
+		assert.NotNil(t, client.tcpPool)
 	}
 }
 

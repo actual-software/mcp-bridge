@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
 
@@ -364,9 +365,18 @@ func validateRequestDurationHistogram(t *testing.T, metrics string) {
 
 func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 	logger := zaptest.NewLogger(t)
+	exporter, ctx, cancel := setupHistogramTest(t, logger)
+	defer cancel()
 
+	metrics := fetchHistogramMetrics(t, ctx, exporter)
+	verifyHistogramBuckets(t, metrics)
+	verifyHistogramSum(t, metrics)
+}
+
+func setupHistogramTest(t *testing.T, logger *zap.Logger) (*PrometheusExporter, context.Context, context.CancelFunc) {
+	t.Helper()
 	exporter := NewPrometheusExporter(":0", logger)
-
+	
 	testMetrics := &RouterMetrics{
 		ResponseSizes: []int{
 			testTimeout,             // < testIterations
@@ -383,7 +393,6 @@ func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	go func() {
 		if err := exporter.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -392,9 +401,12 @@ func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 	}()
 
 	time.Sleep(testIterations * time.Millisecond)
+	return exporter, ctx, cancel
+}
 
+func fetchHistogramMetrics(t *testing.T, ctx context.Context, exporter *PrometheusExporter) string {
+	t.Helper()
 	addr := exporter.GetEndpoint()
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://%s/metrics", addr), nil)
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
@@ -404,17 +416,17 @@ func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get metrics: %v", err)
 	}
-
 	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("Failed to read response: %v", err)
 	}
+	return string(body)
+}
 
-	metrics := string(body)
-
-	// Parse response size buckets.
+func verifyHistogramBuckets(t *testing.T, metrics string) {
+	t.Helper()
 	buckets := map[string]int{
 		`le="100"`:     1,
 		`le="1000"`:    2,
@@ -430,11 +442,12 @@ func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 			t.Errorf("Expected bucket %s with count %d not found", bucket, expectedCount)
 		}
 	}
+}
 
-	// Check sum.
+func verifyHistogramSum(t *testing.T, metrics string) {
+	t.Helper()
 	expectedSum := testTimeout + httpStatusInternalError + 5000 + 50000 + 500000 + 5000000
 	pattern := fmt.Sprintf(`mcp_router_response_size_bytes_sum %d`, expectedSum)
-
 	if !strings.Contains(metrics, pattern) {
 		t.Errorf("Expected sum %d not found", expectedSum)
 	}
@@ -442,12 +455,22 @@ func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 
 func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 	logger := zaptest.NewLogger(t)
+	exporter, ctx, cancel := setupConcurrentTest(t, logger)
+	defer cancel()
 
+	addr := exporter.GetEndpoint()
+	done := startMetricUpdates()
+	errors := startConcurrentReads(ctx, addr)
+
+	<-done
+	verifyConcurrentAccess(t, errors)
+}
+
+func setupConcurrentTest(t *testing.T, logger *zap.Logger) (*PrometheusExporter, context.Context, context.CancelFunc) {
+	t.Helper()
 	exporter := NewPrometheusExporter(":0", logger)
 
-	// Shared metrics that will be updated concurrently.
 	var requests uint64
-
 	var responses uint64
 
 	exporter.SetRouterMetrics(func() *RouterMetrics {
@@ -458,7 +481,6 @@ func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	go func() {
 		if err := exporter.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -467,11 +489,13 @@ func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 	}()
 
 	time.Sleep(testIterations * time.Millisecond)
+	return exporter, ctx, cancel
+}
 
-	addr := exporter.GetEndpoint()
-
-	// Concurrent metric updates.
+func startMetricUpdates() chan bool {
 	done := make(chan bool)
+	var requests uint64
+	var responses uint64
 
 	go func() {
 		for i := 0; i < testIterations; i++ {
@@ -479,11 +503,13 @@ func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 			atomic.AddUint64(&responses, 1)
 			time.Sleep(time.Millisecond)
 		}
-
 		close(done)
 	}()
 
-	// Concurrent metric reads.
+	return done
+}
+
+func startConcurrentReads(ctx context.Context, addr string) chan error {
 	errors := make(chan error, 10)
 
 	for i := 0; i < constants.TestBatchSize; i++ {
@@ -491,17 +517,14 @@ func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 			req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://%s/metrics", addr), nil)
 			if err != nil {
 				errors <- fmt.Errorf("failed to create request: %w", err)
-
 				return
 			}
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				errors <- err
-
 				return
 			}
-
 			_ = resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
@@ -510,10 +533,11 @@ func TestPrometheusExporter_ConcurrentAccess(t *testing.T) {
 		}()
 	}
 
-	// Wait for updates to complete.
-	<-done
+	return errors
+}
 
-	// Check for errors.
+func verifyConcurrentAccess(t *testing.T, errors chan error) {
+	t.Helper()
 	select {
 	case err := <-errors:
 		t.Errorf("Concurrent access error: %v", err)

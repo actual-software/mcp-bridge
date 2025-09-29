@@ -145,7 +145,7 @@ func (b *DirectManagerConfigurationBuilder) OptimizePerformanceParameters() *Dir
 
 // BuildClientOrchestrator creates the final DirectClientManager with all configurations applied.
 
-func (b *DirectManagerConfigurationBuilder) BuildClientOrchestrator() DirectClientManagerInterface {
+func (b *DirectManagerConfigurationBuilder) BuildClientOrchestrator() *DirectClientManager {
 	// Ensure defaults are applied.
 	if !b.defaultsApplied {
 		b.ApplyOperationalDefaults()

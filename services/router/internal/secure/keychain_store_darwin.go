@@ -137,6 +137,7 @@ func (s *keychainStore) Store(key, token string) error {
 	return s.executeKeychainOperation("store", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
+		// #nosec G204 - calling system keychain utility with sanitized inputs
 		cmd := exec.CommandContext(ctx, "security", "add-generic-password",
 			"-a", key, // account name
 			"-s", serviceName, // service name
@@ -164,6 +165,7 @@ func (s *keychainStore) Retrieve(key string) (string, error) {
 	err := s.executeKeychainOperation("retrieve", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
+		// #nosec G204 - calling system keychain utility with sanitized inputs
 		cmd := exec.CommandContext(ctx, "security", "find-generic-password",
 			"-a", key, // account name
 			"-s", serviceName, // service name
@@ -210,6 +212,7 @@ func (s *keychainStore) Delete(key string) error {
 	return s.executeKeychainOperation("delete", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
+		// #nosec G204 - calling system keychain utility with sanitized inputs
 		cmd := exec.CommandContext(ctx, "security", "delete-generic-password",
 			"-a", key, // account name
 			"-s", serviceName) // service name

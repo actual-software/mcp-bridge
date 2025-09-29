@@ -487,6 +487,7 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 					zap.Int("attempts", attempt+1),
 				)
 			}
+
 			return nil
 		}
 
@@ -497,6 +498,7 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 				zap.Any("request_id", req.ID),
 				zap.Error(err),
 			)
+
 			break
 		}
 

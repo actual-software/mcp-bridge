@@ -1064,7 +1064,7 @@ func verifyWebSocketConcurrentResults(
 
 	// Verify metrics
 	metrics := client.GetMetrics()
-	assert.Equal(t, uint64(numGoroutines*requestsPerGoroutine), metrics.RequestCount)
+	assert.Equal(t, safeIntToUint64(numGoroutines*requestsPerGoroutine), metrics.RequestCount)
 	assert.Equal(t, uint64(0), metrics.ErrorCount)
 	assert.True(t, metrics.IsHealthy)
 }
@@ -1939,6 +1939,7 @@ func cleanupWebSocketFrameSizeBenchClient(b *testing.B, client *WebSocketClient)
 }
 
 func executeWebSocketFrameSizeBenchmark(b *testing.B, client *WebSocketClient, frameSize int) {
+	b.Helper()
 	ctx := context.Background()
 
 	b.ResetTimer()

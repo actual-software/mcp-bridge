@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // TestOriginChecking tests origin validation indirectly.
@@ -31,7 +30,7 @@ Preferred-Languages: en
 Canonical: https://gateway.company.com/.well-known/security.txt
 `
 		_, err := w.Write([]byte(content))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 	})
 
 	handler.ServeHTTP(rec, req)

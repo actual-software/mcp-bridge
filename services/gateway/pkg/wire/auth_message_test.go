@@ -174,7 +174,7 @@ func TestUnmarshalAuthMessage_Invalid(t *testing.T) {
 				assert.NotNil(t, authMsg)
 				assert.Nil(t, authMsg.Message)
 			} else {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, authMsg)
 			}
 		})
@@ -464,6 +464,7 @@ func testResponseRoundTrip(t *testing.T) {
 				"count": 1,
 			},
 		}
+		// #nosec G101 - this is a test token for unit testing, not a real credential
 		authToken := "roundtrip-resp-token"
 
 		// Create auth message
@@ -610,7 +611,7 @@ func runMarshalUnmarshalTests(t *testing.T, tests []struct {
 			// Marshal
 			jsonData, err := json.Marshal(tt.authMsg)
 			if tt.wantError {
-				assert.Error(t, err)
+				require.Error(t, err)
 
 				return
 			}

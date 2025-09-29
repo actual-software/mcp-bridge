@@ -109,68 +109,88 @@ func createLoadBalancingServers(t *testing.T, count int) ([]*mockTCPServerBench,
 // runLoadBalancingClients runs multiple clients against load balanced servers.
 func runLoadBalancingClients(t *testing.T, addresses []string, numClients, requestsPerClient int, logger *zap.Logger) {
 	t.Helper()
-
 	var wg sync.WaitGroup
 	for clientIdx := 0; clientIdx < numClients; clientIdx++ {
 		wg.Add(1)
+		go runSingleLoadBalancingClient(t, &wg, clientIdx, addresses, requestsPerClient, logger)
+	}
+	wg.Wait()
+}
 
-		go func(clientID int) {
-			defer wg.Done()
+func runSingleLoadBalancingClient(t *testing.T, wg *sync.WaitGroup, clientID int, addresses []string, requestsPerClient int, logger *zap.Logger) {
+	t.Helper()
+	defer wg.Done()
 
-			serverIdx := clientID % len(addresses)
-			cfg := config.GatewayConfig{
-				URL: "tcp://" + addresses[serverIdx],
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
-			}
+	client := createLoadBalancingClient(t, clientID, addresses, logger)
+	if client == nil {
+		return
+	}
+	defer closeLoadBalancingClient(t, client, clientID)
 
-			client, err := NewTCPClient(cfg, logger)
-			if err != nil {
-				t.Errorf("Client %d: Failed to create client: %v", clientID, err)
-
-				return
-			}
-
-			defer func() {
-				if err := client.Close(); err != nil {
-					t.Errorf("Client %d: Failed to close: %v", clientID, err)
-				}
-			}()
-
-			// Connect to the gateway
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-
-			if err := client.Connect(ctx); err != nil {
-				t.Errorf("Client %d: Failed to connect: %v", clientID, err)
-
-				return
-			}
-
-			for reqIdx := 0; reqIdx < requestsPerClient; reqIdx++ {
-				req := &mcp.Request{
-					JSONRPC: "2.0",
-					Method:  "test.echo",
-					ID:      fmt.Sprintf("client-%d-req-%d", clientID, reqIdx),
-					Params:  map[string]interface{}{"message": "hello"},
-				}
-
-				if err := client.SendRequest(req); err != nil {
-					t.Errorf("Client %d: Failed to send request: %v", clientID, err)
-
-					continue
-				}
-
-				_, err := client.ReceiveResponse()
-				if err != nil {
-					t.Errorf("Client %d: Failed to receive response: %v", clientID, err)
-				}
-			}
-		}(clientIdx)
+	if !connectLoadBalancingClient(t, client, clientID) {
+		return
 	}
 
-	wg.Wait()
+	sendLoadBalancingRequests(t, client, clientID, requestsPerClient)
+}
+
+func createLoadBalancingClient(t *testing.T, clientID int, addresses []string, logger *zap.Logger) *TCPClient {
+	t.Helper()
+	serverIdx := clientID % len(addresses)
+	cfg := config.GatewayConfig{
+		URL: "tcp://" + addresses[serverIdx],
+		Connection: common.ConnectionConfig{
+			TimeoutMs: 5000,
+		},
+	}
+
+	client, err := NewTCPClient(cfg, logger)
+	if err != nil {
+		t.Errorf("Client %d: Failed to create client: %v", clientID, err)
+		return nil
+	}
+	return client
+}
+
+func closeLoadBalancingClient(t *testing.T, client *TCPClient, clientID int) {
+	t.Helper()
+	if err := client.Close(); err != nil {
+		t.Errorf("Client %d: Failed to close: %v", clientID, err)
+	}
+}
+
+func connectLoadBalancingClient(t *testing.T, client *TCPClient, clientID int) bool {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := client.Connect(ctx); err != nil {
+		t.Errorf("Client %d: Failed to connect: %v", clientID, err)
+		return false
+	}
+	return true
+}
+
+func sendLoadBalancingRequests(t *testing.T, client *TCPClient, clientID, requestsPerClient int) {
+	t.Helper()
+	for reqIdx := 0; reqIdx < requestsPerClient; reqIdx++ {
+		req := &mcp.Request{
+			JSONRPC: "2.0",
+			Method:  "test.echo",
+			ID:      fmt.Sprintf("client-%d-req-%d", clientID, reqIdx),
+			Params:  map[string]interface{}{"message": "hello"},
+		}
+
+		if err := client.SendRequest(req); err != nil {
+			t.Errorf("Client %d: Failed to send request: %v", clientID, err)
+			continue
+		}
+
+		_, err := client.ReceiveResponse()
+		if err != nil {
+			t.Errorf("Client %d: Failed to receive response: %v", clientID, err)
+		}
+	}
 }
 
 func TestGatewayClient_LoadBalancing(t *testing.T) {

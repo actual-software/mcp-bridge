@@ -576,7 +576,11 @@ func (s *GatewayServer) setupClientConnection(
 
 func (s *GatewayServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Initialize request context
-	ctx, traceID, requestID, clientIP := s.initializeWebSocketRequest(w, r)
+	traceID := logging.GenerateTraceID()
+	requestID := logging.GenerateRequestID()
+	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
+	r.Body = http.MaxBytesReader(w, r.Body, defaultBufferSize*defaultBufferSize)
+	clientIP := getIPFromAddr(r.RemoteAddr)
 
 	// Check connection limits
 	if err := s.checkConnectionLimits(clientIP); err != nil {
@@ -607,19 +611,6 @@ func (s *GatewayServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	s.setupAndRegisterConnection(enrichedCtx, conn, sess, authClaims, clientIP, r.RemoteAddr)
 }
 
-func (s *GatewayServer) initializeWebSocketRequest(
-	w http.ResponseWriter,
-	r *http.Request,
-) (context.Context, string, string, string) {
-	traceID := logging.GenerateTraceID()
-	requestID := logging.GenerateRequestID()
-	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
-
-	r.Body = http.MaxBytesReader(w, r.Body, defaultBufferSize*defaultBufferSize)
-	clientIP := getIPFromAddr(r.RemoteAddr)
-
-	return ctx, traceID, requestID, clientIP
-}
 
 func (s *GatewayServer) handleConnectionLimitError(
 	ctx context.Context,
@@ -1554,6 +1545,7 @@ func (s *GatewayServer) createTLSConfig() (*tls.Config, error) {
 	}
 
 	// Create base TLS config
+	// #nosec G402 - minVersion is validated by getTLSMinVersion to be TLS 1.2 or 1.3
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   minVersion,

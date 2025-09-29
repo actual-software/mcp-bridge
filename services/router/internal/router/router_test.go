@@ -1160,6 +1160,7 @@ func verifyAllResponsesReceived(
 
 			if received {
 				t.Logf("Response received for request %s", id)
+
 				break
 			}
 
@@ -1181,27 +1182,21 @@ func verifyAllResponsesReceived(
 
 // TestMessageRouter_ConnectionStateHandling tests message routing behavior.
 // during different connection states.
-func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
-	mockConnectAttempts := int32(0)
-
-	// Create a server that fails first few connection attempts.
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		attempts := atomic.AddInt32(&mockConnectAttempts, 1)
+func createConnectionStateTestServer(t *testing.T, mockConnectAttempts *int32) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts := atomic.AddInt32(mockConnectAttempts, 1)
 		if attempts < constants.TestMaxRetries {
 			// Fail connection.
 			w.WriteHeader(http.StatusServiceUnavailable)
-
 			return
 		}
 
 		// Accept connection.
 		upgrader := websocket.Upgrader{}
-
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
-
 		defer func() { _ = conn.Close() }()
 
 		// Handle messages.
@@ -1222,7 +1217,6 @@ func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
 								return id
 							}
 						}
-
 						return nil
 					}()},
 			}
@@ -1231,8 +1225,9 @@ func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
 			}
 		}
 	}))
-	defer mockServer.Close()
+}
 
+func setupConnectionStateTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1245,12 +1240,11 @@ func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
+	return router
+}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() { _ = router.Run(ctx) }()
-
+func testQueuedRequestWhileDisconnected(t *testing.T, router *LocalRouter) {
+	t.Helper()
 	// Send request while disconnected - should be queued.
 	request := `{"jsonrpc":"2.0","method":"test.queued","params":{},"id":"queued-1"}`
 	router.GetStdinChan() <- []byte(request)
@@ -1268,9 +1262,28 @@ func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
 	case <-time.After(3 * time.Second):
 		t.Fatal("Timeout waiting for queued request response")
 	}
+}
 
+func verifyConnectionAttempts(t *testing.T, mockConnectAttempts *int32) {
+	t.Helper()
 	// Verify connection attempts (should have retried).
-	assert.GreaterOrEqual(t, atomic.LoadInt32(&mockConnectAttempts), int32(3))
+	assert.GreaterOrEqual(t, atomic.LoadInt32(mockConnectAttempts), int32(3))
+}
+
+func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
+	mockConnectAttempts := int32(0)
+	mockServer := createConnectionStateTestServer(t, &mockConnectAttempts)
+	defer mockServer.Close()
+
+	router := setupConnectionStateTestRouter(t, mockServer)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() { _ = router.Run(ctx) }()
+
+	testQueuedRequestWhileDisconnected(t, router)
+	verifyConnectionAttempts(t, &mockConnectAttempts)
 }
 
 // TestMessageRouter_ErrorHandling tests various error conditions in message routing.
@@ -1556,7 +1569,8 @@ func validateConcurrentResponses(t *testing.T, numRequests int, responsesReceive
 		case <-timeout:
 			t.Fatalf("Timeout waiting for responses. Received %d/%d", atomic.LoadInt32(responsesReceived), numRequests)
 		case <-ticker.C:
-			if atomic.LoadInt32(responsesReceived) >= int32(numRequests) {
+			// Safe conversion: numRequests is positive and within int32 range for testing
+			if numRequests > 0 && numRequests <= math.MaxInt32 && atomic.LoadInt32(responsesReceived) >= int32(numRequests) {
 				// Verify all request IDs received responses.
 				missing := []string{}
 
@@ -1605,9 +1619,8 @@ func TestMessageRouter_ConcurrentRequests(t *testing.T) {
 }
 
 // TestMessageRouter_RequestTimeout tests timeout handling for requests.
-func TestMessageRouter_RequestTimeout(t *testing.T) {
-	// Create mock server that delays responses.
-	mockServer := createMockWebSocketServer(t, func(conn *websocket.Conn) {
+func createDelayedResponseServer(t *testing.T) *httptest.Server {
+	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {
@@ -1627,7 +1640,6 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 								return id
 							}
 						}
-
 						return nil
 					}()},
 			}
@@ -1636,8 +1648,9 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 			}
 		}
 	})
-	defer mockServer.Close()
+}
 
+func setupTimeoutTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1650,14 +1663,11 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
+	return router
+}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() { _ = router.Run(ctx) }()
-
-	waitForRouterConnection(t, router)
-
+func testRequestTimeout(t *testing.T, router *LocalRouter) {
+	t.Helper()
 	// Send request that will timeout.
 	request := `{"jsonrpc":"2.0","method":"test.timeout","params":{},"id":"timeout-1"}`
 	router.GetStdinChan() <- []byte(request)
@@ -1675,10 +1685,24 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 	}
 }
 
+func TestMessageRouter_RequestTimeout(t *testing.T) {
+	mockServer := createDelayedResponseServer(t)
+	defer mockServer.Close()
+
+	router := setupTimeoutTestRouter(t, mockServer)
+	
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() { _ = router.Run(ctx) }()
+
+	waitForRouterConnection(t, router)
+	testRequestTimeout(t, router)
+}
+
 // TestMessageRouter_MetricsCollection tests that metrics are properly collected during routing.
-func TestMessageRouter_MetricsCollection(t *testing.T) {
-	// Create mock server.
-	mockServer := createMockWebSocketServer(t, func(conn *websocket.Conn) {
+func createMetricsTestServer(t *testing.T) *httptest.Server {
+	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {
@@ -1696,7 +1720,6 @@ func TestMessageRouter_MetricsCollection(t *testing.T) {
 								return id
 							}
 						}
-
 						return nil
 					}()},
 			}
@@ -1705,8 +1728,9 @@ func TestMessageRouter_MetricsCollection(t *testing.T) {
 			}
 		}
 	})
-	defer mockServer.Close()
+}
 
+func setupMetricsTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1719,7 +1743,48 @@ func TestMessageRouter_MetricsCollection(t *testing.T) {
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
+	return router
+}
 
+func testMetricsCollection(t *testing.T, router *LocalRouter) {
+	t.Helper()
+	// Get initial metrics.
+	initialMetrics := router.GetMetrics()
+
+	// Send multiple requests.
+	for i := 0; i < 5; i++ {
+		req := fmt.Sprintf(`{"jsonrpc":"2.0","method":"test.metrics","params":{},"id":"metrics-%d"}`, i)
+		router.GetStdinChan() <- []byte(req)
+		// Consume response.
+		<-router.GetStdoutChan()
+	}
+
+	// Send invalid request to generate error.
+	router.GetStdinChan() <- []byte(`{invalid json}`)
+	<-router.GetStdoutChan() // Consume error response
+
+	// Get final metrics.
+	finalMetrics := router.GetMetrics()
+
+	// Verify metrics were collected.
+	expectedRequests := initialMetrics.RequestsTotal + 5 // 5 valid requests (invalid JSON doesn't count)
+	assert.Equal(t, expectedRequests, finalMetrics.RequestsTotal)
+
+	expectedResponses := initialMetrics.ResponsesTotal + 5 // 5 success responses
+	assert.Equal(t, expectedResponses, finalMetrics.ResponsesTotal)
+	assert.Greater(t, finalMetrics.ErrorsTotal, initialMetrics.ErrorsTotal) // At least 1 error from invalid JSON
+
+	t.Logf("Initial metrics: requests=%d, responses=%d, errors=%d",
+		initialMetrics.RequestsTotal, initialMetrics.ResponsesTotal, initialMetrics.ErrorsTotal)
+	t.Logf("Final metrics: requests=%d, responses=%d, errors=%d",
+		finalMetrics.RequestsTotal, finalMetrics.ResponsesTotal, finalMetrics.ErrorsTotal)
+}
+
+func TestMessageRouter_MetricsCollection(t *testing.T) {
+	mockServer := createMetricsTestServer(t)
+	defer mockServer.Close()
+
+	router := setupMetricsTestRouter(t, mockServer)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -1734,45 +1799,11 @@ func TestMessageRouter_MetricsCollection(t *testing.T) {
 
 	go func() {
 		defer routerWg.Done()
-
 		func() { _ = router.Run(ctx) }()
 	}()
 
 	waitForRouterConnection(t, router)
-
-	// Get initial metrics.
-	initialMetrics := router.GetMetrics()
-
-	// Send multiple requests.
-	for i := 0; i < 5; i++ {
-		req := fmt.Sprintf(`{"jsonrpc":"2.0","method":"test.metrics","params":{},"id":"metrics-%d"}`, i)
-		router.GetStdinChan() <- []byte(req)
-		// Consume response.
-		<-router.GetStdoutChan()
-	}
-
-	// Send invalid request to generate error.
-	router.GetStdinChan() <- []byte(`{invalid json}`)
-
-	<-router.GetStdoutChan() // Consume error response
-
-	// Get final metrics.
-	finalMetrics := router.GetMetrics()
-
-	// Verify metrics were collected.
-	// Valid requests should be counted as requests, and JSON parsing errors
-	// generate errors but may not count as responses.
-	expectedRequests := initialMetrics.RequestsTotal + 5 // 5 valid requests (invalid JSON doesn't count)
-	assert.Equal(t, expectedRequests, finalMetrics.RequestsTotal)
-
-	expectedResponses := initialMetrics.ResponsesTotal + 5 // 5 success responses (error responses may not be counted)
-	assert.Equal(t, expectedResponses, finalMetrics.ResponsesTotal)
-	assert.Greater(t, finalMetrics.ErrorsTotal, initialMetrics.ErrorsTotal) // At least 1 error from invalid JSON
-
-	t.Logf("Initial metrics: requests=%d, responses=%d, errors=%d",
-		initialMetrics.RequestsTotal, initialMetrics.ResponsesTotal, initialMetrics.ErrorsTotal)
-	t.Logf("Final metrics: requests=%d, responses=%d, errors=%d",
-		finalMetrics.RequestsTotal, finalMetrics.ResponsesTotal, finalMetrics.ErrorsTotal)
+	testMetricsCollection(t, router)
 }
 
 // =====================================================================================
@@ -3003,9 +3034,8 @@ func validateProtocolMetrics(t *testing.T, router *LocalRouter, protocolMethods 
 // =====================================================================================
 
 // BenchmarkRouter_ConcurrentRequests benchmarks concurrent request processing.
-func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
-	// Create fast echo server.
-	mockServer := createMockWebSocketServer(b, func(conn *websocket.Conn) {
+func createBenchmarkEchoServer(b testing.TB) *httptest.Server {
+	return createMockWebSocketServer(b, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {
@@ -3023,7 +3053,6 @@ func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
 								return id
 							}
 						}
-
 						return nil
 					}()},
 			}
@@ -3032,8 +3061,9 @@ func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
 			}
 		}
 	})
-	defer mockServer.Close()
+}
 
+func setupConcurrentBenchmarkRouter(b *testing.B, mockServer *httptest.Server) *LocalRouter {
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -3048,39 +3078,48 @@ func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create router: %v", err)
 	}
+	return router
+}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() { _ = router.Run(ctx) }()
-
-	// Wait for connection.
+func waitForBenchmarkRouterConnection(b *testing.B, router *LocalRouter) {
 	for router.GetState() != StateConnected {
 		time.Sleep(1 * time.Millisecond)
 	}
+}
 
-	b.ResetTimer()
-	b.SetParallelism(10) // 10 concurrent workers
-
+func runConcurrentBenchmark(b *testing.B, router *LocalRouter) {
 	b.RunParallel(func(pb *testing.PB) {
 		requestID := 0
 		for pb.Next() {
 			req := fmt.Sprintf(`{"jsonrpc":"2.0","method":"benchmark.concurrent","id":"bench-%d"}`, requestID)
 			router.GetStdinChan() <- []byte(req)
-
 			<-router.GetStdoutChan() // Consume response
-
 			requestID++
 		}
 	})
 }
 
-// BenchmarkRouter_LargePayloads benchmarks processing of large request/response payloads.
-func BenchmarkRouter_LargePayloads(b *testing.B) {
-	// Generate large payload.
-	largeData := strings.Repeat("x", 10*1024) // 10KB payload
+func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
+	mockServer := createBenchmarkEchoServer(b)
+	defer mockServer.Close()
 
-	mockServer := createMockWebSocketServer(b, func(conn *websocket.Conn) {
+	router := setupConcurrentBenchmarkRouter(b, mockServer)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() { _ = router.Run(ctx) }()
+
+	waitForBenchmarkRouterConnection(b, router)
+
+	b.ResetTimer()
+	b.SetParallelism(10) // 10 concurrent workers
+
+	runConcurrentBenchmark(b, router)
+}
+
+// BenchmarkRouter_LargePayloads benchmarks processing of large request/response payloads.
+func createLargePayloadServer(b testing.TB, largeData string) *httptest.Server {
+	return createMockWebSocketServer(b, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {
@@ -3101,7 +3140,6 @@ func BenchmarkRouter_LargePayloads(b *testing.B) {
 								return id
 							}
 						}
-
 						return nil
 					}(),
 				},
@@ -3111,8 +3149,9 @@ func BenchmarkRouter_LargePayloads(b *testing.B) {
 			}
 		}
 	})
-	defer mockServer.Close()
+}
 
+func setupLargePayloadBenchmarkRouter(b *testing.B, mockServer *httptest.Server) *LocalRouter {
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -3127,17 +3166,10 @@ func BenchmarkRouter_LargePayloads(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create router: %v", err)
 	}
+	return router
+}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() { _ = router.Run(ctx) }()
-
-	// Wait for connection.
-	for router.GetState() != StateConnected {
-		time.Sleep(1 * time.Millisecond)
-	}
-
+func runLargePayloadBenchmark(b *testing.B, router *LocalRouter, largeData string) {
 	requestTemplate := `{"jsonrpc":"2.0","method":"benchmark.large","params":{"data":"%s"},"id":"large-bench"}`
 	request := fmt.Sprintf(requestTemplate, largeData)
 
@@ -3146,10 +3178,24 @@ func BenchmarkRouter_LargePayloads(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		router.GetStdinChan() <- []byte(request)
-
 		responseData := <-router.GetStdoutChan()
 		_ = responseData // Consume response
 	}
+}
+
+func BenchmarkRouter_LargePayloads(b *testing.B) {
+	largeData := strings.Repeat("x", 10*1024) // 10KB payload
+	mockServer := createLargePayloadServer(b, largeData)
+	defer mockServer.Close()
+
+	router := setupLargePayloadBenchmarkRouter(b, mockServer)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() { _ = router.Run(ctx) }()
+
+	waitForBenchmarkRouterConnection(b, router)
+	runLargePayloadBenchmark(b, router, largeData)
 }
 
 // BenchmarkRouter_StateTransitions benchmarks connection state management overhead.

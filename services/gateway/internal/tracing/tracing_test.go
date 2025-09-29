@@ -148,11 +148,12 @@ func TestHTTPHeaderInjectionExtraction(t *testing.T) {
 	childRecord := tracer.FinishedSpans()[0]
 	assert.Equal(t, func() uint64 {
 		if mockCtx, ok := span.Context().(mocktracer.MockSpanContext); ok {
+			// #nosec G115 - test code converting mock span IDs
 			return uint64(mockCtx.SpanID)
 		}
 
 		return 0
-	}(), uint64(childRecord.ParentID))
+	}(), uint64(childRecord.ParentID)) // #nosec G115 - test code converting mock span IDs
 }
 
 func TestHTTPMiddleware(t *testing.T) {
@@ -300,6 +301,7 @@ func validateHTTPMiddlewareResponse(t *testing.T, recorder *httptest.ResponseRec
 	assert.Equal(t, "http", requestSpan.Tag("component"))
 	// Validate HTTP status code is in valid range before conversion
 	require.True(t, tt.expectedStatus >= 100 && tt.expectedStatus <= 599, "HTTP status code must be in valid range")
+	// #nosec G115 - validated above that status is in range 100-599
 	assert.Equal(t, uint16(tt.expectedStatus), requestSpan.Tag("http.status_code"))
 
 	if tt.expectError {
@@ -391,7 +393,10 @@ func runTracedHTTPClientTests(t *testing.T, tests []struct {
 }, server *httptest.Server, client *http.Client) {
 	t.Helper()
 
-	tracer := opentracing.GlobalTracer().(*mocktracer.MockTracer)
+	tracer, ok := opentracing.GlobalTracer().(*mocktracer.MockTracer)
+	if !ok {
+		t.Fatal("failed to get mock tracer")
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

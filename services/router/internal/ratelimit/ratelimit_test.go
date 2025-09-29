@@ -11,6 +11,7 @@ import (
 
 	"github.com/poiley/mcp-bridge/services/router/internal/constants"
 
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
 
@@ -631,15 +632,15 @@ func TestTokenBucketLimiter_PreciseRateControl(t *testing.T) {
 	}
 }
 
-func TestSlidingWindowLimiter_EdgeCases(t *testing.T) {
-	logger := zaptest.NewLogger(t)
+type slidingWindowEdgeCase struct {
+	name       string
+	windowSize time.Duration
+	maxEvents  int
+	should     string
+}
 
-	tests := []struct {
-		name       string
-		windowSize time.Duration
-		maxEvents  int
-		should     string
-	}{
+func getSlidingWindowEdgeCaseTests() []slidingWindowEdgeCase {
+	return []slidingWindowEdgeCase{
 		{
 			name:       "zero window size",
 			windowSize: 0,
@@ -677,28 +678,38 @@ func TestSlidingWindowLimiter_EdgeCases(t *testing.T) {
 			should:     "reject all",
 		},
 	}
+}
+
+func testSlidingWindowEdgeCase(t *testing.T, tt slidingWindowEdgeCase, logger *zap.Logger) {
+	t.Helper()
+	limiter := NewSlidingWindowLimiter(tt.windowSize, tt.maxEvents, logger)
+	ctx := context.Background()
+
+	// Test behavior.
+	err := limiter.Allow(ctx)
+
+	switch tt.should {
+	case "reject all":
+		if err == nil {
+			t.Error("Should reject when max events <= 0")
+		}
+	case "work correctly":
+		if tt.maxEvents > 0 && err != nil {
+			t.Errorf("Should allow first request: %v", err)
+		}
+	case "handle gracefully":
+		// Should not panic or crash.
+		t.Logf("Handled edge case gracefully: %v", err)
+	}
+}
+
+func TestSlidingWindowLimiter_EdgeCases(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+	tests := getSlidingWindowEdgeCaseTests()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			limiter := NewSlidingWindowLimiter(tt.windowSize, tt.maxEvents, logger)
-			ctx := context.Background()
-
-			// Test behavior.
-			err := limiter.Allow(ctx)
-
-			switch tt.should {
-			case "reject all":
-				if err == nil {
-					t.Error("Should reject when max events <= 0")
-				}
-			case "work correctly":
-				if tt.maxEvents > 0 && err != nil {
-					t.Errorf("Should allow first request: %v", err)
-				}
-			case "handle gracefully":
-				// Should not panic or crash.
-				t.Logf("Handled edge case gracefully: %v", err)
-			}
+			testSlidingWindowEdgeCase(t, tt, logger)
 		})
 	}
 }
@@ -740,13 +751,13 @@ func TestSlidingWindowLimiter_MemoryCleanup(t *testing.T) {
 	}
 }
 
-func TestRateLimiter_UnderHighLoad(t *testing.T) {
-	logger := zaptest.NewLogger(t)
+type highLoadTest struct {
+	name    string
+	limiter RateLimiter
+}
 
-	tests := []struct {
-		name    string
-		limiter RateLimiter
-	}{
+func getHighLoadTests(logger *zap.Logger) []highLoadTest {
+	return []highLoadTest{
 		{
 			name:    "TokenBucket under load",
 			limiter: NewTokenBucketLimiter(100.0, 10, time.Second, logger),
@@ -760,54 +771,69 @@ func TestRateLimiter_UnderHighLoad(t *testing.T) {
 			limiter: &NoOpLimiter{},
 		},
 	}
+}
+
+func testRateLimiterUnderHighLoad(t *testing.T, tt highLoadTest) {
+	t.Helper()
+	ctx := context.Background()
+
+	const (
+		numGoroutines        = 50
+		requestsPerGoroutine = 20
+	)
+
+	allowed := runHighLoadTest(ctx, tt.limiter, numGoroutines, requestsPerGoroutine)
+	
+	t.Logf("%s: %d allowed out of %d total",
+		tt.name, allowed, numGoroutines*requestsPerGoroutine)
+
+	verifyHighLoadResults(t, tt.limiter, allowed, numGoroutines*requestsPerGoroutine)
+}
+
+func runHighLoadTest(ctx context.Context, limiter RateLimiter, numGoroutines, requestsPerGoroutine int) int32 {
+	var (
+		allowed int32
+		wg      sync.WaitGroup
+	)
+
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < requestsPerGoroutine; j++ {
+				if err := limiter.Allow(ctx); err == nil {
+					atomic.AddInt32(&allowed, 1)
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
+	return allowed
+}
+
+func verifyHighLoadResults(t *testing.T, limiter RateLimiter, allowed int32, totalRequests int) {
+	t.Helper()
+	if _, isNoOp := limiter.(*NoOpLimiter); !isNoOp {
+		// #nosec G115 - test code comparing request counts
+		if allowed >= int32(totalRequests) {
+			t.Errorf("Rate limiter should have limited some requests")
+		}
+	} else {
+		// #nosec G115 - test code comparing request counts  
+		if allowed != int32(totalRequests) {
+			t.Errorf("NoOp limiter should allow all requests")
+		}
+	}
+}
+
+func TestRateLimiter_UnderHighLoad(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+	tests := getHighLoadTests(logger)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-
-			const (
-				numGoroutines        = 50
-				requestsPerGoroutine = 20
-			)
-
-			var (
-				allowed int32
-				wg      sync.WaitGroup
-			)
-
-			start := time.Now()
-
-			for i := 0; i < numGoroutines; i++ {
-				wg.Add(1)
-
-				go func() {
-					defer wg.Done()
-
-					for j := 0; j < requestsPerGoroutine; j++ {
-						if err := tt.limiter.Allow(ctx); err == nil {
-							atomic.AddInt32(&allowed, 1)
-						}
-					}
-				}()
-			}
-
-			wg.Wait()
-
-			elapsed := time.Since(start)
-
-			t.Logf("%s: %d allowed out of %d total in %v",
-				tt.name, allowed, numGoroutines*requestsPerGoroutine, elapsed)
-
-			// Verify rate limiter worked (except NoOp which allows all).
-			if _, isNoOp := tt.limiter.(*NoOpLimiter); !isNoOp {
-				if allowed >= numGoroutines*requestsPerGoroutine {
-					t.Errorf("Rate limiter should have limited some requests")
-				}
-			} else {
-				if allowed != numGoroutines*requestsPerGoroutine {
-					t.Errorf("NoOp limiter should allow all requests")
-				}
-			}
+			testRateLimiterUnderHighLoad(t, tt)
 		})
 	}
 }

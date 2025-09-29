@@ -248,16 +248,17 @@ func (g *GatewayPoolHealthChecker) CheckHealth(ctx context.Context) HealthCheckR
 		result.Details["endpoint_details"] = endpoints
 	}
 
-	if totalEndpoints == 0 {
+	switch {
+	case totalEndpoints == 0:
 		result.Status = HealthStatusUnhealthy
 		result.Message = "No endpoints configured"
-	} else if healthyEndpoints == 0 {
+	case healthyEndpoints == 0:
 		result.Status = HealthStatusUnhealthy
 		result.Message = "No healthy endpoints available"
-	} else if healthyEndpoints < totalEndpoints {
+	case healthyEndpoints < totalEndpoints:
 		result.Status = HealthStatusDegraded
 		result.Message = fmt.Sprintf("%d of %d endpoints healthy", healthyEndpoints, totalEndpoints)
-	} else {
+	default:
 		result.Status = HealthStatusHealthy
 		result.Message = fmt.Sprintf("All %d endpoints healthy", totalEndpoints)
 	}

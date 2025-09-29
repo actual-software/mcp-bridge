@@ -15,25 +15,33 @@ import (
 
 func TestNewGatewayPool(t *testing.T) {
 	logger := zap.NewNop()
+	tests := getGatewayPoolTests()
 
-	tests := []struct {
-		name        string
-		config      *routerConfig.Config
-		wantErr     bool
-		wantErrMsg  string
-		expectCount int
-	}{
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testGatewayPoolCreation(t, tt, logger)
+		})
+	}
+}
+
+type gatewayPoolTest struct {
+	name        string
+	config      *routerConfig.Config
+	wantErr     bool
+	wantErrMsg  string
+	expectCount int
+}
+
+func getGatewayPoolTests() []gatewayPoolTest {
+	return []gatewayPoolTest{
 		{
 			name: "valid single endpoint",
 			config: &routerConfig.Config{
 				GatewayPool: routerConfig.GatewayPoolConfig{
 					Endpoints: []routerConfig.GatewayEndpoint{
 						{
-							URL: fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
-							Auth: config.AuthConfig{
-								Type:  "bearer",
-								Token: "test-token",
-							},
+							URL:  fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
+							Auth: config.AuthConfig{Type: "bearer", Token: "test-token"},
 						},
 					},
 				},
@@ -69,47 +77,63 @@ func TestNewGatewayPool(t *testing.T) {
 			wantErrMsg: "no gateway endpoints configured",
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			pool, err := NewGatewayPool(tt.config, logger)
+func testGatewayPoolCreation(t *testing.T, tt gatewayPoolTest, logger *zap.Logger) {
+	t.Helper()
+	pool, err := NewGatewayPool(tt.config, logger)
 
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("Expected error but got none")
-				} else if tt.wantErrMsg != "" && err.Error() != tt.wantErrMsg {
-					t.Errorf("Expected error '%s', got '%s'", tt.wantErrMsg, err.Error())
-				}
+	if tt.wantErr {
+		verifyGatewayPoolError(t, err, tt.wantErrMsg)
+		return
+	}
 
-				return
-			}
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+		return
+	}
 
-			if err != nil {
-				t.Errorf("Expected no error, got: %v", err)
+	verifyGatewayPool(t, pool, tt.expectCount)
+	_ = pool.Close()
+}
 
-				return
-			}
+func verifyGatewayPoolError(t *testing.T, err error, wantErrMsg string) {
+	t.Helper()
+	if err == nil {
+		t.Errorf("Expected error but got none")
+	} else if wantErrMsg != "" && err.Error() != wantErrMsg {
+		t.Errorf("Expected error '%s', got '%s'", wantErrMsg, err.Error())
+	}
+}
 
-			if pool == nil {
-				t.Error("Expected non-nil pool")
+func verifyGatewayPool(t *testing.T, pool *GatewayPool, expectCount int) {
+	t.Helper()
+	if pool == nil {
+		t.Error("Expected non-nil pool")
+		return
+	}
 
-				return
-			}
-
-			if len(pool.endpoints) != tt.expectCount {
-				t.Errorf("Expected %d endpoints, got %d", tt.expectCount, len(pool.endpoints))
-			}
-
-			// Clean up.
-			_ = pool.Close()
-		})
+	if len(pool.endpoints) != expectCount {
+		t.Errorf("Expected %d endpoints, got %d", expectCount, len(pool.endpoints))
 	}
 }
 
 func TestGatewayPool_LoadBalancing(t *testing.T) {
 	logger := zap.NewNop()
+	config := createLoadBalancingConfig()
+	pool := setupLoadBalancingPool(t, config, logger)
+	defer cleanupPool(t, pool)
 
-	config := &routerConfig.Config{
+	tests := getLoadBalancingTests()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testLoadBalancingStrategy(t, pool, tt.strategy)
+		})
+	}
+}
+
+func createLoadBalancingConfig() *routerConfig.Config {
+	return &routerConfig.Config{
 		GatewayPool: routerConfig.GatewayPoolConfig{
 			Endpoints: []routerConfig.GatewayEndpoint{
 				{
@@ -132,19 +156,29 @@ func TestGatewayPool_LoadBalancing(t *testing.T) {
 			},
 		},
 	}
+}
 
+func setupLoadBalancingPool(t *testing.T, config *routerConfig.Config, logger *zap.Logger) *GatewayPool {
+	t.Helper()
 	pool, err := NewGatewayPool(config, logger)
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}
+	return pool
+}
 
-	defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+func cleanupPool(t *testing.T, pool *GatewayPool) {
+	t.Helper()
+	if err := pool.Close(); err != nil {
+		t.Logf("Failed to close pool: %v", err)
+	}
+}
 
-	tests := []struct {
+func getLoadBalancingTests() []struct {
+	name     string
+	strategy LoadBalancingStrategy
+} {
+	return []struct {
 		name     string
 		strategy LoadBalancingStrategy
 	}{
@@ -153,31 +187,24 @@ func TestGatewayPool_LoadBalancing(t *testing.T) {
 		{"weighted", WeightedStrategy},
 		{"priority", PriorityStrategy},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			pool.strategy = tt.strategy
+func testLoadBalancingStrategy(t *testing.T, pool *GatewayPool, strategy LoadBalancingStrategy) {
+	t.Helper()
+	pool.strategy = strategy
 
-			// Test multiple selections.
-			var selectedURLs []string
+	var selectedURLs []string
+	for i := 0; i < 4; i++ {
+		endpoint, err := pool.SelectEndpoint()
+		if err != nil {
+			t.Errorf("SelectEndpoint failed: %v", err)
+			continue
+		}
+		selectedURLs = append(selectedURLs, endpoint.Config.URL)
+	}
 
-			for i := 0; i < 4; i++ {
-				endpoint, err := pool.SelectEndpoint()
-				if err != nil {
-					t.Errorf("SelectEndpoint failed: %v", err)
-
-					continue
-				}
-
-				selectedURLs = append(selectedURLs, endpoint.Config.URL)
-			}
-
-			if len(selectedURLs) == 0 {
-				t.Error("No endpoints selected")
-			}
-			// Verify that endpoints are being selected (basic smoke test).
-			// More detailed strategy testing would require specific setup for each.
-		})
+	if len(selectedURLs) == 0 {
+		t.Error("No endpoints selected")
 	}
 }
 
@@ -228,8 +255,20 @@ func TestGatewayPool_HealthChecking(t *testing.T) {
 
 func TestGatewayPool_GetEndpointByTags(t *testing.T) {
 	logger := zap.NewNop()
+	config := createTaggedEndpointsConfig()
+	pool := setupTaggedPool(t, config, logger)
+	defer cleanupPool(t, pool)
 
-	config := &routerConfig.Config{
+	tests := getTagTests()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testTagSelection(t, pool, tt)
+		})
+	}
+}
+
+func createTaggedEndpointsConfig() *routerConfig.Config {
+	return &routerConfig.Config{
 		GatewayPool: routerConfig.GatewayPoolConfig{
 			Endpoints: []routerConfig.GatewayEndpoint{
 				{
@@ -250,24 +289,26 @@ func TestGatewayPool_GetEndpointByTags(t *testing.T) {
 			},
 		},
 	}
+}
 
+func setupTaggedPool(t *testing.T, config *routerConfig.Config, logger *zap.Logger) *GatewayPool {
+	t.Helper()
 	pool, err := NewGatewayPool(config, logger)
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}
+	return pool
+}
 
-	defer func() {
-		if err := pool.Close(); err != nil {
-			t.Logf("Failed to close pool: %v", err)
-		}
-	}()
+type tagTest struct {
+	name        string
+	tags        []string
+	expectCount int
+	expectErr   bool
+}
 
-	tests := []struct {
-		name        string
-		tags        []string
-		expectCount int
-		expectErr   bool
-	}{
+func getTagTests() []tagTest {
+	return []tagTest{
 		{
 			name:        "single matching tag",
 			tags:        []string{"docker"},
@@ -289,29 +330,26 @@ func TestGatewayPool_GetEndpointByTags(t *testing.T) {
 			expectErr: true,
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			endpoints, err := pool.GetEndpointByTags(tt.tags)
+func testTagSelection(t *testing.T, pool *GatewayPool, tt tagTest) {
+	t.Helper()
+	endpoints, err := pool.GetEndpointByTags(tt.tags)
 
-			if tt.expectErr {
-				if err == nil {
-					t.Error("Expected error but got none")
-				}
+	if tt.expectErr {
+		if err == nil {
+			t.Error("Expected error but got none")
+		}
+		return
+	}
 
-				return
-			}
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+		return
+	}
 
-			if err != nil {
-				t.Errorf("Expected no error, got: %v", err)
-
-				return
-			}
-
-			if len(endpoints) != tt.expectCount {
-				t.Errorf("Expected %d endpoints, got %d", tt.expectCount, len(endpoints))
-			}
-		})
+	if len(endpoints) != tt.expectCount {
+		t.Errorf("Expected %d endpoints, got %d", tt.expectCount, len(endpoints))
 	}
 }
 

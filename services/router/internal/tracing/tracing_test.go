@@ -119,37 +119,45 @@ func TestTracerOperations(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	tracer := setupTracerForOperationTests(t, logger)
 
-	defer func() { _ = tracer.Shutdown(context.Background()) }()
+	t.Cleanup(func() { _ = tracer.Shutdown(context.Background()) })
 
 	t.Run("StartSpan", func(t *testing.T) {
+		t.Parallel()
 		testStartSpan(t, tracer)
 	})
 
 	t.Run("StartSpanWithKind", func(t *testing.T) {
+		t.Parallel()
 		testStartSpanWithKind(t, tracer)
 	})
 
 	t.Run("SetSpanAttributes", func(t *testing.T) {
+		t.Parallel()
 		testSetSpanAttributes(t, tracer)
 	})
 
 	t.Run("AddSpanEvent", func(t *testing.T) {
+		t.Parallel()
 		testAddSpanEvent(t, tracer)
 	})
 
 	t.Run("RecordError", func(t *testing.T) {
+		t.Parallel()
 		testRecordError(t, tracer)
 	})
 
 	t.Run("HTTPHeaderPropagation", func(t *testing.T) {
+		t.Parallel()
 		testHTTPHeaderPropagation(t, tracer)
 	})
 
 	t.Run("MapPropagation", func(t *testing.T) {
+		t.Parallel()
 		testMapPropagation(t, tracer)
 	})
 
 	t.Run("IsEnabled", func(t *testing.T) {
+		t.Parallel()
 		testIsEnabled(t, tracer)
 	})
 }
@@ -287,6 +295,7 @@ func testMapPropagation(t *testing.T, tracer *tracing.Tracer) {
 	for k := range headers {
 		if strings.EqualFold(k, "traceparent") {
 			found = true
+
 			break
 		}
 	}

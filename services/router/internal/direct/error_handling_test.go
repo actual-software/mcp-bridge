@@ -408,7 +408,7 @@ func TestDirectClientManager_ErrorPropagation(t *testing.T) {
 	}
 }
 
-// Helper functions for createConnectionFailureTests
+// Helper functions for createConnectionFailureTests.
 func createStdioFailureTest(t *testing.T) struct {
 	name        string
 	clientFunc  func() DirectClient
@@ -506,7 +506,7 @@ func createWebSocketFailureTest(t *testing.T) struct {
 	}
 }
 
-// Helper functions for runConcurrentRequestsTest
+// Helper functions for runConcurrentRequestsTest.
 func setupConcurrentTestManager(t *testing.T) DirectClientManagerInterface {
 	t.Helper()
 
@@ -601,7 +601,7 @@ func verifyConcurrentResults(t *testing.T, results chan error) {
 	assert.Equal(t, numConcurrent, successCount, "All concurrent client creations should succeed")
 }
 
-// Helper functions for createErrorRecoveryTests
+// Helper functions for createErrorRecoveryTests.
 func createStdioErrorRecoveryTest(t *testing.T) struct {
 	name           string
 	clientFunc     func() DirectClient

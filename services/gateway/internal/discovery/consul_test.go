@@ -74,6 +74,7 @@ func (m *MockConsulClient) Health() *consulapi.Health {
 	if !ok {
 		return nil
 	}
+
 	return health
 }
 
@@ -665,6 +666,7 @@ func setupConsulInfrastructure(t *testing.T) (cleanup func(), consulAddr string,
 	if err := waitForConsul(consulAddr, 30*time.Second); err != nil {
 		// Cleanup on failure
 		_ = exec.CommandContext(ctx, "docker", "stop", containerName).Run() //nolint:gosec // Test cleanup command
+
 		return nil, "", fmt.Errorf("Consul failed to become ready: %w", err)
 	}
 
@@ -690,6 +692,7 @@ func isDockerAvailable() bool {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "docker", "ps")
+
 	return cmd.Run() == nil
 }
 

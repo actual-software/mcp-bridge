@@ -11,7 +11,6 @@ import (
 	"unsafe"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
 	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
@@ -33,7 +32,7 @@ func TestSecurityHeadersMiddleware(t *testing.T) {
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte("test response"))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 	})
 
 	middleware := server.securityHeadersMiddleware(testHandler)
@@ -192,8 +191,10 @@ func createTestHealthChecker(healthy bool) *health.Checker {
 			Message: "Test service healthy",
 		})
 		// Manually set healthy endpoints for readiness checks using reflection
+		// This is test-only code that needs to set private fields for testing
 		checkerValue := reflect.ValueOf(checker).Elem()
 		statusField := checkerValue.FieldByName("status")
+		// #nosec G103 - using unsafe in test code to set private field for test setup
 		statusField = reflect.NewAt(statusField.Type(), unsafe.Pointer(statusField.UnsafeAddr())).Elem()
 		healthyEndpointsField := statusField.FieldByName("HealthyEndpoints")
 		healthyEndpointsField.SetInt(1)
@@ -232,7 +233,7 @@ func TestHandleHealth(t *testing.T) {
 		var status health.Status
 
 		err := json.NewDecoder(rec.Body).Decode(&status)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.True(t, status.Healthy)
 	})
 
@@ -255,7 +256,7 @@ func TestHandleHealth(t *testing.T) {
 		var status health.Status
 
 		err := json.NewDecoder(rec.Body).Decode(&status)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.False(t, status.Healthy)
 	})
 }

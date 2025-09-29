@@ -491,22 +491,25 @@ func validateConnectResult(t *testing.T, err error, client *Client, tt struct {
 	if tt.wantError {
 		if err == nil {
 			t.Error("Expected error but got none")
-		} else if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
+			return
+		}
+		if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
 			t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
 		}
-	} else {
-		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
-		}
-
-		if client.conn == nil {
-			t.Error("Expected connection to be established")
-		}
-
-		if client.conn != nil {
-			_ = client.conn.Close()
-		}
+		return
 	}
+	
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+
+	if client.conn == nil {
+		t.Error("Expected connection to be established")
+		return
+	}
+
+	_ = client.conn.Close()
 }
 
 // createMessageEchoServer creates a server that echoes back messages with validation.
@@ -550,10 +553,24 @@ func TestClient_SendRequest(t *testing.T) {
 	server := createMessageEchoServer(t)
 	defer server.Close()
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
+	client := createTestGatewayClient(t, server.URL)
+	connectTestClient(t, client)
+	defer closeTestClient(t, client)
 
+	tests := getSendRequestTestCases()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			verifySendRequest(t, client, tt)
+		})
+	}
+}
+
+func createTestGatewayClient(t *testing.T, serverURL string) *Client {
+	t.Helper()
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	logger := testutil.NewTestLogger(t)
-	client := &Client{
+	
+	return &Client{
 		config: config.GatewayConfig{
 			URL: wsURL,
 			Auth: common.AuthConfig{
@@ -570,20 +587,30 @@ func TestClient_SendRequest(t *testing.T) {
 		logger:    logger,
 		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
 	}
+}
 
-	// Connect first.
+func connectTestClient(t *testing.T, client *Client) {
+	t.Helper()
 	ctx := context.Background()
 	if err := client.Connect(ctx); err != nil {
 		t.Fatalf("Failed to connect: %v", err)
 	}
+}
 
-	defer func() {
-		if err := client.Close(); err != nil {
-			t.Logf("Failed to close client in cleanup: %v", err)
-		}
-	}()
+func closeTestClient(t *testing.T, client *Client) {
+	t.Helper()
+	if err := client.Close(); err != nil {
+		t.Logf("Failed to close client in cleanup: %v", err)
+	}
+}
 
-	tests := []struct {
+func getSendRequestTestCases() []struct {
+	name          string
+	request       *mcp.Request
+	wantError     bool
+	errorContains string
+} {
+	return []struct {
 		name          string
 		request       *mcp.Request
 		wantError     bool
@@ -611,23 +638,27 @@ func TestClient_SendRequest(t *testing.T) {
 			wantError: false,
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := client.SendRequest(tt.request)
+func verifySendRequest(t *testing.T, client *Client, tt struct {
+	name          string
+	request       *mcp.Request
+	wantError     bool
+	errorContains string
+}) {
+	t.Helper()
+	err := client.SendRequest(tt.request)
 
-			if tt.wantError {
-				if err == nil {
-					t.Error("Expected error but got none")
-				} else if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
-					t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
-				}
-			}
-		})
+	if tt.wantError {
+		if err == nil {
+			t.Error("Expected error but got none")
+		} else if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
+			t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
+		}
+	} else {
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
 	}
 }
 
@@ -714,8 +745,19 @@ func validateErrorResponse(t *testing.T, resp *mcp.Response, expectedID interfac
 }
 
 func TestClient_ReceiveResponse(t *testing.T) {
-	// Create test messages.
-	testMessages := []WireMessage{
+	testMessages := createTestResponseMessages()
+	server := createTestMessageServer(t, testMessages)
+	defer server.Close()
+
+	client := createTestGatewayClient(t, server.URL)
+	connectTestClient(t, client)
+	defer closeTestClient(t, client)
+
+	verifyReceiveResponses(t, client)
+}
+
+func createTestResponseMessages() []WireMessage {
+	return []WireMessage{
 		{
 			ID:        "test-123",
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
@@ -742,127 +784,68 @@ func TestClient_ReceiveResponse(t *testing.T) {
 			},
 		},
 	}
+}
 
-	// Create test server that sends test messages.
-	server := createTestMessageServer(t, testMessages)
-	defer server.Close()
-
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
-	logger := testutil.NewTestLogger(t)
-	client := &Client{
-		config: config.GatewayConfig{
-			URL: wsURL,
-			Auth: common.AuthConfig{
-				Type:  "bearer",
-				Token: "test-token",
-			},
-			Connection: common.ConnectionConfig{
-				TimeoutMs: 5000,
-			},
-			TLS: common.TLSConfig{
-				Verify: false,
-			},
-		},
-		logger:    logger,
-		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-	}
-
-	// Connect.
-	ctx := context.Background()
-	if err := client.Connect(ctx); err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-
-	defer func() {
-		if err := client.Close(); err != nil {
-			t.Logf("Failed to close client in cleanup: %v", err)
-		}
-	}()
-
-	// Receive first response (success).
+func verifyReceiveResponses(t *testing.T, client *Client) {
+	t.Helper()
+	
+	// Receive first response (success)
 	resp1, err := client.ReceiveResponse()
 	if err != nil {
 		t.Fatalf("Failed to receive first response: %v", err)
 	}
-
 	validateSuccessResponse(t, resp1, "test-123")
 
-	// Receive second response (error).
+	// Receive second response (error)
 	resp2, err := client.ReceiveResponse()
 	if err != nil {
 		t.Fatalf("Failed to receive second response: %v", err)
 	}
-
 	validateErrorResponse(t, resp2, float64(42), -32600) // JSON unmarshals numbers as float64
 }
 
 func TestClient_ReceiveResponse_InvalidPayload(t *testing.T) {
-	// Create server that sends invalid messages.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		upgrader := websocket.Upgrader{}
+	server := createInvalidPayloadServer(t)
+	defer server.Close()
 
+	client := createTestGatewayClient(t, server.URL)
+	connectTestClient(t, client)
+	defer closeTestClient(t, client)
+
+	verifyInvalidPayloadError(t, client)
+}
+
+func createInvalidPayloadServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
-
 		defer func() { _ = conn.Close() }()
 
-		// Send message without MCP payload.
+		// Send message without MCP payload
 		msg := WireMessage{
 			ID:        "test-123",
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Source:    "gateway",
-			// MCPPayload is nil.
+			// MCPPayload is nil
 		}
 		if err := conn.WriteJSON(msg); err != nil {
 			t.Logf("Failed to write JSON response: %v", err)
 		}
-
 		time.Sleep(testIterations * time.Millisecond)
 	}))
-	defer server.Close()
+}
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
-	logger := testutil.NewTestLogger(t)
-	client := &Client{
-		config: config.GatewayConfig{
-			URL: wsURL,
-			Auth: common.AuthConfig{
-				Type:  "bearer",
-				Token: "test-token",
-			},
-			Connection: common.ConnectionConfig{
-				TimeoutMs: 5000,
-			},
-			TLS: common.TLSConfig{
-				Verify: false,
-			},
-		},
-		logger:    logger,
-		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-	}
-
-	// Connect.
-	ctx := context.Background()
-	if err := client.Connect(ctx); err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-
-	defer func() {
-		if err := client.Close(); err != nil {
-			t.Logf("Failed to close client in cleanup: %v", err)
-		}
-	}()
-
-	// Try to receive response.
+func verifyInvalidPayloadError(t *testing.T, client *Client) {
+	t.Helper()
 	_, err := client.ReceiveResponse()
 	if err == nil {
 		t.Error("Expected error for message without MCP payload")
+		return
 	}
-
 	if !strings.Contains(err.Error(), "without MCP payload") {
 		t.Errorf("Expected 'without MCP payload' error, got: %v", err)
 	}
@@ -870,25 +853,32 @@ func TestClient_ReceiveResponse_InvalidPayload(t *testing.T) {
 
 func TestClient_SendPing(t *testing.T) {
 	pingReceived := make(chan bool, 1)
+	server := createPingHandlerServer(t, pingReceived)
+	defer server.Close()
 
-	// Create server that handles ping.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	client := createTestGatewayClient(t, server.URL)
+	connectTestClient(t, client)
+	defer closeTestClient(t, client)
+
+	verifyPingPong(t, client, pingReceived)
+}
+
+func createPingHandlerServer(t *testing.T, pingReceived chan<- bool) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
-
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
-
 		defer func() { _ = conn.Close() }()
 
 		conn.SetPingHandler(func(appData string) error {
 			pingReceived <- true
-
 			return conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(time.Second))
 		})
 
-		// Read messages to handle ping.
+		// Read messages to handle ping
 		for {
 			_, _, err := conn.ReadMessage()
 			if err != nil {
@@ -896,51 +886,21 @@ func TestClient_SendPing(t *testing.T) {
 			}
 		}
 	}))
-	defer server.Close()
+}
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
-	logger := testutil.NewTestLogger(t)
-	client := &Client{
-		config: config.GatewayConfig{
-			URL: wsURL,
-			Auth: common.AuthConfig{
-				Type:  "bearer",
-				Token: "test-token",
-			},
-			Connection: common.ConnectionConfig{
-				TimeoutMs: 5000,
-			},
-			TLS: common.TLSConfig{
-				Verify: false,
-			},
-		},
-		logger:    logger,
-		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-	}
-
-	// Connect.
-	ctx := context.Background()
-	if err := client.Connect(ctx); err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-
-	defer func() {
-		if err := client.Close(); err != nil {
-			t.Logf("Failed to close client in cleanup: %v", err)
-		}
-	}()
-
-	// Send ping.
+func verifyPingPong(t *testing.T, client *Client, pingReceived <-chan bool) {
+	t.Helper()
+	
+	// Send ping
 	err := client.SendPing()
 	if err != nil {
 		t.Errorf("Failed to send ping: %v", err)
 	}
 
-	// Verify ping was received.
+	// Verify ping was received
 	select {
 	case <-pingReceived:
-		// Success.
+		// Success
 	case <-time.After(1 * time.Second):
 		t.Error("Timeout waiting for ping")
 	}
@@ -948,25 +908,35 @@ func TestClient_SendPing(t *testing.T) {
 
 func TestClient_Close(t *testing.T) {
 	closeReceived := make(chan bool, 1)
+	server := createCloseHandlerServer(t, closeReceived)
+	defer server.Close()
 
-	// Create server that handles close.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	client := createTestGatewayClient(t, server.URL)
+	
+	// Test closing when not connected
+	verifyCloseWhenDisconnected(t, client)
+	
+	// Connect and test normal close
+	connectTestClient(t, client)
+	verifyCloseWhenConnected(t, client, closeReceived)
+}
+
+func createCloseHandlerServer(t *testing.T, closeReceived chan<- bool) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
-
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
-
 		defer func() { _ = conn.Close() }()
 
 		conn.SetCloseHandler(func(code int, text string) error {
 			closeReceived <- true
-
 			return nil
 		})
 
-		// Read messages.
+		// Read messages
 		for {
 			_, _, err := conn.ReadMessage()
 			if err != nil {
@@ -974,56 +944,34 @@ func TestClient_Close(t *testing.T) {
 			}
 		}
 	}))
-	defer server.Close()
+}
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
-	logger := testutil.NewTestLogger(t)
-	client := &Client{
-		config: config.GatewayConfig{
-			URL: wsURL,
-			Auth: common.AuthConfig{
-				Type:  "bearer",
-				Token: "test-token",
-			},
-			Connection: common.ConnectionConfig{
-				TimeoutMs: 5000,
-			},
-			TLS: common.TLSConfig{
-				Verify: false,
-			},
-		},
-		logger:    logger,
-		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-	}
-
-	// Test closing when not connected.
+func verifyCloseWhenDisconnected(t *testing.T, client *Client) {
+	t.Helper()
 	err := client.Close()
 	if err != nil {
 		t.Errorf("Close should not error when not connected: %v", err)
 	}
+}
 
-	// Connect.
-	ctx := context.Background()
-	if err := client.Connect(ctx); err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-
-	// Close connection.
-	err = client.Close()
+func verifyCloseWhenConnected(t *testing.T, client *Client, closeReceived <-chan bool) {
+	t.Helper()
+	
+	// Close connection
+	err := client.Close()
 	if err != nil {
 		t.Errorf("Failed to close: %v", err)
 	}
 
-	// Verify close was received.
+	// Verify close was received
 	select {
 	case <-closeReceived:
-		// Success.
+		// Success
 	case <-time.After(1 * time.Second):
-		// Close message is best effort, so timeout is ok.
+		// Close message is best effort, so timeout is ok
 	}
 
-	// Verify connection is nil.
+	// Verify connection is nil
 	if client.IsConnected() {
 		t.Error("Expected IsConnected to return false after close")
 	}
@@ -1079,75 +1027,49 @@ func TestExtractNamespace(t *testing.T) {
 }
 
 func TestClient_ConcurrentOperations(t *testing.T) {
-	// Create echo server.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		upgrader := websocket.Upgrader{}
+	server := createEchoServer(t)
+	defer server.Close()
 
+	client := createTestGatewayClient(t, server.URL)
+	connectTestClient(t, client)
+	defer closeTestClient(t, client)
+
+	runConcurrentSends(t, client)
+}
+
+func createEchoServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
-
 		defer func() { _ = conn.Close() }()
 
-		// Echo messages back.
+		// Echo messages back
 		for {
 			var msg WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {
 				break
 			}
-
 			if err := conn.WriteJSON(msg); err != nil {
 				break
 			}
 		}
 	}))
-	defer server.Close()
+}
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
-	logger := testutil.NewTestLogger(t)
-	client := &Client{
-		config: config.GatewayConfig{
-			URL: wsURL,
-			Auth: common.AuthConfig{
-				Type:  "bearer",
-				Token: "test-token",
-			},
-			Connection: common.ConnectionConfig{
-				TimeoutMs: 5000,
-			},
-			TLS: common.TLSConfig{
-				Verify: false,
-			},
-		},
-		logger:    logger,
-		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-	}
-
-	// Connect.
-	ctx := context.Background()
-	if err := client.Connect(ctx); err != nil {
-		t.Fatalf("Failed to connect: %v", err)
-	}
-
-	defer func() {
-		if err := client.Close(); err != nil {
-			t.Logf("Failed to close client in cleanup: %v", err)
-		}
-	}()
-
-	// Concurrent sends.
+func runConcurrentSends(t *testing.T, client *Client) {
+	t.Helper()
+	
 	var wg sync.WaitGroup
-
-	errors := make(chan error, 10)
+	errors := make(chan error, constants.TestBatchSize)
 
 	for i := 0; i < constants.TestBatchSize; i++ {
 		wg.Add(1)
-
 		go func(id int) {
 			defer wg.Done()
-
 			req := &mcp.Request{
 				JSONRPC: constants.TestJSONRPCVersion,
 				Method:  "test.method",
@@ -1162,7 +1084,7 @@ func TestClient_ConcurrentOperations(t *testing.T) {
 	wg.Wait()
 	close(errors)
 
-	// Check for errors.
+	// Check for errors
 	for err := range errors {
 		t.Errorf("Concurrent send error: %v", err)
 	}
@@ -1212,30 +1134,41 @@ func TestWireMessage_JSONMarshaling(t *testing.T) {
 }
 
 func BenchmarkClient_SendRequest(b *testing.B) {
-	// Create null server that just reads messages.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		upgrader := websocket.Upgrader{}
+	server := createNullServer(b)
+	defer server.Close()
 
+	client := createBenchmarkClient(b, server.URL)
+	connectBenchmarkClient(b, client)
+	defer closeBenchmarkClient(b, client)
+
+	runSendRequestBenchmark(b, client)
+}
+
+func createNullServer(b *testing.B) *httptest.Server {
+	b.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
-
 		defer func() { _ = conn.Close() }()
 
-		// Just read and discard.
+		// Just read and discard
 		for {
 			if _, _, err := conn.ReadMessage(); err != nil {
 				break
 			}
 		}
 	}))
-	defer server.Close()
+}
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
+func createBenchmarkClient(b *testing.B, serverURL string) *Client {
+	b.Helper()
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	logger := zaptest.NewLogger(b)
-	client := &Client{
+	
+	return &Client{
 		config: config.GatewayConfig{
 			URL: wsURL,
 			Auth: common.AuthConfig{
@@ -1252,19 +1185,25 @@ func BenchmarkClient_SendRequest(b *testing.B) {
 		logger:    logger,
 		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
 	}
+}
 
-	// Connect.
+func connectBenchmarkClient(b *testing.B, client *Client) {
+	b.Helper()
 	ctx := context.Background()
 	if err := client.Connect(ctx); err != nil {
 		b.Fatalf("Failed to connect: %v", err)
 	}
+}
 
-	defer func() {
-		if err := client.Close(); err != nil {
-			b.Logf("Failed to close client in cleanup: %v", err)
-		}
-	}()
+func closeBenchmarkClient(b *testing.B, client *Client) {
+	b.Helper()
+	if err := client.Close(); err != nil {
+		b.Logf("Failed to close client in cleanup: %v", err)
+	}
+}
 
+func runSendRequestBenchmark(b *testing.B, client *Client) {
+	b.Helper()
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "benchmark.test",
@@ -1276,7 +1215,6 @@ func BenchmarkClient_SendRequest(b *testing.B) {
 	}
 
 	b.ResetTimer()
-
 	for i := 0; i < b.N; i++ {
 		if err := client.SendRequest(req); err != nil {
 			b.Fatal(err)
@@ -1288,151 +1226,127 @@ func BenchmarkClient_SendRequest(b *testing.B) {
 
 // Test various error scenarios during connection.
 func TestClient_Connect_ErrorScenarios(t *testing.T) {
-	tests := []struct {
+	tests := getConnectErrorScenarios(t)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := tt.setupClient()
+			verifyConnectError(t, client, tt)
+		})
+	}
+}
+
+func getConnectErrorScenarios(t *testing.T) []struct {
+	name          string
+	setupClient   func() *Client
+	wantError     bool
+	errorContains string
+} {
+	return []struct {
 		name          string
 		setupClient   func() *Client
 		wantError     bool
 		errorContains string
 	}{
 		{
-			name: "Invalid URL",
-			setupClient: func() *Client {
-				logger := testutil.NewTestLogger(t)
-
-				return &Client{
-					config: config.GatewayConfig{
-						URL: "://invalid-url",
-						Auth: common.AuthConfig{
-							Type:  "bearer",
-							Token: "test-token",
-						},
-					},
-					logger:    logger,
-					tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-				}
-			},
+			name:          "Invalid URL",
+			setupClient:   createInvalidURLClient(t),
 			wantError:     true,
 			errorContains: "invalid gateway URL",
 		},
 		{
-			name: "Connection timeout",
-			setupClient: func() *Client {
-				logger := testutil.NewTestLogger(t)
-
-				return &Client{
-					config: config.GatewayConfig{
-						URL: "ws://nonexistent-host-12345.invalid:9999",
-						Auth: common.AuthConfig{
-							Type:  "bearer",
-							Token: "test-token",
-						},
-						Connection: common.ConnectionConfig{
-							TimeoutMs: testIterations, // Very short timeout
-						},
-					},
-					logger:    logger,
-					tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-				}
-			},
+			name:          "Connection timeout",
+			setupClient:   createTimeoutClient(t),
 			wantError:     true,
 			errorContains: "failed to connect",
 		},
 		{
-			name: "mTLS with missing certificate",
-			setupClient: func() *Client {
-				logger := testutil.NewTestLogger(t)
-
-				return &Client{
-					config: config.GatewayConfig{
-						URL: "wss://example.com",
-						Auth: common.AuthConfig{
-							Type: "mtls",
-							// Missing ClientCert and ClientKey.
-						},
-					},
-					logger:    logger,
-					tlsConfig: &tls.Config{}, // #nosec G402 - test configuration only
-				}
-			},
+			name:          "mTLS with missing certificate",
+			setupClient:   createMTLSMissingCertClient(t),
 			wantError:     true,
 			errorContains: "client certificate and key are required",
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			client := tt.setupClient()
-			ctx := context.Background()
-			err := client.Connect(ctx)
-
-			if tt.wantError {
-				if err == nil {
-					t.Error("Expected error but got none")
-				} else if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
-					t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
-				}
-
-				defer func() {
-					if err := client.Close(); err != nil {
-						t.Logf("Failed to close client in cleanup: %v", err)
-					}
-				}()
-			}
-		})
+func createInvalidURLClient(t *testing.T) func() *Client {
+	return func() *Client {
+		logger := testutil.NewTestLogger(t)
+		return &Client{
+			config: config.GatewayConfig{
+				URL: "://invalid-url",
+				Auth: common.AuthConfig{
+					Type:  "bearer",
+					Token: "test-token",
+				},
+			},
+			logger:    logger,
+			tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
+		}
 	}
 }
 
-// Test network failure scenarios during operation.
-func TestClient_NetworkFailures(t *testing.T) {
-	// Create server that drops connections after setup.
-	connectChan := make(chan struct{})
+func createTimeoutClient(t *testing.T) func() *Client {
+	return func() *Client {
+		logger := testutil.NewTestLogger(t)
+		return &Client{
+			config: config.GatewayConfig{
+				URL: "ws://nonexistent-host-12345.invalid:9999",
+				Auth: common.AuthConfig{
+					Type:  "bearer",
+					Token: "test-token",
+				},
+				Connection: common.ConnectionConfig{
+					TimeoutMs: testIterations, // Very short timeout
+				},
+			},
+			logger:    logger,
+			tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
+		}
+	}
+}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		upgrader := websocket.Upgrader{}
+func createMTLSMissingCertClient(t *testing.T) func() *Client {
+	return func() *Client {
+		logger := testutil.NewTestLogger(t)
+		return &Client{
+			config: config.GatewayConfig{
+				URL: "wss://example.com",
+				Auth: common.AuthConfig{
+					Type: "mtls",
+					// Missing ClientCert and ClientKey
+				},
+			},
+			logger:    logger,
+			tlsConfig: &tls.Config{}, // #nosec G402 - test configuration only
+		}
+	}
+}
 
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
+func verifyConnectError(t *testing.T, client *Client, tt struct {
+	name          string
+	setupClient   func() *Client
+	wantError     bool
+	errorContains string
+}) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Connect(ctx)
+
+	if tt.wantError {
+		if err == nil {
+			t.Error("Expected error but got none")
 			return
 		}
-
-		// Signal that connection was established.
-		close(connectChan)
-
-		// Read one message then close abruptly.
-		_, _, _ = conn.ReadMessage()
-		_ = conn.Close()
-	}))
-	defer server.Close()
-
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
-	logger := testutil.NewTestLogger(t)
-	client := &Client{
-		config: config.GatewayConfig{
-			URL: wsURL,
-			Auth: common.AuthConfig{
-				Type:  "bearer",
-				Token: "test-token",
-			},
-			Connection: common.ConnectionConfig{
-				TimeoutMs: 5000,
-			},
-			TLS: common.TLSConfig{
-				Verify: false,
-			},
-		},
-		logger:    logger,
-		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
+		if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
+			t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
+		}
+		return
 	}
-
-	// Connect.
-	ctx := context.Background()
-	if err := client.Connect(ctx); err != nil {
-		t.Fatalf("Failed to connect: %v", err)
+	
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
 	}
 
 	defer func() {
@@ -1440,21 +1354,55 @@ func TestClient_NetworkFailures(t *testing.T) {
 			t.Logf("Failed to close client in cleanup: %v", err)
 		}
 	}()
+}
 
-	// Wait for connection to be established.
+// Test network failure scenarios during operation.
+func TestClient_NetworkFailures(t *testing.T) {
+	connectChan := make(chan struct{})
+	server := createDropConnectionServer(t, connectChan)
+	defer server.Close()
+
+	client := createTestGatewayClient(t, server.URL)
+	connectTestClient(t, client)
+	defer closeTestClient(t, client)
+
+	verifyNetworkFailureHandling(t, client, connectChan)
+}
+
+func createDropConnectionServer(t *testing.T, connectChan chan<- struct{}) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrader := websocket.Upgrader{}
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+
+		// Signal that connection was established
+		close(connectChan)
+
+		// Read one message then close abruptly
+		_, _, _ = conn.ReadMessage()
+		_ = conn.Close()
+	}))
+}
+
+func verifyNetworkFailureHandling(t *testing.T, client *Client, connectChan <-chan struct{}) {
+	t.Helper()
+	
+	// Wait for connection to be established
 	<-connectChan
 
-	// Try to send request - should cause connection to close.
+	// Try to send request - should cause connection to close
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "test",
 		ID:      "test-1",
 	}
-
 	_ = client.SendRequest(req)
-	// May or may not error immediately depending on timing.
+	// May or may not error immediately depending on timing
 
-	// Try to receive response - should definitely error.
+	// Try to receive response - should definitely error
 	_, err := client.ReceiveResponse()
 	if err == nil {
 		t.Error("Expected error when receiving from closed connection")
@@ -1467,7 +1415,24 @@ func TestClient_NetworkFailures(t *testing.T) {
 
 // Test authentication edge cases.
 func TestClient_AuthenticationEdgeCases(t *testing.T) {
-	tests := []struct {
+	tests := getAuthenticationEdgeCaseTests()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runAuthenticationTest(t, tt)
+		})
+	}
+}
+
+func getAuthenticationEdgeCaseTests() []struct {
+	name           string
+	authConfig     common.AuthConfig
+	expectAuthCall bool
+	serverHandler  func(*testing.T, bool) http.HandlerFunc
+	wantError      bool
+	errorContains  string
+} {
+	return []struct {
 		name           string
 		authConfig     common.AuthConfig
 		expectAuthCall bool
@@ -1476,115 +1441,126 @@ func TestClient_AuthenticationEdgeCases(t *testing.T) {
 		errorContains  string
 	}{
 		{
-			name: "Bearer auth with empty token",
-			authConfig: common.AuthConfig{
-				Type:  "bearer",
-				Token: "",
-			},
+			name:           "Bearer auth with empty token",
+			authConfig:     common.AuthConfig{Type: "bearer", Token: ""},
 			expectAuthCall: false,
-			serverHandler: func(t *testing.T, expectAuth bool) http.HandlerFunc {
-				t.Helper()
-
-				return func(w http.ResponseWriter, r *http.Request) {
-					http.Error(w, "Should not reach here", http.StatusInternalServerError)
-				}
-			},
-			wantError:     true,
-			errorContains: "bearer token not configured",
+			serverHandler:  createErrorAuthHandler,
+			wantError:      true,
+			errorContains:  "bearer token not configured",
 		},
 		{
 			name: "OAuth2 with missing endpoint",
 			authConfig: common.AuthConfig{
-				Type: "oauth2",
-				// Missing TokenEndpoint.
+				Type:         "oauth2",
 				ClientID:     "test-client",
 				ClientSecret: "test-secret",
 			},
 			expectAuthCall: false,
-			serverHandler: func(t *testing.T, expectAuth bool) http.HandlerFunc {
-				t.Helper()
-
-				return func(w http.ResponseWriter, r *http.Request) {
-					http.Error(w, "Should not reach here", http.StatusInternalServerError)
-				}
-			},
-			wantError:     true,
-			errorContains: "OAuth2 token endpoint not configured",
+			serverHandler:  createErrorAuthHandler,
+			wantError:      true,
+			errorContains:  "OAuth2 token endpoint not configured",
 		},
 		{
-			name: "Unknown auth type",
-			authConfig: common.AuthConfig{
-				Type: "unknown",
-			},
+			name:           "Unknown auth type",
+			authConfig:     common.AuthConfig{Type: "unknown"},
 			expectAuthCall: false,
-			serverHandler: func(t *testing.T, expectAuth bool) http.HandlerFunc {
-				t.Helper()
-
-				return func(w http.ResponseWriter, r *http.Request) {
-					// Check that no auth header is set.
-					auth := r.Header.Get("Authorization")
-					if auth != "" {
-						t.Errorf("Expected no auth header, got '%s'", auth)
-					}
-
-					upgrader := websocket.Upgrader{}
-					conn, err := upgrader.Upgrade(w, r, nil)
-					if err != nil {
-						return
-					}
-					defer func() { _ = conn.Close() }()
-					time.Sleep(testIterations * time.Millisecond)
-				}
-			},
-			wantError: false, // Should succeed with no auth
+			serverHandler:  createNoAuthHandler,
+			wantError:      false,
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(tt.serverHandler(t, tt.expectAuthCall))
-			defer server.Close()
-
-			wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
-			logger := testutil.NewTestLogger(t)
-			client := &Client{
-				config: config.GatewayConfig{
-					URL:  wsURL,
-					Auth: tt.authConfig,
-					Connection: common.ConnectionConfig{
-						TimeoutMs: 5000,
-					},
-					TLS: common.TLSConfig{
-						Verify: false,
-					},
-				},
-				logger:    logger,
-				tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-			}
-
-			ctx := context.Background()
-			err := client.Connect(ctx)
-
-			if tt.wantError {
-				if err == nil {
-					t.Error("Expected error but got none")
-				} else if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
-					t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
-				}
-
-				defer func() {
-					if err := client.Close(); err != nil {
-						t.Logf("Failed to close client in cleanup: %v", err)
-					}
-				}()
-			}
-		})
+func createErrorAuthHandler(t *testing.T, expectAuth bool) http.HandlerFunc {
+	t.Helper()
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Should not reach here", http.StatusInternalServerError)
 	}
+}
+
+func createNoAuthHandler(t *testing.T, expectAuth bool) http.HandlerFunc {
+	t.Helper()
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Check that no auth header is set
+		auth := r.Header.Get("Authorization")
+		if auth != "" {
+			t.Errorf("Expected no auth header, got '%s'", auth)
+		}
+
+		upgrader := websocket.Upgrader{}
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer func() { _ = conn.Close() }()
+		time.Sleep(testIterations * time.Millisecond)
+	}
+}
+
+func runAuthenticationTest(t *testing.T, tt struct {
+	name           string
+	authConfig     common.AuthConfig
+	expectAuthCall bool
+	serverHandler  func(*testing.T, bool) http.HandlerFunc
+	wantError      bool
+	errorContains  string
+}) {
+	t.Helper()
+	
+	server := httptest.NewServer(tt.serverHandler(t, tt.expectAuthCall))
+	defer server.Close()
+
+	client := createAuthTestClient(t, server.URL, tt.authConfig)
+	ctx := context.Background()
+	err := client.Connect(ctx)
+
+	verifyAuthResult(t, err, tt.wantError, tt.errorContains, client)
+}
+
+func createAuthTestClient(t *testing.T, serverURL string, authConfig common.AuthConfig) *Client {
+	t.Helper()
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
+	logger := testutil.NewTestLogger(t)
+	
+	return &Client{
+		config: config.GatewayConfig{
+			URL:  wsURL,
+			Auth: authConfig,
+			Connection: common.ConnectionConfig{
+				TimeoutMs: 5000,
+			},
+			TLS: common.TLSConfig{
+				Verify: false,
+			},
+		},
+		logger:    logger,
+		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
+	}
+}
+
+func verifyAuthResult(t *testing.T, err error, wantError bool, errorContains string, client *Client) {
+	t.Helper()
+	
+	if wantError {
+		if err == nil {
+			t.Error("Expected error but got none")
+			return
+		}
+		if errorContains != "" && !strings.Contains(err.Error(), errorContains) {
+			t.Errorf("Expected error containing '%s', got '%s'", errorContains, err.Error())
+		}
+		return
+	}
+	
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Logf("Failed to close client in cleanup: %v", err)
+		}
+	}()
 }
 
 // Test concurrent operations with potential race conditions.
@@ -1750,27 +1726,34 @@ func TestClient_ConcurrentOperations_EdgeCases(t *testing.T) {
 
 // Test connection lifecycle edge cases.
 func TestClient_ConnectionLifecycle(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		upgrader := websocket.Upgrader{}
+	server := createLifecycleTestServer(t)
+	defer server.Close()
 
+	client := createLifecycleTestClient(t, server.URL)
+	testConnectionLifecycles(t, client)
+}
+
+func createLifecycleTestServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
 		}
-
 		defer func() { _ = conn.Close() }()
 
 		// Handle one message then close.
 		_, _, _ = conn.ReadMessage()
-
 		time.Sleep(testTimeout * time.Millisecond)
 	}))
-	defer server.Close()
+}
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
-
+func createLifecycleTestClient(t *testing.T, serverURL string) *Client {
+	t.Helper()
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	logger := testutil.NewTestLogger(t)
-	client := &Client{
+	return &Client{
 		config: config.GatewayConfig{
 			URL: wsURL,
 			Auth: common.AuthConfig{
@@ -1787,111 +1770,135 @@ func TestClient_ConnectionLifecycle(t *testing.T) {
 		logger:    logger,
 		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
 	}
+}
 
+func testConnectionLifecycles(t *testing.T, client *Client) {
+	t.Helper()
 	ctx := context.Background()
 
 	// Test multiple connect/disconnect cycles.
 	for i := 0; i < 3; i++ {
-		// Connect.
-		if err := client.Connect(ctx); err != nil {
-			t.Fatalf("Failed to connect on iteration %d: %v", i, err)
-		}
-
-		if !client.IsConnected() {
-			t.Errorf("Expected IsConnected to be true after connect on iteration %d", i)
-		}
-
-		// Send a message to trigger server close.
-		req := &mcp.Request{
-			JSONRPC: constants.TestJSONRPCVersion,
-			Method:  "test",
-			ID:      i,
-		}
-		_ = client.SendRequest(req) // May fail, that's okay
-
-		// Close.
-		if err := client.Close(); err != nil {
-			t.Errorf("Failed to close on iteration %d: %v", i, err)
-		}
-
-		if client.IsConnected() {
-			t.Errorf("Expected IsConnected to be false after close on iteration %d", i)
-		}
-
-		// Brief pause between cycles.
+		testSingleLifecycle(t, client, ctx, i)
 		time.Sleep(constants.TestTickInterval)
+	}
+}
+
+func testSingleLifecycle(t *testing.T, client *Client, ctx context.Context, iteration int) {
+	t.Helper()
+	// Connect.
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Failed to connect on iteration %d: %v", iteration, err)
+	}
+
+	if !client.IsConnected() {
+		t.Errorf("Expected IsConnected to be true after connect on iteration %d", iteration)
+	}
+
+	// Send a message to trigger server close.
+	req := &mcp.Request{
+		JSONRPC: constants.TestJSONRPCVersion,
+		Method:  "test",
+		ID:      iteration,
+	}
+	_ = client.SendRequest(req) // May fail, that's okay
+
+	// Close.
+	if err := client.Close(); err != nil {
+		t.Errorf("Failed to close on iteration %d: %v", iteration, err)
+	}
+
+	if client.IsConnected() {
+		t.Errorf("Expected IsConnected to be false after close on iteration %d", iteration)
 	}
 }
 
 // Test malformed message handling.
 func TestClient_MalformedMessages(t *testing.T) {
-	malformedMessages := []string{
+	malformedMessages := getMalformedMessages()
+
+	for i, msg := range malformedMessages {
+		t.Run(fmt.Sprintf("malformed_message_%d", i), func(t *testing.T) {
+			testSingleMalformedMessage(t, msg)
+		})
+	}
+}
+
+func getMalformedMessages() []string {
+	return []string{
 		`{"id": "test", "timestamp": "2024-01-01T00:00:00Z"}`, // Missing MCP payload
 		`{"invalid": "json"`, // Invalid JSON
 		`""`,                 // Empty string
 		`null`,               // Null value
 	}
+}
 
-	for i, msg := range malformedMessages {
-		t.Run(fmt.Sprintf("malformed_message_%d", i), func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				upgrader := websocket.Upgrader{}
+func testSingleMalformedMessage(t *testing.T, msg string) {
+	t.Helper()
+	server := createMalformedMessageServer(t, msg)
+	defer server.Close()
 
-				conn, err := upgrader.Upgrade(w, r, nil)
-				if err != nil {
-					return
-				}
+	client := createMalformedMessageClient(t, server.URL)
+	testMalformedMessageReceive(t, client)
+}
 
-				defer func() { _ = conn.Close() }()
+func createMalformedMessageServer(t *testing.T, msg string) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrader := websocket.Upgrader{}
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer func() { _ = conn.Close() }()
 
-				// Send malformed message.
-				if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
-					t.Logf("Failed to write message: %v", err)
-				}
+		// Send malformed message.
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+			t.Logf("Failed to write message: %v", err)
+		}
+		time.Sleep(testIterations * time.Millisecond)
+	}))
+}
 
-				time.Sleep(testIterations * time.Millisecond)
-			}))
-			defer server.Close()
+func createMalformedMessageClient(t *testing.T, serverURL string) *Client {
+	t.Helper()
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
+	logger := testutil.NewTestLogger(t)
+	return &Client{
+		config: config.GatewayConfig{
+			URL: wsURL,
+			Auth: common.AuthConfig{
+				Type:  "bearer",
+				Token: "test-token",
+			},
+			Connection: common.ConnectionConfig{
+				TimeoutMs: 5000,
+			},
+			TLS: common.TLSConfig{
+				Verify: false,
+			},
+		},
+		logger:    logger,
+		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
+	}
+}
 
-			wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
+func testMalformedMessageReceive(t *testing.T, client *Client) {
+	t.Helper()
+	ctx := context.Background()
 
-			logger := testutil.NewTestLogger(t)
-			client := &Client{
-				config: config.GatewayConfig{
-					URL: wsURL,
-					Auth: common.AuthConfig{
-						Type:  "bearer",
-						Token: "test-token",
-					},
-					Connection: common.ConnectionConfig{
-						TimeoutMs: 5000,
-					},
-					TLS: common.TLSConfig{
-						Verify: false,
-					},
-				},
-				logger:    logger,
-				tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
-			}
+	if err := client.Connect(ctx); err != nil {
+		t.Fatalf("Failed to connect: %v", err)
+	}
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Logf("Failed to close client in cleanup: %v", err)
+		}
+	}()
 
-			ctx := context.Background()
-
-			if err := client.Connect(ctx); err != nil {
-				t.Fatalf("Failed to connect: %v", err)
-			}
-
-			defer func() {
-				if err := client.Close(); err != nil {
-					t.Logf("Failed to close client in cleanup: %v", err)
-				}
-			}()
-
-			// Try to receive the malformed message.
-			_, err := client.ReceiveResponse()
-			if err == nil {
-				t.Error("Expected error when receiving malformed message")
-			}
-		})
+	// Try to receive the malformed message.
+	_, err := client.ReceiveResponse()
+	if err == nil {
+		t.Error("Expected error when receiving malformed message")
 	}
 }
 

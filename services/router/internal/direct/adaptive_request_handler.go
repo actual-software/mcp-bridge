@@ -221,6 +221,8 @@ func (u *ClientMetricsUpdater) updateRunningLatencyStats() {
 	// Simple running average with safe conversion
 	const maxSafeInt64 = 1<<63 - 1
 	if u.metrics.RequestCount > 0 && u.metrics.RequestCount <= maxSafeInt64 {
+		// Safe conversion: RequestCount is verified to be <= maxSafeInt64
+		// #nosec G115 - explicit bounds check ensures RequestCount fits in int64
 		count := int64(u.metrics.RequestCount)
 		u.metrics.AverageLatency = time.Duration(
 			(int64(u.metrics.AverageLatency)*(count-1) + int64(u.duration)) / count)

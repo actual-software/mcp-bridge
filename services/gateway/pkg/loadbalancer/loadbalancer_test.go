@@ -374,62 +374,74 @@ func runConcurrentAccessTests(t *testing.T, loadBalancers []struct {
 
 	for _, tt := range loadBalancers {
 		t.Run(tt.name, func(t *testing.T) {
-			var wg sync.WaitGroup
-
-			selections := &sync.Map{}
-
-			// Concurrent selections
-			for i := 0; i < testIterations; i++ {
-				wg.Add(1)
-
-				go func() {
-					defer wg.Done()
-
-					for j := 0; j < testIterations; j++ {
-						ep := tt.lb.Next()
-						if ep != nil {
-							selections.Store(ep.Address, true)
-						}
-					}
-				}()
-			}
-
-			// Concurrent updates
-			for i := 0; i < 10; i++ {
-				wg.Add(1)
-
-				go func(iter int) {
-					defer wg.Done()
-
-					newEndpoints := make([]*discovery.Endpoint, 5)
-
-					for j := range newEndpoints {
-						newEndpoints[j] = &discovery.Endpoint{
-							Address: fmt.Sprintf("new-ep%d-%d", iter, j),
-							Healthy: true,
-							Weight:  testIterations,
-						}
-					}
-
-					tt.lb.UpdateEndpoints(newEndpoints)
-				}(i)
-			}
-
-			wg.Wait()
-
-			// Verify some endpoints were selected
-			count := 0
-
-			selections.Range(func(_, _ interface{}) bool {
-				count++
-
-				return true
-			})
-
-			if count == 0 {
-				t.Error("Expected some endpoints to be selected")
-			}
+			selections := executeConcurrentOperations(t, tt.lb)
+			verifyConcurrentResults(t, selections)
 		})
+	}
+}
+
+func executeConcurrentOperations(t *testing.T, lb LoadBalancer) *sync.Map {
+	t.Helper()
+	
+	var wg sync.WaitGroup
+	selections := &sync.Map{}
+
+	startConcurrentSelections(&wg, lb, selections)
+	startConcurrentUpdates(&wg, lb)
+	
+	wg.Wait()
+	return selections
+}
+
+func startConcurrentSelections(wg *sync.WaitGroup, lb LoadBalancer, selections *sync.Map) {
+	for i := 0; i < testIterations; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < testIterations; j++ {
+				ep := lb.Next()
+				if ep != nil {
+					selections.Store(ep.Address, true)
+				}
+			}
+		}()
+	}
+}
+
+func startConcurrentUpdates(wg *sync.WaitGroup, lb LoadBalancer) {
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(iter int) {
+			defer wg.Done()
+			newEndpoints := createUpdateEndpoints(iter)
+			lb.UpdateEndpoints(newEndpoints)
+		}(i)
+	}
+}
+
+func createUpdateEndpoints(iter int) []*discovery.Endpoint {
+	newEndpoints := make([]*discovery.Endpoint, 5)
+	for j := range newEndpoints {
+		newEndpoints[j] = &discovery.Endpoint{
+			Address: fmt.Sprintf("new-ep%d-%d", iter, j),
+			Healthy: true,
+			Weight:  testIterations,
+		}
+	}
+	return newEndpoints
+}
+
+func verifyConcurrentResults(t *testing.T, selections *sync.Map) {
+	t.Helper()
+	
+	count := 0
+	selections.Range(func(_, _ interface{}) bool {
+		count++
+		return true
+	})
+	
+	if count == 0 {
+		t.Error("Expected some endpoints to be selected")
 	}
 }
 

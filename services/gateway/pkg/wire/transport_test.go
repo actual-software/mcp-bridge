@@ -61,7 +61,7 @@ func TestTransport_SendReceiveRequest(t *testing.T) {
 	// Check send completed
 	select {
 	case err := <-errChan:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(time.Second):
 		t.Fatal("Send timeout")
 	}
@@ -99,7 +99,7 @@ func TestTransport_SendReceiveResponse(t *testing.T) {
 	// Check send completed
 	select {
 	case err := <-errChan:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(time.Second):
 		t.Fatal("Send timeout")
 	}
@@ -129,7 +129,7 @@ func TestTransport_SendReceiveError(t *testing.T) {
 	// Check send completed
 	select {
 	case err := <-errChan:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(time.Second):
 		t.Fatal("Send timeout")
 	}
@@ -154,7 +154,7 @@ func TestTransport_SendReceiveHealthCheck(t *testing.T) {
 	// Check send completed
 	select {
 	case err := <-errChan:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(time.Second):
 		t.Fatal("Send timeout")
 	}
@@ -176,7 +176,7 @@ func TestTransport_Bidirectional(t *testing.T) {
 	go func() {
 		// Receive request
 		msgType, msg, err := server.ReceiveMessage()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, MessageTypeRequest, msgType)
 
 		receivedReq, ok := msg.(*mcp.Request)
@@ -194,7 +194,7 @@ func TestTransport_Bidirectional(t *testing.T) {
 		}
 
 		err = server.SendResponse(resp)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		done <- true
 	}()
@@ -273,7 +273,7 @@ func TestTransport_ConcurrentSend(t *testing.T) {
 	// Check all sends completed
 	for i := 0; i < numSenders; i++ {
 		err := <-errChan
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 
 	// Verify all messages received
@@ -289,7 +289,7 @@ func TestTransport_Deadlines(t *testing.T) {
 
 	// Try to receive - should timeout
 	_, _, err = client.ReceiveMessage()
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// Reset deadline
 	err = client.SetReadDeadline(time.Time{})
@@ -323,7 +323,7 @@ func TestTransport_InvalidMessage(t *testing.T) {
 
 	// Try to receive - should get error
 	_, _, err := transport.ReceiveMessage()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "magic bytes")
 }
 

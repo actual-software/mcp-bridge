@@ -450,8 +450,13 @@ func TestNamespaceRouter_EmptyMethod(t *testing.T) {
 
 func TestNamespaceRouter_MultipleMatches(t *testing.T) {
 	logger := zap.NewNop()
+	config := createMultipleMatchesConfig()
+	router := setupMultipleMatchesRouter(t, config, logger)
+	testMultipleMatchesRouting(t, router)
+}
 
-	config := NamespaceRoutingConfig{
+func createMultipleMatchesConfig() NamespaceRoutingConfig {
+	return NamespaceRoutingConfig{
 		Enabled: true,
 		Rules: []NamespaceRoutingRule{
 			{
@@ -474,48 +479,46 @@ func TestNamespaceRouter_MultipleMatches(t *testing.T) {
 			},
 		},
 	}
+}
 
+func setupMultipleMatchesRouter(t *testing.T, config NamespaceRoutingConfig, logger *zap.Logger) *NamespaceRouter {
+	t.Helper()
 	router, err := NewNamespaceRouter(config, logger)
 	if err != nil {
 		t.Fatalf("Failed to create namespace router: %v", err)
 	}
+	return router
+}
 
-	// This should match the highest priority rule only.
+func testMultipleMatchesRouting(t *testing.T, router *NamespaceRouter) {
+	t.Helper()
 	req := &mcp.Request{Method: "test.command"}
-
 	tags, err := router.RouteRequest(req)
+	
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
-
 		return
 	}
 
 	if len(tags) == 0 {
 		t.Error("Expected tags for test.command")
-
 		return
 	}
 
-	// Should only get tags from the highest priority rule.
+	verifyPriorityTags(t, tags)
+}
+
+func verifyPriorityTags(t *testing.T, tags []string) {
+	t.Helper()
 	expectedTags := []string{"specific"}
+	
 	if len(tags) != len(expectedTags) {
 		t.Errorf("Expected %d tags, got %d: %v", len(expectedTags), len(tags), tags)
-
 		return
 	}
 
 	for _, expectedTag := range expectedTags {
-		found := false
-
-		for _, tag := range tags {
-			if tag == expectedTag {
-				found = true
-
-				break
-			}
-		}
-
-		if !found {
+		if !containsTag(tags, expectedTag) {
 			t.Errorf("Expected tag %s not found in %v", expectedTag, tags)
 		}
 	}

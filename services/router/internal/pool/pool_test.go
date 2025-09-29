@@ -87,80 +87,85 @@ func TestNewPool(t *testing.T) {
 	factory := &mockFactory{}
 
 	t.Run("valid config", func(t *testing.T) {
-		config := Config{
-			MinSize:             2,
-			MaxSize:             5,
-			MaxIdleTime:         time.Minute,
-			MaxLifetime:         time.Hour,
-			AcquireTimeout:      time.Second,
-			HealthCheckInterval: time.Second,
-		}
-
-		pool, err := NewPool(config, factory, logger)
-		require.NoError(t, err)
-		require.NotNil(t, pool)
-
-		defer func() {
-			if err := pool.Close(); err != nil {
-				t.Logf("Failed to close pool: %v", err)
-			}
-		}()
-
-		// Should create MinSize connections.
-		time.Sleep(testIterations * time.Millisecond)
-
-		expectedMinSize := func() int32 {
-			if config.MinSize <= math.MaxInt32 && config.MinSize >= 0 {
-				return int32(config.MinSize)
-			}
-
-			return 0
-		}()
-		assert.GreaterOrEqual(t, factory.GetCreateCount(), expectedMinSize)
-
-		stats := pool.Stats()
-		assert.Equal(t, int64(config.MinSize), stats.TotalConnections)
+		testValidPoolConfig(t, factory, logger)
 	})
 
 	t.Run("invalid config corrections", func(t *testing.T) {
-		config := Config{
-			MinSize: -1,
-			MaxSize: 0,
-		}
-
-		pool, err := NewPool(config, factory, logger)
-		require.NoError(t, err)
-		require.NotNil(t, pool)
-
-		defer func() {
-			if err := pool.Close(); err != nil {
-				t.Logf("Failed to close pool: %v", err)
-			}
-		}()
-
-		assert.Equal(t, 0, pool.config.MinSize)
-		assert.Equal(t, 10, pool.config.MaxSize)
+		testInvalidPoolConfig(t, factory, logger)
 	})
 
 	t.Run("min greater than max", func(t *testing.T) {
-		config := Config{
-			MinSize: 10,
-			MaxSize: 5,
-		}
-
-		pool, err := NewPool(config, factory, logger)
-		require.NoError(t, err)
-		require.NotNil(t, pool)
-
-		defer func() {
-			if err := pool.Close(); err != nil {
-				t.Logf("Failed to close pool: %v", err)
-			}
-		}()
-
-		assert.Equal(t, 5, pool.config.MinSize)
-		assert.Equal(t, 5, pool.config.MaxSize)
+		testMinGreaterThanMax(t, factory, logger)
 	})
+}
+
+func testValidPoolConfig(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	config := Config{
+		MinSize:             2,
+		MaxSize:             5,
+		MaxIdleTime:         time.Minute,
+		MaxLifetime:         time.Hour,
+		AcquireTimeout:      time.Second,
+		HealthCheckInterval: time.Second,
+	}
+
+	pool := createAndVerifyPool(t, config, factory, logger)
+	defer closePool(t, pool)
+
+	time.Sleep(testIterations * time.Millisecond)
+	verifyMinSizeConnections(t, factory, config)
+
+	stats := pool.Stats()
+	assert.Equal(t, int64(config.MinSize), stats.TotalConnections)
+}
+
+func testInvalidPoolConfig(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	config := Config{
+		MinSize: -1,
+		MaxSize: 0,
+	}
+
+	pool := createAndVerifyPool(t, config, factory, logger)
+	defer closePool(t, pool)
+
+	assert.Equal(t, 0, pool.config.MinSize)
+	assert.Equal(t, 10, pool.config.MaxSize)
+}
+
+func testMinGreaterThanMax(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	config := Config{
+		MinSize: 10,
+		MaxSize: 5,
+	}
+
+	pool := createAndVerifyPool(t, config, factory, logger)
+	defer closePool(t, pool)
+
+	assert.Equal(t, 5, pool.config.MinSize)
+	assert.Equal(t, 5, pool.config.MaxSize)
+}
+
+func createAndVerifyPool(t *testing.T, config Config, factory *mockFactory, logger *zap.Logger) *Pool {
+	pool, err := NewPool(config, factory, logger)
+	require.NoError(t, err)
+	require.NotNil(t, pool)
+	return pool
+}
+
+func closePool(t *testing.T, pool *Pool) {
+	if err := pool.Close(); err != nil {
+		t.Logf("Failed to close pool: %v", err)
+	}
+}
+
+func verifyMinSizeConnections(t *testing.T, factory *mockFactory, config Config) {
+	expectedMinSize := func() int32 {
+		if config.MinSize <= math.MaxInt32 && config.MinSize >= 0 {
+			return int32(config.MinSize)
+		}
+		return 0
+	}()
+	assert.GreaterOrEqual(t, factory.GetCreateCount(), expectedMinSize)
 }
 
 func TestPoolAcquireRelease(t *testing.T) {
@@ -680,84 +685,81 @@ func TestPoolConnectionLifecycle(t *testing.T) {
 	factory := &mockFactory{}
 
 	t.Run("connection maximum lifetime", func(t *testing.T) {
-		config := Config{
-			MinSize:             1,
-			MaxSize:             3,
-			MaxLifetime:         testIterations * time.Millisecond, // Very short lifetime
-			MaxIdleTime:         1 * time.Second,                   // Longer than lifetime
-			HealthCheckInterval: testTimeout * time.Millisecond,
-		}
-
-		pool, err := NewPool(config, factory, logger)
-		require.NoError(t, err)
-
-		defer func() {
-			if err := pool.Close(); err != nil {
-				t.Logf("Failed to close pool: %v", err)
-			}
-		}()
-
-		// Wait for initial connection.
-		require.Eventually(t, func() bool {
-			stats := pool.Stats()
-
-			return stats.TotalConnections >= 1
-		}, time.Second, 20*time.Millisecond)
-
-		initialStats := pool.Stats()
-		initialCreated := initialStats.CreatedCount
-
-		// Wait for connections to exceed max lifetime and get replaced.
-		time.Sleep(config.MaxLifetime + 2*config.HealthCheckInterval)
-
-		// Should have created new connections to maintain minimum.
-		require.Eventually(t, func() bool {
-			stats := pool.Stats()
-
-			return stats.CreatedCount > initialCreated
-		}, time.Second, testTimeout*time.Millisecond, "New connections should be created to replace expired ones")
-
-		// Should still maintain minimum pool size.
-		finalStats := pool.Stats()
-		assert.GreaterOrEqual(t, finalStats.TotalConnections, int64(config.MinSize))
+		testMaxLifetime(t, factory, logger)
 	})
 
 	t.Run("connection idle timeout", func(t *testing.T) {
-		config := Config{
-			MinSize:             1,
-			MaxSize:             3,
-			MaxLifetime:         1 * time.Hour,                  // Very long lifetime
-			MaxIdleTime:         testTimeout * time.Millisecond, // Short idle time
-			HealthCheckInterval: 30 * time.Millisecond,
-		}
-
-		pool, err := NewPool(config, factory, logger)
-		require.NoError(t, err)
-
-		defer func() {
-			if err := pool.Close(); err != nil {
-				t.Logf("Failed to close pool: %v", err)
-			}
-		}()
-
-		ctx := context.Background()
-
-		// Acquire and release connection to make it idle.
-		conn, err := pool.Acquire(ctx)
-		require.NoError(t, err)
-		err = pool.Release(conn)
-		require.NoError(t, err)
-
-		// Wait for idle timeout and health check.
-		time.Sleep(config.MaxIdleTime + 2*config.HealthCheckInterval)
-
-		// Should maintain minimum connections.
-		require.Eventually(t, func() bool {
-			stats := pool.Stats()
-
-			return stats.TotalConnections >= int64(config.MinSize)
-		}, time.Second, testTimeout*time.Millisecond, "Pool should maintain minimum connections")
+		testIdleTimeout(t, factory, logger)
 	})
+}
+
+func testMaxLifetime(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	config := Config{
+		MinSize:             1,
+		MaxSize:             3,
+		MaxLifetime:         testIterations * time.Millisecond,
+		MaxIdleTime:         1 * time.Second,
+		HealthCheckInterval: testTimeout * time.Millisecond,
+	}
+
+	pool := createAndVerifyPool(t, config, factory, logger)
+	defer closePool(t, pool)
+
+	waitForInitialConnection(t, pool)
+	initialStats := pool.Stats()
+	initialCreated := initialStats.CreatedCount
+
+	time.Sleep(config.MaxLifetime + 2*config.HealthCheckInterval)
+	verifyConnectionReplacement(t, pool, initialCreated)
+
+	finalStats := pool.Stats()
+	assert.GreaterOrEqual(t, finalStats.TotalConnections, int64(config.MinSize))
+}
+
+func testIdleTimeout(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	config := Config{
+		MinSize:             1,
+		MaxSize:             3,
+		MaxLifetime:         1 * time.Hour,
+		MaxIdleTime:         testTimeout * time.Millisecond,
+		HealthCheckInterval: 30 * time.Millisecond,
+	}
+
+	pool := createAndVerifyPool(t, config, factory, logger)
+	defer closePool(t, pool)
+
+	testIdleConnection(t, pool)
+	time.Sleep(config.MaxIdleTime + 2*config.HealthCheckInterval)
+	verifyMinimumConnections(t, pool, config)
+}
+
+func waitForInitialConnection(t *testing.T, pool *Pool) {
+	require.Eventually(t, func() bool {
+		stats := pool.Stats()
+		return stats.TotalConnections >= 1
+	}, time.Second, 20*time.Millisecond)
+}
+
+func verifyConnectionReplacement(t *testing.T, pool *Pool, initialCreated int64) {
+	require.Eventually(t, func() bool {
+		stats := pool.Stats()
+		return stats.CreatedCount > initialCreated
+	}, time.Second, testTimeout*time.Millisecond, "New connections should be created to replace expired ones")
+}
+
+func testIdleConnection(t *testing.T, pool *Pool) {
+	ctx := context.Background()
+	conn, err := pool.Acquire(ctx)
+	require.NoError(t, err)
+	err = pool.Release(conn)
+	require.NoError(t, err)
+}
+
+func verifyMinimumConnections(t *testing.T, pool *Pool, config Config) {
+	require.Eventually(t, func() bool {
+		stats := pool.Stats()
+		return stats.TotalConnections >= int64(config.MinSize)
+	}, time.Second, testTimeout*time.Millisecond, "Pool should maintain minimum connections")
 }
 
 // Test pool behavior under stress.
@@ -1081,99 +1083,104 @@ func TestPoolMaintenance(t *testing.T) {
 	factory := &mockFactory{}
 
 	t.Run("minimum size maintenance", func(t *testing.T) {
-		config := Config{
-			MinSize:             2,
-			MaxSize:             5,
-			MaxIdleTime:         testIterations * time.Millisecond,
-			HealthCheckInterval: testTimeout * time.Millisecond,
-		}
-
-		pool, err := NewPool(config, factory, logger)
-		require.NoError(t, err)
-
-		defer func() {
-			if err := pool.Close(); err != nil {
-				t.Logf("Failed to close pool: %v", err)
-			}
-		}()
-
-		// Wait for initial connections.
-		require.Eventually(t, func() bool {
-			stats := pool.Stats()
-
-			return stats.TotalConnections >= int64(config.MinSize)
-		}, time.Second, testTimeout*time.Millisecond)
-
-		initialStats := pool.Stats()
-		assert.GreaterOrEqual(t, initialStats.TotalConnections, int64(config.MinSize))
-
-		// Test basic functionality - that pool maintains its connections.
-		ctx := context.Background()
-		conn, err := pool.Acquire(ctx)
-		require.NoError(t, err)
-		err = pool.Release(conn)
-		require.NoError(t, err)
-
-		// Verify pool still maintains minimum connections.
-		finalStats := pool.Stats()
-		assert.GreaterOrEqual(t, finalStats.TotalConnections, int64(config.MinSize))
+		testMinimumSizeMaintenance(t, factory, logger)
 	})
 
 	t.Run("health check removes expired connections", func(t *testing.T) {
-		config := Config{
-			MinSize:             1,
-			MaxSize:             3,
-			MaxIdleTime:         20 * time.Millisecond, // Very short
-			HealthCheckInterval: 30 * time.Millisecond,
-		}
-
-		pool, err := NewPool(config, factory, logger)
-		require.NoError(t, err)
-
-		defer func() {
-			if err := pool.Close(); err != nil {
-				t.Logf("Failed to close pool: %v", err)
-			}
-		}()
-
-		ctx := context.Background()
-
-		// Create extra connections beyond minimum.
-		conns := make([]Connection, 3)
-
-		for i := 0; i < 3; i++ {
-			conn, err := pool.Acquire(ctx)
-			require.NoError(t, err)
-
-			conns[i] = conn
-		}
-
-		// Release them to make them idle.
-		for _, conn := range conns {
-			_ = pool.Release(conn)
-		}
-
-		// Check initial state - should have idle connections.
-		require.Eventually(t, func() bool {
-			stats := pool.Stats()
-
-			return stats.IdleConnections >= 1
-		}, time.Second, testTimeout*time.Millisecond)
-
-		// Wait for connections to expire and health check to run.
-		time.Sleep(config.MaxIdleTime + 2*config.HealthCheckInterval)
-
-		// Should maintain minimum connections after cleanup.
-		require.Eventually(t, func() bool {
-			stats := pool.Stats()
-
-			return stats.TotalConnections >= int64(config.MinSize)
-		}, 2*time.Second, testIterations*time.Millisecond, "Should maintain minimum after cleanup")
-
-		finalStats := pool.Stats()
-		assert.GreaterOrEqual(t, finalStats.TotalConnections, int64(config.MinSize))
-		assert.Positive(t, finalStats.ClosedCount, "Should have closed expired connections")
+		testHealthCheckRemovesExpiredConnections(t, factory, logger)
 	})
+}
+
+func testMinimumSizeMaintenance(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	t.Helper()
+	config := Config{
+		MinSize:             2,
+		MaxSize:             5,
+		MaxIdleTime:         testIterations * time.Millisecond,
+		HealthCheckInterval: testTimeout * time.Millisecond,
+	}
+
+	pool, err := NewPool(config, factory, logger)
+	require.NoError(t, err)
+
+	defer func() {
+		if err := pool.Close(); err != nil {
+			t.Logf("Failed to close pool: %v", err)
+		}
+	}()
+
+	// Wait for initial connections.
+	require.Eventually(t, func() bool {
+		stats := pool.Stats()
+		return stats.TotalConnections >= int64(config.MinSize)
+	}, time.Second, testTimeout*time.Millisecond)
+
+	initialStats := pool.Stats()
+	assert.GreaterOrEqual(t, initialStats.TotalConnections, int64(config.MinSize))
+
+	// Test basic functionality - that pool maintains its connections.
+	ctx := context.Background()
+	conn, err := pool.Acquire(ctx)
+	require.NoError(t, err)
+	err = pool.Release(conn)
+	require.NoError(t, err)
+
+	// Verify pool still maintains minimum connections.
+	finalStats := pool.Stats()
+	assert.GreaterOrEqual(t, finalStats.TotalConnections, int64(config.MinSize))
+}
+
+func testHealthCheckRemovesExpiredConnections(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	t.Helper()
+	config := Config{
+		MinSize:             1,
+		MaxSize:             3,
+		MaxIdleTime:         20 * time.Millisecond, // Very short
+		HealthCheckInterval: 30 * time.Millisecond,
+	}
+
+	pool, err := NewPool(config, factory, logger)
+	require.NoError(t, err)
+
+	defer func() {
+		if err := pool.Close(); err != nil {
+			t.Logf("Failed to close pool: %v", err)
+		}
+	}()
+
+	ctx := context.Background()
+
+	// Create extra connections beyond minimum.
+	conns := make([]Connection, 3)
+	for i := 0; i < 3; i++ {
+		conn, err := pool.Acquire(ctx)
+		require.NoError(t, err)
+		conns[i] = conn
+	}
+
+	// Release them to make them idle.
+	for _, conn := range conns {
+		_ = pool.Release(conn)
+	}
+
+	// Check initial state - should have idle connections.
+	require.Eventually(t, func() bool {
+		stats := pool.Stats()
+		return stats.IdleConnections >= 1
+	}, time.Second, testTimeout*time.Millisecond)
+
+	// Wait for connections to expire and health check to run.
+	time.Sleep(config.MaxIdleTime + 2*config.HealthCheckInterval)
+
+	// Should maintain minimum connections after cleanup.
+	require.Eventually(t, func() bool {
+		stats := pool.Stats()
+		return stats.TotalConnections >= int64(config.MinSize)
+	}, 2*time.Second, testIterations*time.Millisecond, "Should maintain minimum after cleanup")
+
+	finalStats := pool.Stats()
+	assert.GreaterOrEqual(t, finalStats.TotalConnections, int64(config.MinSize))
+	assert.Positive(t, finalStats.ClosedCount, "Should have closed expired connections")
 }
 
 // Benchmark pool operations.

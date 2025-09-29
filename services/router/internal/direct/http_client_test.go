@@ -985,63 +985,85 @@ func runConcurrentHTTPOperations(
 ) ([]error, []*mcp.Response) {
 	t.Helper()
 
+	channelSize := numGoroutines * requestsPerGoroutine
+	errChan := make(chan error, channelSize)
+	responseChan := make(chan *mcp.Response, channelSize)
+
+	done := launchConcurrentHTTPWorkers(client, numGoroutines, requestsPerGoroutine, errChan, responseChan)
+	waitForHTTPCompletion(t, done)
+
+	return collectHTTPResults(errChan, responseChan, channelSize)
+}
+
+func launchConcurrentHTTPWorkers(
+	client *HTTPClient,
+	numGoroutines, requestsPerGoroutine int,
+	errChan chan<- error,
+	responseChan chan<- *mcp.Response,
+) chan struct{} {
 	var wg sync.WaitGroup
-
 	ctx := context.Background()
+	done := make(chan struct{})
 
-	errChan := make(chan error, numGoroutines*requestsPerGoroutine)
-	responseChan := make(chan *mcp.Response, numGoroutines*requestsPerGoroutine)
-
-	// Launch concurrent goroutines.
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
-
-		go func(goroutineID int) {
-			defer wg.Done()
-
-			for r := 0; r < requestsPerGoroutine; r++ {
-				req := &mcp.Request{
-					JSONRPC: constants.TestJSONRPCVersion,
-					Method:  "concurrent_test",
-					ID:      fmt.Sprintf("concurrent-%d-%d-%d", goroutineID, r, time.Now().UnixNano()),
-				}
-
-				resp, err := client.SendRequest(ctx, req)
-				if err != nil {
-					errChan <- err
-					return
-				}
-
-				responseChan <- resp
-			}
-		}(g)
+		go processHTTPWorkerRequests(&wg, client, ctx, g, requestsPerGoroutine, errChan, responseChan)
 	}
-
-	// Wait for all goroutines to complete.
-	done := make(chan struct{})
 
 	go func() {
 		wg.Wait()
 		close(done)
 	}()
+	
+	return done
+}
 
+func processHTTPWorkerRequests(
+	wg *sync.WaitGroup,
+	client *HTTPClient,
+	ctx context.Context,
+	goroutineID, requestsPerGoroutine int,
+	errChan chan<- error,
+	responseChan chan<- *mcp.Response,
+) {
+	defer wg.Done()
+
+	for r := 0; r < requestsPerGoroutine; r++ {
+		req := &mcp.Request{
+			JSONRPC: constants.TestJSONRPCVersion,
+			Method:  "concurrent_test",
+			ID:      fmt.Sprintf("concurrent-%d-%d-%d", goroutineID, r, time.Now().UnixNano()),
+		}
+
+		resp, err := client.SendRequest(ctx, req)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		responseChan <- resp
+	}
+}
+
+func waitForHTTPCompletion(t *testing.T, done <-chan struct{}) {
+	t.Helper()
 	select {
 	case <-done:
-		// Success.
+		// Success
 	case <-time.After(30 * time.Second):
 		t.Fatal("Concurrent operations timed out")
 	}
+}
 
-	// Check for errors.
+func collectHTTPResults(errChan chan error, responseChan chan *mcp.Response, capacity int) ([]error, []*mcp.Response) {
 	close(errChan)
 	close(responseChan)
 
-	errors := make([]error, 0, numGoroutines*requestsPerGoroutine)
+	errors := make([]error, 0, capacity)
 	for err := range errChan {
 		errors = append(errors, err)
 	}
 
-	responses := make([]*mcp.Response, 0, numGoroutines*requestsPerGoroutine)
+	responses := make([]*mcp.Response, 0, capacity)
 	for resp := range responseChan {
 		responses = append(responses, resp)
 	}
@@ -1063,7 +1085,7 @@ func verifyConcurrentHTTPResults(
 
 	// Verify metrics.
 	metrics := client.GetMetrics()
-	assert.Equal(t, uint64(numGoroutines*requestsPerGoroutine), metrics.RequestCount)
+	assert.Equal(t, safeIntToUint64(numGoroutines*requestsPerGoroutine), metrics.RequestCount)
 	assert.Equal(t, uint64(0), metrics.ErrorCount)
 	assert.True(t, metrics.IsHealthy)
 }

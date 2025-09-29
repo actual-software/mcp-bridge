@@ -410,6 +410,7 @@ func setupTestBackend(t *testing.T) (*httptest.Server, *int32) {
 }
 
 func handleTestBackendRequest(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	t.Helper()
 	// Verify request
 	if r.Method != http.MethodPost {
 		t.Errorf("Expected POST, got %s", r.Method)

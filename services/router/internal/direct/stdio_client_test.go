@@ -719,7 +719,19 @@ func createStdioLifecycleScript(t *testing.T) string {
 	t.Helper()
 	tmpDir := t.TempDir()
 	scriptPath := filepath.Join(tmpDir, "lifecycle_server.py")
-	scriptContent := `#!/usr/bin/env python3
+	scriptContent := getLifecycleScriptContent()
+	
+	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+	require.NoError(t, err)
+	return scriptPath
+}
+
+func getLifecycleScriptContent() string {
+	return getLifecycleScriptHeader() + getLifecycleScriptMain()
+}
+
+func getLifecycleScriptHeader() string {
+	return `#!/usr/bin/env python3
 import json
 import sys
 import signal
@@ -746,7 +758,11 @@ signal.signal(signal.SIGINT, signal_handler)
 atexit.register(cleanup)
 
 lifecycle_log.append("process_started")
+`
+}
 
+func getLifecycleScriptMain() string {
+	return `
 def main():
     for line in sys.stdin:
         try:
@@ -787,10 +803,6 @@ def main():
 if __name__ == "__main__":
     main()
 `
-
-	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
-	require.NoError(t, err)
-	return scriptPath
 }
 
 func setupStdioLifecycleClient(t *testing.T, logger *zap.Logger, scriptPath string) *StdioClient {
@@ -1378,12 +1390,12 @@ func collectStdioConcurrentResults(errChan chan error, responseChan chan *mcp.Re
 	close(errChan)
 	close(responseChan)
 
-	var errors []error
+	errors := make([]error, 0, len(errChan))
 	for err := range errChan {
 		errors = append(errors, err)
 	}
 
-	var responses []*mcp.Response
+	responses := make([]*mcp.Response, 0, len(responseChan))
 	for resp := range responseChan {
 		responses = append(responses, resp)
 	}
@@ -1401,7 +1413,7 @@ func verifyStdioConcurrentResults(t *testing.T, client *StdioClient, errors []er
 	assert.Len(t, responses, expectedCount, "All requests should receive responses")
 
 	metrics := client.GetMetrics()
-	assert.Equal(t, uint64(expectedCount), metrics.RequestCount)
+	assert.Equal(t, safeIntToUint64(expectedCount), metrics.RequestCount)
 	assert.Equal(t, uint64(0), metrics.ErrorCount)
 	assert.True(t, metrics.IsHealthy)
 }
@@ -1541,7 +1553,7 @@ func verifyStdioMemoryOptimizationMetrics(t *testing.T, client *StdioClient, exp
 	t.Helper()
 
 	metrics := client.GetMetrics()
-	assert.Equal(t, uint64(expectedRequests), metrics.RequestCount)
+	assert.Equal(t, safeIntToUint64(expectedRequests), metrics.RequestCount)
 	assert.Equal(t, uint64(0), metrics.ErrorCount)
 }
 

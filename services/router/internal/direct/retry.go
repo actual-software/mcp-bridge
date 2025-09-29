@@ -205,6 +205,7 @@ func NewAdaptiveRetry(config AdaptiveRetryConfig, logger *zap.Logger) *AdaptiveR
 		circuitBreaker: NewCircuitBreaker(config),
 		errorTypeStats: make(map[string]*ErrorStats),
 		// Non-cryptographic randomness for jitter is acceptable
+		// #nosec G404 - using math/rand for retry jitter, not security
 		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }

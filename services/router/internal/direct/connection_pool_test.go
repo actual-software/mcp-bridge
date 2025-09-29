@@ -830,7 +830,7 @@ func TestConnectionPool_StressTest(t *testing.T) {
 	verifyStressTestResults(t, pool, config, successRate)
 }
 
-// Helper functions for TestConnectionPool_ConcurrentAccess
+// Helper functions for TestConnectionPool_ConcurrentAccess.
 func setupConcurrentAccessPool(t *testing.T) *ConnectionPool {
 	t.Helper()
 
@@ -919,7 +919,7 @@ func verifyConcurrentAccessResults(t *testing.T, pool *ConnectionPool, connectio
 	assert.LessOrEqual(t, stats["active_connections"], 10) // MaxActiveConnections from setup
 }
 
-// Helper functions for TestConnectionPool_StressTest
+// Helper functions for TestConnectionPool_StressTest.
 func setupStressTestPool(t *testing.T) (*ConnectionPool, *ConnectionPoolConfig) {
 	t.Helper()
 

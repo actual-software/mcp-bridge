@@ -261,7 +261,7 @@ func TestSSEBackend_SendRequestWithTimeout(t *testing.T) {
 	}
 
 	_, err = backend.SendRequest(ctx, req)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, strings.ToLower(err.Error()), "timeout")
 }
 
@@ -282,7 +282,7 @@ func TestSSEBackend_SendRequestNotRunning(t *testing.T) {
 	}
 
 	_, err := backend.SendRequest(context.Background(), req)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not running")
 }
 
@@ -308,7 +308,7 @@ func TestSSEBackend_Health(t *testing.T) {
 
 	// Health check should fail when not running
 	err := backend.Health(ctx)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not running")
 
 	// Start backend
@@ -321,7 +321,7 @@ func TestSSEBackend_Health(t *testing.T) {
 
 	// Health check should pass when running with active connection
 	err = backend.Health(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check metrics updated
 	metrics := backend.GetMetrics()
@@ -435,7 +435,7 @@ func TestSSEBackend_CustomHeaders(t *testing.T) {
 	time.Sleep(httpStatusOK * time.Millisecond)
 
 	err = backend.Health(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestSSEBackend_ConcurrentRequests(t *testing.T) {

@@ -64,6 +64,8 @@ func testValidCACertificate(t *testing.T) {
 	tempDir := t.TempDir()
 	_, _, caFile := CreateTestCertificates(t, tempDir)
 
+	// #nosec G304 - test code reading test-generated file
+	// #nosec G304 - reading test-generated CA file
 	caCertPEM, err := os.ReadFile(caFile)
 	require.NoError(t, err)
 
@@ -84,6 +86,7 @@ func testValidServerCertificate(t *testing.T) {
 	tempDir := t.TempDir()
 	certFile, _, _ := CreateTestCertificates(t, tempDir)
 
+	// #nosec G304 - reading test-generated certificate file
 	serverCertPEM, err := os.ReadFile(certFile)
 	require.NoError(t, err)
 
@@ -118,6 +121,7 @@ func testValidServerPrivateKey(t *testing.T) {
 	tempDir := t.TempDir()
 	_, keyFile, _ := CreateTestCertificates(t, tempDir)
 
+	// #nosec G304 - reading test-generated key file  
 	serverKeyPEM, err := os.ReadFile(keyFile)
 	require.NoError(t, err)
 
@@ -162,6 +166,7 @@ func testCertificatesFormValidChain(t *testing.T) {
 	tempDir := t.TempDir()
 	certFile, _, caFile := CreateTestCertificates(t, tempDir)
 
+	// #nosec G304 - reading test-generated CA file
 	caCertPEM, err := os.ReadFile(caFile)
 	require.NoError(t, err)
 
@@ -169,6 +174,7 @@ func testCertificatesFormValidChain(t *testing.T) {
 	caCert, err := x509.ParseCertificate(caBlock.Bytes)
 	require.NoError(t, err)
 
+	// #nosec G304 - reading test-generated certificate file
 	serverCertPEM, err := os.ReadFile(certFile)
 	require.NoError(t, err)
 
@@ -261,6 +267,7 @@ func setupTrustedTLSConfig(t *testing.T, certFile, keyFile, caFile string) (tls.
 	require.NoError(t, err)
 
 	// Load CA certificate for client verification
+	// #nosec G304 - reading test-generated CA file
 	caCertPEM, err := os.ReadFile(caFile)
 	require.NoError(t, err)
 
@@ -463,6 +470,7 @@ func testCertificatesUseRSA2048(t *testing.T) {
 func loadCertificateFromFile(t *testing.T, certFile string) *x509.Certificate {
 	t.Helper()
 
+	// #nosec G304 - reading test-generated certificate file
 	certPEM, err := os.ReadFile(certFile)
 	require.NoError(t, err)
 
@@ -519,13 +527,17 @@ func TestUniqueGeneration(t *testing.T) {
 		certFile2, _, caFile2 := CreateTestCertificates(t, tempDir2)
 
 		// Read certificates
+		// #nosec G304 - reading test-generated certificate file
 		cert1PEM, err := os.ReadFile(certFile1)
 		require.NoError(t, err)
+		// #nosec G304 - reading test-generated certificate file
 		cert2PEM, err := os.ReadFile(certFile2)
 		require.NoError(t, err)
 
+		// #nosec G304 - reading test-generated CA file
 		ca1PEM, err := os.ReadFile(caFile1)
 		require.NoError(t, err)
+		// #nosec G304 - reading test-generated CA file
 		ca2PEM, err := os.ReadFile(caFile2)
 		require.NoError(t, err)
 

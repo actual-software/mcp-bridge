@@ -1237,6 +1237,7 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 
 	// Create kind cluster
 
+	// #nosec G204 - test code using controlled inputs
 	createCmd := exec.CommandContext(ctx, "kind", "create", "cluster", "--name", clusterName, "--wait", "60s")
 
 	createOutput, err := createCmd.CombinedOutput()
@@ -1251,12 +1252,14 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 
 	// Export kubeconfig
 
+	// #nosec G204 - test code using controlled inputs
 	exportCmd := exec.CommandContext(ctx, "kind", "export", "kubeconfig",
 		"--name", clusterName, "--kubeconfig", kubeconfigPath)
 
 	exportOutput, err := exportCmd.CombinedOutput()
 	if err != nil {
 		// Cleanup on failure
+		// #nosec G204 - test cleanup code
 		_ = exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", clusterName).Run()
 		return nil, "", fmt.Errorf("failed to export kubeconfig: %w, output: %s", err, string(exportOutput))
 	}
@@ -1264,6 +1267,7 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 	// Wait for cluster to be ready
 	if err := waitForKubernetesCluster(kubeconfigPath, 60*time.Second); err != nil {
 		// Cleanup on failure
+		// #nosec G204 - test cleanup code
 		_ = exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", clusterName).Run()
 		_ = os.Remove(kubeconfigPath)
 
@@ -1275,6 +1279,7 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 	cleanup = func() {
 		t.Logf("Cleaning up kind cluster: %s", clusterName)
 
+		// #nosec G204 - test cleanup code with controlled inputs
 		deleteCmd := exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", clusterName)
 		if output, err := deleteCmd.CombinedOutput(); err != nil {
 			t.Logf("Failed to delete kind cluster: %v, output: %s", err, string(output))

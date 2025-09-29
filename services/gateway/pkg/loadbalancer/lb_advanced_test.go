@@ -510,67 +510,84 @@ func TestLoadBalancer_WeightDistributionAccuracy_Advanced(t *testing.T) {
 
 // TestHybridLoadBalancer_EdgeCases_Advanced tests various edge cases.
 func TestHybridLoadBalancer_EdgeCases_Advanced(t *testing.T) {
-	tests := []struct {
-		name     string
-		setup    func() *HybridLoadBalancer
-		testFunc func(*testing.T, *HybridLoadBalancer)
-	}{
-		{
-			name: "zero weight endpoint",
-			setup: func() *HybridLoadBalancer {
-				endpoints := []*discovery.Endpoint{
-					{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: 0},
-				}
-				config := HybridConfig{Strategy: "weighted", HealthAware: true}
-
-				return NewHybridLoadBalancer(endpoints, config)
-			},
-			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
-				endpoint := lb.Next()
-
-				assert.NotNil(t, endpoint, "Should return endpoint even with zero weight")
-			},
-		},
-		{
-			name: "empty endpoints list",
-			setup: func() *HybridLoadBalancer {
-				config := HybridConfig{Strategy: "round_robin", HealthAware: true}
-
-				return NewHybridLoadBalancer([]*discovery.Endpoint{}, config)
-			},
-			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
-				endpoint := lb.Next()
-
-				assert.Nil(t, endpoint, "Should return nil when no endpoints available")
-			},
-		},
-		{
-			name: "single healthy endpoint",
-			setup: func() *HybridLoadBalancer {
-				endpoints := []*discovery.Endpoint{
-					{Service: "only-svc", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-				}
-				config := HybridConfig{Strategy: "round_robin", HealthAware: true}
-
-				return NewHybridLoadBalancer(endpoints, config)
-			},
-			testFunc: func(t *testing.T, lb *HybridLoadBalancer) {
-				// Should consistently return the same endpoint
-				for i := 0; i < 10; i++ {
-					endpoint := lb.Next()
-
-					require.NotNil(t, endpoint)
-					assert.Equal(t, "only-svc", endpoint.Service)
-				}
-			},
-		},
-	}
+	tests := getHybridLoadBalancerEdgeCaseTests()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			lb := tt.setup()
 			tt.testFunc(t, lb)
 		})
+	}
+}
+
+func getHybridLoadBalancerEdgeCaseTests() []struct {
+	name     string
+	setup    func() *HybridLoadBalancer
+	testFunc func(*testing.T, *HybridLoadBalancer)
+} {
+	return []struct {
+		name     string
+		setup    func() *HybridLoadBalancer
+		testFunc func(*testing.T, *HybridLoadBalancer)
+	}{
+		{
+			name:     "zero weight endpoint",
+			setup:    setupZeroWeightEndpoint,
+			testFunc: testZeroWeightEndpoint,
+		},
+		{
+			name:     "empty endpoints list",
+			setup:    setupEmptyEndpointsList,
+			testFunc: testEmptyEndpointsList,
+		},
+		{
+			name:     "single healthy endpoint",
+			setup:    setupSingleHealthyEndpoint,
+			testFunc: testSingleHealthyEndpoint,
+		},
+	}
+}
+
+func setupZeroWeightEndpoint() *HybridLoadBalancer {
+	endpoints := []*discovery.Endpoint{
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: 0},
+	}
+	config := HybridConfig{Strategy: "weighted", HealthAware: true}
+	return NewHybridLoadBalancer(endpoints, config)
+}
+
+func testZeroWeightEndpoint(t *testing.T, lb *HybridLoadBalancer) {
+	t.Helper()
+	endpoint := lb.Next()
+	assert.NotNil(t, endpoint, "Should return endpoint even with zero weight")
+}
+
+func setupEmptyEndpointsList() *HybridLoadBalancer {
+	config := HybridConfig{Strategy: "round_robin", HealthAware: true}
+	return NewHybridLoadBalancer([]*discovery.Endpoint{}, config)
+}
+
+func testEmptyEndpointsList(t *testing.T, lb *HybridLoadBalancer) {
+	t.Helper()
+	endpoint := lb.Next()
+	assert.Nil(t, endpoint, "Should return nil when no endpoints available")
+}
+
+func setupSingleHealthyEndpoint() *HybridLoadBalancer {
+	endpoints := []*discovery.Endpoint{
+		{Service: "only-svc", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
+	}
+	config := HybridConfig{Strategy: "round_robin", HealthAware: true}
+	return NewHybridLoadBalancer(endpoints, config)
+}
+
+func testSingleHealthyEndpoint(t *testing.T, lb *HybridLoadBalancer) {
+	t.Helper()
+	// Should consistently return the same endpoint
+	for i := 0; i < 10; i++ {
+		endpoint := lb.Next()
+		require.NotNil(t, endpoint)
+		assert.Equal(t, "only-svc", endpoint.Service)
 	}
 }
 

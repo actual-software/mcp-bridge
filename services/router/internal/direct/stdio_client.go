@@ -308,7 +308,7 @@ func (c *StdioClient) healthCheckLoop(parentCtx context.Context) {
 						zap.Int("restart_count", c.restarts),
 						zap.Int("max_restarts", c.config.Process.MaxRestarts))
 
-					go c.restartProcess()
+					go c.restartProcess(parentCtx)
 				}
 			}
 
@@ -318,7 +318,7 @@ func (c *StdioClient) healthCheckLoop(parentCtx context.Context) {
 }
 
 // restartProcess attempts to restart the stdio process.
-func (c *StdioClient) restartProcess() {
+func (c *StdioClient) restartProcess(ctx context.Context) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -343,10 +343,10 @@ func (c *StdioClient) restartProcess() {
 	time.Sleep(c.config.Process.RestartDelay)
 
 	// Restart process.
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutSeconds*time.Second)
+	startCtx, cancel := context.WithTimeout(ctx, defaultTimeoutSeconds*time.Second)
 	defer cancel()
 
-	if err := c.startProcess(ctx); err != nil {
+	if err := c.startProcess(startCtx); err != nil {
 		c.logger.Error("failed to restart process", zap.Error(err))
 		c.state = StateError
 

@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -486,6 +487,7 @@ func startFrontend(t *testing.T, frontend *Frontend) {
 }
 
 func runConnectionTest(t *testing.T, clientConn, serverConn net.Conn) {
+	t.Helper()
 	// Prepare test request
 	request := createTestRequest()
 	requestData, err := json.Marshal(request)
@@ -674,6 +676,22 @@ func testSuccessfulAuth(
 func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, mockSessions *MockSessionManager, logger *zap.Logger) {
 	t.Helper()
 
+	failingFrontend := setupFailingAuthFrontend(t, config, mockRouter, mockSessions, logger)
+	defer func() {
+		_ = failingFrontend.Stop(context.Background())
+	}()
+
+	request := createAuthTestRequest()
+	testConn := executeAuthRequest(t, failingFrontend, request)
+	
+	syncBuf, ok := testConn.writer.(*syncBuffer)
+	require.True(t, ok, "writer should be a syncBuffer")
+	verifyAuthFailureResponse(t, syncBuf)
+}
+
+func setupFailingAuthFrontend(t *testing.T, config Config, mockRouter *MockRequestRouter, mockSessions *MockSessionManager, logger *zap.Logger) *Frontend {
+	t.Helper()
+	
 	failingMockAuth := &MockAuthProviderWithError{
 		shouldAuthFail: true,
 	}
@@ -681,12 +699,12 @@ func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, 
 
 	err := failingFrontend.Start(context.Background())
 	require.NoError(t, err)
+	
+	return failingFrontend
+}
 
-	defer func() {
-		_ = failingFrontend.Stop(context.Background())
-	}()
-
-	request2 := mcp.Request{
+func createAuthTestRequest() mcp.Request {
+	return mcp.Request{
 		JSONRPC: "2.0",
 		Method:  "test_method",
 		ID:      "test-2",
@@ -700,38 +718,45 @@ func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, 
 			"x-api-key":     "apikey456",
 		},
 	}
+}
 
-	requestData2, err := json.Marshal(request2)
-
+func executeAuthRequest(t *testing.T, frontend *Frontend, request mcp.Request) *testConnection {
+	t.Helper()
+	
+	requestData, err := json.Marshal(request)
 	require.NoError(t, err)
 
-	reader2 := &blockingReader{
-		data: append(requestData2, '\n'),
+	reader := &blockingReader{
+		data: append(requestData, '\n'),
 		done: make(chan struct{}),
 	}
-	writer2 := &syncBuffer{}
+	writer := &syncBuffer{}
 
-	testConn2 := &testConnection{
-		reader:     reader2,
-		writer:     writer2,
+	testConn := &testConnection{
+		reader:     reader,
+		writer:     writer,
 		isConnLike: true,
 	}
 
-	failingFrontend.wg.Add(1)
-
+	frontend.wg.Add(1)
 	go func() {
-		failingFrontend.handleConnection(context.Background(), testConn2)
+		frontend.handleConnection(context.Background(), testConn)
 	}()
 
 	time.Sleep(responseProcessingTimeout)
-	close(reader2.done)
+	close(reader.done)
 	time.Sleep(connectionCleanupTimeout)
+	
+	return testConn
+}
 
-	assert.Positive(t, writer2.Len(), "Expected auth failure response")
+func verifyAuthFailureResponse(t *testing.T, writer *syncBuffer) {
+	t.Helper()
+	
+	assert.Positive(t, writer.Len(), "Expected auth failure response")
 
 	var errorResp mcp.Response
-
-	err = json.Unmarshal(writer2.Bytes(), &errorResp)
+	err := json.Unmarshal(writer.Bytes(), &errorResp)
 
 	require.NoError(t, err)
 	assert.NotNil(t, errorResp.Error, "Expected error in auth failure response")
@@ -1392,6 +1417,24 @@ func TestStdioFrontend_DefaultConfigValues(t *testing.T) {
 
 // Benchmark tests.
 func BenchmarkStdioFrontend_HandleRequest(b *testing.B) {
+	frontend, conn, request := setupBenchmarkComponents(b)
+	// Get the underlying buffer from the encoder
+	encoderWriter := reflect.ValueOf(conn.writer).Elem().FieldByName("w")
+	writer, ok := encoderWriter.Interface().(*bytes.Buffer)
+	if !ok {
+		b.Fatal("Failed to get bytes.Buffer from encoder")
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		writer.Reset()
+		request.ID = fmt.Sprintf("bench-%d", i)
+		benchmarkSingleRequest(frontend, conn, request)
+	}
+}
+
+func setupBenchmarkComponents(b *testing.B) (*Frontend, *ClientConnection, *mcp.Request) {
 	logger := zaptest.NewLogger(b)
 	mockRouter := &MockRequestRouter{}
 	mockAuth := &MockAuthProvider{}
@@ -1421,40 +1464,31 @@ func BenchmarkStdioFrontend_HandleRequest(b *testing.B) {
 		Params:  map[string]interface{}{"data": "benchmark"},
 	}
 
-	b.ResetTimer()
+	return frontend, conn, request
+}
 
-	for i := 0; i < b.N; i++ {
-		writer.Reset()
+func benchmarkSingleRequest(frontend *Frontend, conn *ClientConnection, request *mcp.Request) {
+	var wg sync.WaitGroup
+	wg.Add(1)
 
-		request.ID = fmt.Sprintf("bench-%d", i)
+	go func() {
+		defer wg.Done()
+		
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 
-		var wg sync.WaitGroup
+		resp, err := frontend.router.RouteRequest(ctx, request, "")
+		if err != nil {
+			frontend.sendErrorResponse(conn, request, err.Error())
+			return
+		}
 
-		wg.Add(1)
+		conn.mu.Lock()
+		_ = conn.writer.Encode(resp)
+		conn.mu.Unlock()
+	}()
 
-		// Use a custom function to avoid the frontend's waitgroup
-
-		go func() {
-			defer wg.Done()
-
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-
-			defer cancel()
-
-			resp, err := frontend.router.RouteRequest(ctx, request, "")
-			if err != nil {
-				frontend.sendErrorResponse(conn, request, err.Error())
-
-				return
-			}
-
-			conn.mu.Lock()
-			_ = conn.writer.Encode(resp)
-			conn.mu.Unlock()
-		}()
-
-		wg.Wait()
-	}
+	wg.Wait()
 }
 
 func BenchmarkStdioFrontend_UpdateMetrics(b *testing.B) {

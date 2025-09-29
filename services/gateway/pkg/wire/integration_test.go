@@ -41,12 +41,13 @@ func runServerSide(t *testing.T, server *Transport, expectedReq *mcp.Request, do
 	go func() {
 		// Receive request on server
 		msgType, msg, err := server.ReceiveMessage()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, MessageTypeRequest, msgType)
 
 		receivedReq, ok := msg.(*mcp.Request)
 		if !ok {
 			t.Errorf("Expected *mcp.Request, got %T", msg)
+
 			return
 		}
 
@@ -65,7 +66,7 @@ func runServerSide(t *testing.T, server *Transport, expectedReq *mcp.Request, do
 		}
 
 		err = server.SendResponse(resp)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		done <- true
 	}()

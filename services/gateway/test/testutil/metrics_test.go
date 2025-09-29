@@ -276,7 +276,7 @@ func testTCPMessageCountZero(t *testing.T) {
 
 	registry := CreateTestMetricsRegistryWithHelpers()
 	count := registry.GetTCPMessageCount("inbound", "request")
-	assert.Equal(t, float64(0), count)
+	assert.InDelta(t, float64(0), count, 0.001)
 }
 
 func testTCPMessageCountAfterSingleIncrement(t *testing.T) {
@@ -290,7 +290,7 @@ func testTCPMessageCountAfterSingleIncrement(t *testing.T) {
 	counter.Inc()
 
 	count := registry.GetTCPMessageCount("inbound", "request")
-	assert.Equal(t, float64(1), count)
+	assert.InDelta(t, float64(1), count, 0.001)
 }
 
 func testTCPMessageCountAfterMultipleIncrements(t *testing.T) {
@@ -307,7 +307,7 @@ func testTCPMessageCountAfterMultipleIncrements(t *testing.T) {
 	}
 
 	count := registry.GetTCPMessageCount("outbound", "response")
-	assert.Equal(t, float64(5), count)
+	assert.InDelta(t, float64(5), count, 0.001)
 }
 
 func testTCPMessageCountWithInvalidLabels(t *testing.T) {
@@ -322,10 +322,10 @@ func testTCPMessageCountWithInvalidLabels(t *testing.T) {
 
 	// Check different labels return zero
 	count := registry.GetTCPMessageCount("invalid", "request")
-	assert.Equal(t, float64(0), count)
+	assert.InDelta(t, float64(0), count, 0.001)
 
 	count = registry.GetTCPMessageCount("inbound", "invalid")
-	assert.Equal(t, float64(0), count)
+	assert.InDelta(t, float64(0), count, 0.001)
 }
 
 func testTCPMessageCountWithDifferentLabelCombinations(t *testing.T) {
@@ -403,7 +403,7 @@ func testTCPProtocolErrorCountZero(t *testing.T) {
 
 	registry := CreateTestMetricsRegistryWithHelpers()
 	count := registry.GetTCPProtocolErrorCount("invalid_frame")
-	assert.Equal(t, float64(0), count)
+	assert.InDelta(t, float64(0), count, 0.001)
 }
 
 func testTCPProtocolErrorCountAfterSingleIncrement(t *testing.T) {
@@ -417,7 +417,7 @@ func testTCPProtocolErrorCountAfterSingleIncrement(t *testing.T) {
 	counter.Inc()
 
 	count := registry.GetTCPProtocolErrorCount("invalid_frame")
-	assert.Equal(t, float64(1), count)
+	assert.InDelta(t, float64(1), count, 0.001)
 }
 
 func testTCPProtocolErrorCountAfterMultipleIncrements(t *testing.T) {
@@ -449,7 +449,7 @@ func testTCPProtocolErrorCountWithInvalidErrorType(t *testing.T) {
 
 	// Check invalid error type returns zero
 	count := registry.GetTCPProtocolErrorCount("invalid_error_type")
-	assert.Equal(t, float64(0), count)
+	assert.InDelta(t, float64(0), count, 0.001)
 }
 
 func testTCPProtocolErrorCountWithDifferentErrorTypes(t *testing.T) {
@@ -849,7 +849,7 @@ func TestMetricsErrorPaths(t *testing.T) {
 
 		// Test with labels that might not exist
 		count := registry.GetTCPMessageCount("nonexistent_direction", "nonexistent_type")
-		assert.Equal(t, float64(0), count) // Should return 0 for non-existent metrics
+		assert.InDelta(t, float64(0), count, 0.001) // Should return 0 for non-existent metrics
 	})
 
 	t.Run("tcp_protocol_error_count_handles_nil_counter", func(t *testing.T) {
@@ -857,6 +857,6 @@ func TestMetricsErrorPaths(t *testing.T) {
 
 		// Test with error type that might not exist
 		count := registry.GetTCPProtocolErrorCount("nonexistent_error_type")
-		assert.Equal(t, float64(0), count) // Should return 0 for non-existent metrics
+		assert.InDelta(t, float64(0), count, 0.001) // Should return 0 for non-existent metrics
 	})
 }

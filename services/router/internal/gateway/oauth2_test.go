@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
 	common "github.com/poiley/mcp-bridge/pkg/common/config"
@@ -365,13 +366,24 @@ func handleRefreshTokenRequest(t *testing.T, w http.ResponseWriter, r *http.Requ
 
 func TestOAuth2Client_ErrorHandling(t *testing.T) {
 	logger := zaptest.NewLogger(t)
+	tests := getOAuth2ErrorTests()
 
-	tests := []struct {
-		name        string
-		handler     http.HandlerFunc
-		wantErr     bool
-		errContains string
-	}{
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testOAuth2ErrorCase(t, tt, logger)
+		})
+	}
+}
+
+type oauth2ErrorTest struct {
+	name        string
+	handler     http.HandlerFunc
+	wantErr     bool
+	errContains string
+}
+
+func getOAuth2ErrorTests() []oauth2ErrorTest {
+	return []oauth2ErrorTest{
 		{
 			name: "server error",
 			handler: func(w http.ResponseWriter, r *http.Request) {
@@ -400,61 +412,11 @@ func TestOAuth2Client_ErrorHandling(t *testing.T) {
 			errContains: "invalid_client",
 		},
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(tt.handler)
-			defer server.Close()
-
-			cfg := config.GatewayConfig{
-				Auth: common.AuthConfig{
-					Type:          "oauth2",
-					GrantType:     "client_credentials",
-					TokenEndpoint: server.URL,
-					ClientID:      "test",
-					ClientSecret:  "test",
-				},
-			}
-
-			client := NewOAuth2Client(cfg, logger, http.DefaultClient)
-
-			_, err := client.GetToken(context.Background())
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetToken() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if err != nil && tt.errContains != "" {
-				if !containsOAuth2(err.Error(), tt.errContains) {
-					t.Errorf("Error = %v, want error containing %s", err, tt.errContains)
-				}
-			}
-		})
-	}
 }
 
-func TestOAuth2Client_ConcurrentAccess(t *testing.T) {
-	logger := zaptest.NewLogger(t)
-
-	var requestCount int32
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&requestCount, 1)
-
-		// Simulate some processing time.
-		time.Sleep(testIterations * time.Millisecond)
-
-		resp := OAuth2Token{
-			AccessToken: "concurrent-token",
-			TokenType:   "Bearer",
-			ExpiresIn:   3600,
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			t.Logf("Failed to encode response: %v", err)
-		}
-	}))
+func testOAuth2ErrorCase(t *testing.T, tt oauth2ErrorTest, logger *zap.Logger) {
+	t.Helper()
+	server := httptest.NewServer(tt.handler)
 	defer server.Close()
 
 	cfg := config.GatewayConfig{
@@ -468,14 +430,73 @@ func TestOAuth2Client_ConcurrentAccess(t *testing.T) {
 	}
 
 	client := NewOAuth2Client(cfg, logger, http.DefaultClient)
+	_, err := client.GetToken(context.Background())
+	
+	if (err != nil) != tt.wantErr {
+		t.Errorf("GetToken() error = %v, wantErr %v", err, tt.wantErr)
+	}
 
-	// Launch multiple goroutines to get token.
+	if err != nil && tt.errContains != "" {
+		if !containsOAuth2(err.Error(), tt.errContains) {
+			t.Errorf("Error = %v, want error containing %s", err, tt.errContains)
+		}
+	}
+}
+
+func TestOAuth2Client_ConcurrentAccess(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+	var requestCount int32
+	server := createConcurrentOAuth2Server(t, &requestCount)
+	defer server.Close()
+
+	client := createOAuth2TestClient(server.URL, logger)
+	runConcurrentOAuth2Test(t, client)
+	verifySingleRequest(t, &requestCount)
+}
+
+func createConcurrentOAuth2Server(t *testing.T, requestCount *int32) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(requestCount, 1)
+		time.Sleep(testIterations * time.Millisecond)
+
+		resp := OAuth2Token{
+			AccessToken: "concurrent-token",
+			TokenType:   "Bearer",
+			ExpiresIn:   3600,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Logf("Failed to encode response: %v", err)
+		}
+	}))
+}
+
+func createOAuth2TestClient(serverURL string, logger *zap.Logger) *OAuth2Client {
+	cfg := config.GatewayConfig{
+		Auth: common.AuthConfig{
+			Type:          "oauth2",
+			GrantType:     "client_credentials",
+			TokenEndpoint: serverURL,
+			ClientID:      "test",
+			ClientSecret:  "test",
+		},
+	}
+	return NewOAuth2Client(cfg, logger, http.DefaultClient)
+}
+
+func runConcurrentOAuth2Test(t *testing.T, client *OAuth2Client) {
+	t.Helper()
 	const numGoroutines = 10
-
 	errors := make(chan error, numGoroutines)
 	tokens := make(chan string, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	launchOAuth2Goroutines(client, errors, tokens, numGoroutines)
+	collectOAuth2Results(t, errors, tokens, numGoroutines)
+}
+
+func launchOAuth2Goroutines(client *OAuth2Client, errors chan error, tokens chan string, count int) {
+	for i := 0; i < count; i++ {
 		go func() {
 			token, err := client.GetToken(context.Background())
 			if err != nil {
@@ -485,9 +506,11 @@ func TestOAuth2Client_ConcurrentAccess(t *testing.T) {
 			}
 		}()
 	}
+}
 
-	// Collect results.
-	for i := 0; i < numGoroutines; i++ {
+func collectOAuth2Results(t *testing.T, errors chan error, tokens chan string, count int) {
+	t.Helper()
+	for i := 0; i < count; i++ {
 		select {
 		case err := <-errors:
 			t.Errorf("Goroutine error: %v", err)
@@ -499,9 +522,11 @@ func TestOAuth2Client_ConcurrentAccess(t *testing.T) {
 			t.Error("Timeout waiting for goroutine")
 		}
 	}
+}
 
-	// Should only make one request despite concurrent access.
-	if count := atomic.LoadInt32(&requestCount); count != 1 {
+func verifySingleRequest(t *testing.T, requestCount *int32) {
+	t.Helper()
+	if count := atomic.LoadInt32(requestCount); count != 1 {
 		t.Errorf("Expected 1 request, got %d", count)
 	}
 }

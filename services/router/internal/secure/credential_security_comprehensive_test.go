@@ -636,11 +636,12 @@ func testPlatformListBehavior(t *testing.T, store TokenStore, testKey string) {
 
 	keys, err := store.List()
 
-	if errors.Is(err, ErrListNotSupported) {
+	switch {
+	case errors.Is(err, ErrListNotSupported):
 		t.Logf("List not supported on %s (expected)", runtime.GOOS)
-	} else if err != nil {
+	case err != nil:
 		t.Errorf("List failed unexpectedly: %v", err)
-	} else {
+	default:
 		validateListContainsKey(t, keys, testKey)
 	}
 }

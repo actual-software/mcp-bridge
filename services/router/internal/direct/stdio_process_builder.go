@@ -62,7 +62,11 @@ func (b *StdioProcessBuilder) createCommand(ctx context.Context) error {
 		return errors.New("command not specified")
 	}
 
-	// Command from trusted configuration
+	// This executes a command specified in the user's configuration file.
+	// The user explicitly configures which MCP server to run via stdio.
+	// This is the intended functionality - we're not executing arbitrary input,
+	// but rather a command the user has deliberately configured.
+	// #nosec G204 - executing user-configured MCP server command is the intended behavior
 	b.cmd = exec.CommandContext(ctx, b.client.config.Command[0], b.client.config.Command[1:]...)
 
 	if b.client.config.WorkingDir != "" {

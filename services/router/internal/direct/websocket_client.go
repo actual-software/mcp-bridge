@@ -170,7 +170,12 @@ func (c *WebSocketClient) connect(ctx context.Context) error {
 	dialer := c.createDialer()
 	headers := c.prepareHeaders()
 
-	conn, _, err := c.establishConnection(ctx, dialer, headers)
+	conn, resp, err := c.establishConnection(ctx, dialer, headers)
+	if resp != nil && resp.Body != nil {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+	}
 	if err != nil {
 		return err
 	}
@@ -400,7 +405,7 @@ func (c *WebSocketClient) healthCheckLoop(parentCtx context.Context) {
 				c.logger.Warn("health check failed", zap.Error(err))
 				// Consider reconnection if unhealthy.
 				if c.shouldReconnect() {
-					go c.reconnect()
+					go c.reconnect(parentCtx)
 				}
 			}
 
@@ -419,7 +424,7 @@ func (c *WebSocketClient) shouldReconnect() bool {
 }
 
 // reconnect attempts to reconnect the WebSocket.
-func (c *WebSocketClient) reconnect() {
+func (c *WebSocketClient) reconnect(parentCtx context.Context) {
 	c.mu.Lock()
 	c.reconnectAttempts++
 	attempts := c.reconnectAttempts
@@ -432,7 +437,7 @@ func (c *WebSocketClient) reconnect() {
 	// Wait before reconnecting.
 	time.Sleep(c.config.Connection.ReconnectDelay)
 
-	ctx, cancel := context.WithTimeout(context.Background(), c.config.HandshakeTimeout)
+	ctx, cancel := context.WithTimeout(parentCtx, c.config.HandshakeTimeout)
 	defer cancel()
 
 	c.mu.Lock()

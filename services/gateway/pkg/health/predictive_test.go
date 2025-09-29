@@ -195,7 +195,7 @@ func TestPredictiveHealthMonitor_GetHealthScore(t *testing.T) {
 	// Record good metrics
 	monitor.RecordMetrics(endpoint, testTimeout*time.Millisecond, true)
 	score := monitor.GetHealthScore(endpoint)
-	assert.Equal(t, 1.0, score) // Perfect score for low latency and no errors
+	assert.InDelta(t, 1.0, score, 0.001) // Perfect score for low latency and no errors
 
 	// Record high latency request
 	monitor.RecordMetrics(endpoint, httpStatusInternalError*time.Millisecond, true)
@@ -227,7 +227,7 @@ func TestPredictiveHealthMonitor_GetPredictedHealth(t *testing.T) {
 	// With prediction disabled, should return current health
 	predicted, confidence := monitor.GetPredictedHealth(endpoint)
 	assert.True(t, predicted)
-	assert.Equal(t, 1.0, confidence)
+	assert.InDelta(t, 1.0, confidence, 0.001)
 
 	// Enable prediction
 	monitor.config.EnablePrediction = true
@@ -235,13 +235,13 @@ func TestPredictiveHealthMonitor_GetPredictedHealth(t *testing.T) {
 	// Unregistered endpoint
 	predicted, confidence = monitor.GetPredictedHealth(endpoint)
 	assert.True(t, predicted)
-	assert.Equal(t, 1.0, confidence)
+	assert.InDelta(t, 1.0, confidence, 0.001)
 
 	// Register endpoint
 	monitor.RegisterEndpoint(endpoint)
 	predicted, confidence = monitor.GetPredictedHealth(endpoint)
 	assert.True(t, predicted)        // Default predicted health
-	assert.Equal(t, 0.0, confidence) // Default confidence
+	assert.InDelta(t, 0.0, confidence, 0.001) // Default confidence
 }
 
 func TestCircuitBreaker_StateTransitions(t *testing.T) {
@@ -326,7 +326,7 @@ func TestPredictiveHealthMonitor_Statistics(t *testing.T) {
 	assert.Equal(t, 2, stats.TotalEndpoints)
 	assert.Equal(t, 2, stats.HealthyEndpoints)
 	assert.Equal(t, 0, stats.UnhealthyEndpoints)
-	assert.Equal(t, 1.0, stats.AverageHealthScore)
+	assert.InDelta(t, 1.0, stats.AverageHealthScore, 0.001)
 
 	// Make one endpoint unhealthy
 	for i := 0; i < 5; i++ {
@@ -424,7 +424,7 @@ func TestPredictiveHealthMonitor_DefaultConfiguration(t *testing.T) {
 	assert.Equal(t, testIterations, monitor.config.HistorySize)
 	assert.Equal(t, 15*time.Minute, monitor.config.PredictionWindow)
 	assert.Equal(t, 1*time.Second, monitor.config.LatencyThreshold)
-	assert.Equal(t, 0.05, monitor.config.ErrorRateThreshold)
+	assert.InDelta(t, 0.05, monitor.config.ErrorRateThreshold, 0.001)
 	assert.Equal(t, 2.0, monitor.config.AnomalyDeviationFactor)
 }
 

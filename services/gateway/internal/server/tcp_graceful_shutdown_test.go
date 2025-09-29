@@ -224,8 +224,9 @@ func startMockGoroutinesForShutdown(server *GatewayServer, ctx context.Context) 
 }
 
 func performGracefulShutdown(t *testing.T, server *GatewayServer, ctx context.Context) {
+	t.Helper()
 	// Perform shutdown
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 2*time.Second)
 	defer shutdownCancel()
 
 	err := server.Shutdown(shutdownCtx)

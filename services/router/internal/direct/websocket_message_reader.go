@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"context"
 	"errors"
 	"io"
 	"time"
@@ -166,7 +167,7 @@ func (r *WebSocketMessageReader) handleClosedConnection() {
 
 func (r *WebSocketMessageReader) attemptReconnection() {
 	if r.client.shouldReconnect() {
-		go r.client.reconnect()
+		go r.client.reconnect(context.Background())
 	}
 }
 

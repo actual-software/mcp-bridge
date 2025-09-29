@@ -60,7 +60,7 @@ func createProtocolBenchmarkConfigs(b *testing.B, logger *zap.Logger) []protocol
 	}
 }
 
-func setupHTTPBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupHTTPBenchmark(b *testing.B, logger *zap.Logger) (*HTTPClient, func()) {
 	b.Helper()
 
 	mockServer := newMockHTTPServer()
@@ -85,7 +85,7 @@ func setupHTTPBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func())
 	return client, func() { mockServer.Close() }
 }
 
-func setupWebSocketBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupWebSocketBenchmark(b *testing.B, logger *zap.Logger) (*WebSocketClient, func()) {
 	b.Helper()
 
 	mockServer := newMockWebSocketServer(b)
@@ -110,7 +110,7 @@ func setupWebSocketBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, fu
 	return client, func() { mockServer.close() }
 }
 
-func setupSSEBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupSSEBenchmark(b *testing.B, logger *zap.Logger) (*SSEClient, func()) {
 	b.Helper()
 
 	mockServer := newMockSSEServer()
@@ -134,7 +134,7 @@ func setupSSEBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) 
 	return client, func() { mockServer.close() }
 }
 
-func setupStdioBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupStdioBenchmark(b *testing.B, logger *zap.Logger) (*StdioClient, func()) {
 	b.Helper()
 
 	// Create a simple echo script for benchmarking
@@ -250,7 +250,8 @@ func createProtocolSetups(b *testing.B, logger *zap.Logger) []struct {
 	}
 }
 
-func setupHTTPBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupHTTPBenchmarkClient(b *testing.B, logger *zap.Logger) (*HTTPClient, func()) {
+	b.Helper()
 	mockServer := newMockHTTPServer()
 	config := HTTPClientConfig{
 		URL:         mockServer.URL,
@@ -266,7 +267,8 @@ func setupHTTPBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, f
 	return client, func() { mockServer.Close() }
 }
 
-func setupWebSocketBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupWebSocketBenchmarkClient(b *testing.B, logger *zap.Logger) (*WebSocketClient, func()) {
+	b.Helper()
 	mockServer := newMockWebSocketServer(b)
 	config := WebSocketClientConfig{
 		URL:         mockServer.getWebSocketURL(),
@@ -282,7 +284,8 @@ func setupWebSocketBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClie
 	return client, func() { mockServer.close() }
 }
 
-func setupSSEBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupSSEBenchmarkClient(b *testing.B, logger *zap.Logger) (*SSEClient, func()) {
+	b.Helper()
 	mockServer := newMockSSEServer()
 	config := SSEClientConfig{
 		URL:            mockServer.getURL(),
@@ -298,7 +301,7 @@ func setupSSEBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, fu
 	return client, func() { mockServer.close() }
 }
 
-func setupStdioBenchmarkClient(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupStdioBenchmarkClient(b *testing.B, logger *zap.Logger) (*StdioClient, func()) {
 	tmpDir := b.TempDir()
 	scriptPath := createSimpleEchoScript(b, tmpDir)
 
@@ -375,7 +378,7 @@ func createConcurrencyBenchmarkConfigs(b *testing.B, logger *zap.Logger) []proto
 	}
 }
 
-func setupHTTPConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupHTTPConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (*HTTPClient, func()) {
 	b.Helper()
 
 	mockServer := newMockHTTPServer()
@@ -398,7 +401,7 @@ func setupHTTPConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClie
 	return client, func() { mockServer.Close() }
 }
 
-func setupWebSocketConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupWebSocketConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (*WebSocketClient, func()) {
 	b.Helper()
 
 	mockServer := newMockWebSocketServer(b)
@@ -420,7 +423,7 @@ func setupWebSocketConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (Direc
 	return client, func() { mockServer.close() }
 }
 
-func setupSSEConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupSSEConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (*SSEClient, func()) {
 	b.Helper()
 
 	mockServer := newMockSSEServer()
@@ -442,7 +445,7 @@ func setupSSEConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClien
 	return client, func() { mockServer.close() }
 }
 
-func setupStdioConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupStdioConcurrencyBenchmark(b *testing.B, logger *zap.Logger) (*StdioClient, func()) {
 	b.Helper()
 
 	tmpDir := b.TempDir()
@@ -556,7 +559,7 @@ func createPayloadBenchmarkProtocols(b *testing.B, logger *zap.Logger) []protoco
 	}
 }
 
-func setupHTTPPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupHTTPPayloadBenchmark(b *testing.B, logger *zap.Logger) (*HTTPClient, func()) {
 	b.Helper()
 
 	mockServer := newMockHTTPServer()
@@ -578,7 +581,7 @@ func setupHTTPPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, 
 	return client, func() { mockServer.Close() }
 }
 
-func setupWebSocketPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupWebSocketPayloadBenchmark(b *testing.B, logger *zap.Logger) (*WebSocketClient, func()) {
 	b.Helper()
 
 	mockServer := newMockWebSocketServer(b)
@@ -601,7 +604,7 @@ func setupWebSocketPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectCli
 	return client, func() { mockServer.close() }
 }
 
-func setupSSEPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupSSEPayloadBenchmark(b *testing.B, logger *zap.Logger) (*SSEClient, func()) {
 	b.Helper()
 
 	mockServer := newMockSSEServer()
@@ -623,7 +626,7 @@ func setupSSEPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, f
 	return client, func() { mockServer.close() }
 }
 
-func setupStdioPayloadBenchmark(b *testing.B, logger *zap.Logger) (DirectClient, func()) {
+func setupStdioPayloadBenchmark(b *testing.B, logger *zap.Logger) (*StdioClient, func()) {
 	b.Helper()
 
 	tmpDir := b.TempDir()

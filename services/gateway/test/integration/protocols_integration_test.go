@@ -75,6 +75,7 @@ func (suite *ProtocolsIntegrationTestSuite) setupStdioBackend(logger *zap.Logger
 
 	// Give server time to start
 	time.Sleep(httpStatusOK * time.Millisecond)
+
 	return backend
 }
 
@@ -190,7 +191,7 @@ func (suite *ProtocolsIntegrationTestSuite) TestWebSocketBackendIntegration() {
 
 	// Test health check
 	err = backend.Health(suite.ctx)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	// Test request/response
 	req := &mcp.Request{
@@ -240,6 +241,7 @@ func (suite *ProtocolsIntegrationTestSuite) setupPerformanceStdioBackend(logger 
 	suite.Require().NoError(err)
 
 	time.Sleep(httpStatusOK * time.Millisecond)
+
 	return backend
 }
 
@@ -300,7 +302,15 @@ func (suite *ProtocolsIntegrationTestSuite) runPerformanceTest(backend *stdio.Ba
 	}
 
 	suite.Equal(0, errors, "All requests should succeed")
+
 	return time.Since(start)
+}
+
+func safeIntToUint64(n int) uint64 {
+	if n < 0 {
+		return 0
+	}
+	return uint64(n)
 }
 
 func (suite *ProtocolsIntegrationTestSuite) verifyPerformanceResults(
@@ -312,7 +322,7 @@ func (suite *ProtocolsIntegrationTestSuite) verifyPerformanceResults(
 
 	metrics := backend.GetMetrics()
 	suite.True(metrics.IsHealthy)
-	suite.Equal(uint64(numRequests), metrics.RequestCount)
+	suite.Equal(safeIntToUint64(numRequests), metrics.RequestCount)
 }
 
 // Test concurrent operations across multiple protocols.
@@ -500,6 +510,7 @@ func (suite *ProtocolsIntegrationTestSuite) createTestScript(content string) str
 	tmpDir := suite.T().TempDir()
 	scriptPath := filepath.Join(tmpDir, "test_script.py")
 
+	// #nosec G306 - test script needs execute permission (0o700) to run
 	err := os.WriteFile(scriptPath, []byte(content), 0o700)
 	suite.Require().NoError(err)
 

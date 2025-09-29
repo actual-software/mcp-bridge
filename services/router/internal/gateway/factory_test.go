@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
 	common "github.com/poiley/mcp-bridge/pkg/common/config"
@@ -17,20 +18,39 @@ func TestNewGatewayClient(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
 
-	tests := []struct {
-		name        string
-		cfg         config.GatewayConfig
-		wantType    string
-		wantErr     bool
-		errContains string
-	}{
+	tests := getNewGatewayClientTests()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			testNewGatewayClientCase(t, tt, logger)
+		})
+	}
+}
+
+type gatewayClientTest struct {
+	name        string
+	cfg         config.GatewayConfig
+	wantType    string
+	wantErr     bool
+	errContains string
+}
+
+func getNewGatewayClientTests() []gatewayClientTest {
+	tests := []gatewayClientTest{}
+	tests = append(tests, getWebSocketTests()...)
+	tests = append(tests, getTCPTests()...)
+	tests = append(tests, getErrorTests()...)
+	return tests
+}
+
+func getWebSocketTests() []gatewayClientTest {
+	return []gatewayClientTest{
 		{
 			name: "WebSocket client (ws)",
 			cfg: config.GatewayConfig{
 				URL: fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
+				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.Client",
 			wantErr:  false,
@@ -39,20 +59,21 @@ func TestNewGatewayClient(t *testing.T) {
 			name: "WebSocket client (wss)",
 			cfg: config.GatewayConfig{
 				URL: fmt.Sprintf("wss://localhost:%d", constants.TestHTTPSPort),
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
+				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.Client",
 			wantErr:  false,
 		},
+	}
+}
+
+func getTCPTests() []gatewayClientTest {
+	return []gatewayClientTest{
 		{
 			name: "TCP client (tcp)",
 			cfg: config.GatewayConfig{
 				URL: fmt.Sprintf("tcp://localhost:%d", constants.TestHTTPPort),
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
+				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.TCPClient",
 			wantErr:  false,
@@ -61,9 +82,7 @@ func TestNewGatewayClient(t *testing.T) {
 			name: "TCP client with TLS (tcps)",
 			cfg: config.GatewayConfig{
 				URL: fmt.Sprintf("tcps://localhost:%d", constants.TestHTTPSPort),
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
+				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.TCPClient",
 			wantErr:  false,
@@ -72,18 +91,19 @@ func TestNewGatewayClient(t *testing.T) {
 			name: "TCP client with TLS (tcp+tls)",
 			cfg: config.GatewayConfig{
 				URL: fmt.Sprintf("tcp+tls://localhost:%d", constants.TestHTTPSPort),
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
+				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.TCPClient",
 			wantErr:  false,
 		},
+	}
+}
+
+func getErrorTests() []gatewayClientTest {
+	return []gatewayClientTest{
 		{
-			name: "invalid URL",
-			cfg: config.GatewayConfig{
-				URL: "not-a-url",
-			},
+			name:        "invalid URL",
+			cfg:         config.GatewayConfig{URL: "not-a-url"},
 			wantErr:     true,
 			errContains: "unsupported URL scheme:",
 		},
@@ -96,51 +116,43 @@ func TestNewGatewayClient(t *testing.T) {
 			errContains: "unsupported URL scheme",
 		},
 		{
-			name: "empty URL",
-			cfg: config.GatewayConfig{
-				URL: "",
-			},
+			name:        "empty URL",
+			cfg:         config.GatewayConfig{URL: ""},
 			wantErr:     true,
 			errContains: "unsupported URL scheme:",
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+func testNewGatewayClientCase(t *testing.T, tt gatewayClientTest, logger *zap.Logger) {
+	t.Helper()
+	client, err := NewGatewayClient(tt.cfg, logger)
 
-			client, err := NewGatewayClient(tt.cfg, logger)
-
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewGatewayClient() error = %v, wantErr %v", err, tt.wantErr)
-
-				return
-			}
-
-			if err != nil {
-				if tt.errContains != "" && !contains(err.Error(), tt.errContains) {
-					t.Errorf("Error = %v, want error containing %s", err, tt.errContains)
-				}
-
-				return
-			}
-
-			if client == nil {
-				t.Error("Expected non-nil client")
-
-				return
-			}
-
-			// Check type.
-			gotType := fmt.Sprintf("%T", client)
-			if gotType != tt.wantType {
-				t.Errorf("Client type = %v, want %v", gotType, tt.wantType)
-			}
-
-			// Verify it implements GatewayClient interface.
-			var _ = client
-		})
+	if (err != nil) != tt.wantErr {
+		t.Errorf("NewGatewayClient() error = %v, wantErr %v", err, tt.wantErr)
+		return
 	}
+
+	if err != nil {
+		if tt.errContains != "" && !contains(err.Error(), tt.errContains) {
+			t.Errorf("Error = %v, want error containing %s", err, tt.errContains)
+		}
+		return
+	}
+
+	if client == nil {
+		t.Error("Expected non-nil client")
+		return
+	}
+
+	// Check type.
+	gotType := fmt.Sprintf("%T", client)
+	if gotType != tt.wantType {
+		t.Errorf("Client type = %v, want %v", gotType, tt.wantType)
+	}
+
+	// Verify it implements GatewayClient interface.
+	var _ = client
 }
 
 func TestGatewayClient_InterfaceCompliance(t *testing.T) {
@@ -225,8 +237,22 @@ func verifyClientConfiguration(t *testing.T, client GatewayClient, authType stri
 // setupMTLSCerts creates temporary certificate files for mTLS testing.
 func setupMTLSCerts(t *testing.T) (certFile, keyFile string, cleanup func()) {
 	t.Helper()
+	certPem := getMTLSCertPEM()
+	keyPem := getMTLSKeyPEM()
 
-	certPem := `-----BEGIN CERTIFICATE-----
+	certFile, certCleanup := testutil.TempFile(t, certPem)
+	keyFile, keyCleanup := testutil.TempFile(t, keyPem)
+
+	cleanup = func() {
+		certCleanup()
+		keyCleanup()
+	}
+
+	return certFile, keyFile, cleanup
+}
+
+func getMTLSCertPEM() string {
+	return `-----BEGIN CERTIFICATE-----
 MIIDhTCCAm2gAwIBAgIUcvTZq+m2sj3lim7Yf4B6LFRSFPUwDQYJKoZIhvcNAQEL
 BQAwUjELMAkGA1UEBhMCVVMxDTALBgNVBAgMBFRlc3QxDTALBgNVBAcMBFRlc3Qx
 DTALBgNVBAoMBFRlc3QxFjAUBgNVBAMMDXRlc3QtY2EubG9jYWwwHhcNMjUwODA0
@@ -247,8 +273,10 @@ rR+HL2Yh9+bP9vinPDPUFEQ/WBY5Fpp2QsLLo5EeRegryYi6nzZN2IKy3OE3dAhC
 Qdoz6sKUTxjiDfKklY3w5aQI9ij2s802+J76sSkMUoVCEBdC+R4rTESYUbwq+TI1
 xO/Saff/cbJvDK89o8VaJKWV+ZXguvkgA6sRFNGII3B5UFiLm7u9IXg=
 -----END CERTIFICATE-----`
+}
 
-	keyPem := `-----BEGIN PRIVATE KEY-----
+func getMTLSKeyPEM() string {
+	return `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC2stSsvDhvgxeq
 adF9JCOyVnzVFuU2EbjPfEwT8exHYK+JSWPHzcJ4uv6Zf1IIUTP2UOj39o15C9MZ
 PCCki094t5LsWCOrxU+9YVXnZ/4YWMqcmNr0pZ8E+JC7Q+3PJrDKtYg1xAWzs1+Z
@@ -276,27 +304,29 @@ z7HLgQu3xnXW0EeoR7hwJrj60vPHK2lwzRFE+lkBAoGAQmV5h+rCYTB8REIMyKGa
 lxROYybkmXoExEMWo01N9g4BkXZrj5piCgR5drpMrTziqqMj+ou1wjIqbyPVbgdd
 Zry7yq3lVqE6jyOprjq/HMM=
 -----END PRIVATE KEY-----`
-
-	certFile, certCleanup := testutil.TempFile(t, certPem)
-	keyFile, keyCleanup := testutil.TempFile(t, keyPem)
-
-	cleanup = func() {
-		certCleanup()
-		keyCleanup()
-	}
-
-	return certFile, keyFile, cleanup
 }
 
 func TestGatewayClient_AuthConfiguration(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+	tests := getAuthConfigurationTests()
 
-	tests := []struct {
-		name     string
-		authType string
-		url      string
-	}{
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			testAuthConfigurationCase(t, tt, logger)
+		})
+	}
+}
+
+type authConfigTest struct {
+	name     string
+	authType string
+	url      string
+}
+
+func getAuthConfigurationTests() []authConfigTest {
+	return []authConfigTest{
 		{
 			name:     "WebSocket with bearer auth",
 			authType: "bearer",
@@ -323,55 +353,74 @@ func TestGatewayClient_AuthConfiguration(t *testing.T) {
 			url:      fmt.Sprintf("tcps://localhost:%d", constants.TestHTTPSPort),
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+func testAuthConfigurationCase(t *testing.T, tt authConfigTest, logger *zap.Logger) {
+	t.Helper()
+	authConfig := createAuthConfig(t, tt.authType)
 
-			authConfig := common.AuthConfig{
-				Type:  tt.authType,
-				Token: "test-token",
-				// For OAuth2.
-				ClientID:      "test-client",
-				ClientSecret:  "test-secret",
-				TokenEndpoint: "http://auth.example.com/token",
-				GrantType:     "client_credentials",
-			}
-
-			// Create temporary certificate files for mTLS tests.
-			if tt.authType == config.AuthTypeMTLS {
-				certFile, keyFile, cleanup := setupMTLSCerts(t)
-				defer cleanup()
-
-				authConfig.ClientCert = certFile
-				authConfig.ClientKey = keyFile
-			}
-
-			cfg := config.GatewayConfig{
-				URL:  tt.url,
-				Auth: authConfig,
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
-			}
-
-			client, err := NewGatewayClient(cfg, logger)
-			if err != nil {
-				t.Fatalf("Failed to create client: %v", err)
-			}
-
-			// Verify client configuration.
-			verifyClientConfiguration(t, client, tt.authType)
-		})
+	cfg := config.GatewayConfig{
+		URL:        tt.url,
+		Auth:       authConfig,
+		Connection: common.ConnectionConfig{TimeoutMs: 5000},
 	}
+
+	client, err := NewGatewayClient(cfg, logger)
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	// Verify client configuration.
+	verifyClientConfiguration(t, client, tt.authType)
+}
+
+func createAuthConfig(t *testing.T, authType string) common.AuthConfig {
+	t.Helper()
+	authConfig := common.AuthConfig{
+		Type:          authType,
+		Token:         "test-token",
+		ClientID:      "test-client",
+		ClientSecret:  "test-secret",
+		TokenEndpoint: "http://auth.example.com/token",
+		GrantType:     "client_credentials",
+	}
+
+	// Create temporary certificate files for mTLS tests.
+	if authType == config.AuthTypeMTLS {
+		certFile, keyFile, cleanup := setupMTLSCerts(t)
+		t.Cleanup(cleanup)
+		authConfig.ClientCert = certFile
+		authConfig.ClientKey = keyFile
+	}
+
+	return authConfig
 }
 
 func TestGatewayClient_TLSConfiguration(t *testing.T) {
 	t.Parallel()
 	logger := zaptest.NewLogger(t)
+	caFile := setupTLSTestCA(t)
+	tlsConfig := createTLSTestConfig(caFile)
+	tests := getTLSConfigurationTests()
 
-	// Create temporary CA file.
-	caCert := `-----BEGIN CERTIFICATE-----
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			testTLSConfigurationCase(t, tt.url, tlsConfig, logger)
+		})
+	}
+}
+
+func setupTLSTestCA(t *testing.T) string {
+	t.Helper()
+	caCert := getTLSTestCACert()
+	caFile, cleanup := testutil.TempFile(t, caCert)
+	t.Cleanup(cleanup)
+	return caFile
+}
+
+func getTLSTestCACert() string {
+	return `-----BEGIN CERTIFICATE-----
 MIIDhTCCAm2gAwIBAgIUIFCgv8sjzj7TYRNCiWM9r3JbiW4wDQYJKoZIhvcNAQEL
 BQAwUjELMAkGA1UEBhMCVVMxDTALBgNVBAgMBFRlc3QxDTALBgNVBAcMBFRlc3Qx
 DTALBgNVBAoMBFRlc3QxFjAUBgNVBAMMDXRlc3QtY2EubG9jYWwwHhcNMjUwODAz
@@ -392,18 +441,22 @@ R9mz6Xt0/QzvkHqj8HOdEQcIqdadPF/xQiTbm2ZM4DXzKUR6UTKrib4DmCX7RH49
 Pw2PcgCtWHGdANdL7+nuk4KBo43oeHoxtQefjyw9DV+yOSdEXL6AFOSXIU6q9f06
 PIHoJdYUmhCwEjxX4LniJH2cIHTW5tfdKTm/e+8qsvj/CbEmgjAv5RE=
 -----END CERTIFICATE-----`
+}
 
-	caFile, cleanup := testutil.TempFile(t, caCert)
-	defer cleanup()
-
-	tlsConfig := common.TLSConfig{
+func createTLSTestConfig(caFile string) common.TLSConfig {
+	return common.TLSConfig{
 		Verify:       false,
 		MinVersion:   "1.2",
 		CAFile:       caFile,
 		CipherSuites: []string{"TLS_AES_128_GCM_SHA256"},
 	}
+}
 
-	tests := []struct {
+func getTLSConfigurationTests() []struct {
+	name string
+	url  string
+} {
+	return []struct {
 		name string
 		url  string
 	}{
@@ -416,30 +469,25 @@ PIHoJdYUmhCwEjxX4LniJH2cIHTW5tfdKTm/e+8qsvj/CbEmgjAv5RE=
 			url:  fmt.Sprintf("tcps://localhost:%d", constants.TestHTTPSPort),
 		},
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+func testTLSConfigurationCase(t *testing.T, url string, tlsConfig common.TLSConfig, logger *zap.Logger) {
+	t.Helper()
+	cfg := config.GatewayConfig{
+		URL:        url,
+		TLS:        tlsConfig,
+		Connection: common.ConnectionConfig{TimeoutMs: 5000},
+	}
 
-			cfg := config.GatewayConfig{
-				URL: tt.url,
-				TLS: tlsConfig,
-				Connection: common.ConnectionConfig{
-					TimeoutMs: 5000,
-				},
-			}
+	client, err := NewGatewayClient(cfg, logger)
+	if err != nil {
+		// TLS configuration might fail without actual cert files.
+		// but the factory should still work
+		t.Logf("Client creation with TLS config: %v", err)
+	}
 
-			client, err := NewGatewayClient(cfg, logger)
-			if err != nil {
-				// TLS configuration might fail without actual cert files.
-				// but the factory should still work
-				t.Logf("Client creation with TLS config: %v", err)
-			}
-
-			if client == nil && err == nil {
-				t.Error("Expected either client or error")
-			}
-		})
+	if client == nil && err == nil {
+		t.Error("Expected either client or error")
 	}
 }
 

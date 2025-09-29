@@ -552,7 +552,7 @@ func TestTimeoutDocumentation(t *testing.T) {
 	}
 }
 
-// Helper functions for TestConnectionPoolTimeouts
+// Helper functions for TestConnectionPoolTimeouts.
 func createConnectionPoolTests() []struct {
 	name     string
 	timeout  time.Duration
@@ -650,7 +650,7 @@ func verifyConnectionPoolRelationships(t *testing.T) {
 	}
 }
 
-// Helper functions for TestTimeoutConsistency
+// Helper functions for TestTimeoutConsistency.
 func createTimeoutConsistencyTests() []struct {
 	name        string
 	smaller     time.Duration

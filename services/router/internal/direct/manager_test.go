@@ -1062,8 +1062,7 @@ func TestDirectClientManagerMetricsCollection(t *testing.T) {
 		},
 	}
 
-	manager, ok := NewDirectClientManager(config, logger).(*DirectClientManager)
-	assert.True(t, ok, "type assertion failed")
+	manager := NewDirectClientManager(config, logger)
 
 	ctx := context.Background()
 
@@ -1121,9 +1120,7 @@ func TestDirectClientManagerClientLifecycle(t *testing.T) {
 
 	mgr := NewDirectClientManager(config, logger)
 
-	manager, ok := mgr.(*DirectClientManager)
-
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 
 	ctx := context.Background()
 
@@ -1186,8 +1183,7 @@ func setupConcreteProtocolDetectionManager(t *testing.T, logger *zap.Logger) *Di
 	}
 
 	mgr := NewDirectClientManager(config, logger)
-	manager, ok := mgr.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 
 	return manager
 }
@@ -1458,8 +1454,7 @@ func setupErrorHandlingTestManager(t *testing.T) DirectClientManagerInterface {
 	}
 
 	mgr := NewDirectClientManager(config, logger)
-	manager, ok := mgr.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 	return manager
 }
 
@@ -1569,9 +1564,7 @@ func TestDirectClientManagerHealthCheckIntegration(t *testing.T) {
 
 	mgr := NewDirectClientManager(config, logger)
 
-	manager, ok := mgr.(*DirectClientManager)
-
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 
 	ctx := context.Background()
 
@@ -1634,8 +1627,7 @@ func setupAdaptiveTestManager(t *testing.T) *DirectClientManager {
 	config := createAdaptiveTestConfig()
 
 	mgr := NewDirectClientManager(config, logger)
-	manager, ok := mgr.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 	return manager
 }
 
@@ -1740,8 +1732,7 @@ func setupMemoryOptimizedTestManager(t *testing.T) *DirectClientManager {
 	config := createMemoryOptimizedConfig()
 
 	mgr := NewDirectClientManager(config, logger)
-	manager, ok := mgr.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 	return manager
 }
 
@@ -1832,8 +1823,7 @@ func setupConnectionPoolTestManager(t *testing.T) *DirectClientManager {
 	}
 
 	mgr := NewDirectClientManager(config, logger)
-	manager, ok := mgr.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 	return manager
 }
 
@@ -1903,8 +1893,7 @@ func setupProtocolSpecificTestManager(t *testing.T) *DirectClientManager {
 	config := createFullProtocolConfig()
 
 	mgr := NewDirectClientManager(config, logger)
-	manager, ok := mgr.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 	return manager
 }
 
@@ -2073,9 +2062,7 @@ func TestDirectClientManagerCacheManagement(t *testing.T) {
 
 	mgr := NewDirectClientManager(config, logger)
 
-	manager, ok := mgr.(*DirectClientManager)
-
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := mgr
 
 	ctx := context.Background()
 

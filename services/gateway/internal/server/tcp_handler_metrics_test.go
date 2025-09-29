@@ -66,6 +66,7 @@ func runTCPHandlerMetricsTests(t *testing.T, tests []struct {
 	runScenario  func(*testing.T, *TCPHandler, net.Conn)
 	checkMetrics func(*testing.T, *metrics.Registry)
 }, metricsReg *metrics.Registry) {
+	t.Helper()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset metrics

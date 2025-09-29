@@ -107,12 +107,12 @@ func TestTCPClient_ConnectionLifecycle(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	eventTracker := createEventTracker()
 
-	server := createLifecycleTestServer(t, eventTracker)
+	server := createTCPLifecycleTestServer(t, eventTracker)
 
 	addr := startLifecycleServer(t, server)
 	defer server.Stop()
 
-	client := createLifecycleTestClient(t, addr, logger)
+	client := createTCPLifecycleTestClient(t, addr, logger)
 	runLifecycleTest(t, client)
 
 	validateLifecycleEvents(t, eventTracker)
@@ -141,7 +141,7 @@ func (e *eventTracker) getEvents() []string {
 	return append([]string{}, e.events...)
 }
 
-func createLifecycleTestServer(t *testing.T, tracker *eventTracker) *mockTCPServer {
+func createTCPLifecycleTestServer(t *testing.T, tracker *eventTracker) *mockTCPServer {
 	t.Helper()
 	return newMockTCPServer(t, func(conn net.Conn) {
 		handleLifecycleConnection(conn, tracker)
@@ -168,12 +168,12 @@ func handleVersionNegotiation(reader *bufio.Reader, conn net.Conn, tracker *even
 
 	if frame.MessageType == MessageTypeVersionNegotiation {
 		tracker.addEvent("version_negotiation")
-		sendVersionAck(conn)
+		sendTCPVersionAck(conn)
 		tracker.addEvent("version_ack_sent")
 	}
 }
 
-func sendVersionAck(conn net.Conn) {
+func sendTCPVersionAck(conn net.Conn) {
 	ackPayload := map[string]interface{}{"agreed_version": 1}
 	ackData, _ := json.Marshal(ackPayload)
 	ackFrame := &BinaryFrame{
@@ -253,7 +253,7 @@ func startLifecycleServer(t *testing.T, server *mockTCPServer) string {
 	return addr
 }
 
-func createLifecycleTestClient(t *testing.T, addr string, logger *zap.Logger) *TCPClient {
+func createTCPLifecycleTestClient(t *testing.T, addr string, logger *zap.Logger) *TCPClient {
 	cfg := config.GatewayConfig{
 		URL: "tcp://" + addr,
 		Connection: common.ConnectionConfig{

@@ -1301,6 +1301,7 @@ func validateEdgeCaseResult(t *testing.T, tt struct {
 	if tt.wantError {
 		if err == nil {
 			t.Error("Expected error but got none")
+
 			return
 		}
 

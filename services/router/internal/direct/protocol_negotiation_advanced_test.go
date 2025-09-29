@@ -117,9 +117,7 @@ func setupProtocolManager(
 		},
 	}
 
-	managerInterface := NewDirectClientManager(config, logger)
-	manager, ok := managerInterface.(*DirectClientManager)
-	assert.True(t, ok, "type assertion failed")
+	manager := NewDirectClientManager(config, logger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 
@@ -423,9 +421,7 @@ func setupConcurrentDetectionManager(t *testing.T) *DirectClientManager {
 		},
 	}
 
-	managerInterface := NewDirectClientManager(config, logger)
-	manager, ok := managerInterface.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := NewDirectClientManager(config, logger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -558,6 +554,7 @@ func TestAdvancedProtocolNegotiation_FailureScenarios(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			runFailureScenarioTest(t, tt)
 		})
 	}
@@ -686,13 +683,10 @@ func setupSlowResponseServer(t *testing.T) (string, func()) {
 
 func runFailureScenarioTest(t *testing.T, tt failureScenarioTest) {
 	t.Helper()
-	t.Parallel()
 
 	logger := zaptest.NewLogger(t)
-	managerInterface := NewDirectClientManager(tt.config, logger)
-	manager, ok := managerInterface.(*DirectClientManager)
+	manager := NewDirectClientManager(tt.config, logger)
 
-	require.True(t, ok, "Expected *DirectClientManager type")
 
 	timeout := tt.testTimeout
 	if timeout == 0 {
@@ -768,16 +762,16 @@ func TestAdvancedProtocolNegotiation_EdgeCases(t *testing.T) {
 	manager := setupEdgeCaseTestManager(t, config, logger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	err := manager.Start(ctx)
 	require.NoError(t, err)
 
-	defer func() {
+	t.Cleanup(func() {
 		if err := manager.Stop(ctx); err != nil {
 			t.Logf("Failed to stop manager: %v", err)
 		}
-	}()
+	})
 
 	runEdgeCaseTests(t, manager, ctx, config, logger)
 }
@@ -799,9 +793,7 @@ func createEdgeCaseTestConfig() DirectConfig {
 func setupEdgeCaseTestManager(t *testing.T, config DirectConfig, logger *zap.Logger) *DirectClientManager {
 	t.Helper()
 
-	managerInterface := NewDirectClientManager(config, logger)
-	manager, ok := managerInterface.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := NewDirectClientManager(config, logger)
 
 	return manager
 }
@@ -816,18 +808,22 @@ func runEdgeCaseTests(
 	t.Helper()
 
 	t.Run("cache_expiration", func(t *testing.T) {
+		t.Parallel()
 		testCacheExpiration(t, manager, ctx)
 	})
 
 	t.Run("empty_preferred_order", func(t *testing.T) {
+		t.Parallel()
 		testEmptyPreferredOrder(t, ctx, config, logger)
 	})
 
 	t.Run("protocol_hints_integration", func(t *testing.T) {
+		t.Parallel()
 		testProtocolHintsIntegration(t, manager, ctx)
 	})
 
 	t.Run("network_error_recovery", func(t *testing.T) {
+		t.Parallel()
 		testNetworkErrorRecovery(t, manager, ctx)
 	})
 }
@@ -865,9 +861,7 @@ func testEmptyPreferredOrder(t *testing.T, ctx context.Context, config DirectCon
 	emptyConfig := config
 	emptyConfig.AutoDetection.PreferredOrder = []string{}
 
-	emptyManagerInterface := NewDirectClientManager(emptyConfig, logger)
-	emptyManager, ok := emptyManagerInterface.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	emptyManager := NewDirectClientManager(emptyConfig, logger)
 
 	err := emptyManager.Start(ctx)
 	require.NoError(t, err)
@@ -948,16 +942,20 @@ func TestAdvancedProtocolNegotiation_PerformanceCharacteristics(t *testing.T) {
 	t.Parallel()
 
 	manager := setupPerformanceTestManager(t)
-	defer cleanupPerformanceTestManager(t, manager)
+	t.Cleanup(func() {
+		cleanupPerformanceTestManager(t, manager)
+	})
 
 	server := setupPerformanceTestServer()
-	defer server.Close()
+	t.Cleanup(server.Close)
 
 	t.Run("detection_performance", func(t *testing.T) {
+		t.Parallel()
 		runDetectionPerformanceTest(t, manager, server.URL)
 	})
 
 	t.Run("cache_effectiveness", func(t *testing.T) {
+		t.Parallel()
 		runCacheEffectivenessTest(t, manager, server.URL)
 	})
 }
@@ -978,9 +976,7 @@ func setupPerformanceTestManager(t *testing.T) *DirectClientManager {
 		},
 	}
 
-	managerInterface := NewDirectClientManager(config, logger)
-	manager, ok := managerInterface.(*DirectClientManager)
-	require.True(t, ok, "Expected *DirectClientManager type")
+	manager := NewDirectClientManager(config, logger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()

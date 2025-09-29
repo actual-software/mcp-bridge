@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"sync"
@@ -436,7 +437,12 @@ func (b *Backend) selectEndpoint() int {
 	remainder := nextID % uint64(endpointCount)
 	
 	// remainder is guaranteed to fit in int since endpointCount comes from len()
-	// and Go slice lengths are bounded by int
+	// and Go slice lengths are bounded by int (max int32 on 32-bit, int64 on 64-bit)
+	// Since remainder < endpointCount and endpointCount <= MaxInt, this is safe
+	if remainder > math.MaxInt {
+		// This should never happen given the constraints, but check anyway
+		return 0
+	}
 	return int(remainder)
 }
 
