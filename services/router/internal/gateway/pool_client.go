@@ -24,8 +24,8 @@ type PoolClient struct {
 }
 
 // NewPoolClient creates a new pool-based gateway client.
-func NewPoolClient(cfg *config.Config, logger *zap.Logger) (*PoolClient, error) {
-	pool, err := NewGatewayPool(cfg, logger)
+func NewPoolClient(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*PoolClient, error) {
+	pool, err := NewGatewayPool(ctx, cfg, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gateway pool: %w", err)
 	}
@@ -154,7 +154,7 @@ func (pc *PoolClient) connectToEndpoint(ctx context.Context, endpoint *GatewayEn
 }
 
 // SendRequest sends a request through the current endpoint.
-func (pc *PoolClient) SendRequest(req *mcp.Request) error {
+func (pc *PoolClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 	// Use namespace routing if enabled.
 	if pc.namespaceRouter != nil && pc.namespaceRouter.config.Enabled {
 		pc.handleNamespaceRouting(req)
@@ -164,7 +164,7 @@ func (pc *PoolClient) SendRequest(req *mcp.Request) error {
 		return errors.New("not connected to any endpoint")
 	}
 
-	err := pc.currentEndpoint.Client.SendRequest(req)
+	err := pc.currentEndpoint.Client.SendRequest(ctx, req)
 	if err != nil {
 		pc.currentEndpoint.UpdateHealth(false, err)
 		pc.logger.Error("Failed to send request",

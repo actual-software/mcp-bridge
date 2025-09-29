@@ -144,12 +144,12 @@ func (cb *CircuitBreaker) Connect(ctx context.Context) error {
 }
 
 // SendRequest sends a request through the circuit breaker.
-func (cb *CircuitBreaker) SendRequest(req *mcp.Request) error {
-	ctx, cancel := context.WithTimeout(context.Background(), cb.config.TimeoutDuration)
+func (cb *CircuitBreaker) SendRequest(ctx context.Context, req *mcp.Request) error {
+	ctx, cancel := context.WithTimeout(ctx, cb.config.TimeoutDuration)
 	defer cancel()
 
 	return cb.executeWithCircuitBreaker(ctx, "SendRequest", func(ctx context.Context) error {
-		return cb.client.SendRequest(req)
+		return cb.client.SendRequest(ctx, req)
 	})
 }
 

@@ -81,7 +81,8 @@ func getGatewayPoolTests() []gatewayPoolTest {
 
 func testGatewayPoolCreation(t *testing.T, tt gatewayPoolTest, logger *zap.Logger) {
 	t.Helper()
-	pool, err := NewGatewayPool(tt.config, logger)
+	ctx := context.Background()
+	pool, err := NewGatewayPool(ctx, tt.config, logger)
 
 	if tt.wantErr {
 		verifyGatewayPoolError(t, err, tt.wantErrMsg)
@@ -160,7 +161,8 @@ func createLoadBalancingConfig() *routerConfig.Config {
 
 func setupLoadBalancingPool(t *testing.T, config *routerConfig.Config, logger *zap.Logger) *GatewayPool {
 	t.Helper()
-	pool, err := NewGatewayPool(config, logger)
+	ctx := context.Background()
+	pool, err := NewGatewayPool(ctx, config, logger)
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}
@@ -228,7 +230,8 @@ func TestGatewayPool_HealthChecking(t *testing.T) {
 		},
 	}
 
-	pool, err := NewGatewayPool(config, logger)
+	ctx := context.Background()
+	pool, err := NewGatewayPool(ctx, config, logger)
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}
@@ -293,7 +296,8 @@ func createTaggedEndpointsConfig() *routerConfig.Config {
 
 func setupTaggedPool(t *testing.T, config *routerConfig.Config, logger *zap.Logger) *GatewayPool {
 	t.Helper()
-	pool, err := NewGatewayPool(config, logger)
+	ctx := context.Background()
+	pool, err := NewGatewayPool(ctx, config, logger)
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}
@@ -371,7 +375,8 @@ func TestGatewayPool_ConcurrentAccess(t *testing.T) {
 		},
 	}
 
-	pool, err := NewGatewayPool(config, logger)
+	ctx := context.Background()
+	pool, err := NewGatewayPool(ctx, config, logger)
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}

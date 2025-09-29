@@ -181,7 +181,7 @@ func sendLoadBalancingRequests(t *testing.T, client *TCPClient, clientID, reques
 			Params:  map[string]interface{}{"message": "hello"},
 		}
 
-		if err := client.SendRequest(req); err != nil {
+		if err := client.SendRequest(ctx, req); err != nil {
 			t.Errorf("Client %d: Failed to send request: %v", clientID, err)
 			continue
 		}
@@ -283,7 +283,7 @@ func createServerShutdownTest() failoverScenarioTest {
 				Method:  "test_failover",
 				ID:      "failover-1",
 			}
-			if err := client.SendRequest(req); err != nil {
+			if err := client.SendRequest(ctx, req); err != nil {
 				return err
 			}
 			_, err := client.ReceiveResponse()
@@ -319,7 +319,7 @@ func createCorruptionTest() failoverScenarioTest {
 				Method:  "test_corruption",
 				ID:      "corrupt-1",
 			}
-			if err := client.SendRequest(req); err != nil {
+			if err := client.SendRequest(ctx, req); err != nil {
 				return err
 			}
 			_, err := client.ReceiveResponse()
@@ -369,7 +369,7 @@ func createSlowResponseTest() failoverScenarioTest {
 				Method:  "test_slow",
 				ID:      "slow-1",
 			}
-			if err := client.SendRequest(req); err != nil {
+			if err := client.SendRequest(ctx, req); err != nil {
 				return err
 			}
 			_, err := client.ReceiveResponse()
@@ -622,7 +622,7 @@ func runSingleOperation(
 		ID:      fmt.Sprintf("req_%d_%d", goroutineID, opIdx),
 	}
 
-	if err := client.SendRequest(req); err != nil {
+	if err := client.SendRequest(ctx, req); err != nil {
 		atomic.AddInt64(counters.errors, 1)
 		return
 	}

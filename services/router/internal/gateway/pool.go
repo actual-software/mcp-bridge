@@ -109,7 +109,7 @@ type GatewayPool struct {
 }
 
 // NewGatewayPool creates a new gateway pool with the given configuration.
-func NewGatewayPool(cfg *config.Config, logger *zap.Logger) (*GatewayPool, error) {
+func NewGatewayPool(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*GatewayPool, error) {
 	endpoints := cfg.GetGatewayEndpoints()
 	if len(endpoints) == 0 {
 		return nil, errors.New("no gateway endpoints configured")

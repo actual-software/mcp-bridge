@@ -250,6 +250,7 @@ func (env *TCPPerformanceTestEnvironment) ExecutePerformanceTest(params Performa
 
 // sendAndReceiveRequest sends a request and validates response.
 func (env *TCPPerformanceTestEnvironment) sendAndReceiveRequest(index int, maxLatency time.Duration) {
+	ctx := context.Background()
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  fmt.Sprintf("perf_test_%d", index),
@@ -258,7 +259,7 @@ func (env *TCPPerformanceTestEnvironment) sendAndReceiveRequest(index int, maxLa
 
 	requestStart := time.Now()
 
-	if err := env.client.SendRequest(req); err != nil {
+	if err := env.client.SendRequest(ctx, req); err != nil {
 		env.t.Fatalf("Failed to send request %d: %v", index, err)
 	}
 

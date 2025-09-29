@@ -398,7 +398,7 @@ func getSendRequestTests() []sendRequestTest {
 
 func testSendRequest(t *testing.T, client *TCPClient, tt sendRequestTest) {
 	t.Helper()
-	err := client.SendRequest(tt.req)
+	err := client.SendRequest(ctx, tt.req)
 	if (err != nil) != tt.wantErr {
 		t.Errorf("SendRequest() error = %v, wantErr %v", err, tt.wantErr)
 	}
@@ -461,7 +461,7 @@ func sendTestRequestAndReceive(t *testing.T, client *TCPClient) {
 		ID:      "test-1",
 	}
 
-	if err := client.SendRequest(req); err != nil {
+	if err := client.SendRequest(ctx, req); err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
 
@@ -831,7 +831,7 @@ func TestTCPClient_OAuth2(t *testing.T) {
 		Method:  "test",
 		ID:      "test-1",
 	}
-	if err := client.SendRequest(req); err != nil {
+	if err := client.SendRequest(ctx, req); err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
 

@@ -228,7 +228,7 @@ func (e *PrometheusExporter) Start(ctx context.Context) error {
 		// Background context is appropriate for shutdown - we want to complete shutdown
 		// even if the parent context is cancelled, hence contextcheck is disabled
 		shutdownCtx, cancel := context.WithTimeout(
-			context.Background(),
+			context.Background(), //nolint:contextcheck // Need fresh context for graceful shutdown
 			constants.MetricsShutdownTimeout,
 		)
 		defer cancel()

@@ -164,14 +164,13 @@ func (p *PooledGatewayClient) Connect(ctx context.Context) error {
 }
 
 // SendRequest sends a request using the current connection.
-func (p *PooledGatewayClient) SendRequest(req *mcp.Request) error {
+func (p *PooledGatewayClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 	p.mu.Lock()
 	conn := p.current
 	p.mu.Unlock()
 
 	if conn == nil {
 		// Auto-connect if not connected.
-		ctx := context.Background()
 		if err := p.Connect(ctx); err != nil {
 			return fmt.Errorf("not connected and failed to auto-connect: %w", err)
 		}
@@ -189,7 +188,7 @@ func (p *PooledGatewayClient) SendRequest(req *mcp.Request) error {
 
 	client := genericConn.GetClient()
 
-	return client.SendRequest(req)
+	return client.SendRequest(ctx, req)
 }
 
 // ReceiveResponse receives a response from the current connection.

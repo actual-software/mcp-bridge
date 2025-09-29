@@ -24,11 +24,11 @@ func CreateWebSocketMessageReader(client *WebSocketClient) *WebSocketMessageRead
 }
 
 // ReadMessageLoop continuously reads messages from WebSocket.
-func (r *WebSocketMessageReader) ReadMessageLoop() {
+func (r *WebSocketMessageReader) ReadMessageLoop(ctx context.Context) {
 	defer r.cleanup()
 
 	for r.shouldContinueReading() {
-		r.readSingleMessage()
+		r.readSingleMessage(ctx)
 	}
 }
 
@@ -66,7 +66,7 @@ func (r *WebSocketMessageReader) shouldContinueReading() bool {
 	}
 }
 
-func (r *WebSocketMessageReader) readSingleMessage() {
+func (r *WebSocketMessageReader) readSingleMessage(ctx context.Context) {
 	conn := r.getConnection()
 	if conn == nil {
 		r.handleNilConnection()
@@ -87,7 +87,7 @@ func (r *WebSocketMessageReader) readSingleMessage() {
 
 	response, err := r.readResponse(conn)
 	if err != nil {
-		r.handleReadError(err)
+		r.handleReadError(ctx, err)
 
 		return
 	}
@@ -128,9 +128,9 @@ func (r *WebSocketMessageReader) readResponse(conn *websocket.Conn) (response *m
 	return &resp, err
 }
 
-func (r *WebSocketMessageReader) handleReadError(err error) {
+func (r *WebSocketMessageReader) handleReadError(ctx context.Context, err error) {
 	if r.isClosedError(err) {
-		r.handleClosedConnection()
+		r.handleClosedConnection(ctx)
 
 		return
 	}
@@ -147,7 +147,7 @@ func (r *WebSocketMessageReader) isClosedError(err error) bool {
 	return errors.Is(err, io.EOF)
 }
 
-func (r *WebSocketMessageReader) handleClosedConnection() {
+func (r *WebSocketMessageReader) handleClosedConnection(ctx context.Context) {
 	r.client.logger.Info("WebSocket connection closed")
 
 	r.client.mu.Lock()
@@ -162,12 +162,12 @@ func (r *WebSocketMessageReader) handleClosedConnection() {
 		m.IsHealthy = false
 	})
 
-	r.attemptReconnection()
+	r.attemptReconnection(ctx)
 }
 
-func (r *WebSocketMessageReader) attemptReconnection() {
+func (r *WebSocketMessageReader) attemptReconnection(ctx context.Context) {
 	if r.client.shouldReconnect() {
-		go r.client.reconnect(context.Background())
+		go r.client.reconnect(ctx)
 	}
 }
 

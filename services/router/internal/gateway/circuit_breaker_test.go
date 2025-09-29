@@ -135,7 +135,8 @@ func TestCircuitBreaker_SuccessfulOperations(t *testing.T) {
 	// Send request.
 	req := &mcp.Request{ID: "test", Method: "test"}
 
-	err = cb.SendRequest(req)
+	ctx := context.Background()
+	err = cb.SendRequest(ctx, req)
 	if err != nil {
 		t.Errorf("Expected successful SendRequest, got error: %v", err)
 	}
@@ -200,7 +201,8 @@ func TestCircuitBreaker_FailureHandling(t *testing.T) {
 	}
 
 	// Second failure should trip the circuit.
-	err = cb.SendRequest(&mcp.Request{ID: "test"})
+	ctx := context.Background()
+	err = cb.SendRequest(ctx, &mcp.Request{ID: "test"})
 	if err == nil {
 		t.Error("Expected error from SendRequest")
 	}
@@ -239,8 +241,9 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 	cb := NewCircuitBreaker(client, config, logger)
 
 	// Cause failures to trip the circuit.
-	_ = cb.SendRequest(&mcp.Request{ID: "test1"})
-	_ = cb.SendRequest(&mcp.Request{ID: "test2"})
+	ctx := context.Background()
+	_ = cb.SendRequest(ctx, &mcp.Request{ID: "test1"})
+	_ = cb.SendRequest(ctx, &mcp.Request{ID: "test2"})
 
 	// Verify circuit is open.
 	stats := cb.GetStats()
@@ -255,7 +258,8 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 	client.sendRequestErr = nil
 
 	// Next request should be allowed (circuit goes to HALF_OPEN).
-	err := cb.SendRequest(&mcp.Request{ID: "test3"})
+	ctx := context.Background()
+	err := cb.SendRequest(ctx, &mcp.Request{ID: "test3"})
 	if err != nil {
 		t.Errorf("Expected successful request after recovery, got: %v", err)
 	}
@@ -268,7 +272,8 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 
 	// If still HALF_OPEN, send another successful request to close it.
 	if stats.State == CircuitHalfOpen {
-		err = cb.SendRequest(&mcp.Request{ID: "test4"})
+		ctx := context.Background()
+		err = cb.SendRequest(ctx, &mcp.Request{ID: "test4"})
 		if err != nil {
 			t.Errorf("Expected second successful request after recovery, got: %v", err)
 		}
@@ -299,7 +304,8 @@ func TestCircuitBreaker_Timeout(t *testing.T) {
 
 	// This should timeout.
 	start := time.Now()
-	err := cb.SendRequest(&mcp.Request{ID: "test"})
+	ctx := context.Background()
+	err := cb.SendRequest(ctx, &mcp.Request{ID: "test"})
 	duration := time.Since(start)
 
 	if err == nil {

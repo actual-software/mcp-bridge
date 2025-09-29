@@ -21,7 +21,7 @@ const (
 // GatewayClient defines the interface for gateway clients.
 type GatewayClient interface {
 	Connect(ctx context.Context) error
-	SendRequest(req *mcp.Request) error
+	SendRequest(ctx context.Context, req *mcp.Request) error
 	ReceiveResponse() (*mcp.Response, error)
 	SendPing() error
 	Close() error
@@ -50,10 +50,10 @@ func NewGatewayClient(cfg config.GatewayConfig, logger *zap.Logger) (GatewayClie
 
 // for high availability and efficient resource utilization across multiple gateway endpoints.
 
-func NewGatewayClientWithPool(cfg *config.Config, logger *zap.Logger) (GatewayClient, error) {
+func NewGatewayClientWithPool(ctx context.Context, cfg *config.Config, logger *zap.Logger) (GatewayClient, error) {
 	logger.Info("Creating pool-based gateway client",
 		zap.Int("endpoints", len(cfg.GetGatewayEndpoints())),
 		zap.String("strategy", cfg.GetLoadBalancerConfig().Strategy))
 
-	return NewPoolClient(cfg, logger)
+	return NewPoolClient(ctx, cfg, logger)
 }

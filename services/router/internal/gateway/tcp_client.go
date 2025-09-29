@@ -278,7 +278,7 @@ func (c *TCPClient) performHandshake() error {
 }
 
 // SendRequest sends an MCP request to the gateway using binary protocol.
-func (c *TCPClient) SendRequest(req *mcp.Request) error {
+func (c *TCPClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 

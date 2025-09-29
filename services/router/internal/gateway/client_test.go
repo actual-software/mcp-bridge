@@ -647,7 +647,7 @@ func verifySendRequest(t *testing.T, client *Client, tt struct {
 	errorContains string
 }) {
 	t.Helper()
-	err := client.SendRequest(tt.request)
+	err := client.SendRequest(ctx, tt.request)
 
 	if tt.wantError {
 		if err == nil {
@@ -674,7 +674,7 @@ func TestClient_SendRequest_NotConnected(t *testing.T) {
 		ID:      1,
 	}
 
-	err := client.SendRequest(req)
+	err := client.SendRequest(ctx, req)
 	if err == nil {
 		t.Error("Expected error when not connected")
 	}
@@ -1075,7 +1075,7 @@ func runConcurrentSends(t *testing.T, client *Client) {
 				Method:  "test.method",
 				ID:      id,
 			}
-			if err := client.SendRequest(req); err != nil {
+			if err := client.SendRequest(ctx, req); err != nil {
 				errors <- err
 			}
 		}(i)
@@ -1216,7 +1216,7 @@ func runSendRequestBenchmark(b *testing.B, client *Client) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := client.SendRequest(req); err != nil {
+		if err := client.SendRequest(ctx, req); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -1399,7 +1399,7 @@ func verifyNetworkFailureHandling(t *testing.T, client *Client, connectChan <-ch
 		Method:  "test",
 		ID:      "test-1",
 	}
-	_ = client.SendRequest(req)
+	_ = client.SendRequest(ctx, req)
 	// May or may not error immediately depending on timing
 
 	// Try to receive response - should definitely error
@@ -1612,7 +1612,7 @@ func runConcurrentSenders(t *testing.T, client *Client, numOperations int) (chan
 				Method:  "concurrent.test",
 				ID:      id,
 			}
-			if err := client.SendRequest(req); err != nil {
+			if err := client.SendRequest(ctx, req); err != nil {
 				sendErrors <- err
 			}
 		}(i)
@@ -1800,7 +1800,7 @@ func testSingleLifecycle(t *testing.T, client *Client, ctx context.Context, iter
 		Method:  "test",
 		ID:      iteration,
 	}
-	_ = client.SendRequest(req) // May fail, that's okay
+	_ = client.SendRequest(ctx, req) // May fail, that's okay
 
 	// Close.
 	if err := client.Close(); err != nil {
@@ -1919,7 +1919,7 @@ func TestClient_WebSocketErrorHandling(t *testing.T) {
 			operation: func() error {
 				req := &mcp.Request{JSONRPC: constants.TestJSONRPCVersion, Method: "test", ID: 1}
 
-				return client.SendRequest(req)
+				return client.SendRequest(ctx, req)
 			},
 		},
 		{

@@ -162,10 +162,11 @@ func (env *ConnectionPoolingTestEnvironment) TestConnectionReuse(numRequests int
 
 // sendMultipleRequests sends multiple requests through the client.
 func (env *ConnectionPoolingTestEnvironment) sendMultipleRequests(client *TCPClient, count int) {
+	ctx := context.Background()
 	for i := 0; i < count; i++ {
 		req := env.createTestRequest(i)
 
-		if err := client.SendRequest(req); err != nil {
+		if err := client.SendRequest(ctx, req); err != nil {
 			env.t.Errorf("Failed to send request %d: %v", i, err)
 		}
 
@@ -195,12 +196,13 @@ func (env *ConnectionPoolingTestEnvironment) verifyConnectionCount(expected int,
 
 // TestReconnection tests reconnection behavior.
 func (env *ConnectionPoolingTestEnvironment) TestReconnection() {
+	ctx := context.Background()
 	// First client.
 	client1 := env.CreateClient()
 	env.ConnectClient(client1)
 
 	req := env.createReconnectRequest("first")
-	if err := client1.SendRequest(req); err != nil {
+	if err := client1.SendRequest(ctx, req); err != nil {
 		env.t.Errorf("Failed to send request on first connection: %v", err)
 	}
 
@@ -211,7 +213,7 @@ func (env *ConnectionPoolingTestEnvironment) TestReconnection() {
 	env.ConnectClient(client2)
 
 	req = env.createReconnectRequest("second")
-	if err := client2.SendRequest(req); err != nil {
+	if err := client2.SendRequest(ctx, req); err != nil {
 		env.t.Errorf("Failed to send request on second connection: %v", err)
 	}
 

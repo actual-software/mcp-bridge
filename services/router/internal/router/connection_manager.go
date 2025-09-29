@@ -52,10 +52,10 @@ func NewConnectionManager(cfg *config.Config, logger *zap.Logger, gwClient gatew
 }
 
 // Start begins connection management with automatic reconnection.
-func (cm *ConnectionManager) Start() {
+func (cm *ConnectionManager) Start(ctx context.Context) {
 	cm.wg.Add(1)
 
-	go cm.maintainConnection()
+	go cm.maintainConnection(ctx)
 }
 
 // Stop gracefully stops the connection manager.
@@ -122,7 +122,7 @@ func (cm *ConnectionManager) GetRetryCount() uint64 {
 }
 
 // maintainConnection manages the WebSocket connection with automatic reconnection.
-func (cm *ConnectionManager) maintainConnection() {
+func (cm *ConnectionManager) maintainConnection(ctx context.Context) {
 	defer cm.wg.Done()
 
 	backoff := 1 * time.Second
@@ -143,7 +143,7 @@ func (cm *ConnectionManager) maintainConnection() {
 
 			cm.setState(StateConnecting)
 
-			if err := cm.connect(); err != nil {
+			if err := cm.connect(ctx); err != nil {
 				cm.logger.Error("Connection failed",
 					zap.Error(err),
 					zap.Duration("next_retry", backoff),
@@ -186,7 +186,7 @@ func (cm *ConnectionManager) maintainConnection() {
 }
 
 // connect establishes the WebSocket connection.
-func (cm *ConnectionManager) connect() error {
+func (cm *ConnectionManager) connect(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(cm.ctx, defaultTimeoutSeconds*time.Second)
 	defer cancel()
 

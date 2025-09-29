@@ -157,7 +157,7 @@ func (c *Client) getOAuth2Token(ctx context.Context) (string, error) {
 //
 // Thread Safety: Safe for concurrent use. Multiple goroutines can call this
 // method simultaneously without risk of deadlock or data races.
-func (c *Client) SendRequest(req *mcp.Request) error {
+func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 	// Check connection state with minimal lock time.
 	c.connMu.Lock()
 	conn := c.conn

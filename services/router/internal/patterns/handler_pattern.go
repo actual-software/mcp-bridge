@@ -349,7 +349,7 @@ func (m *ConnectionManager) EstablishManagedConnection(
 
 	// Try to get from pool first.
 	if conn, err := m.connectionPool.GetConnection(ctx); err == nil {
-		if m.isConnectionValid(conn) {
+		if m.isConnectionValid(ctx, conn) {
 			return conn, nil
 		}
 	}
@@ -426,7 +426,7 @@ func (m *ConnectionManager) validateNewConnection(ctx context.Context, conn Conn
 }
 
 // isConnectionValid checks if a connection is still valid.
-func (m *ConnectionManager) isConnectionValid(conn Connection) bool {
+func (m *ConnectionManager) isConnectionValid(ctx context.Context, conn Connection) bool {
 	if !conn.IsHealthy() {
 		return false
 	}

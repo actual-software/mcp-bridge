@@ -262,7 +262,7 @@ func (a *connectionAttempt) sendRequest(client *TCPClient) bool {
 		ID:      fmt.Sprintf("circuit-%d", a.index),
 	}
 
-	if err := client.SendRequest(req); err != nil {
+	if err := client.SendRequest(context.Background(), req); err != nil {
 		a.handler.t.Logf("Request %d failed: %v", a.index+1, err)
 
 		return false

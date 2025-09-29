@@ -221,7 +221,7 @@ func (r *LocalRouter) initializeComponents() error {
 	}
 
 	// Create gateway client (with pool support).
-	gwClient, err := gateway.NewGatewayClientWithPool(r.config, r.logger)
+	gwClient, err := gateway.NewGatewayClientWithPool(r.ctx, r.config, r.logger)
 	if err != nil {
 		return fmt.Errorf("failed to create gateway client: %w", err)
 	}
@@ -283,8 +283,8 @@ func (r *LocalRouter) Run(ctx context.Context) error {
 	r.cancel = cancel
 
 	// Start focused components.
-	r.connMgr.Start()
-	r.msgRouter.Start()
+	r.connMgr.Start(ctx)
+	r.msgRouter.Start(ctx)
 
 	// Start direct client manager if enabled.
 	if r.directManager != nil {

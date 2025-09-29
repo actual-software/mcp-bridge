@@ -686,7 +686,7 @@ func attemptConnectionAndOperation(client *TCPClient, ctx context.Context) error
 		ID:      "test-1",
 	}
 
-	err = client.SendRequest(req)
+	err = client.SendRequest(ctx, req)
 	if err != nil {
 		return err
 	}

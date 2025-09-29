@@ -81,7 +81,7 @@ func NewMessageRouter(
 }
 
 // Start begins message routing between stdin/stdout and WebSocket.
-func (mr *MessageRouter) Start() {
+func (mr *MessageRouter) Start(ctx context.Context) {
 	mr.wg.Add(DefaultRetryCountLimited)
 
 	go mr.handleStdinToWS()
@@ -177,7 +177,7 @@ func (mr *MessageRouter) processQueuedRequests() {
 		}
 
 		// Process the request.
-		err := mr.processStdinMessageDirect(qr.Data)
+		err := mr.processStdinMessageDirect(mr.ctx, qr.Data)
 
 		// Send result back to waiting goroutine.
 		select {
@@ -361,7 +361,7 @@ func (mr *MessageRouter) processStdinMessage(data []byte) error {
 	}
 
 	// Connection is ready, process immediately.
-	return mr.processStdinMessageDirect(data)
+	return mr.processStdinMessageDirect(mr.ctx, data)
 }
 
 // processStdinMessageDirect processes a request when already connected.
@@ -409,7 +409,7 @@ func (mr *MessageRouter) determineRoutingTarget(req *mcp.Request) (bool, error) 
 	return false, nil
 }
 
-func (mr *MessageRouter) processStdinMessageDirect(data []byte) error {
+func (mr *MessageRouter) processStdinMessageDirect(ctx context.Context, data []byte) error {
 	startTime := time.Now()
 
 	// Parse MCP request.
@@ -442,10 +442,10 @@ func (mr *MessageRouter) processStdinMessageDirect(data []byte) error {
 
 	if useDirect {
 		// Try direct connection first, with fallback to gateway.
-		return mr.processRequestWithFallback(&req, data, startTime)
+		return mr.processRequestWithFallback(ctx, &req, data, startTime)
 	} else {
 		// Route directly to gateway connection.
-		return mr.processGatewayRequest(&req, data, startTime)
+		return mr.processGatewayRequest(ctx, &req, data, startTime)
 	}
 }
 
@@ -453,6 +453,7 @@ func (mr *MessageRouter) processStdinMessageDirect(data []byte) error {
 // processDirectRequest processes a request via direct connection.
 // attemptDirectWithRetries tries direct connection with retries.
 func (mr *MessageRouter) attemptDirectWithRetries(
+	ctx context.Context,
 	req *mcp.Request,
 	data []byte,
 	startTime time.Time,
@@ -464,7 +465,7 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 		if attempt > 0 {
 			select {
 			case <-time.After(config.Fallback.RetryDelay):
-			case <-mr.ctx.Done():
+			case <-ctx.Done():
 				return errors.New("context canceled during retry")
 			}
 
@@ -475,8 +476,8 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 			)
 		}
 
-		ctx, cancel := context.WithTimeout(mr.ctx, config.Fallback.DirectTimeout)
-		err := mr.processDirectRequestWithContext(ctx, req, data, startTime)
+		timeoutCtx, cancel := context.WithTimeout(ctx, config.Fallback.DirectTimeout)
+		err := mr.processDirectRequestWithContext(timeoutCtx, req, data, startTime)
 
 		cancel()
 
@@ -514,6 +515,7 @@ func (mr *MessageRouter) attemptDirectWithRetries(
 
 // handleFallbackToGateway handles fallback to gateway after direct failure.
 func (mr *MessageRouter) handleFallbackToGateway(
+	ctx context.Context,
 	req *mcp.Request,
 	data []byte,
 	startTime time.Time,
@@ -533,7 +535,7 @@ func (mr *MessageRouter) handleFallbackToGateway(
 		zap.Duration("direct_duration", fallbackStart.Sub(startTime)),
 	)
 
-	err := mr.processGatewayRequest(req, data, fallbackStart)
+	err := mr.processGatewayRequest(ctx, req, data, fallbackStart)
 	if err != nil {
 		mr.logger.Error("Both direct and gateway failed",
 			zap.Any("request_id", req.ID),
@@ -557,22 +559,22 @@ func (mr *MessageRouter) handleFallbackToGateway(
 }
 
 // processRequestWithFallback attempts direct connection first, then falls back to gateway on failure.
-func (mr *MessageRouter) processRequestWithFallback(req *mcp.Request, data []byte, startTime time.Time) error {
+func (mr *MessageRouter) processRequestWithFallback(ctx context.Context, req *mcp.Request, data []byte, startTime time.Time) error {
 	directConfig := mr.config.GetDirectConfig()
 
 	// Check if fallback is disabled.
 	if !directConfig.Fallback.Enabled {
-		return mr.processDirectRequest(req, data, startTime)
+		return mr.processDirectRequest(ctx, req, data, startTime)
 	}
 
 	// Try direct connection with retries.
-	directErr := mr.attemptDirectWithRetries(req, data, startTime, directConfig)
+	directErr := mr.attemptDirectWithRetries(ctx, req, data, startTime, directConfig)
 	if directErr == nil {
 		return nil
 	}
 
 	// Direct failed, try gateway fallback.
-	return mr.handleFallbackToGateway(req, data, startTime, directErr, directConfig)
+	return mr.handleFallbackToGateway(ctx, req, data, startTime, directErr, directConfig)
 }
 
 // isRetryableDirectError determines if a direct connection error should trigger gateway fallback.
@@ -683,7 +685,7 @@ func (mr *MessageRouter) processDirectRequestWithContext(
 	return nil
 }
 
-func (mr *MessageRouter) processDirectRequest(req *mcp.Request, data []byte, startTime time.Time) error {
+func (mr *MessageRouter) processDirectRequest(ctx context.Context, req *mcp.Request, data []byte, startTime time.Time) error {
 	// Create response channel for correlation - buffered to prevent blocking.
 	respChan := make(chan *mcp.Response, 1)
 
@@ -708,7 +710,7 @@ func (mr *MessageRouter) processDirectRequest(req *mcp.Request, data []byte, sta
 	serverURL := mr.extractServerURL(req)
 
 	// Get or create direct client for the server.
-	client, err := mr.directManager.GetClient(mr.ctx, serverURL)
+	client, err := mr.directManager.GetClient(ctx, serverURL)
 	if err != nil {
 		cleanup() // Clean up on error
 		mr.metricsCol.IncrementErrors()
@@ -757,7 +759,7 @@ func (mr *MessageRouter) processDirectRequest(req *mcp.Request, data []byte, sta
 }
 
 // processGatewayRequest processes a request via gateway connection.
-func (mr *MessageRouter) processGatewayRequest(req *mcp.Request, data []byte, startTime time.Time) error {
+func (mr *MessageRouter) processGatewayRequest(ctx context.Context, req *mcp.Request, data []byte, startTime time.Time) error {
 	// Create response channel for correlation - buffered to prevent blocking.
 	respChan := make(chan *mcp.Response, 1)
 
@@ -782,7 +784,7 @@ func (mr *MessageRouter) processGatewayRequest(req *mcp.Request, data []byte, st
 	mr.metricsCol.IncrementGatewayRequests()
 
 	// Forward to gateway.
-	if err := mr.gwClient.SendRequest(req); err != nil {
+	if err := mr.gwClient.SendRequest(ctx, req); err != nil {
 		cleanup() // Clean up on send error
 		mr.metricsCol.IncrementErrors()
 		mr.logger.Error("Failed to send request to gateway",

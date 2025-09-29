@@ -147,7 +147,7 @@ func (c *WebSocketClient) Connect(ctx context.Context) error {
 	// Start background routines.
 	c.wg.Add(1)
 
-	go c.readMessages()
+	go c.readMessages(ctx)
 
 	c.wg.Add(1)
 
@@ -271,9 +271,9 @@ func (c *WebSocketClient) SendRequest(ctx context.Context, req *mcp.Request) (*m
 }
 
 // readMessages continuously reads messages from WebSocket.
-func (c *WebSocketClient) readMessages() {
+func (c *WebSocketClient) readMessages(ctx context.Context) {
 	reader := CreateWebSocketMessageReader(c)
-	reader.ReadMessageLoop()
+	reader.ReadMessageLoop(ctx)
 }
 
 // pingLoop sends periodic ping frames.
