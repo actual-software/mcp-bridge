@@ -888,6 +888,7 @@ func returnAndReuseConnections(
 }
 
 func shutdownAndVerifyCleanup(t *testing.T, multiplexer *ConnectionMultiplexer) {
+	t.Helper()
 	ctx := context.Background()
 
 	// Shutdown gracefully

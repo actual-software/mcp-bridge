@@ -1435,6 +1435,7 @@ func BenchmarkStdioFrontend_HandleRequest(b *testing.B) {
 }
 
 func setupBenchmarkComponents(b *testing.B) (*Frontend, *ClientConnection, *mcp.Request) {
+	b.Helper()
 	logger := zaptest.NewLogger(b)
 	mockRouter := &MockRequestRouter{}
 	mockAuth := &MockAuthProvider{}

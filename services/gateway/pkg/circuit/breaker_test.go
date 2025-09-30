@@ -335,6 +335,7 @@ func TestCircuitBreaker_StateTransitions(t *testing.T) {
 }
 
 func createStateChecker(t *testing.T, cb *CircuitBreaker, states *[]State) func(State) {
+	t.Helper()
 	return func(expected State) {
 		state := cb.GetState()
 		*states = append(*states, state)
@@ -367,6 +368,7 @@ func testClosedStateTransitions(cb *CircuitBreaker, checkState func(State)) {
 }
 
 func testOpenStateTransitions(t *testing.T, cb *CircuitBreaker, checkState func(State)) {
+	t.Helper()
 	// Call while open
 	err := cb.Call(func() error { return nil })
 	if err == nil {

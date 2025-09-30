@@ -625,6 +625,7 @@ func createManyTestEndpoints() []*discovery.Endpoint {
 }
 
 func runPerformanceTestForAlgorithm(t *testing.T, algorithm string, endpoints []*discovery.Endpoint, requests int) {
+	t.Helper()
 	config := HybridConfig{
 		Strategy:    algorithm,
 		HealthAware: true,
@@ -651,6 +652,7 @@ func executePerformanceRequests(lb *HybridLoadBalancer, requests int) int {
 }
 
 func validatePerformanceResults(t *testing.T, algorithm string, successCount, requests int, duration time.Duration) {
+	t.Helper()
 	// Performance assertions
 	assert.Greater(t, successCount, requests*8/10, "Should succeed at least 80%% of requests")
 	assert.Less(t, duration, 5*time.Second, "Should complete %d requests within 5 seconds", requests)

@@ -159,6 +159,7 @@ func runWebSocketOriginTests(t *testing.T, tests []struct {
 	origin        string
 	expectConnect bool
 }, wsURL string) {
+	t.Helper()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create dialer with custom origin
@@ -235,6 +236,7 @@ func createWildcardOriginTestConfig() *config.Config {
 }
 
 func runWildcardOriginTests(t *testing.T, origins []string, wsURL string) {
+	t.Helper()
 	// Test that any origin is allowed with wildcard
 	for _, origin := range origins {
 		t.Run("Wildcard allows "+origin, func(t *testing.T) {
