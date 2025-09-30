@@ -173,6 +173,7 @@ func connectLoadBalancingClient(t *testing.T, client *TCPClient, clientID int) b
 
 func sendLoadBalancingRequests(t *testing.T, client *TCPClient, clientID, requestsPerClient int) {
 	t.Helper()
+	ctx := context.Background()
 	for reqIdx := 0; reqIdx < requestsPerClient; reqIdx++ {
 		req := &mcp.Request{
 			JSONRPC: "2.0",
@@ -194,6 +195,7 @@ func sendLoadBalancingRequests(t *testing.T, client *TCPClient, clientID, reques
 }
 
 func TestGatewayClient_LoadBalancing(t *testing.T) {
+	// ctx := context.Background() - unused
 	_, addresses, requestCounts, cleanup := createLoadBalancingServers(t, 3)
 	defer cleanup()
 
@@ -237,6 +239,7 @@ func TestGatewayClient_LoadBalancing(t *testing.T) {
 
 // TestGatewayClient_FailoverScenarios tests various failover scenarios.
 func TestGatewayClient_FailoverScenarios(t *testing.T) {
+	// ctx := context.Background() - unused
 	logger := zaptest.NewLogger(t)
 	tests := createFailoverScenarioTests()
 
@@ -250,7 +253,7 @@ func TestGatewayClient_FailoverScenarios(t *testing.T) {
 type failoverScenarioTest struct {
 	name            string
 	serverBehavior  func(conn net.Conn)
-	clientOps       func(*TCPClient) error
+	clientOps       func(context.Context, *TCPClient) error
 	expectedSuccess bool
 	expectedError   string
 }
@@ -277,7 +280,7 @@ func createServerShutdownTest() failoverScenarioTest {
 			}
 			_ = conn.Close()
 		},
-		clientOps: func(client *TCPClient) error {
+		clientOps: func(ctx context.Context, client *TCPClient) error {
 			req := &mcp.Request{
 				JSONRPC: constants.TestJSONRPCVersion,
 				Method:  "test_failover",
@@ -313,7 +316,7 @@ func createCorruptionTest() failoverScenarioTest {
 			_, _ = conn.Write([]byte{0xFF, 0xFF, 0xFF, 0xFF})
 			_ = conn.Close()
 		},
-		clientOps: func(client *TCPClient) error {
+		clientOps: func(ctx context.Context, client *TCPClient) error {
 			req := &mcp.Request{
 				JSONRPC: constants.TestJSONRPCVersion,
 				Method:  "test_corruption",
@@ -363,7 +366,7 @@ func createSlowResponseTest() failoverScenarioTest {
 			}
 			sendResponse(conn, frame.Version, wireMsg.ID, resp)
 		},
-		clientOps: func(client *TCPClient) error {
+		clientOps: func(ctx context.Context, client *TCPClient) error {
 			req := &mcp.Request{
 				JSONRPC: constants.TestJSONRPCVersion,
 				Method:  "test_slow",
@@ -414,7 +417,7 @@ func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenar
 
 	defer func() { _ = client.Close() }()
 
-	err = tt.clientOps(client)
+	err = tt.clientOps(ctx, client)
 	validateFailoverResult(t, err, tt)
 }
 
@@ -436,12 +439,14 @@ func validateFailoverResult(t *testing.T, err error, tt failoverScenarioTest) {
 
 // TestGatewayClient_CircuitBreakerBehavior tests circuit breaker functionality.
 func TestGatewayClient_CircuitBreakerBehavior(t *testing.T) {
+	// ctx := context.Background() - unused
 	handler := CreateCircuitBreakerTestHandler(t)
 	handler.ExecuteTest()
 }
 
 // TestGatewayClient_ConcurrentFailover tests concurrent operations during failover.
 func TestGatewayClient_ConcurrentFailover(t *testing.T) {
+	// ctx := context.Background() - unused
 	logger := zaptest.NewLogger(t)
 	serverCounters := createServerCounters()
 

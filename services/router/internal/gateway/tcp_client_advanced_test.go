@@ -288,7 +288,7 @@ func runLifecycleTest(t *testing.T, client *TCPClient) {
 		Method:  "test",
 		ID:      "test-1",
 	}
-	if err := client.SendRequest(req); err != nil {
+	if err := client.SendRequest(ctx, req); err != nil {
 		t.Errorf("Failed to send request: %v", err)
 	}
 
@@ -491,13 +491,14 @@ func runConcurrentRequests(t *testing.T, client *TCPClient, numRequests int) cha
 func sendConcurrentRequest(t *testing.T, wg *sync.WaitGroup, client *TCPClient, id int, results chan<- int64) {
 	defer wg.Done()
 
+	ctx := context.Background()
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "test",
 		ID:      fmt.Sprintf("req-%d", id),
 	}
 
-	if err := client.SendRequest(req); err != nil {
+	if err := client.SendRequest(ctx, req); err != nil {
 		t.Errorf("Failed to send request %d: %v", id, err)
 		return
 	}
@@ -811,7 +812,7 @@ func BenchmarkTCPClient_SendRequest(b *testing.B) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		if err := client.SendRequest(req); err != nil {
+		if err := client.SendRequest(ctx, req); err != nil {
 			b.Fatalf("Failed to send request: %v", err)
 		}
 
@@ -919,7 +920,7 @@ func BenchmarkTCPClient_ConcurrentRequests(b *testing.B) {
 				ID:      fmt.Sprintf("concurrent-%d", time.Now().UnixNano()),
 			}
 
-			if err := client.SendRequest(req); err != nil {
+			if err := client.SendRequest(ctx, req); err != nil {
 				b.Fatalf("Failed to send request: %v", err)
 			}
 

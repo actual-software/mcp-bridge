@@ -38,7 +38,7 @@ func (m *MockGatewayClient) Connect(ctx context.Context) error {
 	return m.connectErr
 }
 
-func (m *MockGatewayClient) SendRequest(req *mcp.Request) error {
+func (m *MockGatewayClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 	m.callCounts["SendRequest"]++
 	if m.shouldBlock {
 		time.Sleep(m.blockDuration)
@@ -109,6 +109,7 @@ func TestNewCircuitBreaker(t *testing.T) {
 }
 
 func TestCircuitBreaker_SuccessfulOperations(t *testing.T) {
+	ctx := context.Background()
 	client := NewMockGatewayClient()
 	client.isConnected = true
 
@@ -124,7 +125,6 @@ func TestCircuitBreaker_SuccessfulOperations(t *testing.T) {
 	cb := NewCircuitBreaker(client, config, logger)
 
 	// Test successful operations.
-	ctx := context.Background()
 
 	// Connect.
 	err := cb.Connect(ctx)
@@ -135,7 +135,6 @@ func TestCircuitBreaker_SuccessfulOperations(t *testing.T) {
 	// Send request.
 	req := &mcp.Request{ID: "test", Method: "test"}
 
-	ctx := context.Background()
 	err = cb.SendRequest(ctx, req)
 	if err != nil {
 		t.Errorf("Expected successful SendRequest, got error: %v", err)
@@ -175,6 +174,7 @@ func TestCircuitBreaker_SuccessfulOperations(t *testing.T) {
 }
 
 func TestCircuitBreaker_FailureHandling(t *testing.T) {
+	ctx := context.Background()
 	client := NewMockGatewayClient()
 	testErr := errors.New("test error")
 	client.connectErr = testErr
@@ -192,7 +192,6 @@ func TestCircuitBreaker_FailureHandling(t *testing.T) {
 	logger := zap.NewNop()
 
 	cb := NewCircuitBreaker(client, config, logger)
-	ctx := context.Background()
 
 	// First failure.
 	err := cb.Connect(ctx)
@@ -201,7 +200,6 @@ func TestCircuitBreaker_FailureHandling(t *testing.T) {
 	}
 
 	// Second failure should trip the circuit.
-	ctx := context.Background()
 	err = cb.SendRequest(ctx, &mcp.Request{ID: "test"})
 	if err == nil {
 		t.Error("Expected error from SendRequest")
@@ -225,6 +223,7 @@ func TestCircuitBreaker_FailureHandling(t *testing.T) {
 }
 
 func TestCircuitBreaker_Recovery(t *testing.T) {
+	ctx := context.Background()
 	client := NewMockGatewayClient()
 	testErr := errors.New("test error")
 	client.sendRequestErr = testErr
@@ -241,7 +240,6 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 	cb := NewCircuitBreaker(client, config, logger)
 
 	// Cause failures to trip the circuit.
-	ctx := context.Background()
 	_ = cb.SendRequest(ctx, &mcp.Request{ID: "test1"})
 	_ = cb.SendRequest(ctx, &mcp.Request{ID: "test2"})
 
@@ -258,7 +256,6 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 	client.sendRequestErr = nil
 
 	// Next request should be allowed (circuit goes to HALF_OPEN).
-	ctx := context.Background()
 	err := cb.SendRequest(ctx, &mcp.Request{ID: "test3"})
 	if err != nil {
 		t.Errorf("Expected successful request after recovery, got: %v", err)
@@ -272,7 +269,6 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 
 	// If still HALF_OPEN, send another successful request to close it.
 	if stats.State == CircuitHalfOpen {
-		ctx := context.Background()
 		err = cb.SendRequest(ctx, &mcp.Request{ID: "test4"})
 		if err != nil {
 			t.Errorf("Expected second successful request after recovery, got: %v", err)
@@ -287,6 +283,7 @@ func TestCircuitBreaker_Recovery(t *testing.T) {
 }
 
 func TestCircuitBreaker_Timeout(t *testing.T) {
+	ctx := context.Background()
 	client := NewMockGatewayClient()
 	client.shouldBlock = true
 	client.blockDuration = httpStatusOK * time.Millisecond
@@ -304,7 +301,6 @@ func TestCircuitBreaker_Timeout(t *testing.T) {
 
 	// This should timeout.
 	start := time.Now()
-	ctx := context.Background()
 	err := cb.SendRequest(ctx, &mcp.Request{ID: "test"})
 	duration := time.Since(start)
 

@@ -90,7 +90,7 @@ func (h *FallbackTestHandler) setupMockComponents() {
 func (h *FallbackTestHandler) createMockGatewayClient() *TestGatewayClient {
 	client := NewTestGatewayClient()
 	client.connectFunc = func(ctx context.Context) error { return nil }
-	client.sendRequestFunc = func(req *mcp.Request) error { return nil }
+	client.sendRequestFunc = func(ctx context.Context, req *mcp.Request) error { return nil }
 	client.isConnectedFunc = func() bool { return true }
 
 	return client
@@ -131,8 +131,9 @@ func (h *FallbackTestHandler) initializeRouter() {
 
 // startServices starts the connection manager and message router.
 func (h *FallbackTestHandler) startServices() {
-	h.connMgr.Start()
-	h.msgRouter.Start()
+	ctx := context.Background()
+	h.connMgr.Start(ctx)
+	h.msgRouter.Start(ctx)
 }
 
 // stopServices stops the connection manager and message router.

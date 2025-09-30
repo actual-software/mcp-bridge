@@ -65,7 +65,7 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 
 	var requestCount int64
 
-	mockClients.gwClient.sendRequestFunc = func(req *mcp.Request) error {
+	mockClients.gwClient.sendRequestFunc = func(ctx context.Context, req *mcp.Request) error {
 		atomic.AddInt64(&requestCount, 1)
 		time.Sleep(5 * time.Millisecond) // Simulate gateway latency
 
@@ -150,7 +150,7 @@ func setupMessageRouterForPerformance(cfg *config.Config, logger *zap.Logger, mo
 	metricsCol := NewMetricsCollector(logger)
 
 	// Start connection manager and wait for connection.
-	connMgr.Start()
+	connMgr.Start(context.Background())
 
 	// Wait for connection to be established.
 	timeout := time.After(2 * time.Second)
@@ -183,7 +183,7 @@ func setupMessageRouterForPerformance(cfg *config.Config, logger *zap.Logger, mo
 	)
 
 	// Start the message router.
-	msgRouter.Start()
+	msgRouter.Start(context.Background())
 
 	return msgRouter
 }
@@ -306,7 +306,7 @@ func TestMessageRouter_ConcurrentFallbackStressTest(t *testing.T) {
 
 type TestGatewayClient struct {
 	connectFunc         func(context.Context) error
-	sendRequestFunc     func(*mcp.Request) error
+	sendRequestFunc     func(context.Context, *mcp.Request) error
 	receiveResponseFunc func() (*mcp.Response, error)
 	isConnectedFunc     func() bool
 	sendRequestCalled   int64
@@ -329,11 +329,11 @@ func (t *TestGatewayClient) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (t *TestGatewayClient) SendRequest(req *mcp.Request) error {
+func (t *TestGatewayClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 	atomic.AddInt64(&t.sendRequestCalled, 1)
 
 	if t.sendRequestFunc != nil {
-		if err := t.sendRequestFunc(req); err != nil {
+		if err := t.sendRequestFunc(ctx, req); err != nil {
 			return err
 		}
 	}

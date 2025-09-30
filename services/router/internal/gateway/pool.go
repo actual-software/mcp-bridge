@@ -118,7 +118,7 @@ func NewGatewayPool(ctx context.Context, cfg *config.Config, logger *zap.Logger)
 	lbConfig := cfg.GetLoadBalancerConfig()
 	sdConfig := cfg.GetServiceDiscoveryConfig()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background()) //nolint:contextcheck // Creating new root context for pool lifecycle
 
 	pool := createGatewayPoolStruct(endpoints, lbConfig, sdConfig, logger, ctx, cancel)
 

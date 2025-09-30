@@ -106,7 +106,7 @@ func (h *StressTestHandler) setupMockComponents() {
 func (h *StressTestHandler) createMockGatewayClient() *TestGatewayClient {
 	client := NewTestGatewayClient()
 	client.connectFunc = func(ctx context.Context) error { return nil }
-	client.sendRequestFunc = func(req *mcp.Request) error {
+	client.sendRequestFunc = func(ctx context.Context, req *mcp.Request) error {
 		atomic.AddInt64(&h.metrics.gatewayAttempts, 1)
 
 		return nil
@@ -170,9 +170,10 @@ func (h *StressTestHandler) initializeRouter() {
 
 // startServices starts the router services.
 func (h *StressTestHandler) startServices() {
+	ctx := context.Background()
 	connMgr := h.msgRouter.connMgr
-	connMgr.Start()
-	h.msgRouter.Start()
+	connMgr.Start(ctx)
+	h.msgRouter.Start(ctx)
 }
 
 // stopServices stops the router services.

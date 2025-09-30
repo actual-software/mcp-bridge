@@ -3034,8 +3034,8 @@ func validateProtocolMetrics(t *testing.T, router *LocalRouter, protocolMethods 
 // =====================================================================================
 
 // BenchmarkRouter_ConcurrentRequests benchmarks concurrent request processing.
-func createBenchmarkEchoServer(b testing.TB) *httptest.Server {
-	return createMockWebSocketServer(b, func(conn *websocket.Conn) {
+func createBenchmarkEchoServer(tb testing.TB) *httptest.Server {
+	return createMockWebSocketServer(tb, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {
@@ -3064,6 +3064,7 @@ func createBenchmarkEchoServer(b testing.TB) *httptest.Server {
 }
 
 func setupConcurrentBenchmarkRouter(b *testing.B, mockServer *httptest.Server) *LocalRouter {
+	b.Helper()
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -3082,12 +3083,14 @@ func setupConcurrentBenchmarkRouter(b *testing.B, mockServer *httptest.Server) *
 }
 
 func waitForBenchmarkRouterConnection(b *testing.B, router *LocalRouter) {
+	b.Helper()
 	for router.GetState() != StateConnected {
 		time.Sleep(1 * time.Millisecond)
 	}
 }
 
 func runConcurrentBenchmark(b *testing.B, router *LocalRouter) {
+	b.Helper()
 	b.RunParallel(func(pb *testing.PB) {
 		requestID := 0
 		for pb.Next() {
@@ -3118,8 +3121,8 @@ func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
 }
 
 // BenchmarkRouter_LargePayloads benchmarks processing of large request/response payloads.
-func createLargePayloadServer(b testing.TB, largeData string) *httptest.Server {
-	return createMockWebSocketServer(b, func(conn *websocket.Conn) {
+func createLargePayloadServer(tb testing.TB, largeData string) *httptest.Server {
+	return createMockWebSocketServer(tb, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {

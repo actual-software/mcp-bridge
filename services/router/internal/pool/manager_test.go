@@ -84,6 +84,7 @@ func getPooledGatewayClientTests() []pooledGatewayTest {
 }
 
 func testPooledGatewayClient(t *testing.T, tt pooledGatewayTest, poolConfig Config, logger *zap.Logger) {
+	t.Helper()
 	gwConfig := config.GatewayConfig{URL: tt.url}
 	client, err := NewPooledGatewayClient(poolConfig, gwConfig, logger)
 
@@ -99,6 +100,7 @@ func testPooledGatewayClient(t *testing.T, tt pooledGatewayTest, poolConfig Conf
 }
 
 func verifyPoolType(t *testing.T, client *PooledGatewayClient, isWebSocket bool) {
+	t.Helper()
 	if isWebSocket {
 		assert.NotNil(t, client.wsPool)
 		assert.Nil(t, client.tcpPool)
@@ -151,7 +153,7 @@ func TestPooledGatewayClientLifecycle(t *testing.T) {
 		ID:     "test-1",
 		Method: "test",
 	}
-	err = client.SendRequest(req)
+	err = client.SendRequest(context.Background(), req)
 	require.Error(t, err)
 
 	// Test ReceiveResponse without connection.
@@ -194,7 +196,8 @@ func TestPooledGatewayClientAutoConnect(t *testing.T) {
 		Method: "test",
 	}
 
-	err = pgc.SendRequest(req)
+	ctx := context.Background()
+	err = pgc.SendRequest(ctx, req)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to auto-connect")
 }

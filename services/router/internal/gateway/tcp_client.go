@@ -294,7 +294,7 @@ func (c *TCPClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 		authToken = c.config.Auth.Token
 	case config.AuthTypeOAuth2:
 		if c.oauth2Client != nil {
-			token, err := c.oauth2Client.GetToken(context.Background())
+			token, err := c.oauth2Client.GetToken(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to get OAuth2 token: %w", err)
 			}

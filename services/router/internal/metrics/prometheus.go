@@ -235,7 +235,7 @@ func (e *PrometheusExporter) Start(ctx context.Context) error {
 
 		// Background context is appropriate for shutdown
 
-		if err := e.server.Shutdown(shutdownCtx); err != nil {
+		if err := e.server.Shutdown(shutdownCtx); err != nil { //nolint:contextcheck // shutdownCtx is intentionally fresh
 			e.logger.Error("Failed to shutdown metrics server", zap.Error(err))
 		}
 	}()

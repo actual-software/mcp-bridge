@@ -100,6 +100,7 @@ func TestNewPool(t *testing.T) {
 }
 
 func testValidPoolConfig(t *testing.T, factory *mockFactory, logger *zap.Logger) {
+	t.Helper()
 	config := Config{
 		MinSize:             2,
 		MaxSize:             5,

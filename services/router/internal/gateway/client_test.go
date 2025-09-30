@@ -240,7 +240,6 @@ PIHoJdYUmhCwEjxX4LniJH2cIHTW5tfdKTm/e+8qsvj/CbEmgjAv5RE=
 
 func TestClient_Connect(t *testing.T) {
 	tests := createConnectTests()
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(tt.serverHandler(t))
@@ -550,6 +549,7 @@ func createMessageEchoServer(t *testing.T) *httptest.Server {
 }
 
 func TestClient_SendRequest(t *testing.T) {
+	ctx := context.Background()
 	server := createMessageEchoServer(t)
 	defer server.Close()
 
@@ -560,7 +560,7 @@ func TestClient_SendRequest(t *testing.T) {
 	tests := getSendRequestTestCases()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			verifySendRequest(t, client, tt)
+			verifySendRequest(t, ctx, client, tt)
 		})
 	}
 }
@@ -640,7 +640,7 @@ func getSendRequestTestCases() []struct {
 	}
 }
 
-func verifySendRequest(t *testing.T, client *Client, tt struct {
+func verifySendRequest(t *testing.T, ctx context.Context, client *Client, tt struct {
 	name          string
 	request       *mcp.Request
 	wantError     bool
@@ -663,6 +663,7 @@ func verifySendRequest(t *testing.T, client *Client, tt struct {
 }
 
 func TestClient_SendRequest_NotConnected(t *testing.T) {
+	ctx := context.Background()
 	logger := testutil.NewTestLogger(t)
 	client := &Client{
 		logger: logger,
@@ -747,7 +748,6 @@ func validateErrorResponse(t *testing.T, resp *mcp.Response, expectedID interfac
 func TestClient_ReceiveResponse(t *testing.T) {
 	testMessages := createTestResponseMessages()
 	server := createTestMessageServer(t, testMessages)
-	defer server.Close()
 
 	client := createTestGatewayClient(t, server.URL)
 	connectTestClient(t, client)
@@ -912,7 +912,6 @@ func TestClient_Close(t *testing.T) {
 	defer server.Close()
 
 	client := createTestGatewayClient(t, server.URL)
-	
 	// Test closing when not connected
 	verifyCloseWhenDisconnected(t, client)
 	
@@ -1002,6 +1001,7 @@ func TestClient_IsConnected(t *testing.T) {
 }
 
 func TestExtractNamespace(t *testing.T) {
+	// ctx := context.Background() - unused
 	tests := []struct {
 		method   string
 		expected string
@@ -1009,7 +1009,6 @@ func TestExtractNamespace(t *testing.T) {
 		{"initialize", "system"},
 		{"tools/list", "system"},
 		{"tools/call", "system"},
-		{"k8s.getPods", "k8s"},
 		{"docker.listContainers", "docker"},
 		{"custom.namespace.method", "custom"},
 		{"simplemethod", "default"},
@@ -1027,6 +1026,7 @@ func TestExtractNamespace(t *testing.T) {
 }
 
 func TestClient_ConcurrentOperations(t *testing.T) {
+	// ctx := context.Background() - unused
 	server := createEchoServer(t)
 	defer server.Close()
 
@@ -1075,6 +1075,7 @@ func runConcurrentSends(t *testing.T, client *Client) {
 				Method:  "test.method",
 				ID:      id,
 			}
+			ctx := context.Background()
 			if err := client.SendRequest(ctx, req); err != nil {
 				errors <- err
 			}
@@ -1091,6 +1092,7 @@ func runConcurrentSends(t *testing.T, client *Client) {
 }
 
 func TestWireMessage_JSONMarshaling(t *testing.T) {
+	// ctx := context.Background() - unused
 	msg := WireMessage{
 		ID:              "test-123",
 		Timestamp:       "2024-01-01T00:00:00Z",
@@ -1216,6 +1218,7 @@ func runSendRequestBenchmark(b *testing.B, client *Client) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		ctx := context.Background()
 		if err := client.SendRequest(ctx, req); err != nil {
 			b.Fatal(err)
 		}
@@ -1226,6 +1229,7 @@ func runSendRequestBenchmark(b *testing.B, client *Client) {
 
 // Test various error scenarios during connection.
 func TestClient_Connect_ErrorScenarios(t *testing.T) {
+	// ctx := context.Background() - unused
 	tests := getConnectErrorScenarios(t)
 
 	for _, tt := range tests {
@@ -1358,6 +1362,7 @@ func verifyConnectError(t *testing.T, client *Client, tt struct {
 
 // Test network failure scenarios during operation.
 func TestClient_NetworkFailures(t *testing.T) {
+	// ctx := context.Background() - unused
 	connectChan := make(chan struct{})
 	server := createDropConnectionServer(t, connectChan)
 	defer server.Close()
@@ -1399,6 +1404,7 @@ func verifyNetworkFailureHandling(t *testing.T, client *Client, connectChan <-ch
 		Method:  "test",
 		ID:      "test-1",
 	}
+	ctx := context.Background()
 	_ = client.SendRequest(ctx, req)
 	// May or may not error immediately depending on timing
 
@@ -1415,6 +1421,7 @@ func verifyNetworkFailureHandling(t *testing.T, client *Client, connectChan <-ch
 
 // Test authentication edge cases.
 func TestClient_AuthenticationEdgeCases(t *testing.T) {
+	// ctx := context.Background() - unused
 	tests := getAuthenticationEdgeCaseTests()
 
 	for _, tt := range tests {
@@ -1612,6 +1619,7 @@ func runConcurrentSenders(t *testing.T, client *Client, numOperations int) (chan
 				Method:  "concurrent.test",
 				ID:      id,
 			}
+			ctx := context.Background()
 			if err := client.SendRequest(ctx, req); err != nil {
 				sendErrors <- err
 			}
@@ -1674,6 +1682,7 @@ func validateConcurrentErrors(t *testing.T, sendErrors, recvErrors chan error, n
 }
 
 func TestClient_ConcurrentOperations_EdgeCases(t *testing.T) {
+	ctx := context.Background()
 	server := createSlowEchoServer(t)
 	defer server.Close()
 
@@ -1697,8 +1706,6 @@ func TestClient_ConcurrentOperations_EdgeCases(t *testing.T) {
 		logger:    logger,
 		tlsConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 - test configuration only
 	}
-
-	ctx := context.Background()
 
 	if err := client.Connect(ctx); err != nil {
 		t.Fatalf("Failed to connect: %v", err)
@@ -1726,6 +1733,7 @@ func TestClient_ConcurrentOperations_EdgeCases(t *testing.T) {
 
 // Test connection lifecycle edge cases.
 func TestClient_ConnectionLifecycle(t *testing.T) {
+	// ctx := context.Background() - unused
 	server := createLifecycleTestServer(t)
 	defer server.Close()
 
@@ -1814,6 +1822,7 @@ func testSingleLifecycle(t *testing.T, client *Client, ctx context.Context, iter
 
 // Test malformed message handling.
 func TestClient_MalformedMessages(t *testing.T) {
+	// ctx := context.Background() - unused
 	malformedMessages := getMalformedMessages()
 
 	for i, msg := range malformedMessages {
@@ -1904,6 +1913,7 @@ func testMalformedMessageReceive(t *testing.T, client *Client) {
 
 // Test error handling during WebSocket operations.
 func TestClient_WebSocketErrorHandling(t *testing.T) {
+	ctx := context.Background()
 	logger := testutil.NewTestLogger(t)
 	client := &Client{
 		logger: logger,

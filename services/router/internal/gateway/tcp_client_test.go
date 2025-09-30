@@ -398,6 +398,7 @@ func getSendRequestTests() []sendRequestTest {
 
 func testSendRequest(t *testing.T, client *TCPClient, tt sendRequestTest) {
 	t.Helper()
+	ctx := context.Background()
 	err := client.SendRequest(ctx, tt.req)
 	if (err != nil) != tt.wantErr {
 		t.Errorf("SendRequest() error = %v, wantErr %v", err, tt.wantErr)
@@ -455,6 +456,7 @@ func setupTCPClientForResponse(t *testing.T, addr string) (*TCPClient, func()) {
 func sendTestRequestAndReceive(t *testing.T, client *TCPClient) {
 	t.Helper()
 
+	ctx := context.Background()
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "test",
