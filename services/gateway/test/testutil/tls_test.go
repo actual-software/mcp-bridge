@@ -183,7 +183,7 @@ func testCertificatesFormValidChain(t *testing.T) {
 	require.NoError(t, err)
 
 	err = serverCert.CheckSignatureFrom(caCert)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	roots := x509.NewCertPool()
 	roots.AddCert(caCert)
@@ -326,14 +326,14 @@ func waitForTLSHandshakeSuccess(t *testing.T, serverDone, clientDone <-chan erro
 
 	select {
 	case err := <-serverDone:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(5 * time.Second):
 		t.Fatal("Server handshake timed out")
 	}
 
 	select {
 	case err := <-clientDone:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(5 * time.Second):
 		t.Fatal("Client handshake timed out")
 	}
@@ -401,7 +401,7 @@ func waitForTLSHandshakeFailure(t *testing.T, clientDone <-chan error) {
 
 	select {
 	case err := <-clientDone:
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "certificate")
 	case <-time.After(5 * time.Second):
 		t.Fatal("Client handshake should have failed quickly")

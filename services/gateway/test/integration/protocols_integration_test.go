@@ -310,6 +310,7 @@ func safeIntToUint64(n int) uint64 {
 	if n < 0 {
 		return 0
 	}
+
 	return uint64(n)
 }
 
@@ -345,6 +346,7 @@ func (suite *ProtocolsIntegrationTestSuite) setupConcurrentBackends(
 ) (*stdio.Backend, *wsBackend.Backend) {
 	stdioBackend := suite.createConcurrentStdioBackend(logger)
 	wsBackendInstance := suite.createConcurrentWebSocketBackend(logger)
+
 	return stdioBackend, wsBackendInstance
 }
 
@@ -359,6 +361,7 @@ func (suite *ProtocolsIntegrationTestSuite) createConcurrentStdioBackend(logger 
 	stdioBackend := stdio.CreateStdioBackend("concurrent-stdio", stdioConfig, logger, nil)
 	err := stdioBackend.Start(suite.ctx)
 	suite.Require().NoError(err)
+
 	return stdioBackend
 }
 

@@ -548,11 +548,11 @@ func runMetricResetBehaviorTest(t *testing.T) {
 	tcpCounter.Add(5)
 
 	// Verify initial value
-	assert.Equal(t, float64(5), registry.GetTCPMessageCount("outbound", "response"))
+	assert.InDelta(t, float64(5), registry.GetTCPMessageCount("outbound", "response"), 0.001)
 
 	// Reset by creating new registry
 	newRegistry := CreateTestMetricsRegistryWithHelpers()
-	assert.Equal(t, float64(0), newRegistry.GetTCPMessageCount("outbound", "response"))
+	assert.InDelta(t, float64(0), newRegistry.GetTCPMessageCount("outbound", "response"), 0.001)
 }
 
 func runLabelValidationTest(t *testing.T) {
@@ -823,7 +823,7 @@ func assertGaugeValue(t *testing.T, gauge prometheus.Gauge, expectedValue float6
 	err := gauge.Write(metric)
 	require.NoError(t, err)
 	require.NotNil(t, metric.Gauge)
-	assert.Equal(t, expectedValue, metric.Gauge.GetValue())
+	assert.InDelta(t, expectedValue, metric.Gauge.GetValue(), 0.001)
 }
 
 // TestMetricsErrorPaths tests error handling paths in helper methods.

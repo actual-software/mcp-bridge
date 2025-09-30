@@ -66,6 +66,7 @@ func createOriginTestAuth() *mockAuthProvider {
 		},
 	}
 	mockAuth.claims.Subject = "test-user"
+
 	return mockAuth
 }
 
@@ -89,6 +90,7 @@ func createOriginTestRouter() *router.Router {
 		},
 	}
 	mockDiscovery := &mockServiceDiscovery{}
+
 	return router.InitializeRequestRouter(
 		context.Background(),
 		routerCfg,

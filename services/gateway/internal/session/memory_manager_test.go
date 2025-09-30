@@ -114,7 +114,7 @@ func TestMemoryManager_CleanupExpiredSessions(t *testing.T) {
 
 	// Verify GetSession also returns error for expired session
 	_, err = mgr.GetSession(session.ID)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 
 	// Check stats - no sessions should remain
@@ -207,7 +207,7 @@ func TestMemoryManager_Close(t *testing.T) {
 
 	// Close the manager
 	err = mgr.Close()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify cleanup goroutine stopped
 	select {

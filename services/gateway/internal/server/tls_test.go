@@ -244,6 +244,7 @@ func runTLSConfigTests(t *testing.T, tests []tlsConfigTest) {
 			cfg, err := server.createTLSConfig()
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 

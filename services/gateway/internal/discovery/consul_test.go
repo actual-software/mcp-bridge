@@ -719,6 +719,7 @@ func findAvailablePort() (int, error) {
 	if !ok {
 		return 0, fmt.Errorf("expected TCP address, got %T", listener.Addr())
 	}
+
 	return addr.Port, nil
 }
 

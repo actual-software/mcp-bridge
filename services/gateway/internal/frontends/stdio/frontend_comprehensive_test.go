@@ -1493,6 +1493,7 @@ func benchmarkSingleRequest(frontend *Frontend, conn *ClientConnection, request 
 		resp, err := frontend.router.RouteRequest(ctx, request, "")
 		if err != nil {
 			frontend.sendErrorResponse(conn, request, err.Error())
+
 			return
 		}
 

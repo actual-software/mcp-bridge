@@ -325,6 +325,7 @@ func validateWebSocketConnection(t *testing.T, server *GatewayServer, resp *http
 			if keyStr, ok := key.(string); ok {
 				connectionIDs = append(connectionIDs, keyStr)
 			}
+
 			return true
 		})
 		t.Errorf("Expected connection to be registered. Found connections: %v", connectionIDs)

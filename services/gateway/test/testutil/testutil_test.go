@@ -87,7 +87,7 @@ func TestGenerateRSAKeyPair(t *testing.T) {
 
 		// Parse the private key
 		parsedKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, parsedKey)
 		assert.Equal(t, DefaultRSAKeySize, parsedKey.Size()*8)
 	})
@@ -102,7 +102,7 @@ func TestGenerateRSAKeyPair(t *testing.T) {
 
 		// Parse the public key
 		parsedPublicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, parsedPublicKey)
 
 		// Verify it matches the original private key's public key
@@ -161,7 +161,7 @@ func testHMACTokenGeneration(t *testing.T, claims jwt.MapClaims) {
 		return secret, nil
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, parsedToken.Valid)
 	assert.Equal(t, jwt.SigningMethodHS256, parsedToken.Method)
 }

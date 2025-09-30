@@ -49,7 +49,7 @@ type JWTProvider struct {
 
 // InitializeAuthenticationProvider creates an authentication provider based on configuration.
 //
-
+//nolint:ireturn // Factory pattern requires interface return
 func InitializeAuthenticationProvider(cfg config.AuthConfig, logger *zap.Logger) (Provider, error) {
 	switch cfg.Provider {
 	case "jwt":

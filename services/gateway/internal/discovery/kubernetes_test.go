@@ -906,6 +906,7 @@ func createStartStopTestObjects() (*v1.Service, *v1.Endpoints) {
 			},
 		},
 	}
+
 	return testService, testEndpoint
 }
 
@@ -1262,6 +1263,7 @@ func setupKubernetesInfrastructure(t *testing.T) (cleanup func(), kubeconfig str
 		// Cleanup on failure
 		// #nosec G204 - test cleanup code
 		_ = exec.CommandContext(ctx, "kind", "delete", "cluster", "--name", clusterName).Run()
+
 		return nil, "", fmt.Errorf("failed to export kubeconfig: %w, output: %s", err, string(exportOutput))
 	}
 

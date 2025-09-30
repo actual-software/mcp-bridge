@@ -194,11 +194,13 @@ func runRedisSessionStoreTests(t *testing.T, tests []struct {
 
 			if err != nil {
 				t.Errorf("Expected no error, got: %v", err)
+
 				return
 			}
 
 			if manager == nil {
 				t.Error("Expected manager to be created")
+
 				return
 			}
 
@@ -390,6 +392,7 @@ func TestRedisManager_UpdateSession(t *testing.T) {
 	testExpiredSessionUpdate(t, manager)
 }
 
+//nolint:ireturn // Test helper returns interface
 func setupRedisManagerForUpdate(t *testing.T) Manager {
 	t.Helper()
 
@@ -730,6 +733,7 @@ func setupConcurrentTest(t *testing.T) (*RedisManager, *Session) {
 	if !ok {
 		t.Fatal("Expected RedisManager type")
 	}
+
 	return redisManager, session
 }
 

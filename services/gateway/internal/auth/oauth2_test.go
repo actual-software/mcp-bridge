@@ -604,7 +604,7 @@ func TestOAuth2Provider_ValidateJWT(t *testing.T) {
 
 	// Test the stub implementation - should always return error
 	claims, err := provider.validateJWT("any-jwt-token")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, claims)
 	assert.Contains(t, err.Error(), "JWKS validation not implemented")
 }

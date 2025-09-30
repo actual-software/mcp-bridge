@@ -82,7 +82,7 @@ func CreateBackendFactory(logger *zap.Logger, metrics *metrics.Registry) *Defaul
 
 // CreateBackend creates a backend instance based on configuration.
 //
-
+//nolint:ireturn // Factory pattern requires interface return
 func (f *DefaultFactory) CreateBackend(config BackendConfig) (Backend, error) {
 	switch config.Protocol {
 	case "stdio":
@@ -105,6 +105,7 @@ func (f *DefaultFactory) SupportedProtocols() []string {
 // createStdioBackend creates a stdio backend instance.
 //
 
+//nolint:ireturn // Factory pattern requires interface return
 func (f *DefaultFactory) createStdioBackend(config BackendConfig) (Backend, error) {
 	stdioConfig := stdio.Config{}
 
@@ -230,6 +231,7 @@ func (f *DefaultFactory) parseStdioProcess(stdioConfig *stdio.Config, config map
 // createWebSocketBackend creates a WebSocket backend instance.
 //
 
+//nolint:ireturn // Factory pattern requires interface return
 func (f *DefaultFactory) createWebSocketBackend(config BackendConfig) (Backend, error) {
 	wsConfig := websocket.Config{}
 
@@ -376,6 +378,7 @@ func (f *DefaultFactory) parseWebSocketHealthCheck(wsConfig *websocket.Config, c
 // createSSEBackend creates an SSE backend instance.
 //
 
+//nolint:ireturn // Factory pattern requires interface return
 func (f *DefaultFactory) createSSEBackend(config BackendConfig) (Backend, error) {
 	sseConfig := sse.Config{}
 

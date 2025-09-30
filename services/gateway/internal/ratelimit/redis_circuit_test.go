@@ -39,7 +39,7 @@ func TestRedisRateLimiterWithCircuitBreaker_CircuitOpen(t *testing.T) {
 		allowed, err := limiter.Allow(ctx, "test-key", config)
 
 		// All requests should succeed via fallback
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, allowed)
 
 		// After 5 failures, circuit should open
@@ -71,6 +71,7 @@ func TestRedisRateLimiterWithCircuitBreaker_CircuitRecovery(t *testing.T) {
 	verifyCircuitRecovery(t, limiter, ctx, config)
 }
 
+//nolint:ireturn // Returns mock interface for testing
 func setupCircuitRecoveryTest(t *testing.T) (*redis.Client, redismock.ClientMock, *RedisRateLimiterWithCircuitBreaker) {
 	t.Helper()
 
@@ -122,7 +123,7 @@ func verifyCircuitRecovery(
 	// This is a simplified test that just verifies the fallback works consistently
 	allowed, err := limiter.Allow(ctx, "test-key", config)
 
-	assert.NoError(t, err) // Should succeed via fallback when circuit is open
+	require.NoError(t, err) // Should succeed via fallback when circuit is open
 	assert.True(t, allowed)
 }
 
@@ -151,14 +152,14 @@ func TestRedisRateLimiterWithCircuitBreaker_FallbackRateLimit(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		allowed, err := limiter.Allow(ctx, "test-key", config)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, allowed)
 	}
 
 	// Third request should be rate limited by fallback
 	allowed, err := limiter.Allow(ctx, "test-key", config)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, allowed)
 }
 

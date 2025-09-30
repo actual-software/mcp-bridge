@@ -581,6 +581,7 @@ func setupSingleHealthyEndpoint() *HybridLoadBalancer {
 		{Service: "only-svc", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
 	}
 	config := HybridConfig{Strategy: "round_robin", HealthAware: true}
+
 	return NewHybridLoadBalancer(endpoints, config)
 }
 
@@ -624,6 +625,7 @@ func createManyTestEndpoints() []*discovery.Endpoint {
 			Weight:  testTimeout + i%testIterations,
 		}
 	}
+
 	return endpoints
 }
 

@@ -24,7 +24,7 @@ type MemoryManager struct {
 
 // CreateInMemorySessionStore creates an in-memory session storage for single-instance deployments.
 //
-
+//nolint:ireturn // Factory pattern requires interface return
 func CreateInMemorySessionStore(logger *zap.Logger, cleanupInterval time.Duration) Manager {
 	if cleanupInterval <= 0 {
 		cleanupInterval = defaultMaxConnections * time.Minute // Default cleanup interval

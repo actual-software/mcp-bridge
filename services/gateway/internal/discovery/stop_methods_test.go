@@ -26,7 +26,7 @@ func TestSSEDiscovery_Stop(t *testing.T) {
 	}
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Stop should not panic - call it to get coverage
 	discovery.Stop()
@@ -54,7 +54,7 @@ func TestStdioDiscovery_Stop(t *testing.T) {
 	}
 
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Stop should not panic - call it to get coverage
 	discovery.Stop()
@@ -82,7 +82,7 @@ func TestWebSocketDiscovery_Stop(t *testing.T) {
 	}
 
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Stop should not panic - call it to get coverage
 	discovery.Stop()
@@ -110,7 +110,7 @@ func TestSSEDiscovery_GetService(t *testing.T) {
 	}
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Cast to concrete type to access GetService method
 	sseBridge, ok := discovery.(*SSEDiscovery)
@@ -120,7 +120,7 @@ func TestSSEDiscovery_GetService(t *testing.T) {
 
 	// Test getting existing service
 	endpoint, err := sseBridge.GetService(ctx, "weather")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, endpoint)
 	assert.Equal(t, "weather", endpoint.Service)
 	assert.Equal(t, "weather", endpoint.Namespace)
@@ -147,7 +147,7 @@ func TestStdioDiscovery_GetService(t *testing.T) {
 	}
 
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Cast to concrete type to access GetService method
 	stdioBridge, ok := discovery.(*StdioDiscovery)
@@ -157,7 +157,7 @@ func TestStdioDiscovery_GetService(t *testing.T) {
 
 	// Test getting existing service
 	endpoint, err := stdioBridge.GetService(ctx, "weather")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, endpoint)
 	assert.Equal(t, "weather", endpoint.Service)
 	assert.Equal(t, "weather", endpoint.Namespace)
@@ -184,7 +184,7 @@ func TestWebSocketDiscovery_GetService(t *testing.T) {
 	}
 
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Cast to concrete type to access GetService method
 	wsBridge, ok := discovery.(*WebSocketDiscovery)
@@ -194,7 +194,7 @@ func TestWebSocketDiscovery_GetService(t *testing.T) {
 
 	// Test getting existing service
 	endpoint, err := wsBridge.GetService(ctx, "weather")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, endpoint)
 	assert.Equal(t, "weather", endpoint.Service)
 	assert.Equal(t, "weather", endpoint.Namespace)
@@ -215,7 +215,7 @@ func TestSSEDiscovery_checkHTTPEndpoint(t *testing.T) {
 	}
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sseBridge, ok := discovery.(*SSEDiscovery)
 	require.True(t, ok, "Expected SSEDiscovery type")
@@ -250,7 +250,7 @@ func TestSSEDiscovery_Watch(t *testing.T) {
 	}
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sseBridge, ok := discovery.(*SSEDiscovery)
 	require.True(t, ok, "Expected SSEDiscovery type")
@@ -288,7 +288,7 @@ func TestStdioDiscovery_Watch(t *testing.T) {
 	}
 
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	stdioBridge, ok := discovery.(*StdioDiscovery)
 	require.True(t, ok, "Expected StdioDiscovery type")
@@ -326,7 +326,7 @@ func TestWebSocketDiscovery_Watch(t *testing.T) {
 	}
 
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	wsBridge, ok := discovery.(*WebSocketDiscovery)
 	require.True(t, ok, "Expected WebSocketDiscovery type")
@@ -367,7 +367,7 @@ func TestSSEDiscovery_HealthCheck(t *testing.T) {
 	}
 
 	discovery, err := CreateSSEServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sseBridge, ok := discovery.(*SSEDiscovery)
 	require.True(t, ok, "Expected SSEDiscovery type")
@@ -409,7 +409,7 @@ func TestStdioDiscovery_HealthCheck(t *testing.T) {
 	}
 
 	discovery, err := CreateStdioServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	stdioBridge, ok := discovery.(*StdioDiscovery)
 	require.True(t, ok, "Expected StdioDiscovery type")
@@ -450,7 +450,7 @@ func TestWebSocketDiscovery_HealthCheck(t *testing.T) {
 	}
 
 	discovery, err := CreateWebSocketServiceDiscovery(cfg, logger)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	wsBridge, ok := discovery.(*WebSocketDiscovery)
 	require.True(t, ok, "Expected WebSocketDiscovery type")

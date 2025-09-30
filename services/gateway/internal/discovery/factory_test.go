@@ -31,7 +31,7 @@ func TestCreateServiceDiscoveryProvider_Static(t *testing.T) {
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// Verify it's a static discovery
@@ -63,7 +63,7 @@ func TestCreateServiceDiscoveryProvider_LegacyMode(t *testing.T) {
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// Verify it's a static discovery
@@ -96,7 +96,7 @@ func TestCreateServiceDiscoveryProvider_ProviderOverridesMode(t *testing.T) {
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// Should create static discovery, not kubernetes
@@ -206,7 +206,7 @@ func TestCreateServiceDiscoveryProvider_SSEAliases(t *testing.T) {
 			sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
 			// SSE discovery should be created successfully with valid config
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, sd)
 
 			// Verify it's an SSE discovery
@@ -239,7 +239,7 @@ func TestCreateServiceDiscoveryProvider_STDIO(t *testing.T) {
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
 	// STDIO discovery should be created successfully with valid config
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// Verify it's a STDIO discovery

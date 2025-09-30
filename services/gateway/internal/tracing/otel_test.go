@@ -91,6 +91,7 @@ func runOTelTracerTests(t *testing.T, tests []struct {
 			tracer, err := tracing.InitOTelTracer(tt.config, logger)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -128,6 +129,7 @@ func setupOTelTracer(t *testing.T, logger *zap.Logger) *tracing.OTelTracer {
 
 	tracer, err := tracing.InitOTelTracer(cfg, logger)
 	require.NoError(t, err)
+
 	return tracer
 }
 

@@ -64,7 +64,7 @@ func TestInitTracer(t *testing.T) {
 			if tt.wantError {
 				assert.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, tracer)
 				assert.NotNil(t, closer)
 
@@ -129,14 +129,14 @@ func TestHTTPHeaderInjectionExtraction(t *testing.T) {
 	// Test injection
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	err := InjectHTTPHeaders(span, req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify headers were added
 	assert.NotEmpty(t, req.Header)
 
 	// Test extraction
 	extractedContext, err := ExtractHTTPHeaders(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, extractedContext)
 
 	// Create child span from extracted context
@@ -512,5 +512,5 @@ func TestJaegerLogger(t *testing.T) {
 func TestNoopCloser(t *testing.T) {
 	closer := &noopCloser{}
 	err := closer.Close()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
