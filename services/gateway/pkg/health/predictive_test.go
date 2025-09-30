@@ -425,7 +425,7 @@ func TestPredictiveHealthMonitor_DefaultConfiguration(t *testing.T) {
 	assert.Equal(t, 15*time.Minute, monitor.config.PredictionWindow)
 	assert.Equal(t, 1*time.Second, monitor.config.LatencyThreshold)
 	assert.InDelta(t, 0.05, monitor.config.ErrorRateThreshold, 0.001)
-	assert.Equal(t, 2.0, monitor.config.AnomalyDeviationFactor)
+	assert.InDelta(t, 2.0, monitor.config.AnomalyDeviationFactor, 0.001)
 }
 
 // Benchmark tests.

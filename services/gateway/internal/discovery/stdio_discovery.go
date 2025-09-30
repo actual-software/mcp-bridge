@@ -29,6 +29,7 @@ type StdioDiscovery struct {
 // CreateStdioServiceDiscovery creates a stdio-based (process communication) service discovery instance.
 //
 
+//nolint:ireturn // Factory pattern requires interface return
 func CreateStdioServiceDiscovery(cfg config.StdioDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
 	services := make(map[string]*config.StdioServiceConfig)
 

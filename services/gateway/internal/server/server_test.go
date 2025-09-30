@@ -41,6 +41,7 @@ func TestBootstrapGatewayServer(t *testing.T) {
 	validateBootstrappedServer(t, server, cfg, mockHealth, registry, logger)
 }
 
+//nolint:ireturn // Test helper returns interfaces
 func setupBootstrapTestDependencies(t *testing.T) (
 	*config.Config,
 	*mockAuthProvider,

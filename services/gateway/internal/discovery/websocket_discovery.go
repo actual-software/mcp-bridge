@@ -31,6 +31,7 @@ type WebSocketDiscovery struct {
 // CreateWebSocketServiceDiscovery creates a WebSocket-based service discovery instance.
 //
 
+//nolint:ireturn // Factory pattern requires interface return
 func CreateWebSocketServiceDiscovery(
 	cfg config.WebSocketDiscoveryConfig,
 	logger *zap.Logger,

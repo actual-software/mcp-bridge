@@ -130,7 +130,7 @@ func TestStdioBackend_StartWithInvalidCommand(t *testing.T) {
 			backend := CreateStdioBackend("test", tt.config, logger, nil)
 
 			err := backend.Start(context.Background())
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
@@ -251,7 +251,7 @@ done`)
 
 	// Health check should fail when not running
 	err := backend.Health(ctx)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not running")
 
 	// Start backend
@@ -264,7 +264,7 @@ done`)
 
 	// Health check should pass when running
 	err = backend.Health(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check metrics updated
 	metrics := backend.GetMetrics()

@@ -34,6 +34,7 @@ type SSEDiscovery struct {
 // CreateSSEServiceDiscovery creates a Server-Sent Events based service discovery instance.
 //
 
+//nolint:ireturn // Factory pattern requires interface return
 func CreateSSEServiceDiscovery(cfg config.SSEDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
 	services := make(map[string]*config.SSEServiceConfig)
 

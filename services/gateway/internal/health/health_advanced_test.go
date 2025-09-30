@@ -391,6 +391,7 @@ func runConcurrentReads(checker *Checker, done chan error) {
 			status := checker.GetDetailedStatus()
 			if status.Subsystems == nil {
 				done <- errors.New("subsystems map is nil")
+
 				return
 			}
 		}()

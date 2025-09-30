@@ -673,7 +673,13 @@ func testSuccessfulAuth(
 	assert.Positive(t, writer1.Len(), "Expected successful auth response")
 }
 
-func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, mockSessions *MockSessionManager, logger *zap.Logger) {
+func testFailedAuth(
+	t *testing.T,
+	config Config,
+	mockRouter *MockRequestRouter,
+	mockSessions *MockSessionManager,
+	logger *zap.Logger,
+) {
 	t.Helper()
 
 	failingFrontend := setupFailingAuthFrontend(t, config, mockRouter, mockSessions, logger)
@@ -689,7 +695,13 @@ func testFailedAuth(t *testing.T, config Config, mockRouter *MockRequestRouter, 
 	verifyAuthFailureResponse(t, syncBuf)
 }
 
-func setupFailingAuthFrontend(t *testing.T, config Config, mockRouter *MockRequestRouter, mockSessions *MockSessionManager, logger *zap.Logger) *Frontend {
+func setupFailingAuthFrontend(
+	t *testing.T,
+	config Config,
+	mockRouter *MockRequestRouter,
+	mockSessions *MockSessionManager,
+	logger *zap.Logger,
+) *Frontend {
 	t.Helper()
 	
 	failingMockAuth := &MockAuthProviderWithError{

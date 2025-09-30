@@ -584,6 +584,7 @@ func (r *Router) extractNamespace(req *mcp.Request) string {
 // getLoadBalancer gets or creates a load balancer for a namespace.
 //
 
+//nolint:ireturn // Returns interface for flexibility
 func (r *Router) getLoadBalancer(namespace string) loadbalancer.LoadBalancer {
 	r.balancerMu.RLock()
 	lb, exists := r.balancers[namespace]

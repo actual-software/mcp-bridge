@@ -369,6 +369,7 @@ func setupHealthRecoveryTest(t *testing.T) *HybridLoadBalancer {
 		Strategy:    "round_robin",
 		HealthAware: true,
 	}
+
 	return NewHybridLoadBalancer(initialEndpoints, config)
 }
 
@@ -553,6 +554,7 @@ func setupZeroWeightEndpoint() *HybridLoadBalancer {
 		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: 0},
 	}
 	config := HybridConfig{Strategy: "weighted", HealthAware: true}
+
 	return NewHybridLoadBalancer(endpoints, config)
 }
 
@@ -564,6 +566,7 @@ func testZeroWeightEndpoint(t *testing.T, lb *HybridLoadBalancer) {
 
 func setupEmptyEndpointsList() *HybridLoadBalancer {
 	config := HybridConfig{Strategy: "round_robin", HealthAware: true}
+
 	return NewHybridLoadBalancer([]*discovery.Endpoint{}, config)
 }
 

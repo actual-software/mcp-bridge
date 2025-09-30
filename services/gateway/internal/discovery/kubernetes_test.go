@@ -29,6 +29,7 @@ import (
 
 const providerKubernetes = "kubernetes"
 
+//nolint:ireturn // Test helper returns kubernetes interface
 func createKubernetesTestClient(t *testing.T, kubeconfig string) kubernetes.Interface {
 	t.Helper()
 

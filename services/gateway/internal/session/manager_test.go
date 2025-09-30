@@ -291,6 +291,7 @@ func TestRedisManager_GetSession(t *testing.T) {
 	testExpiredSessionHandling(t, manager, mr)
 }
 
+//nolint:ireturn // Test helper returns interface
 func setupRedisManagerTest(t *testing.T) (*miniredis.Miniredis, Manager) {
 	t.Helper()
 

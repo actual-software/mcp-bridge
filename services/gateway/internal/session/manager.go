@@ -56,7 +56,7 @@ type RedisManager struct {
 
 // CreateSessionStorageManager creates a session storage manager based on configuration.
 //
-
+//nolint:ireturn // Factory pattern requires interface return
 func CreateSessionStorageManager(ctx context.Context, cfg config.SessionConfig, logger *zap.Logger) (Manager, error) {
 	switch cfg.Provider {
 	case "redis":
@@ -92,7 +92,7 @@ func CreateSessionStorageManager(ctx context.Context, cfg config.SessionConfig, 
 
 // InitializeRedisSessionStore creates a Redis-backed session storage manager.
 //
-
+//nolint:ireturn // Factory pattern requires interface return
 func InitializeRedisSessionStore(ctx context.Context, cfg config.RedisConfig, logger *zap.Logger) (Manager, error) {
 	// Parse Redis URL or use individual settings
 	var opt *redis.Options

@@ -11,6 +11,7 @@ import (
 // CreateServiceDiscoveryProvider creates a service discovery instance based on the provider configuration.
 //
 
+//nolint:ireturn // Factory pattern requires interface return
 func CreateServiceDiscoveryProvider(cfg config.ServiceDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
 	// Get the effective provider (prefer Provider over Mode for consistency)
 	provider := cfg.Provider

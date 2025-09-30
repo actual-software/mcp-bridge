@@ -98,7 +98,14 @@ func createOriginTestRouter() *router.Router {
 	)
 }
 
-func createOriginTestGatewayServer(t *testing.T, cfg *config.Config, mockAuth *mockAuthProvider, mockSessions *mockSessionManager, testRouter *router.Router) *GatewayServer {
+func createOriginTestGatewayServer(
+	t *testing.T,
+	cfg *config.Config,
+	mockAuth *mockAuthProvider,
+	mockSessions *mockSessionManager,
+	testRouter *router.Router,
+) *GatewayServer {
+	t.Helper()
 	mockHealth := health.CreateHealthMonitor(nil, zap.NewNop())
 	registry := testutil.CreateTestMetricsRegistry()
 	mockRateLimiter := ratelimit.CreateLocalMemoryRateLimiter(zap.NewNop())

@@ -443,6 +443,7 @@ func (b *Backend) selectEndpoint() int {
 		// This should never happen given the constraints, but check anyway
 		return 0
 	}
+
 	return int(remainder)
 }
 

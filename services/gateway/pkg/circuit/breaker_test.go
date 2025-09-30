@@ -336,6 +336,7 @@ func TestCircuitBreaker_StateTransitions(t *testing.T) {
 
 func createStateChecker(t *testing.T, cb *CircuitBreaker, states *[]State) func(State) {
 	t.Helper()
+
 	return func(expected State) {
 		state := cb.GetState()
 		*states = append(*states, state)

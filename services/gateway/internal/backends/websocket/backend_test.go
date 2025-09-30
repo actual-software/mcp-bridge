@@ -103,12 +103,12 @@ func TestWebSocketBackend_StartStop(t *testing.T) {
 
 	// Test double start (should fail)
 	err = backend.Start(ctx)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "already running")
 
 	// Test stop - FIX: Capture the actual stop error
 	stopErr := backend.Stop(ctx)
-	assert.NoError(t, stopErr)
+	require.NoError(t, stopErr)
 
 	// Verify stopped state
 	backend.mu.RLock()
@@ -132,7 +132,7 @@ func TestWebSocketBackend_StartWithInvalidEndpoint(t *testing.T) {
 
 	// Start should not fail even if initial connections fail
 	err := backend.Start(context.Background())
-	assert.NoError(t, err) // Connection failures are logged but don't fail startup
+	require.NoError(t, err) // Connection failures are logged but don't fail startup
 
 	_ = backend.Stop(context.Background())
 }
@@ -288,7 +288,7 @@ func TestWebSocketBackend_Health(t *testing.T) {
 
 	// Health check should fail when not running
 	err := backend.Health(ctx)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not running")
 
 	// Start backend

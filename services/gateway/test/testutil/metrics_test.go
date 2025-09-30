@@ -371,7 +371,7 @@ func verifyTCPMessageCounts(t *testing.T, registry *TestMetricsRegistry, testCas
 
 	for _, tc := range testCases {
 		count := registry.GetTCPMessageCount(tc.direction, tc.msgType)
-		assert.Equal(t, float64(tc.increments), count, "Failed for %s/%s", tc.direction, tc.msgType)
+		assert.InDelta(t, float64(tc.increments), count, 0.001, "Failed for %s/%s", tc.direction, tc.msgType)
 	}
 }
 
@@ -434,7 +434,7 @@ func testTCPProtocolErrorCountAfterMultipleIncrements(t *testing.T) {
 	}
 
 	count := registry.GetTCPProtocolErrorCount("timeout")
-	assert.Equal(t, float64(3), count)
+	assert.InDelta(t, float64(3), count, 0.001)
 }
 
 func testTCPProtocolErrorCountWithInvalidErrorType(t *testing.T) {
@@ -490,7 +490,7 @@ func verifyTCPProtocolErrorCounts(t *testing.T, registry *TestMetricsRegistry, e
 
 	for errorType, expectedCount := range errorTypes {
 		count := registry.GetTCPProtocolErrorCount(errorType)
-		assert.Equal(t, float64(expectedCount), count, "Failed for error type %s", errorType)
+		assert.InDelta(t, float64(expectedCount), count, 0.001, "Failed for error type %s", errorType)
 	}
 }
 
@@ -530,8 +530,8 @@ func runSimultaneousMetricOperationsTest(t *testing.T) {
 	registry.ConnectionsTotal.Set(testIterations)
 
 	// Verify all metrics
-	assert.Equal(t, float64(10), registry.GetTCPMessageCount("inbound", "request"))
-	assert.Equal(t, float64(3), registry.GetTCPProtocolErrorCount("frame_error"))
+	assert.InDelta(t, float64(10), registry.GetTCPMessageCount("inbound", "request"), 0.001)
+	assert.InDelta(t, float64(3), registry.GetTCPProtocolErrorCount("frame_error"), 0.001)
 
 	assertGaugeValue(t, registry.ConnectionsActive, 25)
 	assertGaugeValue(t, registry.ConnectionsTotal, testIterations)
