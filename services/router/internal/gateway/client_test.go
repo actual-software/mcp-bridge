@@ -21,6 +21,7 @@ import (
 	common "github.com/poiley/mcp-bridge/pkg/common/config"
 	"github.com/poiley/mcp-bridge/services/router/internal/config"
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	gatewayTestutil "github.com/poiley/mcp-bridge/services/gateway/test/testutil"
 	"github.com/poiley/mcp-bridge/test/testutil"
 )
 
@@ -415,74 +416,13 @@ func createConnectTestClient(t *testing.T, serverURL string, tt struct {
 func createMTLSCertificates(t *testing.T) (string, string) {
 	t.Helper()
 
-	certPem := getTestCertPem()
-	keyPem := getTestKeyPem()
-
-	certFile, certCleanup := testutil.TempFile(t, certPem)
-	t.Cleanup(certCleanup)
-
-	keyFile, keyCleanup := testutil.TempFile(t, keyPem)
-	t.Cleanup(keyCleanup)
+	// Use the gateway testutil to create proper certificates
+	tempDir := t.TempDir()
+	certFile, keyFile, _ := gatewayTestutil.CreateTestCertificates(t, tempDir)
 
 	return certFile, keyFile
 }
 
-func getTestCertPem() string {
-	return `-----BEGIN CERTIFICATE-----
-MIIDhTCCAm2gAwIBAgIUcvTZq+m2sj3lim7Yf4B6LFRSFPUwDQYJKoZIhvcNAQEL
-BQAwUjELMAkGA1UEBhMCVVMxDTALBgNVBAgMBFRlc3QxDTALBgNVBAcMBFRlc3Qx
-DTALBgNVBAoMBFRlc3QxFjAUBgNVBAMMDXRlc3QtY2EubG9jYWwwHhcNMjUwODA0
-MDAwMTM0WhcNMjYwODA0MDAwMTM0WjBSMQswCQYDVQQGEwJVUzENMAsGA1UECAwE
-VGVzdDENMAsGA1UEBwwEVGVzdDENMAsGA1UECgwEVGVzdDEWMBQGA1UEAwwNdGVz
-dC1jYS5sb2NhbDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALay1Ky8
-OG+DF6pp0X0kI7JWfNUW5TYRuM98TBPx7Edgr4lJY8fNwni6/pl/UghRM/ZQ6Pf2
-jXkL0xk8IKSLT3i3kuxYI6vFT71hVedn/hhYypyY2vSlnwT4kLtD7c8msMq1iDXE
-BbOzX5m+Q5vKauLiULW2VRP9Ty3QH+1BF/uW0dZaxyNRa/p9qzg7LMXXj8c8zwFl
-Hjh9Cy46NUg0+xbbhmxu1cQVZCE/8N4s+3NsFZN4YBKlE5AT2cJ93zB+dL+hR4YZ
-lzMF1rcPMRDX4jT6QODRVShe34u6X+OG6mu2M7rpp72SmUGEounlqvReM8MJpMX1
-ggjFpk4FmkSVe3kCAwEAAaNTMFEwHQYDVR0OBBYEFH3IbeSKHPfPeylSmvgOkvMF
-X444MB8GA1UdIwQYMBaAFH3IbeSKHPfPeylSmvgOkvMFX444MA8GA1UdEwEB/wQF
-MAMBAf8wDQYJKoZIhvcNAQELBQADggEBABUdCOe9VvMIl7/U0vYZg2lsClf08jI1
-egFDbP6u9lT9sYavB83bteAZBhGCFvLgEH6dT8cRdJlcXTvahUBAe9pLhvnt9B86
-uzEsq428NY9OGE57mtQJ9yOvVkQ97NfamFqIONEsJh5td1UwqOS6k+o5IHvz2cqp
-rR+HL2Yh9+bP9vinPDPUFEQ/WBY5Fpp2QsLLo5EeRegryYi6nzZN2IKy3OE3dAhC
-Qdoz6sKUTxjiDfKklY3w5aQI9ij2s802+J76sSkMUoVCEBdC+R4rTESYUbwq+TI1
-
-xO/Saff/cbJvDK89o8VaJKWV+ZXguvkgA6sRFNGII3B5UFiLm7u9IXg=
------END CERTIFICATE-----`
-}
-
-func getTestKeyPem() string {
-	return `-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC2stSsvDhvgxeq
-adF9JCOyVnzVFuU2EbjPfEwT8exHYK+JSWPHzcJ4uv6Zf1IIUTP2UOj39o15C9MZ
-PCCki094t5LsWCOrxU+9YVXnZ/4YWMqcmNr0pZ8E+JC7Q+3PJrDKtYg1xAWzs1+Z
-vkObymri4lC1tlUT/U8t0B/tQRf7ltHWWscjUWv6fas4OyzF14/HPM8BZR44fQsu
-OjVINPsW24ZsbtXEFWQhP/DeLPtzbBWTeGASpROQE9nCfd8wfnS/oUeGGZczBda3
-DzEQ1+I0+kDg0VUoXt+Lul/jhuprtjO66ae9kplBhKLp5ar0XjPDCaTF9YIIxaZO
-BZpElXt5AgMBAAECggEAKD7dKB7/TJtDaZQNZISDQ4wXTCaSv/Yn8LboGGWsv61+
-BZ9P1moOWqOQpbYdFz1yFaLNqx/aGs3exvqOk0in7Ub9G8ivtO1Oa0CnmIX5PJpE
-qbnnU8ivLrxlv4bPelhCziiulG91tRgAqYC26njs0kV584lylOhyWnx0KAK0moRH
-rkYmlZa5rDQbqOq5C9zJCSqorHZhFLfk8aSbqfWNVHCV2FILEHiFWk/7iZ59i/Ng
-MnwkDol2CzYqVcqLxD1T/N9QfgmUiso9zCw8Rz3rjv9RT6nps3cfZIQGXHonwi+
-h4Y31u6f37D1NuCfESk+tPikrl0TRnkEgQk8m0QGPQKBgQDdrIkuRNREcBB9G2C0
-cNv7xKJion21asO//p45+ppkX9L8m3aRfJg7msgrDSYv2Vo1chY0DBc7lMkrbecL
-3VFy5EgWmXC07R1xVVlUR2kirY+F8Z16tfltE+ZhtdLm2mz/UPcw3W/DGemaLabf
-nPe0+F6CJz1DTuscm7lABdaUDQKBgQDS/UFmFngqv0TT6CwSQxWw7ISx6Bqdn2TC
-h5V352l0pYGaIuViNQKV2olHAmph9hyi84RFq0qR1JiRzenqTDe7r7iWoCnKLGHV
-tybbLlvfAUtBQQxfqcUxb20mbUGjU0TS3MvZioLDmdQE7iE57yQSU61TsdOOGbA1
-9CTJ6mYOHQKBgQCVpgu6G6c9SHYpL1lalzI7RmTlt5Kr7ZaWv7pro72k83fJJt6l
-mvpeisCFJ8xW0yHuIMXSfzMT+v7P/dLTlKaOrIPqFc4bplORFjBHECpuycKxhwps
-M/td4uhNoGTvihe5SRyHdYYkrRKiDh2wqhQjrOSIcxsNnHJmjs5B5W8V5QKBgG/h
-W4yG3bHNOvIjaztD13y57qNoMLTkkMmWm+u5CnKQUOkrF/e7pGNSPvkojsDjgMvn
-1XwcGK67zSuDxUY4pFUiGP/GbmKGplpthG01aAIY7Y7sr2MK40YTkA2QYf35acVm
-z7HLgQu3xnXW0EeoR7hwJrj60vPHK2lwzRFE+lkBAoGAQmV5h+rCYTB8REIMyKGa
-38nkBxdRY3o/C+CoZlp8mLKL35uYwP1Y8sv7YfVxSVpXE82Tt0HNDmzCztZnS8qC
-lxROYybkmXoExEMWo01N9g4BkXZrj5piCgR5drpMrTziqqMj+ou1wjIqbyPVbgdd
-
-Zry7yq3lVqE6jyOprjq/HMM=
------END PRIVATE KEY-----`
-}
 
 func validateConnectResult(t *testing.T, err error, client *Client, tt struct {
 	name          string

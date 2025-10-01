@@ -34,14 +34,18 @@ func TestTCPHandler_MetricsCollection(t *testing.T) {
 }
 
 func createTCPHandlerMetricsTests(metricsReg *metrics.Registry) []struct {
-	name         string
-	setupHandler func(*testing.T) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
+	name string
+	setupHandler func(
+		*testing.T, *metrics.Registry,
+	) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
 	runScenario  func(*testing.T, *TCPHandler, net.Conn)
 	checkMetrics func(*testing.T, *metrics.Registry)
 } {
 	return []struct {
-		name         string
-		setupHandler func(*testing.T) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
+		name string
+		setupHandler func(
+			*testing.T, *metrics.Registry,
+		) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
 		runScenario  func(*testing.T, *TCPHandler, net.Conn)
 		checkMetrics func(*testing.T, *metrics.Registry)
 	}{
@@ -61,8 +65,10 @@ func createTCPHandlerMetricsTests(metricsReg *metrics.Registry) []struct {
 }
 
 func runTCPHandlerMetricsTests(t *testing.T, tests []struct {
-	name         string
-	setupHandler func(*testing.T) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
+	name string
+	setupHandler func(
+		*testing.T, *metrics.Registry,
+	) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
 	runScenario  func(*testing.T, *TCPHandler, net.Conn)
 	checkMetrics func(*testing.T, *metrics.Registry)
 }, metricsReg *metrics.Registry) {
@@ -74,7 +80,7 @@ func runTCPHandlerMetricsTests(t *testing.T, tests []struct {
 			metricsReg = metrics.InitializeMetricsRegistry()
 
 			// Setup handler
-			handler, authProvider, router, sessionManager, rateLimiter := tt.setupHandler(t)
+			handler, authProvider, router, sessionManager, rateLimiter := tt.setupHandler(t, metricsReg)
 
 			// Create pipe connection
 			clientConn, serverConn := net.Pipe()
@@ -119,6 +125,7 @@ func runTCPHandlerMetricsTests(t *testing.T, tests []struct {
 
 func setupSuccessfulMetricsTest(
 	t *testing.T,
+	metricsReg *metrics.Registry,
 ) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
 	t.Helper()
 
@@ -127,7 +134,6 @@ func setupSuccessfulMetricsTest(
 	sessionManager := new(MockSessionManager)
 	rateLimiter := new(MockRateLimiter)
 
-	metricsReg := metrics.InitializeMetricsRegistry()
 	handler := CreateTCPProtocolHandler(
 		zap.NewNop(),
 		authProvider,
@@ -255,6 +261,7 @@ func checkSuccessfulMetrics(t *testing.T, reg *metrics.Registry) {
 
 func setupAuthFailureMetricsTest(
 	t *testing.T,
+	metricsReg *metrics.Registry,
 ) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter) {
 	t.Helper()
 
@@ -263,7 +270,6 @@ func setupAuthFailureMetricsTest(
 	sessionManager := new(MockSessionManager)
 	rateLimiter := new(MockRateLimiter)
 
-	metricsReg := metrics.InitializeMetricsRegistry()
 	handler := CreateTCPProtocolHandler(
 		zap.NewNop(),
 		authProvider,
@@ -411,8 +417,7 @@ func runHandlerInBackground(t *testing.T, handler *TCPHandler, serverConn net.Co
 	t.Helper()
 
 	// Run handler
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := context.Background()
 
 	done := make(chan struct{})
 

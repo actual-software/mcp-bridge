@@ -141,10 +141,13 @@ func TestTCPPerIPLimits(t *testing.T) {
 	serverAddr := server.tcpListener.Addr().String()
 
 	conns := testPerIPConnectionLimits(t, serverAddr)
-	defer cleanupConnections(conns)
 
 	testPerIPLimitMetrics(t, server.metrics)
 	testConnectionRecovery(t, serverAddr, conns)
+
+	// Close connections before shutdown to unblock handlers
+	cleanupConnections(conns)
+
 	shutdownServerGracefully(t, server, cancel)
 }
 
@@ -276,10 +279,24 @@ func testConnectionRecovery(t *testing.T, serverAddr string, conns []net.Conn) {
 func shutdownServerGracefully(t *testing.T, s *GatewayServer, cancel context.CancelFunc) {
 	t.Helper()
 
-	// Cleanup
+	// Close listener first to stop accepting new connections
+	if s.tcpListener != nil {
+		_ = s.tcpListener.Close()
+	}
+
+	// Close all active connections to unblock handlers
+	s.tcpConnections.Range(func(key, value interface{}) bool {
+		if conn, ok := value.(net.Conn); ok {
+			_ = conn.Close()
+		}
+
+		return true
+	})
+
+	// Cancel context to stop handlers
 	cancel()
 
-	// Wait for accept loop to finish
+	// Wait for accept loop and handlers to finish
 	done := make(chan struct{})
 
 	go func() {
@@ -292,9 +309,5 @@ func shutdownServerGracefully(t *testing.T, s *GatewayServer, cancel context.Can
 		// Success
 	case <-time.After(2 * time.Second):
 		t.Fatal("Server shutdown timeout")
-	}
-
-	if s.tcpListener != nil {
-		_ = s.tcpListener.Close()
 	}
 }

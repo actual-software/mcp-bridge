@@ -26,7 +26,10 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 )
 
+type contextKey string
+
 const (
+	sessionContextKey = contextKey("session")
 	// Test constants.
 	testIterations    = 100
 	testMaxIterations = 1000
@@ -411,6 +414,14 @@ func setupTestBackend(t *testing.T) (*httptest.Server, *int32) {
 
 func handleTestBackendRequest(t *testing.T, w http.ResponseWriter, r *http.Request) {
 	t.Helper()
+
+	// Handle health check requests
+	if r.Method == http.MethodGet {
+		w.WriteHeader(http.StatusOK)
+
+		return
+	}
+
 	// Verify request
 	if r.Method != http.MethodPost {
 		t.Errorf("Expected POST, got %s", r.Method)
@@ -529,8 +540,17 @@ func TestRouter_RouteRequest_WithSession(t *testing.T) {
 
 func setupSessionTestBackend(sessionReceived *bool) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-MCP-Session-ID") == "test-session-123" &&
-			r.Header.Get("X-MCP-User") == "test-user" {
+		// Handle health check requests
+		if r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusOK)
+
+			return
+		}
+
+		sessionID := r.Header.Get("X-MCP-Session-ID")
+		user := r.Header.Get("X-MCP-User")
+
+		if sessionID == "test-session-123" && user == "test-user" {
 			*sessionReceived = true
 		}
 
@@ -582,11 +602,7 @@ func testSessionRouting(t *testing.T, router *Router, sessionReceived *bool) {
 		User: "test-user",
 	}
 
-	type contextKey string
-
-	const sessionKey contextKey = "session"
-
-	ctx := context.WithValue(context.Background(), sessionKey, sess)
+	ctx := context.WithValue(context.Background(), sessionContextKey, sess)
 
 	req := &mcp.Request{
 		JSONRPC: "2.0",

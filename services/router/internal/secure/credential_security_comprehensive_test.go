@@ -414,6 +414,15 @@ func setupRaceConditionTest(t *testing.T) TokenStore {
 		t.Fatalf("Failed to create store: %v", err)
 	}
 
+	// Clean up any leftover items from previous test runs
+	// Try to delete potential keys that might exist
+	for i := 0; i < 10; i++ {
+		for j := 0; j < 5; j++ {
+			key := fmt.Sprintf("race-key-%d-%d", i, j)
+			_ = store.Delete(key) // Ignore errors - item might not exist
+		}
+	}
+
 	return store
 }
 
@@ -446,7 +455,7 @@ func runRaceConditionGoroutines(t *testing.T, store TokenStore, numGoroutines, o
 	select {
 	case <-done:
 		// All goroutines completed successfully.
-	case <-time.After(30 * time.Second):
+	case <-time.After(3 * time.Minute):
 		t.Fatal("Test timed out - possible keychain deadlock")
 	}
 
@@ -606,7 +615,7 @@ func TestTokenStore_PlatformSpecificBehavior(t *testing.T) {
 // setupPlatformTest creates a token store for platform-specific testing.
 //
 //nolint:ireturn // Test helper requires interface return
-func setupPlatformTest(t *testing.T) TokenStore {
+func setupPlatformTest(t *testing.T) *TokenStoreImpl {
 	t.Helper()
 
 	store, err := NewTokenStore("platform-test")

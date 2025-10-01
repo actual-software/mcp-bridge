@@ -10,16 +10,15 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
-	"sync"
-	"syscall"
 	"time"
 )
 
 const (
-	defaultRetryCount  = 10
-	maxConcurrentOps   = 10                     // Limit concurrent keychain operations to prevent resource exhaustion
+	defaultRetryCount = 10
+	// Serialize keychain operations - macOS keychain deadlocks under concurrent access
+	maxConcurrentOps   = 1
 	operationTimeout   = 30 * time.Second       // Increased from 10s to handle slow operations
-	retryBackoffBase   = 100 * time.Millisecond // Base backoff duration for exponential retry
+	retryBackoffBase   = 500 * time.Millisecond // Base backoff duration for exponential retry
 	asciiMaxChar       = 127                    // Maximum ASCII character value
 	maxBadControlRatio = 0.2                    // Maximum ratio of bad control characters for valid base64
 )
@@ -27,7 +26,6 @@ const (
 // keychainStore implements TokenStore using macOS Keychain Services.
 type keychainStore struct {
 	appName   string
-	mu        sync.Mutex    // Protect individual store operations
 	semaphore chan struct{} // Per-instance semaphore to limit concurrent operations
 }
 
@@ -50,13 +48,11 @@ func newKeychainStore(appName string) (TokenStore, error) {
 // timeout handling, and error recovery.
 
 func (s *keychainStore) executeKeychainOperation(operation string, fn func(context.Context) error) error {
+	// Acquire semaphore to limit concurrent keychain operations
 	if err := s.acquireOperationPermits(operation); err != nil {
 		return err
 	}
 	defer s.releaseOperationPermits()
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	return s.executeWithRetry(operation, fn)
 }
@@ -88,7 +84,7 @@ func (s *keychainStore) executeWithRetry(operation string, fn func(context.Conte
 	// Execute operation with retry on recoverable errors
 	var lastErr error
 
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := 0; attempt < 5; attempt++ {
 		if attempt > 0 {
 			if err := s.waitForRetry(ctx, attempt, operation); err != nil {
 				return err
@@ -129,6 +125,11 @@ func (s *keychainStore) isRecoverableError(err error) bool {
 	// Check for specific recoverable errors
 	errorStr := err.Error()
 
+	// Exit status 44 can happen during concurrent updates - retry
+	if strings.Contains(errorStr, "exit status 44") {
+		return true
+	}
+
 	return strings.Contains(errorStr, "resource temporarily unavailable") ||
 		strings.Contains(errorStr, "operation not permitted") ||
 		strings.Contains(errorStr, "fork/exec")
@@ -146,12 +147,9 @@ func (s *keychainStore) Store(key, token string) error {
 			"-w", token, // password
 			"-U") // update if exists
 
-		// Set process group to enable cleanup of child processes
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
 		err := cmd.Run()
 
-		// Ensure process is fully cleaned up
+		// Clean up process resources
 		if cmd.Process != nil {
 			_ = cmd.Process.Release()
 		}
@@ -173,12 +171,9 @@ func (s *keychainStore) Retrieve(key string) (string, error) {
 			"-s", serviceName, // service name
 			"-w") // return password only
 
-		// Set process group to enable cleanup of child processes
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
 		output, err := cmd.Output()
 
-		// Ensure process is fully cleaned up
+		// Clean up process resources
 		if cmd.Process != nil {
 			_ = cmd.Process.Release()
 		}
@@ -219,12 +214,9 @@ func (s *keychainStore) Delete(key string) error {
 			"-a", key, // account name
 			"-s", serviceName) // service name
 
-		// Set process group to enable cleanup of child processes
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
 		err := cmd.Run()
 
-		// Ensure process is fully cleaned up
+		// Clean up process resources
 		if cmd.Process != nil {
 			_ = cmd.Process.Release()
 		}
