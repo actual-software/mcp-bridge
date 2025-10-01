@@ -701,6 +701,7 @@ run_coverage_analysis() {
     local temp_profiles=()
     local successful_modules=()
     local failed_modules=()
+    local skipped_modules=()
 
     {
         echo "=== COMPREHENSIVE GO MODULE COVERAGE ==="
@@ -734,7 +735,7 @@ run_coverage_analysis() {
 
             if [[ -n "$skip_reason" ]]; then
                 echo "Module ${module_name}: SKIPPED ($skip_reason)"
-                failed_modules+=("${module_name}:skipped_${skip_reason// /_}")
+                skipped_modules+=("${module_name}:skipped_${skip_reason// /_}")
                 continue
             fi
 
@@ -857,18 +858,26 @@ run_coverage_analysis() {
 
         echo "=== COVERAGE COLLECTION COMPLETE ==="
         echo "Successful modules: ${successful_modules[*]}"
+        echo "Skipped modules: ${skipped_modules[*]}"
         echo "Failed modules: ${failed_modules[*]}"
-        echo "Total profiles collected: ${#temp_profiles[@]}/${#go_modules[@]}"
+        local testable_modules=$((${#go_modules[@]} - ${#skipped_modules[@]}))
+        echo "Total profiles collected: ${#temp_profiles[@]}/${testable_modules}"
     } > "${coverage_output}" 2>&1
 
-    # Merge coverage profiles
+    # Merge coverage profiles and track individual module coverage
+    local -A module_coverage_map
     if [[ ${#temp_profiles[@]} -gt 0 ]]; then
         print_info "Merging coverage profiles from ${#temp_profiles[@]} successful modules..."
         echo "mode: atomic" > "${coverage_profile}"
         local total_merged_lines=0
 
+        # First extract individual module coverage percentages before merging
         for profile in "${temp_profiles[@]}"; do
             if [[ -f "${profile}" ]]; then
+                local module_name=$(basename "${profile}" | sed 's/.*\.out\.//')
+                local module_cov=$(go tool cover -func="${profile}" 2>/dev/null | grep "^total:" | awk '{print $3}' | sed 's/%$//' || echo "0")
+                module_coverage_map["${module_name}"]="${module_cov}"
+
                 local profile_lines=$(tail -n +2 "${profile}" | wc -l)
                 tail -n +2 "${profile}" >> "${coverage_profile}" 2>/dev/null || true
                 total_merged_lines=$((total_merged_lines + profile_lines))
@@ -898,6 +907,7 @@ run_coverage_analysis() {
         go tool cover -html="${coverage_profile}" -o "${coverage_html}" 2>/dev/null || print_warning "Could not generate HTML coverage report"
 
         # Generate detailed coverage summary
+        local testable_modules=$((${#go_modules[@]} - ${#skipped_modules[@]}))
         {
             echo "=== REPOSITORY COVERAGE SUMMARY ==="
             echo "Timestamp: $(date)"
@@ -907,16 +917,29 @@ run_coverage_analysis() {
             echo ""
 
             echo "=== MODULE COVERAGE STATUS ==="
-            echo "Modules successfully collected (${#successful_modules[@]}/${#go_modules[@]}):"
+            echo "Total modules: ${#go_modules[@]} (${testable_modules} testable, ${#skipped_modules[@]} skipped)"
+            echo "Modules successfully collected (${#successful_modules[@]}/${testable_modules}):"
             if [[ ${#successful_modules[@]} -gt 0 ]]; then
                 for module in "${successful_modules[@]}"; do
-                    echo "  ✅ ${module}"
+                    local mod_cov="${module_coverage_map[${module}]:-N/A}"
+                    echo "  ✅ ${module}: ${mod_cov}% coverage"
                 done
             else
                 echo "  (none)"
             fi
             echo ""
-            echo "Modules that failed coverage collection (${#failed_modules[@]}/${#go_modules[@]}):"
+            echo "Modules skipped (${#skipped_modules[@]}/${#go_modules[@]}):"
+            if [[ ${#skipped_modules[@]} -gt 0 ]]; then
+                for module in "${skipped_modules[@]}"; do
+                    IFS=':' read -r mod_name skip_reason <<< "$module"
+                    local reason=$(echo "$skip_reason" | sed 's/skipped_//' | tr '_' ' ')
+                    echo "  ⏭️  ${mod_name} (${reason})"
+                done
+            else
+                echo "  (none)"
+            fi
+            echo ""
+            echo "Modules that failed coverage collection (${#failed_modules[@]}/${testable_modules}):"
             if [[ ${#failed_modules[@]} -gt 0 ]]; then
                 for module in "${failed_modules[@]}"; do
                     IFS=':' read -r mod_name failure_reason <<< "$module"
@@ -935,9 +958,6 @@ run_coverage_analysis() {
                         no_data) echo "  ⚠️  ${mod_name} (no coverage data generated)" ;;
                         access_failed) echo "  🚫 ${mod_name} (directory access failed)" ;;
                         no_log) echo "  📝 ${mod_name} (no test log generated)" ;;
-                        skipped_*)
-                            local reason=$(echo "$failure_reason" | sed 's/skipped_//' | tr '_' ' ')
-                            echo "  ⏭️  ${mod_name} (skipped: ${reason})" ;;
                         unknown_failure) echo "  ❓ ${mod_name} (unknown test failure)" ;;
                         *) echo "  ❓ ${mod_name} (${failure_reason})" ;;
                     esac
@@ -960,10 +980,15 @@ run_coverage_analysis() {
             echo ""
 
             echo "=== COVERAGE COLLECTION WARNINGS ==="
+            if [[ ${#skipped_modules[@]} -gt 0 ]]; then
+                echo "ℹ️  ${#skipped_modules[@]} module(s) were intentionally skipped and excluded from coverage."
+            fi
             if [[ ${#failed_modules[@]} -gt 0 ]]; then
-                echo "⚠️  Coverage data is incomplete due to ${#failed_modules[@]} failed modules."
+                echo "⚠️  Coverage data is incomplete due to ${#failed_modules[@]} failed modules out of ${testable_modules} testable modules."
                 echo "    The reported coverage percentage only reflects successfully tested modules."
                 echo "    Fix failing tests in the failed modules for complete coverage analysis."
+            elif [[ ${#skipped_modules[@]} -gt 0 ]]; then
+                echo "✅ All testable modules contributed to coverage analysis."
             else
                 echo "✅ All modules contributed to coverage analysis."
             fi
@@ -971,20 +996,24 @@ run_coverage_analysis() {
         } > "${coverage_summary}"
 
         # Display results
+        local testable_modules=$((${#go_modules[@]} - ${#skipped_modules[@]}))
         if [[ ${coverage_status} == "PASS" ]]; then
-            print_success "Coverage: ${total_coverage}% from ${#successful_modules[@]}/${#go_modules[@]} modules (threshold: ${COVERAGE_THRESHOLD}%)"
+            print_success "Coverage: ${total_coverage}% from ${#successful_modules[@]}/${testable_modules} testable modules (threshold: ${COVERAGE_THRESHOLD}%)"
         elif [[ ${coverage_status} == "PARTIAL" ]]; then
             if (( $(echo "${total_coverage} >= ${COVERAGE_THRESHOLD}" | bc -l 2>/dev/null || echo "0") )); then
-                print_success "Coverage: ${total_coverage}% from ${#successful_modules[@]}/${#go_modules[@]} modules (threshold: ${COVERAGE_THRESHOLD}%)"
-                print_warning "Coverage incomplete: ${#failed_modules[@]} modules failed testing"
+                print_success "Coverage: ${total_coverage}% from ${#successful_modules[@]}/${testable_modules} testable modules (threshold: ${COVERAGE_THRESHOLD}%)"
+                print_warning "Coverage incomplete: ${#failed_modules[@]} of ${testable_modules} testable modules failed"
             else
-                print_error "Coverage: ${total_coverage}% from ${#successful_modules[@]}/${#go_modules[@]} modules (below threshold: ${COVERAGE_THRESHOLD}%)"
-                print_warning "Coverage incomplete: ${#failed_modules[@]} modules failed testing"
+                print_error "Coverage: ${total_coverage}% from ${#successful_modules[@]}/${testable_modules} testable modules (below threshold: ${COVERAGE_THRESHOLD}%)"
+                print_warning "Coverage incomplete: ${#failed_modules[@]} of ${testable_modules} testable modules failed"
             fi
         else
             print_error "Coverage: ${total_coverage}% (below threshold: ${COVERAGE_THRESHOLD}%)"
         fi
 
+        if [[ ${#skipped_modules[@]} -gt 0 ]]; then
+            print_info "Skipped ${#skipped_modules[@]} non-testable modules (E2E tests, etc.)"
+        fi
         print_info "Successful modules: ${successful_modules[*]}"
         if [[ ${#failed_modules[@]} -gt 0 ]]; then
             print_warning "Failed modules: ${failed_modules[*]}"
