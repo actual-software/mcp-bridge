@@ -253,7 +253,7 @@ func getTCPConnectTests() []tcpConnectTest {
 
 func testTCPConnect(t *testing.T, tt tcpConnectTest, logger *zap.Logger) {
 	t.Helper()
-	server := setupTCPTestServer(t, tt)
+	server := setupTCPTestServer(t, &tt)
 	if server != nil {
 		defer server.Stop()
 	}
@@ -262,7 +262,7 @@ func testTCPConnect(t *testing.T, tt tcpConnectTest, logger *zap.Logger) {
 	testTCPConnection(t, client, tt.wantErr)
 }
 
-func setupTCPTestServer(t *testing.T, tt tcpConnectTest) *mockTCPServer {
+func setupTCPTestServer(t *testing.T, tt *tcpConnectTest) *mockTCPServer {
 	t.Helper()
 	if tt.handler == nil {
 		return nil

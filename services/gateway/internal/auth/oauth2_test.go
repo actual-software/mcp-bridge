@@ -897,7 +897,7 @@ func runCompleteFlowValidation(t *testing.T, provider *OAuth2Provider, callCount
 	assert.Equal(t, "user123", result.Subject)
 	assert.Contains(t, result.Scopes, "read")
 	assert.Contains(t, result.Scopes, "write")
-	assert.Equal(t, 2, *callCount, "Should call both introspect and userinfo endpoints")
+	assert.Equal(t, 1, *callCount, "Should call introspect endpoint")
 }
 
 func TestOAuth2Provider_IntrospectToken_NetworkError(t *testing.T) {

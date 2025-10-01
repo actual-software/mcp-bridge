@@ -615,7 +615,7 @@ func TestTokenStore_PlatformSpecificBehavior(t *testing.T) {
 // setupPlatformTest creates a token store for platform-specific testing.
 //
 //nolint:ireturn // Test helper requires interface return
-func setupPlatformTest(t *testing.T) *TokenStoreImpl {
+func setupPlatformTest(t *testing.T) TokenStore {
 	t.Helper()
 
 	store, err := NewTokenStore("platform-test")

@@ -301,9 +301,14 @@ func TestStdioFrontend_UnixSocketConnection(t *testing.T) {
 
 func createTemporarySocketPath(t *testing.T) string {
 	t.Helper()
-	tempDir := t.TempDir()
+	// Use /tmp directly to avoid macOS unix socket path length limit (104 chars)
+	// t.TempDir() creates very long paths that exceed this limit
+	socketPath := filepath.Join("/tmp", fmt.Sprintf("test-%d.sock", time.Now().UnixNano()))
+	t.Cleanup(func() {
+		_ = os.Remove(socketPath)
+	})
 
-	return filepath.Join(tempDir, "test.sock")
+	return socketPath
 }
 
 func cleanupSocket(t *testing.T, socketPath string) {

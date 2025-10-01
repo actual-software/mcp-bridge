@@ -58,7 +58,7 @@ func createBasicTLSTests(certFile, keyFile string) []tlsConfigTest {
 			wantErr: false,
 			validate: func(t *testing.T, cfg *tls.Config) {
 				t.Helper()
-				assert.Equal(t, uint16(tls.VersionTLS12), cfg.MinVersion)
+				assert.Equal(t, uint16(tls.VersionTLS13), cfg.MinVersion)
 				assert.Equal(t, tls.NoClientCert, cfg.ClientAuth)
 			},
 		},

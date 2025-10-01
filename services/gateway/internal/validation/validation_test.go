@@ -554,19 +554,19 @@ func createTokenErrorTests() []struct {
 		},
 		{
 			name:    "token with null byte",
-			token:   "token\\x00value",
+			token:   "token\x00value",
 			wantErr: true,
 			errMsg:  "token contains invalid characters",
 		},
 		{
 			name:    "token with newline",
-			token:   "token\\nvalue",
+			token:   "token\nvalue",
 			wantErr: true,
 			errMsg:  "token contains invalid characters",
 		},
 		{
 			name:    "token with carriage return",
-			token:   "token\\rvalue",
+			token:   "token\rvalue",
 			wantErr: true,
 			errMsg:  "token contains invalid characters",
 		},

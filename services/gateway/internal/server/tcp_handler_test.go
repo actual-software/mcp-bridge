@@ -262,8 +262,7 @@ func runTCPHandlerInBackground(t *testing.T, handler *TCPHandler, serverConn net
 	t.Helper()
 
 	// Handle connection in background
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := context.Background()
 
 	done := make(chan error)
 
