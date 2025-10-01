@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	defaultRetryCount = 10
-	// Serialize keychain operations - macOS keychain deadlocks under concurrent access
+	// Serialize keychain operations - macOS keychain deadlocks under concurrent access.
 	maxConcurrentOps   = 1
 	operationTimeout   = 30 * time.Second       // Increased from 10s to handle slow operations
 	retryBackoffBase   = 500 * time.Millisecond // Base backoff duration for exponential retry
