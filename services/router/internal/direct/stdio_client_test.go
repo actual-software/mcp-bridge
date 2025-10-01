@@ -169,6 +169,7 @@ if __name__ == "__main__":
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -191,6 +192,7 @@ func setupStdioTestClient(t *testing.T, logger *zap.Logger, scriptPath string) *
 	require.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 
@@ -403,7 +405,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -525,7 +529,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -551,6 +557,7 @@ func setupStdioEnvClient(t *testing.T, logger *zap.Logger, scriptPath string) *S
 	require.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 
@@ -634,7 +641,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return tmpDir, scriptPath
 }
 
@@ -658,6 +667,7 @@ func setupStdioWorkingDirClient(t *testing.T, logger *zap.Logger, scriptPath, tm
 	require.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 
@@ -720,9 +730,11 @@ func createStdioLifecycleScript(t *testing.T) string {
 	tmpDir := t.TempDir()
 	scriptPath := filepath.Join(tmpDir, "lifecycle_server.py")
 	scriptContent := getLifecycleScriptContent()
-	
+
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -820,7 +832,9 @@ func setupStdioLifecycleClient(t *testing.T, logger *zap.Logger, scriptPath stri
 	}
 
 	client, err := NewStdioClient("lifecycle-client", "stdio://python3 "+scriptPath, config, logger)
+
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -920,7 +934,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -1114,7 +1130,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -1137,7 +1155,9 @@ func setupStdioPerformanceClient(
 	}
 
 	client, err := NewStdioClient("perf-client", "stdio://python3 "+scriptPath, config, logger)
+
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -1154,8 +1174,11 @@ func measureStdioConnectTime(t *testing.T, client *StdioClient) time.Duration {
 
 	ctx := context.Background()
 	start := time.Now()
+
 	err := client.Connect(ctx)
+
 	require.NoError(t, err)
+
 	return time.Since(start)
 }
 
@@ -1271,7 +1294,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -1300,6 +1325,7 @@ func setupStdioConcurrentClient(t *testing.T, logger *zap.Logger, scriptPath str
 	require.NoError(t, err)
 
 	time.Sleep(2 * constants.TestSleepShort)
+
 	return client
 }
 
@@ -1333,13 +1359,17 @@ func runStdioConcurrentOperationsTest(t *testing.T, client *StdioClient) {
 }
 
 func createStdioConcurrentChannels(numGoroutines, requestsPerGoroutine int) (chan error, chan *mcp.Response) {
+
 	errChan := make(chan error, numGoroutines*requestsPerGoroutine)
+
 	responseChan := make(chan *mcp.Response, numGoroutines*requestsPerGoroutine)
+
 	return errChan, responseChan
 }
 
 func launchStdioConcurrentWorkers(t *testing.T, wg *sync.WaitGroup, client *StdioClient, ctx context.Context,
 	numGoroutines, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
+	t.Helper()
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
 
@@ -1359,8 +1389,11 @@ func runStdioConcurrentWorker(wg *sync.WaitGroup, client *StdioClient, ctx conte
 		}
 
 		resp, err := client.SendRequest(ctx, req)
+
 		if err != nil {
+
 			errChan <- err
+
 			return
 		}
 
@@ -1462,7 +1495,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -1486,6 +1521,7 @@ func setupStdioMemoryOptimizedClient(t *testing.T, logger *zap.Logger, scriptPat
 	require.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 
@@ -1609,7 +1645,9 @@ if __name__ == "__main__":
 `
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
+
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -1631,6 +1669,7 @@ func setupStdioLargePayloadClient(t *testing.T, logger *zap.Logger, scriptPath s
 	}
 
 	client, err := NewStdioClient("large-payload-client", "stdio://python3 "+scriptPath, config, logger)
+
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -1638,6 +1677,7 @@ func setupStdioLargePayloadClient(t *testing.T, logger *zap.Logger, scriptPath s
 	require.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 
@@ -1754,6 +1794,7 @@ if __name__ == "__main__":
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(t, err)
+
 	return scriptPath
 }
 
@@ -1776,6 +1817,7 @@ func setupStdioErrorRecoveryClient(t *testing.T, logger *zap.Logger, scriptPath 
 	require.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 
@@ -1945,6 +1987,7 @@ if __name__ == "__main__":
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(b, err)
+
 	return scriptPath
 }
 
@@ -1973,6 +2016,7 @@ func setupStdioConcurrentBenchClient(b *testing.B, logger *zap.Logger, scriptPat
 	require.NoError(b, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 
@@ -2044,6 +2088,7 @@ func createStdioMemoryBenchScript(b *testing.B) string {
 
 	err := os.WriteFile(scriptPath, []byte(scriptContent), 0o755) //nolint:gosec // Test script needs exec permissions
 	require.NoError(b, err)
+
 	return scriptPath
 }
 
@@ -2081,6 +2126,7 @@ func setupStdioMemoryBenchClient(
 	require.NoError(b, err)
 
 	time.Sleep(100 * time.Millisecond)
+
 	return client
 }
 

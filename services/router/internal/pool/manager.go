@@ -69,6 +69,8 @@ func NewPooledGatewayClient(
 }
 
 // acquireConnection gets a connection from the appropriate pool.
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (p *PooledGatewayClient) acquireConnection(ctx context.Context) (Connection, error) {
 	if p.isWebSocket {
 		p.logger.Debug("Acquiring WebSocket connection from pool")

@@ -828,6 +828,7 @@ func setupSSEPerformanceClient(
 
 	client, err := NewSSEClient("perf-client", config.URL, config, logger)
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -837,6 +838,7 @@ func measureSSEConnectionTime(t *testing.T, client *SSEClient, ctx context.Conte
 	start := time.Now()
 	err := client.Connect(ctx)
 	require.NoError(t, err)
+
 	return time.Since(start)
 }
 
@@ -925,6 +927,7 @@ func setupSSEConcurrentClient(t *testing.T, logger *zap.Logger) *SSEClient {
 	require.NoError(t, err)
 
 	time.Sleep(httpStatusOK * time.Millisecond)
+
 	return client
 }
 
@@ -959,11 +962,13 @@ func runSSEConcurrentOperationsTest(t *testing.T, client *SSEClient) {
 func createSSEConcurrentChannels(numGoroutines, requestsPerGoroutine int) (chan error, chan *mcp.Response) {
 	errChan := make(chan error, numGoroutines*requestsPerGoroutine)
 	responseChan := make(chan *mcp.Response, numGoroutines*requestsPerGoroutine)
+
 	return errChan, responseChan
 }
 
 func launchSSEConcurrentWorkers(t *testing.T, wg *sync.WaitGroup, client *SSEClient, ctx context.Context,
 	numGoroutines, requestsPerGoroutine int, errChan chan error, responseChan chan *mcp.Response) {
+	t.Helper()
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
 
@@ -985,6 +990,7 @@ func runSSEConcurrentWorker(wg *sync.WaitGroup, client *SSEClient, ctx context.C
 		resp, err := client.SendRequest(ctx, req)
 		if err != nil {
 			errChan <- err
+
 			return
 		}
 
@@ -1164,6 +1170,7 @@ func runSSEStreamManagementTest(t *testing.T, logger *zap.Logger, tc struct {
 	err := client.Connect(ctx)
 	if tc.expectError {
 		require.Error(t, err)
+
 		return
 	}
 
@@ -1193,6 +1200,7 @@ func setupSSEStreamManagementClient(t *testing.T, logger *zap.Logger, serverURL 
 
 	client, err := NewSSEClient("stream-test-client", config.URL, config, logger)
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -1230,6 +1238,7 @@ func setupReconnectionServer() (*httptest.Server, func(bool)) {
 
 		if !enabled {
 			http.Error(w, "Server temporarily unavailable", http.StatusServiceUnavailable)
+
 			return
 		}
 
@@ -1375,6 +1384,7 @@ func runCompressionTest(t *testing.T, logger *zap.Logger, tc struct {
 
 func setupCompressionTestServer(t *testing.T, expectHeader bool) *httptest.Server {
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			w.Header().Set("Content-Type", "text/event-stream")
@@ -1464,6 +1474,7 @@ func setupErrorRecoveryServer() (*httptest.Server, *int) {
 			requestCount++
 			if requestCount <= 2 {
 				http.Error(w, "Temporary server error", http.StatusInternalServerError)
+
 				return
 			}
 
@@ -1497,7 +1508,9 @@ func setupErrorRecoveryClient(t *testing.T, logger *zap.Logger, serverURL string
 	require.NoError(t, err)
 
 	time.Sleep(httpStatusOK * time.Millisecond)
+
 	return client
+
 }
 
 func cleanupErrorRecoveryClient(t *testing.T, client *SSEClient) {

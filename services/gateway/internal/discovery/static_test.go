@@ -22,7 +22,7 @@ func TestCreateStaticServiceDiscovery(t *testing.T) {
 
 			sd, err := CreateStaticServiceDiscovery(tt.config, logger)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 
 				if tt.errContains != "" {
 					assert.Contains(t, err.Error(), tt.errContains)
@@ -30,7 +30,7 @@ func TestCreateStaticServiceDiscovery(t *testing.T) {
 
 				assert.Nil(t, sd)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, sd)
 				assert.NotNil(t, sd.endpoints)
 			}
@@ -310,14 +310,14 @@ func TestStaticDiscovery_StartStop(t *testing.T) {
 
 	// Test Start - should be no-op for static discovery
 	err = sd.Start(context.Background())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Test Stop - should be no-op for static discovery
 	sd.Stop()
 
 	// Multiple starts/stops should be safe
 	err = sd.Start(context.Background())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	sd.Stop()
 }
 
@@ -342,7 +342,7 @@ func TestStaticDiscovery_InvalidURL(t *testing.T) {
 
 	// The current implementation logs errors but doesn't fail creation
 	// It should still create the discovery service but skip invalid endpoints
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, sd)
 
 	// The invalid endpoint should be skipped, so default namespace should have 0 endpoints

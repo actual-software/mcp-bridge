@@ -9,7 +9,8 @@ import (
 )
 
 // createTestConnectionMetrics creates test connection metrics.
-
+//
+//nolint:ireturn // Test helper returns Prometheus interfaces
 func createTestConnectionMetrics() (prometheus.Gauge, prometheus.Gauge, prometheus.Counter) {
 	connTotal := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "mcp_gateway_connections_total",
@@ -28,7 +29,8 @@ func createTestConnectionMetrics() (prometheus.Gauge, prometheus.Gauge, promethe
 }
 
 // createTestRequestMetrics creates test request metrics.
-
+//
+//nolint:ireturn // Test helper returns Prometheus interfaces
 func createTestRequestMetrics() (*prometheus.CounterVec, *prometheus.HistogramVec, prometheus.Gauge) {
 	reqTotal := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "mcp_gateway_requests_total",

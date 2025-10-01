@@ -176,6 +176,8 @@ const (
 )
 
 // ErrorSampler creates a zapcore sampler for errors based on severity.
+//
+//nolint:ireturn // Factory function for zapcore.Core interface
 func ErrorSampler(core zapcore.Core) zapcore.Core {
 	// Sample low severity errors more aggressively
 	return zapcore.NewSamplerWithOptions(

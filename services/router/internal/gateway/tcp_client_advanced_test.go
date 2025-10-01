@@ -138,11 +138,13 @@ func (e *eventTracker) addEvent(event string) {
 func (e *eventTracker) getEvents() []string {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+
 	return append([]string{}, e.events...)
 }
 
 func createTCPLifecycleTestServer(t *testing.T, tracker *eventTracker) *mockTCPServer {
 	t.Helper()
+
 	return newMockTCPServer(t, func(conn net.Conn) {
 		handleLifecycleConnection(conn, tracker)
 	})
@@ -191,6 +193,7 @@ func handleRegularMessages(reader *bufio.Reader, conn net.Conn, tracker *eventTr
 			if !errors.Is(err, io.EOF) {
 				tracker.addEvent("read_error")
 			}
+
 			return
 		}
 
@@ -250,10 +253,12 @@ func startLifecycleServer(t *testing.T, server *mockTCPServer) string {
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
 	}
+
 	return addr
 }
 
 func createTCPLifecycleTestClient(t *testing.T, addr string, logger *zap.Logger) *TCPClient {
+	t.Helper()
 	cfg := config.GatewayConfig{
 		URL: "tcp://" + addr,
 		Connection: common.ConnectionConfig{
@@ -265,10 +270,12 @@ func createTCPLifecycleTestClient(t *testing.T, addr string, logger *zap.Logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
+
 	return client
 }
 
 func runLifecycleTest(t *testing.T, client *TCPClient) {
+	t.Helper()
 	ctx := context.Background()
 
 	if err := client.Connect(ctx); err != nil {
@@ -300,6 +307,7 @@ func runLifecycleTest(t *testing.T, client *TCPClient) {
 }
 
 func validateLifecycleEvents(t *testing.T, tracker *eventTracker) {
+	t.Helper()
 	time.Sleep(100 * time.Millisecond)
 
 	events := tracker.getEvents()
@@ -436,6 +444,7 @@ func startServerOrFail(t *testing.T, server *mockTCPServer) string {
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
 	}
+
 	return addr
 }
 
@@ -485,10 +494,12 @@ func runConcurrentRequests(t *testing.T, client *TCPClient, numRequests int) cha
 
 	wg.Wait()
 	close(results)
+
 	return results
 }
 
 func sendConcurrentRequest(t *testing.T, wg *sync.WaitGroup, client *TCPClient, id int, results chan<- int64) {
+	t.Helper()
 	defer wg.Done()
 
 	ctx := context.Background()
@@ -500,12 +511,14 @@ func sendConcurrentRequest(t *testing.T, wg *sync.WaitGroup, client *TCPClient, 
 
 	if err := client.SendRequest(ctx, req); err != nil {
 		t.Errorf("Failed to send request %d: %v", id, err)
+
 		return
 	}
 
 	resp, err := client.ReceiveResponse()
 	if err != nil {
 		t.Errorf("Failed to receive response %d: %v", id, err)
+
 		return
 	}
 
@@ -516,15 +529,18 @@ func sendConcurrentRequest(t *testing.T, wg *sync.WaitGroup, client *TCPClient, 
 }
 
 func extractCountFromResponse(t *testing.T, resp *mcp.Response, id int) int64 {
+	t.Helper()
 	result, ok := resp.Result.(map[string]interface{})
 	if !ok {
 		t.Errorf("Invalid result type for request %d", id)
+
 		return -1
 	}
 
 	count, ok := result["count"].(float64)
 	if !ok {
 		t.Errorf("Invalid count type for request %d", id)
+
 		return -1
 	}
 
@@ -670,6 +686,7 @@ func createErrorRecoveryClient(t *testing.T, addr string, logger *zap.Logger) *T
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
+
 	return client
 }
 
@@ -694,6 +711,7 @@ func attemptConnectionAndOperation(client *TCPClient, ctx context.Context) error
 
 	// Try to receive response which should fail
 	_, err = client.ReceiveResponse()
+
 	return err
 }
 

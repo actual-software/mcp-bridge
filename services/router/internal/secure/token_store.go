@@ -36,6 +36,8 @@ var ErrTokenNotFound = errors.New("token not found")
 var ErrListNotSupported = errors.New("listing tokens not supported on this platform")
 
 // NewTokenStore creates a new platform-appropriate token store.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func NewTokenStore(appName string) (TokenStore, error) {
 	switch runtime.GOOS {
 	case OSTypeDarwin:

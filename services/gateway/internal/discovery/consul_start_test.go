@@ -43,7 +43,7 @@ func TestConsulDiscovery_Start_WithoutRealConsul(t *testing.T) {
 		defer cancel()
 
 		err = discovery.Start(ctx)
-		assert.Error(t, err, "Start should fail when Consul is unavailable")
+		require.Error(t, err, "Start should fail when Consul is unavailable")
 		assert.Contains(t, err.Error(), "initial service discovery failed")
 
 		// Clean up
@@ -203,7 +203,7 @@ func TestConsulDiscovery_updateHealthStatus_EmptyEndpoints(t *testing.T) {
 
 		// This should not panic even with no client or endpoints
 		err := discovery.updateHealthStatus()
-		assert.NoError(t, err, "updateHealthStatus should not error with empty endpoints")
+		require.NoError(t, err, "updateHealthStatus should not error with empty endpoints")
 
 		// Verify no endpoints were created
 		assert.Empty(t, discovery.endpoints)
@@ -219,7 +219,7 @@ func TestConsulDiscovery_updateHealthStatus_EmptyEndpoints(t *testing.T) {
 
 		// This should not panic when there are no endpoints
 		err := discovery.updateHealthStatus()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Verify no endpoints were created
 		endpoints := discovery.GetEndpoints("any-namespace")

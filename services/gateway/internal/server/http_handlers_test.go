@@ -11,6 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
 	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
@@ -233,7 +234,7 @@ func TestHandleHealth(t *testing.T) {
 		var status health.Status
 
 		err := json.NewDecoder(rec.Body).Decode(&status)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, status.Healthy)
 	})
 
@@ -256,7 +257,7 @@ func TestHandleHealth(t *testing.T) {
 		var status health.Status
 
 		err := json.NewDecoder(rec.Body).Decode(&status)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, status.Healthy)
 	})
 }
@@ -446,7 +447,7 @@ func TestCreateTLSConfigFunction(t *testing.T) {
 		}
 
 		_, err := server.createTLSConfig()
-		assert.Error(t, err)
+		require.Error(t, err)
 		// The error should be about TLS configuration failure
 		assert.True(t,
 			strings.Contains(err.Error(), "TLS configuration failed") ||

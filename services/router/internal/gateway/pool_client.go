@@ -157,7 +157,7 @@ func (pc *PoolClient) connectToEndpoint(ctx context.Context, endpoint *GatewayEn
 func (pc *PoolClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 	// Use namespace routing if enabled.
 	if pc.namespaceRouter != nil && pc.namespaceRouter.config.Enabled {
-		pc.handleNamespaceRouting(req)
+		pc.handleNamespaceRouting(ctx, req)
 	}
 
 	if pc.currentEndpoint == nil {
@@ -261,7 +261,7 @@ func (pc *PoolClient) GetPoolStats() map[string]interface{} {
 }
 
 // SelectEndpointByTags selects an endpoint that matches specific tags for namespace routing.
-func (pc *PoolClient) SelectEndpointByTags(tags []string) error {
+func (pc *PoolClient) SelectEndpointByTags(ctx context.Context, tags []string) error {
 	endpoints, err := pc.pool.GetEndpointByTags(tags)
 	if err != nil {
 		return fmt.Errorf("failed to find endpoint with tags %v: %w", tags, err)
@@ -281,10 +281,10 @@ func (pc *PoolClient) SelectEndpointByTags(tags []string) error {
 
 	// Connect to the selected endpoint if not already connected.
 	if !selectedEndpoint.Client.IsConnected() {
-		ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutSeconds*time.Second)
+		connCtx, cancel := context.WithTimeout(ctx, defaultTimeoutSeconds*time.Second)
 		defer cancel()
 
-		err = pc.connectToEndpoint(ctx, selectedEndpoint)
+		err = pc.connectToEndpoint(connCtx, selectedEndpoint)
 		if err != nil {
 			selectedEndpoint.UpdateHealth(false, err)
 
@@ -317,7 +317,7 @@ func (pc *PoolClient) ForceReconnect(ctx context.Context) error {
 	return pc.Connect(ctx)
 }
 
-func (pc *PoolClient) handleNamespaceRouting(req *mcp.Request) {
+func (pc *PoolClient) handleNamespaceRouting(ctx context.Context, req *mcp.Request) {
 	tags, err := pc.namespaceRouter.RouteRequest(req)
 	if err != nil {
 		pc.logger.Warn("Namespace routing failed, using current endpoint",
@@ -328,7 +328,7 @@ func (pc *PoolClient) handleNamespaceRouting(req *mcp.Request) {
 	}
 
 	// Try to select endpoint by tags.
-	err = pc.SelectEndpointByTags(tags)
+	err = pc.SelectEndpointByTags(ctx, tags)
 	if err != nil {
 		pc.logger.Warn("Failed to select endpoint by tags, using current endpoint",
 			zap.Strings("tags", tags),

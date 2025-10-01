@@ -28,10 +28,10 @@ func TestCreateSSEServiceDiscovery(t *testing.T) {
 
 			sd, err := CreateSSEServiceDiscovery(tt.config, logger)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, sd)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, sd)
 				sseSD, ok := sd.(*SSEDiscovery)
 				assert.True(t, ok)
@@ -145,7 +145,7 @@ func TestSSEDiscovery_StartStop(t *testing.T) {
 
 	// Test Start
 	err = sd.Start(context.Background())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Test Stop
 	// Stop should not error

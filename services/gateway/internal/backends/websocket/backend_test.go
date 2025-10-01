@@ -238,7 +238,7 @@ func TestWebSocketBackend_SendRequestWithTimeout(t *testing.T) {
 	}
 
 	_, err = backend.SendRequest(ctx, req)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, strings.ToLower(err.Error()), "timeout")
 }
 
@@ -257,7 +257,7 @@ func TestWebSocketBackend_SendRequestNotRunning(t *testing.T) {
 	}
 
 	_, err := backend.SendRequest(context.Background(), req)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no pool for endpoint")
 }
 
@@ -301,7 +301,7 @@ func TestWebSocketBackend_Health(t *testing.T) {
 
 	// Health check should pass when running with healthy connections
 	err = backend.Health(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check metrics updated
 	metrics := backend.GetMetrics()
@@ -440,7 +440,7 @@ func TestWebSocketBackend_MultipleEndpoints(t *testing.T) {
 		}
 
 		response, err := backend.SendRequest(ctx, req)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, response)
 		assert.Equal(t, req.ID, response.ID)
 	}

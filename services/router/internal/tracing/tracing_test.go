@@ -102,6 +102,7 @@ func validateTracingInitResult(t *testing.T, tt struct {
 
 	if tt.wantErr {
 		require.Error(t, err)
+
 		return
 	}
 
@@ -176,6 +177,7 @@ func setupTracerForOperationTests(t *testing.T, logger *zap.Logger) *tracing.Tra
 
 	tracer, err := tracing.Init(cfg, logger)
 	require.NoError(t, err)
+
 	return tracer
 }
 

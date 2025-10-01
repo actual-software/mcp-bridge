@@ -127,7 +127,7 @@ func TestSSEDiscovery_GetService(t *testing.T) {
 
 	// Test getting non-existent service
 	endpoint, err = sseBridge.GetService(ctx, "nonexistent")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, endpoint)
 	assert.Contains(t, err.Error(), "not found")
 }
@@ -164,7 +164,7 @@ func TestStdioDiscovery_GetService(t *testing.T) {
 
 	// Test getting non-existent service
 	endpoint, err = stdioBridge.GetService(ctx, "nonexistent")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, endpoint)
 	assert.Contains(t, err.Error(), "not found")
 }
@@ -201,7 +201,7 @@ func TestWebSocketDiscovery_GetService(t *testing.T) {
 
 	// Test getting non-existent service
 	endpoint, err = wsBridge.GetService(ctx, "nonexistent")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, endpoint)
 	assert.Contains(t, err.Error(), "not found")
 }
@@ -228,11 +228,11 @@ func TestSSEDiscovery_checkHTTPEndpoint(t *testing.T) {
 
 	// Test with invalid URL
 	err = sseBridge.checkHTTPEndpoint(ctx, "invalid-url", testService)
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// Test with non-existent endpoint
 	err = sseBridge.checkHTTPEndpoint(ctx, "http://localhost:19999", testService)
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 // TestSSEDiscovery_Watch tests the Watch method.
@@ -383,7 +383,7 @@ func TestSSEDiscovery_HealthCheck(t *testing.T) {
 	// Health check should complete without panic
 	err = sseBridge.HealthCheck(ctx, testEndpoint)
 	// Should complete (expect error due to non-existent service but shouldn't panic)
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// Verify endpoint exists and is marked as unhealthy
 	endpoints := discovery.GetEndpoints("weather")
@@ -425,7 +425,7 @@ func TestStdioDiscovery_HealthCheck(t *testing.T) {
 	// Health check should complete without panic
 	err = stdioBridge.HealthCheck(ctx, testEndpoint)
 	// Should complete (expect error due to non-existent command but shouldn't panic)
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// Verify endpoint exists
 	endpoints := discovery.GetEndpoints("weather")
@@ -466,7 +466,7 @@ func TestWebSocketDiscovery_HealthCheck(t *testing.T) {
 	// Health check should complete without panic
 	err = wsBridge.HealthCheck(ctx, testEndpoint)
 	// Should complete (expect error due to non-existent service but shouldn't panic)
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// Verify endpoint exists and is marked as unhealthy
 	endpoints := discovery.GetEndpoints("weather")

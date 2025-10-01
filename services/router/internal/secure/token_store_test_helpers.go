@@ -38,6 +38,8 @@ func EstablishTokenStoreTest(t *testing.T) *TokenStoreTestEnvironment {
 }
 
 // CreateStore creates a token store with the given name.
+//
+//nolint:ireturn // Test helper requires interface return
 func (env *TokenStoreTestEnvironment) CreateStore(serviceName string) TokenStore {
 	store, err := NewTokenStore(serviceName)
 	if err != nil {

@@ -521,7 +521,8 @@ func (m *DirectClientManager) Start(ctx context.Context) error {
 }
 
 // GetClient returns a direct client for the specified server URL.
-
+//
+//nolint:ireturn // Manager pattern requires interface return
 func (m *DirectClientManager) GetClient(ctx context.Context, serverURL string) (DirectClient, error) {
 	m.mu.RLock()
 
@@ -610,7 +611,8 @@ func (m *DirectClientManager) DetectProtocol(ctx context.Context, serverURL stri
 }
 
 // getOrCreateClient gets an existing client or creates a new one using the connection pool.
-
+//
+//nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) getOrCreateClient(
 	ctx context.Context,
 	serverURL string,
@@ -715,8 +717,11 @@ func (m *DirectClientManager) recordConnectionSuccess(serverURL string, protocol
 }
 
 // createClient creates a new client of the specified protocol type.
-
-func (m *DirectClientManager) createClient(ctx context.Context, serverURL string, protocol ClientType) (DirectClient, error) {
+//
+//nolint:ireturn // Factory pattern requires interface return
+func (m *DirectClientManager) createClient(
+	ctx context.Context, serverURL string, protocol ClientType,
+) (DirectClient, error) {
 	switch protocol {
 	case ClientTypeStdio:
 		return m.createStdioClient(ctx, serverURL)
@@ -732,7 +737,8 @@ func (m *DirectClientManager) createClient(ctx context.Context, serverURL string
 }
 
 // Protocol-specific client creation methods.
-
+//
+//nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) createStdioClient(ctx context.Context, serverURL string) (DirectClient, error) {
 	// Create stdio-specific config from manager config.
 	stdioConfig := StdioClientConfig{
@@ -779,6 +785,7 @@ func (m *DirectClientManager) createStdioClient(ctx context.Context, serverURL s
 	return NewStdioClientWithMemoryOptimizer(clientName, serverURL, stdioConfig, m.logger, m.memoryOptimizer)
 }
 
+//nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) createWebSocketClient(ctx context.Context, serverURL string) (DirectClient, error) {
 	// Create WebSocket-specific config from manager config.
 	wsConfig := WebSocketClientConfig{
@@ -826,6 +833,7 @@ func (m *DirectClientManager) createWebSocketClient(ctx context.Context, serverU
 	return NewWebSocketClient(clientName, serverURL, wsConfig, m.logger)
 }
 
+//nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) createHTTPClient(ctx context.Context, serverURL string) (DirectClient, error) {
 	// Create HTTP-specific config from manager config.
 	httpConfig := HTTPClientConfig{
@@ -869,9 +877,11 @@ func (m *DirectClientManager) createHTTPClient(ctx context.Context, serverURL st
 	// Generate unique client name.
 	clientName := fmt.Sprintf("http-%d", time.Now().UnixNano())
 
+	//nolint:contextcheck // NewHTTPClientWithMemoryOptimizer creates its own context for client lifecycle
 	return NewHTTPClientWithMemoryOptimizer(clientName, serverURL, httpConfig, m.logger, m.memoryOptimizer)
 }
 
+//nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) createSSEClient(ctx context.Context, serverURL string) (DirectClient, error) {
 	// Create SSE-specific config from manager config.
 	sseConfig := SSEClientConfig{
@@ -918,6 +928,7 @@ func (m *DirectClientManager) createSSEClient(ctx context.Context, serverURL str
 	// Generate unique client name.
 	clientName := fmt.Sprintf("sse-%d", time.Now().UnixNano())
 
+	//nolint:contextcheck // NewSSEClient creates its own context for client lifecycle
 	return NewSSEClient(clientName, serverURL, sseConfig, m.logger)
 }
 

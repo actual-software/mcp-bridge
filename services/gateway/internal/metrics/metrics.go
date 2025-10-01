@@ -104,7 +104,8 @@ func createRequestMetrics(
 }
 
 // createTCPMetrics creates TCP-related metrics.
-
+//
+//nolint:ireturn // Factory helper returns Prometheus interfaces
 func createTCPMetrics(factory promauto.Factory) (
 	prometheus.Gauge,
 	prometheus.Gauge,

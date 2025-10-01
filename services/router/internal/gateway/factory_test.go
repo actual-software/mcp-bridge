@@ -41,6 +41,7 @@ func getNewGatewayClientTests() []gatewayClientTest {
 	tests = append(tests, getWebSocketTests()...)
 	tests = append(tests, getTCPTests()...)
 	tests = append(tests, getErrorTests()...)
+
 	return tests
 }
 
@@ -130,18 +131,23 @@ func testNewGatewayClientCase(t *testing.T, tt gatewayClientTest, logger *zap.Lo
 
 	if (err != nil) != tt.wantErr {
 		t.Errorf("NewGatewayClient() error = %v, wantErr %v", err, tt.wantErr)
+
 		return
 	}
 
 	if err != nil {
 		if tt.errContains != "" && !contains(err.Error(), tt.errContains) {
 			t.Errorf("Error = %v, want error containing %s", err, tt.errContains)
+
 		}
+
 		return
 	}
 
 	if client == nil {
+
 		t.Error("Expected non-nil client")
+
 		return
 	}
 
@@ -414,8 +420,11 @@ func TestGatewayClient_TLSConfiguration(t *testing.T) {
 func setupTLSTestCA(t *testing.T) string {
 	t.Helper()
 	caCert := getTLSTestCACert()
+
 	caFile, cleanup := testutil.TempFile(t, caCert)
+
 	t.Cleanup(cleanup)
+
 	return caFile
 }
 

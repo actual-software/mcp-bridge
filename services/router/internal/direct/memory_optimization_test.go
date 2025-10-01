@@ -590,6 +590,7 @@ func setupMemoryPatternOptimizer(t *testing.T) *MemoryOptimizer {
 func recordInitialMemoryStats() runtime.MemStats {
 	var initialMem runtime.MemStats
 	runtime.ReadMemStats(&initialMem)
+
 	return initialMem
 }
 
@@ -642,6 +643,7 @@ func calculateMemoryIncrease(initialMem runtime.MemStats) uint64 {
 	} else {
 		memoryIncrease = 0 // GC reduced memory usage
 	}
+
 	return memoryIncrease
 }
 
@@ -682,6 +684,7 @@ func TestMemoryOptimizer_PoolingEffectiveness(t *testing.T) {
 func createOptimizerWithPooling(logger *zap.Logger) *MemoryOptimizer {
 	configWithPooling := DefaultMemoryOptimizationConfig()
 	configWithPooling.EnableObjectPooling = true
+
 	return NewMemoryOptimizer(configWithPooling, logger)
 }
 
@@ -690,6 +693,7 @@ func createOptimizerWithoutPooling(logger *zap.Logger) *MemoryOptimizer {
 	configWithoutPooling.EnableObjectPooling = false
 	configWithoutPooling.BufferPoolConfig.Enabled = false
 	configWithoutPooling.JSONPoolConfig.Enabled = false
+
 	return NewMemoryOptimizer(configWithoutPooling, logger)
 }
 

@@ -66,7 +66,8 @@ func (c *GenericConnection) GetID() string {
 
 // GetClient returns the underlying client.
 // This allows callers to access client-specific methods.
-
+//
+//nolint:ireturn // Accessor returns interface type
 func (c *GenericConnection) GetClient() gateway.GatewayClient {
 	return c.client
 }
@@ -103,7 +104,8 @@ func NewGenericFactory(
 }
 
 // Create creates a new connection using the configured client creator.
-
+//
+//nolint:ireturn // Factory pattern requires interface return
 func (f *GenericFactory) Create(ctx context.Context) (Connection, error) {
 	client, err := f.clientCreator(f.config, f.logger)
 	if err != nil {

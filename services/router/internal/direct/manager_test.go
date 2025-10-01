@@ -245,6 +245,7 @@ func TestDirectClientManagerProtocolDetection(t *testing.T) {
 	runProtocolDetectionTests(t, manager, testCases)
 }
 
+//nolint:ireturn // Test helper requires interface return
 func setupProtocolDetectionManager(t *testing.T, logger *zap.Logger) DirectClientManagerInterface {
 	t.Helper()
 
@@ -446,6 +447,7 @@ func TestDirectClientManagerValidURLs(t *testing.T) {
 	runValidURLsTests(t, manager, testCases)
 }
 
+//nolint:ireturn // Test helper requires interface return
 func setupValidURLsManager(t *testing.T, logger *zap.Logger) DirectClientManagerInterface {
 	t.Helper()
 
@@ -1229,6 +1231,7 @@ func createProtocolDetectionTestCases() []protocolDetectionTestCase {
 	}
 
 	additionalCases := createAdditionalProtocolTestCases()
+
 	return append(basicCases, additionalCases...)
 }
 
@@ -1320,7 +1323,9 @@ func TestDirectClientManagerConfigurationValidation(t *testing.T) {
 
 func createConfigValidationTestCases() []configValidationTestCase {
 	basicCases := createBasicConfigTestCases()
+
 	advancedCases := createAdvancedConfigTestCases()
+
 	return append(basicCases, advancedCases...)
 }
 
@@ -1439,6 +1444,7 @@ func TestDirectClientManagerErrorHandlingComprehensive(t *testing.T) {
 	runErrorHandlingTests(t, manager, ctx, errorTestCases)
 }
 
+//nolint:ireturn // Test helper requires interface return
 func setupErrorHandlingTestManager(t *testing.T) DirectClientManagerInterface {
 	t.Helper()
 	logger := zaptest.NewLogger(t)
@@ -1455,6 +1461,7 @@ func setupErrorHandlingTestManager(t *testing.T) DirectClientManagerInterface {
 
 	mgr := NewDirectClientManager(config, logger)
 	manager := mgr
+
 	return manager
 }
 
@@ -1628,6 +1635,7 @@ func setupAdaptiveTestManager(t *testing.T) *DirectClientManager {
 
 	mgr := NewDirectClientManager(config, logger)
 	manager := mgr
+
 	return manager
 }
 
@@ -1733,6 +1741,7 @@ func setupMemoryOptimizedTestManager(t *testing.T) *DirectClientManager {
 
 	mgr := NewDirectClientManager(config, logger)
 	manager := mgr
+
 	return manager
 }
 
@@ -1824,6 +1833,7 @@ func setupConnectionPoolTestManager(t *testing.T) *DirectClientManager {
 
 	mgr := NewDirectClientManager(config, logger)
 	manager := mgr
+
 	return manager
 }
 
@@ -1894,6 +1904,7 @@ func setupProtocolSpecificTestManager(t *testing.T) *DirectClientManager {
 
 	mgr := NewDirectClientManager(config, logger)
 	manager := mgr
+
 	return manager
 }
 

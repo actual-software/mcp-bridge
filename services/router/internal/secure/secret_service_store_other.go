@@ -8,6 +8,8 @@ import "errors"
 type secretServiceStore struct{}
 
 // newSecretServiceStore returns an error on non-Linux platforms.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func newSecretServiceStore(appName string) (TokenStore, error) {
 	return nil, errors.New("secret service store not available on this platform")
 }

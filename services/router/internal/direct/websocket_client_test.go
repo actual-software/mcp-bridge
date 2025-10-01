@@ -367,6 +367,7 @@ func setupWebSocketTimeoutServer(t *testing.T) *mockWebSocketServer {
 
 	slowServer.server.Close()
 	slowServer.server = httptest.NewServer(mux)
+
 	return slowServer
 }
 
@@ -389,6 +390,7 @@ func setupWebSocketTimeoutClient(t *testing.T, logger *zap.Logger, slowServer *m
 	require.NoError(t, err)
 
 	time.Sleep(constants.TestLongTickInterval)
+
 	return client
 }
 
@@ -640,6 +642,7 @@ func TestWebSocketClientPingPongMechanism(t *testing.T) {
 }
 
 func setupWebSocketPingPongServer(t *testing.T) (chan bool, chan bool, *httptest.Server) {
+	t.Helper()
 	pingReceived := make(chan bool, 5)
 	pongReceived := make(chan bool, 5)
 
@@ -665,16 +668,19 @@ func setupWebSocketPingPongServer(t *testing.T) (chan bool, chan bool, *httptest
 func setupWebSocketPingPongHandlers(conn *websocket.Conn, pingReceived, pongReceived chan bool) {
 	conn.SetPingHandler(func(appData string) error {
 		pingReceived <- true
+
 		return conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(time.Second))
 	})
 
 	conn.SetPongHandler(func(appData string) error {
 		pongReceived <- true
+
 		return nil
 	})
 }
 
 func handleWebSocketPingPongMessages(t *testing.T, conn *websocket.Conn) {
+	t.Helper()
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
@@ -694,6 +700,7 @@ func handleWebSocketPingPongMessages(t *testing.T, conn *websocket.Conn) {
 }
 
 func processWebSocketPingPongMCPRequest(t *testing.T, conn *websocket.Conn, message []byte) {
+	t.Helper()
 	var req mcp.Request
 	if err := json.Unmarshal(message, &req); err == nil {
 		resp := mcp.Response{
@@ -710,6 +717,7 @@ func processWebSocketPingPongMCPRequest(t *testing.T, conn *websocket.Conn, mess
 }
 
 func setupWebSocketPingPongClient(t *testing.T, logger *zap.Logger, server *httptest.Server) *WebSocketClient {
+	t.Helper()
 	config := WebSocketClientConfig{
 		URL:          "ws" + strings.TrimPrefix(server.URL, "http"),
 		PingInterval: 200 * time.Millisecond,
@@ -731,12 +739,14 @@ func setupWebSocketPingPongClient(t *testing.T, logger *zap.Logger, server *http
 }
 
 func cleanupWebSocketPingPongClient(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
 }
 
 func runWebSocketPingPongTest(t *testing.T, client *WebSocketClient, pingReceived, pongReceived chan bool) {
+	t.Helper()
 	// Wait for ping/pong exchanges
 	time.Sleep(1 * time.Second)
 
@@ -745,6 +755,7 @@ func runWebSocketPingPongTest(t *testing.T, client *WebSocketClient, pingReceive
 }
 
 func sendWebSocketPingRequest(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "ping",
@@ -757,6 +768,7 @@ func sendWebSocketPingRequest(t *testing.T, client *WebSocketClient) {
 }
 
 func verifyWebSocketPingPongActivity(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	// Wait for ping/pong activity
 	time.Sleep(5 * constants.TestSleepShort)
 
@@ -779,6 +791,8 @@ func TestWebSocketClientMessageCorrelation(t *testing.T) {
 }
 
 func setupWebSocketCorrelationServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
@@ -796,6 +810,7 @@ func setupWebSocketCorrelationServer(t *testing.T) *httptest.Server {
 }
 
 func handleWebSocketCorrelationMessages(t *testing.T, conn *websocket.Conn) {
+	t.Helper()
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
@@ -826,6 +841,7 @@ func createWebSocketCorrelationResponse(req mcp.Request) mcp.Response {
 }
 
 func sendWebSocketCorrelationResponse(t *testing.T, conn *websocket.Conn, resp mcp.Response) {
+	t.Helper()
 	respData, _ := json.Marshal(resp)
 	if err := conn.WriteMessage(websocket.TextMessage, respData); err != nil {
 		t.Logf("Mock server: failed to write response: %v", err)
@@ -833,6 +849,7 @@ func sendWebSocketCorrelationResponse(t *testing.T, conn *websocket.Conn, resp m
 }
 
 func setupWebSocketCorrelationClient(t *testing.T, logger *zap.Logger, server *httptest.Server) *WebSocketClient {
+	t.Helper()
 	config := WebSocketClientConfig{
 		URL:     "ws" + strings.TrimPrefix(server.URL, "http"),
 		Timeout: 5 * time.Second,
@@ -855,12 +872,14 @@ func setupWebSocketCorrelationClient(t *testing.T, logger *zap.Logger, server *h
 }
 
 func cleanupWebSocketCorrelationClient(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
 }
 
 func runWebSocketCorrelationTest(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	const numRequests = 5
 
 	expectedResponses := make(map[string]string, numRequests)
@@ -887,6 +906,7 @@ func runWebSocketCorrelationTest(t *testing.T, client *WebSocketClient) {
 }
 
 func verifyWebSocketCorrelationResponse(t *testing.T, resp *mcp.Response, expectedCorrelation string) {
+	t.Helper()
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
 
@@ -913,6 +933,7 @@ func setupWebSocketConcurrentClient(
 	logger *zap.Logger,
 	mockServer *mockWebSocketServer,
 ) *WebSocketClient {
+	t.Helper()
 	config := WebSocketClientConfig{
 		URL:     mockServer.getWebSocketURL(),
 		Timeout: 10 * time.Second,
@@ -942,12 +963,14 @@ func setupWebSocketConcurrentClient(
 }
 
 func cleanupWebSocketConcurrentClient(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
 }
 
 func runWebSocketConcurrentOperations(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	const (
 		numGoroutines        = 10
 		requestsPerGoroutine = 5
@@ -963,6 +986,7 @@ func runWebSocketConcurrentOperations(t *testing.T, client *WebSocketClient) {
 func setupWebSocketConcurrentChannels(numGoroutines, requestsPerGoroutine int) (chan error, chan *mcp.Response) {
 	errChan := make(chan error, numGoroutines*requestsPerGoroutine)
 	responseChan := make(chan *mcp.Response, numGoroutines*requestsPerGoroutine)
+
 	return errChan, responseChan
 }
 
@@ -973,6 +997,7 @@ func executeWebSocketConcurrentRequests(
 	errChan chan error,
 	responseChan chan *mcp.Response,
 ) {
+	t.Helper()
 	var wg sync.WaitGroup
 
 	ctx := context.Background()
@@ -1008,6 +1033,7 @@ func executeWebSocketConcurrentGoroutine(
 		resp, err := client.SendRequest(ctx, req)
 		if err != nil {
 			errChan <- err
+
 			return
 		}
 
@@ -1016,6 +1042,7 @@ func executeWebSocketConcurrentGoroutine(
 }
 
 func waitForWebSocketConcurrentCompletion(t *testing.T, wg *sync.WaitGroup) {
+	t.Helper()
 	done := make(chan struct{})
 
 	go func() {
@@ -1059,6 +1086,7 @@ func verifyWebSocketConcurrentResults(
 	responses []*mcp.Response,
 	numGoroutines, requestsPerGoroutine int,
 ) {
+	t.Helper()
 	assert.Empty(t, errors, "No errors should occur during concurrent operations")
 	assert.Len(t, responses, numGoroutines*requestsPerGoroutine, "All requests should receive responses")
 
@@ -1089,6 +1117,7 @@ type webSocketReconnectServerState struct {
 }
 
 func setupWebSocketReconnectServer(t *testing.T) (*webSocketReconnectServerState, *httptest.Server) {
+	t.Helper()
 	state := &webSocketReconnectServerState{
 		mu:              sync.Mutex{},
 		enabled:         true,
@@ -1104,6 +1133,7 @@ func setupWebSocketReconnectServer(t *testing.T) (*webSocketReconnectServerState
 
 		if !enabled {
 			http.Error(w, "Server temporarily unavailable", http.StatusServiceUnavailable)
+
 			return
 		}
 
@@ -1114,6 +1144,7 @@ func setupWebSocketReconnectServer(t *testing.T) (*webSocketReconnectServerState
 }
 
 func handleWebSocketReconnectConnection(t *testing.T, w http.ResponseWriter, r *http.Request, connectionCount int) {
+	t.Helper()
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool { return true },
 	}
@@ -1130,6 +1161,7 @@ func handleWebSocketReconnectConnection(t *testing.T, w http.ResponseWriter, r *
 }
 
 func sendWebSocketReconnectAck(t *testing.T, conn *websocket.Conn, connectionCount int) {
+	t.Helper()
 	ackMsg := map[string]interface{}{
 		"type":             "connection_ack",
 		"connection_count": connectionCount,
@@ -1142,6 +1174,7 @@ func sendWebSocketReconnectAck(t *testing.T, conn *websocket.Conn, connectionCou
 }
 
 func handleWebSocketReconnectMessages(t *testing.T, conn *websocket.Conn, connectionCount int) {
+	t.Helper()
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
@@ -1170,6 +1203,7 @@ func handleWebSocketReconnectMessages(t *testing.T, conn *websocket.Conn, connec
 }
 
 func setupWebSocketReconnectClient(t *testing.T, logger *zap.Logger, server *httptest.Server) *WebSocketClient {
+	t.Helper()
 	config := WebSocketClientConfig{
 		URL:     "ws" + strings.TrimPrefix(server.URL, "http"),
 		Timeout: 2 * time.Second,
@@ -1193,12 +1227,14 @@ func setupWebSocketReconnectClient(t *testing.T, logger *zap.Logger, server *htt
 }
 
 func cleanupWebSocketReconnectClient(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
 }
 
 func runWebSocketReconnectionTest(t *testing.T, client *WebSocketClient, serverState *webSocketReconnectServerState) {
+	t.Helper()
 	ctx := context.Background()
 
 	// Verify initial connection and send test request
@@ -1218,11 +1254,13 @@ func runWebSocketReconnectionTest(t *testing.T, client *WebSocketClient, serverS
 }
 
 func verifyWebSocketInitialConnection(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	time.Sleep(2 * constants.TestSleepShort)
 	assert.Equal(t, StateConnected, client.GetState())
 }
 
 func sendWebSocketInitialRequest(t *testing.T, client *WebSocketClient, ctx context.Context) {
+	t.Helper()
 	req1 := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "test_before_disconnect",
@@ -1247,6 +1285,7 @@ func enableWebSocketReconnectServer(serverState *webSocketReconnectServerState) 
 }
 
 func verifyWebSocketReconnectionResult(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	state := client.GetState()
 	t.Logf("Final client state after reconnection test: %v", state)
 }
@@ -1304,6 +1343,7 @@ func getWebSocketPerformanceTestCases() []webSocketPerformanceTestCase {
 }
 
 func runWebSocketPerformanceTest(t *testing.T, logger *zap.Logger, tc webSocketPerformanceTestCase) {
+	t.Helper()
 	mockServer := newMockWebSocketServer(t)
 	defer mockServer.close()
 
@@ -1320,6 +1360,7 @@ func setupWebSocketPerformanceClient(
 	mockServer *mockWebSocketServer,
 	perfConfig WebSocketPerformanceConfig,
 ) (*WebSocketClient, time.Duration) {
+	t.Helper()
 	config := WebSocketClientConfig{
 		URL:         mockServer.getWebSocketURL(),
 		Timeout:     5 * time.Second,
@@ -1346,12 +1387,14 @@ func setupWebSocketPerformanceClient(
 }
 
 func cleanupWebSocketPerformanceClient(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
 }
 
 func executeWebSocketPerformanceRequests(t *testing.T, client *WebSocketClient) []time.Duration {
+	t.Helper()
 	const numRequests = 20
 
 	requestTimes := make([]time.Duration, numRequests)
@@ -1381,6 +1424,7 @@ func verifyWebSocketPerformanceResults(
 	connectTime time.Duration,
 	requestTimes []time.Duration,
 ) {
+	t.Helper()
 	assert.Less(t, connectTime, 2*time.Second, "Connection should be fast: %v", connectTime)
 
 	var totalRequestTime time.Duration
@@ -1427,6 +1471,7 @@ func getWebSocketFrameTestCases() []webSocketFrameTestCase {
 }
 
 func runWebSocketFrameHandlingTest(t *testing.T, logger *zap.Logger, tc webSocketFrameTestCase) {
+	t.Helper()
 	server := setupWebSocketFrameHandlingServer(t, tc)
 	defer server.Close()
 
@@ -1437,6 +1482,8 @@ func runWebSocketFrameHandlingTest(t *testing.T, logger *zap.Logger, tc webSocke
 }
 
 func setupWebSocketFrameHandlingServer(t *testing.T, tc webSocketFrameTestCase) *httptest.Server {
+	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{
 			CheckOrigin:       func(r *http.Request) bool { return true },
@@ -1455,6 +1502,7 @@ func setupWebSocketFrameHandlingServer(t *testing.T, tc webSocketFrameTestCase) 
 }
 
 func handleWebSocketFrameMessages(t *testing.T, conn *websocket.Conn, tc webSocketFrameTestCase) {
+	t.Helper()
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
@@ -1473,6 +1521,7 @@ func handleWebSocketFrameMessages(t *testing.T, conn *websocket.Conn, tc webSock
 
 func createWebSocketFrameResponse(req mcp.Request, tc webSocketFrameTestCase) mcp.Response {
 	payload := strings.Repeat("x", tc.payloadSize)
+
 	return mcp.Response{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Result: map[string]interface{}{
@@ -1486,6 +1535,7 @@ func createWebSocketFrameResponse(req mcp.Request, tc webSocketFrameTestCase) mc
 }
 
 func sendWebSocketFrameResponse(t *testing.T, conn *websocket.Conn, resp mcp.Response) {
+	t.Helper()
 	respData, _ := json.Marshal(resp)
 	if err := conn.WriteMessage(websocket.TextMessage, respData); err != nil {
 		t.Logf("Failed to write response in test server: %v", err)
@@ -1498,6 +1548,7 @@ func setupWebSocketFrameHandlingClient(
 	server *httptest.Server,
 	tc webSocketFrameTestCase,
 ) *WebSocketClient {
+	t.Helper()
 	config := WebSocketClientConfig{
 		URL:            "ws" + strings.TrimPrefix(server.URL, "http"),
 		Timeout:        10 * time.Second,
@@ -1525,12 +1576,14 @@ func setupWebSocketFrameHandlingClient(
 }
 
 func cleanupWebSocketFrameHandlingClient(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
 }
 
 func executeWebSocketFrameHandlingTest(t *testing.T, client *WebSocketClient, tc webSocketFrameTestCase) {
+	t.Helper()
 	req := &mcp.Request{
 		JSONRPC: constants.TestJSONRPCVersion,
 		Method:  "frame_test",
@@ -1550,6 +1603,7 @@ func executeWebSocketFrameHandlingTest(t *testing.T, client *WebSocketClient, tc
 }
 
 func verifyWebSocketFrameResponse(t *testing.T, resp *mcp.Response, tc webSocketFrameTestCase, duration time.Duration) {
+	t.Helper()
 	result, ok := resp.Result.(map[string]interface{})
 	require.True(t, ok)
 
@@ -1636,10 +1690,13 @@ func TestWebSocketClientErrorRecovery(t *testing.T) {
 }
 
 func setupWebSocketErrorRecoveryServer(t *testing.T, serverErrorCount *int) *httptest.Server {
+	t.Helper()
+
 	return httptest.NewServer(createErrorRecoveryHandler(t, serverErrorCount))
 }
 
 func setupWebSocketErrorRecoveryClient(t *testing.T, logger *zap.Logger, server *httptest.Server) *WebSocketClient {
+	t.Helper()
 	config := WebSocketClientConfig{
 		URL:     "ws" + strings.TrimPrefix(server.URL, "http"),
 		Timeout: 5 * time.Second,
@@ -1666,12 +1723,14 @@ func setupWebSocketErrorRecoveryClient(t *testing.T, logger *zap.Logger, server 
 }
 
 func cleanupWebSocketErrorRecoveryClient(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	ctx := context.Background()
 	err := client.Close(ctx)
 	require.NoError(t, err)
 }
 
 func runWebSocketErrorRecoveryTests(t *testing.T, client *WebSocketClient) {
+	t.Helper()
 	testCases := getWebSocketErrorRecoveryTestCases()
 
 	successCount, clientErrorCount := executeWebSocketErrorRecoveryRequests(t, client, testCases)
@@ -1697,6 +1756,7 @@ func executeWebSocketErrorRecoveryRequests(t *testing.T, client *WebSocketClient
 	method      string
 	expectError bool
 }) (int, int) {
+	t.Helper()
 	var successCount, clientErrorCount int
 
 	ctx := context.Background()
@@ -1725,6 +1785,7 @@ func executeWebSocketErrorRecoveryRequests(t *testing.T, client *WebSocketClient
 }
 
 func verifyWebSocketErrorRecoveryResults(t *testing.T, client *WebSocketClient, successCount, clientErrorCount int) {
+	t.Helper()
 	// Verify that the client handles errors and can recover
 	assert.Positive(t, successCount, "Should have at least some successful requests")
 
@@ -1864,6 +1925,7 @@ func runWebSocketFrameSizeBenchmark(b *testing.B, logger *zap.Logger, frameSize 
 
 func setupWebSocketFrameSizeBenchServer(b *testing.B, frameSize int) *httptest.Server {
 	b.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },

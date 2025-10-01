@@ -29,7 +29,8 @@ type Config struct {
 }
 
 // InitTracer initializes the OpenTracing tracer.
-
+//
+//nolint:ireturn // Factory pattern requires interface return
 func InitTracer(cfg Config, logger *zap.Logger) (opentracing.Tracer, io.Closer, error) {
 	if !cfg.Enabled {
 		logger.Info("Tracing disabled")

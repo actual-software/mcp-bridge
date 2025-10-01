@@ -32,6 +32,8 @@ type keychainStore struct {
 }
 
 // newKeychainStore creates a new macOS Keychain-based token store.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func newKeychainStore(appName string) (TokenStore, error) {
 	// Check if security command is available.
 	if _, err := exec.LookPath("security"); err != nil {

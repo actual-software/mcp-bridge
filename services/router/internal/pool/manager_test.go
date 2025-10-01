@@ -90,6 +90,7 @@ func testPooledGatewayClient(t *testing.T, tt pooledGatewayTest, poolConfig Conf
 
 	if tt.name == "Invalid URL" || tt.name == "Unsupported Scheme" {
 		require.Error(t, err)
+
 		return
 	}
 

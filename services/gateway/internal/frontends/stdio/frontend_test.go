@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
@@ -348,13 +349,13 @@ func TestStdinStdoutConn(t *testing.T) {
 	// Test read
 	buf := make([]byte, 10)
 	n, err := conn.Read(buf)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, 9, n)
 	assert.Equal(t, "test data", string(buf[:n]))
 
 	// Test write
 	n, err = conn.Write([]byte("response"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, 8, n)
 	assert.Equal(t, "response", string(writer.data))
 
@@ -424,7 +425,7 @@ func TestStdioFrontend_StartStopLifecycle(t *testing.T) {
 	disabledConfig := Config{Enabled: false}
 	disabledFrontend := CreateStdioFrontend("disabled", disabledConfig, mockRouter, mockAuth, mockSessions, logger)
 	err := disabledFrontend.Start(context.Background())
-	assert.NoError(t, err) // Should not error for disabled frontend
+	require.NoError(t, err) // Should not error for disabled frontend
 
 	// Test stop when not running
 	err = frontend.Stop(context.Background())
@@ -521,7 +522,7 @@ func TestStdioFrontend_SendErrorResponse(t *testing.T) {
 	var response map[string]interface{}
 
 	err := json.Unmarshal(writer.data, &response)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "test-id", response["id"])
 	assert.NotNil(t, response["error"])
 }
@@ -589,7 +590,7 @@ func TestStdioFrontend_NamedPipesUnsupported(t *testing.T) {
 
 	// Test that named pipes returns an error
 	err := frontend.Start(context.Background())
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "named pipes mode not implemented")
 }
 
@@ -643,6 +644,6 @@ func TestStdioFrontend_AlreadyRunning(t *testing.T) {
 
 	// Test that starting when already running returns error
 	err := frontend.Start(context.Background())
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "already running")
 }

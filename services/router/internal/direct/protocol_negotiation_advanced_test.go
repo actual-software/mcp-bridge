@@ -222,6 +222,7 @@ func createHTTPFirstPreferenceTest() struct {
 		setupServers: func(t *testing.T) (string, string, string, func()) {
 			t.Helper()
 			httpServer := setupHTTPServer(t)
+
 			return httpServer.URL, "", "", func() { httpServer.Close() }
 		},
 		preferredOrder:   []string{"http", "websocket", "sse", "stdio"},
@@ -254,6 +255,7 @@ func createWebSocketFallbackTest() struct {
 			httpServer := setupFailingHTTPServer(t)
 			wsServer := setupWebSocketServer(t)
 			wsURL := "ws" + strings.TrimPrefix(wsServer.URL, "http")
+
 			return httpServer.URL, wsURL, "", func() {
 				httpServer.Close()
 				wsServer.Close()
@@ -287,6 +289,7 @@ func createSSEFallbackTest() struct {
 		setupServers: func(t *testing.T) (string, string, string, func()) {
 			t.Helper()
 			sseServer := setupSSEServer(t)
+
 			return "", "", sseServer.URL, func() { sseServer.Close() }
 		},
 		preferredOrder:   []string{"http", "websocket", "sse", "stdio"},
@@ -319,6 +322,7 @@ func createCustomPreferenceTest() struct {
 			httpServer := setupHTTPServer(t)
 			wsServer := setupWebSocketServer(t)
 			wsURL := "ws" + strings.TrimPrefix(wsServer.URL, "http")
+
 			return httpServer.URL, wsURL, "", func() {
 				httpServer.Close()
 				wsServer.Close()
@@ -352,6 +356,7 @@ func createNetworkDelayTest() struct {
 		setupServers: func(t *testing.T) (string, string, string, func()) {
 			t.Helper()
 			httpServer := setupDelayedHTTPServer(t)
+
 			return httpServer.URL, "", "", func() { httpServer.Close() }
 		},
 		preferredOrder:   []string{"http", "websocket", "sse", "stdio"},
@@ -716,8 +721,10 @@ func determineTestURL(t *testing.T, tt failureScenarioTest) string {
 	if tt.setupServer != nil {
 		testURL, cleanup := tt.setupServer(t)
 		t.Cleanup(cleanup)
+
 		return testURL
 	}
+
 	return tt.serverURL
 }
 
@@ -861,6 +868,7 @@ func testEmptyPreferredOrder(t *testing.T, ctx context.Context, config DirectCon
 	emptyConfig := config
 	emptyConfig.AutoDetection.PreferredOrder = []string{}
 
+	//nolint:contextcheck // NewDirectClientManager creates its own context for manager lifecycle
 	emptyManager := NewDirectClientManager(emptyConfig, logger)
 
 	err := emptyManager.Start(ctx)
@@ -933,13 +941,12 @@ func testNetworkErrorRecovery(t *testing.T, manager *DirectClientManager, ctx co
 }
 
 // TestAdvancedProtocolNegotiation_PerformanceCharacteristics tests performance aspects.
-
 func TestAdvancedProtocolNegotiation_PerformanceCharacteristics(t *testing.T) {
+	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("Skipping performance test in short mode")
 	}
-
-	t.Parallel()
 
 	manager := setupPerformanceTestManager(t)
 	t.Cleanup(func() {

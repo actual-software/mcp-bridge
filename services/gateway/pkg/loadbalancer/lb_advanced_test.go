@@ -653,6 +653,7 @@ func executePerformanceRequests(lb *HybridLoadBalancer, requests int) int {
 			successCount++
 		}
 	}
+
 	return successCount
 }
 

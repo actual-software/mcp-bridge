@@ -117,7 +117,10 @@ func runLoadBalancingClients(t *testing.T, addresses []string, numClients, reque
 	wg.Wait()
 }
 
-func runSingleLoadBalancingClient(t *testing.T, wg *sync.WaitGroup, clientID int, addresses []string, requestsPerClient int, logger *zap.Logger) {
+func runSingleLoadBalancingClient(
+	t *testing.T, wg *sync.WaitGroup, clientID int,
+	addresses []string, requestsPerClient int, logger *zap.Logger,
+) {
 	t.Helper()
 	defer wg.Done()
 
@@ -147,8 +150,10 @@ func createLoadBalancingClient(t *testing.T, clientID int, addresses []string, l
 	client, err := NewTCPClient(cfg, logger)
 	if err != nil {
 		t.Errorf("Client %d: Failed to create client: %v", clientID, err)
+
 		return nil
 	}
+
 	return client
 }
 
@@ -166,8 +171,11 @@ func connectLoadBalancingClient(t *testing.T, client *TCPClient, clientID int) b
 
 	if err := client.Connect(ctx); err != nil {
 		t.Errorf("Client %d: Failed to connect: %v", clientID, err)
+
 		return false
+
 	}
+
 	return true
 }
 
@@ -184,6 +192,7 @@ func sendLoadBalancingRequests(t *testing.T, client *TCPClient, clientID, reques
 
 		if err := client.SendRequest(ctx, req); err != nil {
 			t.Errorf("Client %d: Failed to send request: %v", clientID, err)
+
 			continue
 		}
 
@@ -261,8 +270,11 @@ type failoverScenarioTest struct {
 func createFailoverScenarioTests() []failoverScenarioTest {
 	tests := make([]failoverScenarioTest, 0, 3)
 	tests = append(tests, createServerShutdownTest())
+
 	tests = append(tests, createCorruptionTest())
+
 	tests = append(tests, createSlowResponseTest())
+
 	return tests
 }
 
@@ -288,8 +300,10 @@ func createServerShutdownTest() failoverScenarioTest {
 			}
 			if err := client.SendRequest(ctx, req); err != nil {
 				return err
+
 			}
 			_, err := client.ReceiveResponse()
+
 			return err
 		},
 		expectedSuccess: false,
@@ -326,6 +340,7 @@ func createCorruptionTest() failoverScenarioTest {
 				return err
 			}
 			_, err := client.ReceiveResponse()
+
 			return err
 		},
 		expectedSuccess: false,
@@ -376,6 +391,7 @@ func createSlowResponseTest() failoverScenarioTest {
 				return err
 			}
 			_, err := client.ReceiveResponse()
+
 			return err
 		},
 		expectedSuccess: true,
@@ -492,6 +508,7 @@ func createFailoverTestServer(t *testing.T, counters *serverCounters) *mockTCPSe
 			atomic.AddInt64(counters.errorCount, 1)
 
 			_ = conn.Close()
+
 			return
 		}
 
@@ -548,6 +565,7 @@ func startFailoverServer(t *testing.T, server *mockTCPServerBench) string {
 	if err != nil {
 		t.Fatalf("Failed to start server: %v", err)
 	}
+
 	return addr
 }
 
@@ -610,6 +628,7 @@ func runSingleOperation(
 	client, err := NewTCPClient(cfg, logger)
 	if err != nil {
 		atomic.AddInt64(counters.errors, 1)
+
 		return
 	}
 
@@ -618,6 +637,7 @@ func runSingleOperation(
 	ctx := context.Background()
 	if err := client.Connect(ctx); err != nil {
 		atomic.AddInt64(counters.errors, 1)
+
 		return
 	}
 
@@ -629,6 +649,7 @@ func runSingleOperation(
 
 	if err := client.SendRequest(ctx, req); err != nil {
 		atomic.AddInt64(counters.errors, 1)
+
 		return
 	}
 

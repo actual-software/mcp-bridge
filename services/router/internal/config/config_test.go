@@ -1314,6 +1314,7 @@ func validateEdgeCaseResult(t *testing.T, tt struct {
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
+
 		return
 	}
 

@@ -91,16 +91,19 @@ func validateNewClientResult(t *testing.T, tt struct {
 		if err == nil {
 			t.Error("Expected error but got none")
 		}
+
 		return
 	}
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
+
 		return
 	}
 
 	if client == nil {
 		t.Error("Expected client to be created")
+
 		return
 	}
 
@@ -164,6 +167,7 @@ func createConfigureTLSTests() []struct {
 				if cfg.MinVersion != tls.VersionTLS13 {
 					return errors.New("MinVersion should be TLS 1.3")
 				}
+
 				return nil
 			},
 		},
@@ -180,6 +184,7 @@ func createConfigureTLSTests() []struct {
 				if cfg.MinVersion != tls.VersionTLS12 {
 					return errors.New("MinVersion should be TLS 1.2")
 				}
+
 				return nil
 			},
 		},
@@ -317,6 +322,7 @@ func createSuccessfulBearerHandler(t *testing.T) http.HandlerFunc {
 		if auth != "Bearer test-token" {
 			t.Errorf("Expected 'Bearer test-token', got '%s'", auth)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
 			return
 		}
 
@@ -325,6 +331,7 @@ func createSuccessfulBearerHandler(t *testing.T) http.HandlerFunc {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			t.Errorf("Failed to upgrade: %v", err)
+
 			return
 		}
 
@@ -490,21 +497,25 @@ func validateConnectResult(t *testing.T, err error, client *Client, tt struct {
 	if tt.wantError {
 		if err == nil {
 			t.Error("Expected error but got none")
+
 			return
 		}
 		if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
 			t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
 		}
+
 		return
 	}
-	
+
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
+
 		return
 	}
 
 	if client.conn == nil {
 		t.Error("Expected connection to be established")
+
 		return
 	}
 
@@ -817,6 +828,7 @@ func TestClient_ReceiveResponse_InvalidPayload(t *testing.T) {
 
 func createInvalidPayloadServer(t *testing.T) *httptest.Server {
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -844,7 +856,9 @@ func verifyInvalidPayloadError(t *testing.T, client *Client) {
 	_, err := client.ReceiveResponse()
 	if err == nil {
 		t.Error("Expected error for message without MCP payload")
+
 		return
+
 	}
 	if !strings.Contains(err.Error(), "without MCP payload") {
 		t.Errorf("Expected 'without MCP payload' error, got: %v", err)
@@ -865,6 +879,7 @@ func TestClient_SendPing(t *testing.T) {
 
 func createPingHandlerServer(t *testing.T, pingReceived chan<- bool) *httptest.Server {
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -875,6 +890,7 @@ func createPingHandlerServer(t *testing.T, pingReceived chan<- bool) *httptest.S
 
 		conn.SetPingHandler(func(appData string) error {
 			pingReceived <- true
+
 			return conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(time.Second))
 		})
 
@@ -921,7 +937,9 @@ func TestClient_Close(t *testing.T) {
 }
 
 func createCloseHandlerServer(t *testing.T, closeReceived chan<- bool) *httptest.Server {
+
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -932,6 +950,7 @@ func createCloseHandlerServer(t *testing.T, closeReceived chan<- bool) *httptest
 
 		conn.SetCloseHandler(func(code int, text string) error {
 			closeReceived <- true
+
 			return nil
 		})
 
@@ -1039,6 +1058,7 @@ func TestClient_ConcurrentOperations(t *testing.T) {
 
 func createEchoServer(t *testing.T) *httptest.Server {
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -1148,6 +1168,7 @@ func BenchmarkClient_SendRequest(b *testing.B) {
 
 func createNullServer(b *testing.B) *httptest.Server {
 	b.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -1246,6 +1267,8 @@ func getConnectErrorScenarios(t *testing.T) []struct {
 	wantError     bool
 	errorContains string
 } {
+	t.Helper()
+
 	return []struct {
 		name          string
 		setupClient   func() *Client
@@ -1274,8 +1297,11 @@ func getConnectErrorScenarios(t *testing.T) []struct {
 }
 
 func createInvalidURLClient(t *testing.T) func() *Client {
+	t.Helper()
+
 	return func() *Client {
 		logger := testutil.NewTestLogger(t)
+
 		return &Client{
 			config: config.GatewayConfig{
 				URL: "://invalid-url",
@@ -1291,8 +1317,11 @@ func createInvalidURLClient(t *testing.T) func() *Client {
 }
 
 func createTimeoutClient(t *testing.T) func() *Client {
+	t.Helper()
+
 	return func() *Client {
 		logger := testutil.NewTestLogger(t)
+
 		return &Client{
 			config: config.GatewayConfig{
 				URL: "ws://nonexistent-host-12345.invalid:9999",
@@ -1311,8 +1340,11 @@ func createTimeoutClient(t *testing.T) func() *Client {
 }
 
 func createMTLSMissingCertClient(t *testing.T) func() *Client {
+	t.Helper()
+
 	return func() *Client {
 		logger := testutil.NewTestLogger(t)
+
 		return &Client{
 			config: config.GatewayConfig{
 				URL: "wss://example.com",
@@ -1340,16 +1372,19 @@ func verifyConnectError(t *testing.T, client *Client, tt struct {
 	if tt.wantError {
 		if err == nil {
 			t.Error("Expected error but got none")
+
 			return
 		}
 		if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
 			t.Errorf("Expected error containing '%s', got '%s'", tt.errorContains, err.Error())
 		}
+
 		return
 	}
 	
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
+
 		return
 	}
 
@@ -1375,7 +1410,9 @@ func TestClient_NetworkFailures(t *testing.T) {
 }
 
 func createDropConnectionServer(t *testing.T, connectChan chan<- struct{}) *httptest.Server {
+
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -1477,15 +1514,21 @@ func getAuthenticationEdgeCaseTests() []struct {
 	}
 }
 
+
 func createErrorAuthHandler(t *testing.T, expectAuth bool) http.HandlerFunc {
+
 	t.Helper()
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Should not reach here", http.StatusInternalServerError)
 	}
 }
 
+
 func createNoAuthHandler(t *testing.T, expectAuth bool) http.HandlerFunc {
+
 	t.Helper()
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Check that no auth header is set
 		auth := r.Header.Get("Authorization")
@@ -1549,17 +1592,26 @@ func verifyAuthResult(t *testing.T, err error, wantError bool, errorContains str
 	
 	if wantError {
 		if err == nil {
+
 			t.Error("Expected error but got none")
+
 			return
 		}
 		if errorContains != "" && !strings.Contains(err.Error(), errorContains) {
+
+
 			t.Errorf("Expected error containing '%s', got '%s'", errorContains, err.Error())
+
 		}
+
 		return
 	}
 	
+
 	if err != nil {
+
 		t.Errorf("Unexpected error: %v", err)
+
 		return
 	}
 
@@ -1572,8 +1624,11 @@ func verifyAuthResult(t *testing.T, err error, wantError bool, errorContains str
 
 // Test concurrent operations with potential race conditions.
 // createSlowEchoServer creates a server that echoes messages with a delay.
+
 func createSlowEchoServer(t *testing.T) *httptest.Server {
+
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 
@@ -1741,8 +1796,11 @@ func TestClient_ConnectionLifecycle(t *testing.T) {
 	testConnectionLifecycles(t, client)
 }
 
+
 func createLifecycleTestServer(t *testing.T) *httptest.Server {
+
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -1759,8 +1817,11 @@ func createLifecycleTestServer(t *testing.T) *httptest.Server {
 
 func createLifecycleTestClient(t *testing.T, serverURL string) *Client {
 	t.Helper()
+
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
+
 	logger := testutil.NewTestLogger(t)
+
 	return &Client{
 		config: config.GatewayConfig{
 			URL: wsURL,
@@ -1850,8 +1911,11 @@ func testSingleMalformedMessage(t *testing.T, msg string) {
 	testMalformedMessageReceive(t, client)
 }
 
+
 func createMalformedMessageServer(t *testing.T, msg string) *httptest.Server {
+
 	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		upgrader := websocket.Upgrader{}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -1870,8 +1934,11 @@ func createMalformedMessageServer(t *testing.T, msg string) *httptest.Server {
 
 func createMalformedMessageClient(t *testing.T, serverURL string) *Client {
 	t.Helper()
+
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
+
 	logger := testutil.NewTestLogger(t)
+
 	return &Client{
 		config: config.GatewayConfig{
 			URL: wsURL,

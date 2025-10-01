@@ -809,6 +809,7 @@ func runHighLoadTest(ctx context.Context, limiter RateLimiter, numGoroutines, re
 	}
 
 	wg.Wait()
+
 	return allowed
 }
 

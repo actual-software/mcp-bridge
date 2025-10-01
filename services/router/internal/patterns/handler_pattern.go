@@ -338,6 +338,8 @@ func InitializeConnectionManager(
 }
 
 // EstablishManagedConnection establishes and manages a connection.
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (m *ConnectionManager) EstablishManagedConnection(
 	ctx context.Context,
 	config ConnectionConfig,
@@ -367,6 +369,8 @@ func (m *ConnectionManager) EstablishManagedConnection(
 }
 
 // establishNewConnection creates a new connection with retries.
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (m *ConnectionManager) establishNewConnection(ctx context.Context, config ConnectionConfig) (Connection, error) {
 	var lastErr error
 
@@ -431,11 +435,11 @@ func (m *ConnectionManager) isConnectionValid(ctx context.Context, conn Connecti
 		return false
 	}
 
-	// Quick health check.
-	ctx, cancel := context.WithTimeout(context.Background(), HealthCheckTimeout)
+	// Quick health check with timeout based on parent context.
+	healthCtx, cancel := context.WithTimeout(ctx, HealthCheckTimeout)
 	defer cancel()
 
-	return m.connectionValidator.CheckHealth(ctx, conn) == nil
+	return m.connectionValidator.CheckHealth(healthCtx, conn) == nil
 }
 
 // startMonitoring starts monitoring a connection.

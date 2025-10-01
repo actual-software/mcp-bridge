@@ -302,6 +302,7 @@ func setupSSEBenchmarkClient(b *testing.B, logger *zap.Logger) (*SSEClient, func
 }
 
 func setupStdioBenchmarkClient(b *testing.B, logger *zap.Logger) (*StdioClient, func()) {
+	b.Helper()
 	tmpDir := b.TempDir()
 	scriptPath := createSimpleEchoScript(b, tmpDir)
 

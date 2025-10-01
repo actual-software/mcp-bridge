@@ -507,6 +507,8 @@ func createWebSocketFailureTest(t *testing.T) struct {
 }
 
 // Helper functions for runConcurrentRequestsTest.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupConcurrentTestManager(t *testing.T) DirectClientManagerInterface {
 	t.Helper()
 

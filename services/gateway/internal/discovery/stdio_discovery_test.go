@@ -23,10 +23,10 @@ func TestCreateStdioServiceDiscovery(t *testing.T) {
 
 			sd, err := CreateStdioServiceDiscovery(tt.config, logger)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, sd)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, sd)
 				stdioSD, ok := sd.(*StdioDiscovery)
 				assert.True(t, ok)
@@ -136,7 +136,7 @@ func TestStdioDiscovery_StartStop(t *testing.T) {
 
 	// Test Start
 	err = sd.Start(context.Background())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Test Stop
 	// Stop should not error

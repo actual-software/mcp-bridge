@@ -8,6 +8,8 @@ import (
 )
 
 // createTCPClient is the client creator function for TCP connections.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func createTCPClient(cfg config.GatewayConfig, logger *zap.Logger) (gateway.GatewayClient, error) {
 	return gateway.NewTCPClient(cfg, logger)
 }

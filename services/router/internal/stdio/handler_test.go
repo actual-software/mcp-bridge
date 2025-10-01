@@ -166,6 +166,7 @@ func runStdinHandlerTest(
 			case msg, ok := <-stdinChan:
 				if !ok {
 					done <- true
+
 					return
 				}
 
@@ -175,6 +176,7 @@ func runStdinHandlerTest(
 				}
 			case <-time.After(testIterations * time.Millisecond):
 				done <- true
+
 				return
 			}
 		}

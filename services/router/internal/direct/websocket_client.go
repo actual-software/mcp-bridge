@@ -203,6 +203,7 @@ func (c *WebSocketClient) prepareHeaders() http.Header {
 	for key, value := range c.config.Headers {
 		headers.Set(key, value)
 	}
+
 	return headers
 }
 
@@ -225,6 +226,7 @@ func (c *WebSocketClient) establishConnection(
 		if resp != nil {
 			return nil, resp, fmt.Errorf("WebSocket connection failed with status %d: %w", resp.StatusCode, err)
 		}
+
 		return nil, resp, fmt.Errorf("WebSocket connection failed: %w", err)
 	}
 
@@ -238,6 +240,7 @@ func (c *WebSocketClient) configureConnectionHandlers(conn *websocket.Conn) {
 	// Set pong handler.
 	conn.SetPongHandler(func(appData string) error {
 		c.logger.Debug("received pong", zap.String("data", appData))
+
 		return conn.SetReadDeadline(time.Now().Add(c.config.PongTimeout))
 	})
 
@@ -486,6 +489,7 @@ func (c *WebSocketClient) Close(ctx context.Context) error {
 	}
 
 	c.finalizeClose()
+
 	return nil
 }
 
@@ -538,6 +542,7 @@ func (c *WebSocketClient) waitForShutdown(ctx context.Context) error {
 		c.logger.Debug("background routines did not finish quickly, continuing with close")
 	case <-ctx.Done():
 		c.state = StateClosed
+
 		return ctx.Err()
 	}
 

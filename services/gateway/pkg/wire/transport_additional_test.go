@@ -66,7 +66,7 @@ func TestTransport_SendControl(t *testing.T) {
 	// Check send completed
 	select {
 	case err := <-errChan:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(time.Second):
 		t.Fatal("Send timeout")
 	}
@@ -106,7 +106,7 @@ func TestTransport_SendVersionNegotiation(t *testing.T) {
 	// Check send completed
 	select {
 	case err := <-errChan:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(time.Second):
 		t.Fatal("Send timeout")
 	}
@@ -139,7 +139,7 @@ func TestTransport_SendVersionAck(t *testing.T) {
 	// Check send completed
 	select {
 	case err := <-errChan:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(time.Second):
 		t.Fatal("Send timeout")
 	}
@@ -211,10 +211,10 @@ func verifyEncodeJSONResult(t *testing.T, data []byte, err error, wantErr bool, 
 	t.Helper()
 
 	if wantErr {
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, data)
 	} else {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, data)
 
 		// Verify it's valid JSON
@@ -234,7 +234,7 @@ func TestTransport_SetDeadline(t *testing.T) {
 	// Set deadline
 	deadline := time.Now().Add(time.Hour)
 	err := client.SetDeadline(deadline)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Clear deadline
 	err = client.SetDeadline(time.Time{})
@@ -247,7 +247,7 @@ func TestTransport_SetWriteDeadline(t *testing.T) {
 	// Set write deadline
 	deadline := time.Now().Add(time.Hour)
 	err := client.SetWriteDeadline(deadline)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Clear write deadline
 	err = client.SetWriteDeadline(time.Time{})
@@ -264,7 +264,7 @@ func TestTransport_GetWriter(t *testing.T) {
 	data := []byte("test data")
 	n, err := writer.Write(data)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, len(data), n)
 }
 
@@ -307,7 +307,7 @@ func testReceiveUnknownMessageType(t *testing.T) {
 
 	msgType, msg, err := transport.ReceiveMessage()
 	// Unknown message types should cause an error
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unknown message type")
 	assert.Equal(t, MessageType(0x9999), msgType)
 	assert.Nil(t, msg)
@@ -335,7 +335,7 @@ func testReceiveMalformedJSON(t *testing.T) {
 	}()
 
 	msgType, msg, err := transport.ReceiveMessage()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, MessageTypeRequest, msgType)
 	assert.Nil(t, msg)
 }
@@ -421,7 +421,7 @@ func TestTransport_SendReceive_ErrorConditions(t *testing.T) {
 		}
 
 		err := client.SendRequest(req)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "json: unsupported type")
 	})
 
@@ -436,7 +436,7 @@ func TestTransport_SendReceive_ErrorConditions(t *testing.T) {
 		}
 
 		err := client.SendResponse(resp)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "json: unsupported type")
 	})
 
@@ -449,7 +449,7 @@ func TestTransport_SendReceive_ErrorConditions(t *testing.T) {
 		}
 
 		err := client.SendControl(controlData)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "json: unsupported type")
 	})
 }

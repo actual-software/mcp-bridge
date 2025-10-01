@@ -96,13 +96,13 @@ func runOAuth2ProviderTest(t *testing.T, tt oAuth2ProviderTestCase) {
 	provider, err := createOAuth2AuthProvider(tt.config, logger)
 
 	if tt.wantError {
-		assert.Error(t, err)
+		require.Error(t, err)
 
 		if tt.errorMsg != "" {
 			assert.Contains(t, err.Error(), tt.errorMsg)
 		}
 	} else {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, provider)
 	}
 }
@@ -529,19 +529,19 @@ func TestOAuth2Provider_ValidateToken_WithCache(t *testing.T) {
 
 	// First call should hit the server
 	claims1, err := provider.ValidateToken("test-token")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, claims1)
 	assert.Equal(t, 1, callCount)
 
 	// Second call should use cache
 	claims2, err := provider.ValidateToken("test-token")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, claims2)
 	assert.Equal(t, 1, callCount) // No additional call
 
 	// Different token should hit server again
 	claims3, err := provider.ValidateToken("different-token")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, claims3)
 	assert.Equal(t, 2, callCount)
 }
@@ -680,14 +680,14 @@ func runIntrospectErrorTest(t *testing.T, tt introspectErrorTestCase) {
 	resp, err := provider.introspectToken("test-token")
 
 	if tt.expectError {
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, resp)
 
 		if tt.errorContains != "" {
 			assert.Contains(t, err.Error(), tt.errorContains)
 		}
 	} else {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, resp)
 	}
 }

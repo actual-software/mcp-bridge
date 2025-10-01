@@ -80,6 +80,7 @@ type testFactory struct {
 	createCount int
 }
 
+//nolint:ireturn // Test helper requires interface return
 func (tf *testFactory) Create(ctx context.Context) (Connection, error) {
 	tf.createCount++
 

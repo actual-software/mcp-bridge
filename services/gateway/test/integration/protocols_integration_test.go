@@ -385,6 +385,7 @@ func (suite *ProtocolsIntegrationTestSuite) createConcurrentWebSocketBackend(log
 	suite.Require().NoError(err)
 
 	time.Sleep(httpStatusInternalError * time.Millisecond)
+
 	return wsBackendInstance
 }
 
@@ -484,6 +485,7 @@ func (suite *ProtocolsIntegrationTestSuite) collectResults(
 			wsErrors++
 		}
 	}
+
 	return stdioErrors, wsErrors
 }
 

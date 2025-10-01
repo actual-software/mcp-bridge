@@ -349,6 +349,7 @@ func createConcurrentTestEndpoints() []*discovery.Endpoint {
 			Weight:  testIterations,
 		}
 	}
+
 	return endpoints
 }
 
@@ -390,6 +391,7 @@ func executeConcurrentOperations(t *testing.T, lb LoadBalancer) *sync.Map {
 	startConcurrentUpdates(&wg, lb)
 	
 	wg.Wait()
+
 	return selections
 }
 
@@ -428,6 +430,7 @@ func createUpdateEndpoints(iter int) []*discovery.Endpoint {
 			Weight:  testIterations,
 		}
 	}
+
 	return newEndpoints
 }
 
@@ -437,6 +440,7 @@ func verifyConcurrentResults(t *testing.T, selections *sync.Map) {
 	count := 0
 	selections.Range(func(_, _ interface{}) bool {
 		count++
+
 		return true
 	})
 	

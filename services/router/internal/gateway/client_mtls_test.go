@@ -529,6 +529,7 @@ func createMTLSTestClient(t *testing.T, tt struct {
 	t.Helper()
 
 	logger := testutil.NewTestLogger(t)
+
 	return &Client{
 		config: config.GatewayConfig{
 			Auth: tt.config,

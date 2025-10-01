@@ -320,6 +320,8 @@ func logPoolCreation(logger *zap.Logger, config Config) {
 }
 
 // Acquire gets a connection from the pool.
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (p *Pool) Acquire(ctx context.Context) (Connection, error) {
 	acquirer := CreateConnectionAcquirer(p)
 

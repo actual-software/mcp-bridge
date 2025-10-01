@@ -109,7 +109,8 @@ func InitOTelTracer(cfg config.TracingConfig, logger *zap.Logger) (*OTelTracer, 
 }
 
 // createExporter creates the appropriate trace exporter based on configuration.
-
+//
+//nolint:ireturn // Factory pattern requires interface return
 func createExporter(cfg config.TracingConfig, logger *zap.Logger) (sdktrace.SpanExporter, error) {
 	switch cfg.ExporterType {
 	case "otlp", "":

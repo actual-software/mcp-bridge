@@ -108,6 +108,8 @@ func Init(cfg config.TracingConfig, logger *zap.Logger) (*Tracer, error) {
 }
 
 // createExporter creates the appropriate trace exporter based on configuration.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func createExporter(cfg config.TracingConfig, logger *zap.Logger) (sdktrace.SpanExporter, error) {
 	switch cfg.ExporterType {
 	case "otlp", "":
@@ -131,6 +133,8 @@ func createExporter(cfg config.TracingConfig, logger *zap.Logger) (sdktrace.Span
 }
 
 // createSampler creates the appropriate sampler based on configuration.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func createSampler(cfg config.TracingConfig) sdktrace.Sampler {
 	switch cfg.SamplerType {
 	case "always_on", "":
@@ -145,6 +149,8 @@ func createSampler(cfg config.TracingConfig) sdktrace.Sampler {
 }
 
 // StartSpan starts a new span.
+//
+//nolint:ireturn // Accessor returns interface type
 func (t *Tracer) StartSpan(ctx context.Context, name string,
 	opts ...trace.SpanStartOption) (context.Context, trace.Span) {
 	if t.tracer == nil {
@@ -155,6 +161,8 @@ func (t *Tracer) StartSpan(ctx context.Context, name string,
 }
 
 // StartSpanWithKind starts a new span with a specific kind.
+//
+//nolint:ireturn // Accessor returns interface type
 func (t *Tracer) StartSpanWithKind(ctx context.Context, name string,
 	kind trace.SpanKind) (context.Context, trace.Span) {
 	return t.StartSpan(ctx, name, trace.WithSpanKind(kind))

@@ -20,6 +20,8 @@ func TestNewTokenStore(t *testing.T) {
 }
 
 // validateTokenStoreCreation creates a token store and validates it's not nil.
+//
+//nolint:ireturn // Test helper requires interface return
 func validateTokenStoreCreation(t *testing.T, appName string) TokenStore {
 	t.Helper()
 
@@ -107,6 +109,8 @@ func TestTokenStoreOperations(t *testing.T) {
 }
 
 // setupTokenStoreTest creates a token store and cleans up existing test data.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupTokenStoreTest(t *testing.T, testKey string) TokenStore {
 	t.Helper()
 
@@ -215,6 +219,8 @@ func TestEncryptedFileStore(t *testing.T) {
 }
 
 // setupEncryptedFileStoreTest creates an encrypted file store with temporary directory for testing.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupEncryptedFileStoreTest(t *testing.T) (TokenStore, string, func()) {
 	t.Helper()
 
@@ -348,6 +354,8 @@ func TestConcurrentAccess(t *testing.T) {
 }
 
 // setupConcurrentTest creates a token store for concurrent testing.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupConcurrentTest(t *testing.T) TokenStore {
 	t.Helper()
 
@@ -456,6 +464,8 @@ func TestEncryptedFileStore_SecurityFeatures(t *testing.T) {
 }
 
 // setupSecurityTestStore creates an encrypted file store for security testing.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupSecurityTestStore(t *testing.T, tempDir string) (*encryptedFileStore, TokenStore) {
 	t.Helper()
 
@@ -625,6 +635,8 @@ func TestEncryptedFileStore_ConcurrentOperations(t *testing.T) {
 }
 
 // setupConcurrentEncryptedTest creates an encrypted file store for concurrent testing.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupConcurrentEncryptedTest(t *testing.T, tempDir string) TokenStore {
 	t.Helper()
 
@@ -699,6 +711,7 @@ func TestTokenStore_EdgeCases(t *testing.T) {
 	runTokenStoreEdgeCaseTests(t, store, tests)
 }
 
+//nolint:ireturn // Test helper requires interface return
 func setupTokenStoreEdgeCaseTest(t *testing.T) TokenStore {
 	t.Helper()
 
@@ -706,6 +719,7 @@ func setupTokenStoreEdgeCaseTest(t *testing.T) TokenStore {
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
 	}
+
 	return store
 }
 
@@ -804,11 +818,13 @@ func validateEdgeCaseStoreResult(t *testing.T, err error, wantErr bool) bool {
 
 	if wantErr && err == nil {
 		t.Error("Expected error but got none")
+
 		return false
 	}
 
 	if !wantErr && err != nil {
 		t.Errorf("Unexpected error: %v", err)
+
 		return false
 	}
 
@@ -822,6 +838,7 @@ func verifyAndCleanupEdgeCaseToken(t *testing.T, store TokenStore, key, expected
 	retrieved, err := store.Retrieve(key)
 	if err != nil {
 		t.Errorf("Failed to retrieve: %v", err)
+
 		return
 	}
 
@@ -847,6 +864,7 @@ func TestTokenStore_PerformanceUnderLoad(t *testing.T) {
 }
 
 // setupPerformanceTest creates a token store for performance testing.
+//nolint:ireturn // Test helper requires interface return.
 func setupPerformanceTest(t *testing.T) TokenStore {
 	t.Helper()
 

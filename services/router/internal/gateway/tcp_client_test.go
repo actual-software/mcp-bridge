@@ -133,11 +133,13 @@ func handleEchoMessages(conn net.Conn, reader *bufio.Reader) {
 			if !errors.Is(err, io.EOF) {
 				_ = conn.Close()
 			}
+
 			return
 		}
 
 		if frame.MessageType == MessageTypeHealthCheck {
 			sendPong(conn, frame)
+
 			continue
 		}
 
@@ -272,6 +274,7 @@ func setupTCPTestServer(t *testing.T, tt tcpConnectTest) *mockTCPServer {
 		t.Fatalf("Failed to start server: %v", err)
 	}
 	tt.cfg.URL = "tcp://" + addr
+
 	return server
 }
 
@@ -281,6 +284,7 @@ func createTCPTestClient(t *testing.T, cfg config.GatewayConfig, logger *zap.Log
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
+
 	return client
 }
 
@@ -330,6 +334,7 @@ func setupSendRequestTest(t *testing.T, logger *zap.Logger) (*mockTCPServer, *TC
 	}
 
 	client := createConnectedTCPClient(t, addr, logger)
+
 	return server, client
 }
 

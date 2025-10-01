@@ -238,7 +238,7 @@ func TestConnectionPool_GetConnection_Timeout(t *testing.T) {
 	conn2, err := pool.GetConnection(ctx)
 	duration := time.Since(start)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, conn2)
 	assert.Contains(t, err.Error(), "timeout waiting for connection")
 	assert.GreaterOrEqual(t, duration, testTimeout*time.Millisecond)
@@ -272,7 +272,7 @@ func TestConnectionPool_GetConnection_ContextCanceled(t *testing.T) {
 
 	conn2, err := pool.GetConnection(ctx)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, conn2)
 	assert.Equal(t, context.Canceled, err)
 }

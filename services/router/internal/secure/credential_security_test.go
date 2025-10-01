@@ -73,6 +73,7 @@ func TestCredentialStore_SecurityEdgeCases(t *testing.T) {
 	}
 }
 
+//nolint:ireturn // Test helper requires interface return
 func setupCredentialStore(t *testing.T) TokenStore {
 	t.Helper()
 
@@ -134,6 +135,7 @@ func testSingleMemoryCorruptionCase(t *testing.T, store TokenStore, tt memoryCor
 	// Error is acceptable for malformed input.
 	if err != nil {
 		t.Logf("Store rejected malformed input (expected): %v", err)
+
 		return
 	}
 
@@ -141,6 +143,7 @@ func testSingleMemoryCorruptionCase(t *testing.T, store TokenStore, tt memoryCor
 	retrieved, err := store.Retrieve(tt.key)
 	if err != nil {
 		t.Logf("Retrieve failed for stored malformed data: %v", err)
+
 		return
 	}
 
@@ -196,6 +199,7 @@ func runConcurrentOperations(store TokenStore, numGoroutines, numOperations int)
 	}
 
 	wg.Wait()
+
 	return errors[:errorIndex]
 }
 
@@ -319,6 +323,7 @@ func testSingleInjectionAttack(t *testing.T, store TokenStore, tt injectionAttac
 	err := store.Store(tt.key, tt.token)
 	if err != nil {
 		t.Logf("Store rejected injection attempt (acceptable): %v", err)
+
 		return
 	}
 
@@ -326,6 +331,7 @@ func testSingleInjectionAttack(t *testing.T, store TokenStore, tt injectionAttac
 	retrieved, err := store.Retrieve(tt.key)
 	if err != nil {
 		t.Logf("Retrieve failed (acceptable for injection test): %v", err)
+
 		return
 	}
 
@@ -847,9 +853,11 @@ func BenchmarkCredentialStore_SecurityOperations(b *testing.B) {
 			_ = store.Store(malformedKey, malformedToken)
 		}
 	})
-}
+} //nolint:ireturn // setupCredentialStoreForBench below returns interface for test helper
 
 // Helper for testing.B.
+//
+//nolint:ireturn // Test helper requires interface return.
 func setupCredentialStoreForBench(b *testing.B) TokenStore {
 	b.Helper()
 

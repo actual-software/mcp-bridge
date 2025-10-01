@@ -87,11 +87,13 @@ func testGatewayPoolCreation(t *testing.T, tt gatewayPoolTest, logger *zap.Logge
 
 	if tt.wantErr {
 		verifyGatewayPoolError(t, err, tt.wantErrMsg)
+
 		return
 	}
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
+
 		return
 	}
 
@@ -112,6 +114,7 @@ func verifyGatewayPool(t *testing.T, pool *GatewayPool, expectCount int) {
 	t.Helper()
 	if pool == nil {
 		t.Error("Expected non-nil pool")
+
 		return
 	}
 
@@ -167,6 +170,7 @@ func setupLoadBalancingPool(t *testing.T, config *routerConfig.Config, logger *z
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}
+
 	return pool
 }
 
@@ -201,6 +205,7 @@ func testLoadBalancingStrategy(t *testing.T, pool *GatewayPool, strategy LoadBal
 		endpoint, err := pool.SelectEndpoint()
 		if err != nil {
 			t.Errorf("SelectEndpoint failed: %v", err)
+
 			continue
 		}
 		selectedURLs = append(selectedURLs, endpoint.Config.URL)
@@ -302,6 +307,7 @@ func setupTaggedPool(t *testing.T, config *routerConfig.Config, logger *zap.Logg
 	if err != nil {
 		t.Fatalf("Failed to create pool: %v", err)
 	}
+
 	return pool
 }
 
@@ -345,11 +351,13 @@ func testTagSelection(t *testing.T, pool *GatewayPool, tt tagTest) {
 		if err == nil {
 			t.Error("Expected error but got none")
 		}
+
 		return
 	}
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
+
 		return
 	}
 

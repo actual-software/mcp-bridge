@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNegotiateVersion(t *testing.T) {
@@ -162,7 +163,7 @@ func verifyVersionNegotiationResult(
 	t.Helper()
 
 	if expectError {
-		assert.Error(t, err)
+		require.Error(t, err)
 
 		if errorContains != "" {
 			assert.Contains(t, err.Error(), errorContains)
@@ -170,7 +171,7 @@ func verifyVersionNegotiationResult(
 
 		assert.Equal(t, uint16(0), version)
 	} else {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, expectedVer, version)
 	}
 }
@@ -350,28 +351,28 @@ func TestVersionNegotiationEdgeCases(t *testing.T) {
 	t.Run("Same min and max versions", func(t *testing.T) {
 		version, err := NegotiateVersion(2, 2, 2, 2)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, uint16(2), version)
 	})
 
 	t.Run("Client has wider range", func(t *testing.T) {
 		version, err := NegotiateVersion(1, 10, 5, 6)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, uint16(6), version)
 	})
 
 	t.Run("Server has wider range", func(t *testing.T) {
 		version, err := NegotiateVersion(5, 6, 1, 10)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, uint16(6), version)
 	})
 
 	t.Run("Adjacent non-overlapping ranges", func(t *testing.T) {
 		_, err := NegotiateVersion(1, 2, 3, 4)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "no compatible protocol version")
 	})
 

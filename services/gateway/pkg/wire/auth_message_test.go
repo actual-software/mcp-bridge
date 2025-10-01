@@ -256,7 +256,7 @@ func testInvalidRequestExtraction(t *testing.T) {
 		}
 
 		extractedReq, err := authMsg.ExtractRequest()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, extractedReq)
 	})
 }
@@ -377,7 +377,7 @@ func testInvalidResponseExtraction(t *testing.T) {
 		}
 
 		extractedResp, err := authMsg.ExtractResponse()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, extractedResp)
 	})
 }

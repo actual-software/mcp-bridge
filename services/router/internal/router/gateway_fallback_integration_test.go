@@ -78,6 +78,7 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 			sendRequestFunc: func(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
 				atomic.AddInt64(&requestCount, 1)
 				time.Sleep(1 * time.Millisecond) // Simulate direct latency
+
 				return &mcp.Response{
 					JSONRPC: constants.TestJSONRPCVersion,
 					ID:      req.ID,
@@ -398,6 +399,7 @@ type TestDirectManager struct {
 func (t *TestDirectManager) Start(ctx context.Context) error { return nil }
 func (t *TestDirectManager) Stop(ctx context.Context) error  { return nil }
 
+//nolint:ireturn // Test helper requires interface return
 func (t *TestDirectManager) GetClient(ctx context.Context, serverURL string) (direct.DirectClient, error) {
 	atomic.AddInt64(&t.getClientCalled, 1)
 

@@ -286,6 +286,8 @@ func (n *NoOpLimiter) Wait(ctx context.Context) error {
 }
 
 // NewRateLimiter creates a rate limiter based on configuration.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func NewRateLimiter(ratePerSecond float64, burst int, logger *zap.Logger) RateLimiter {
 	if ratePerSecond <= 0 {
 		// No rate limiting.

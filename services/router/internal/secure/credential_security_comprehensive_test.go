@@ -93,6 +93,7 @@ func TestEncryptedFileStore_MaliciousInputResistance(t *testing.T) {
 	}
 }
 
+//nolint:ireturn // Test helper requires interface return
 func setupMaliciousInputTestStore(t *testing.T, tempDir string) TokenStore {
 	t.Helper()
 
@@ -251,6 +252,7 @@ func TestEncryptedFileStore_FileSystemSecurity(t *testing.T) {
 	testDirectoryTraversalProtection(t, tempDir, store, fileStore)
 }
 
+//nolint:ireturn // Test helper requires interface return
 func setupFileSystemSecurityTest(t *testing.T, tempDir string) (TokenStore, *encryptedFileStore) {
 	t.Helper()
 
@@ -402,6 +404,8 @@ func TestTokenStore_RaceConditions(t *testing.T) {
 }
 
 // setupRaceConditionTest creates and configures a token store for race condition testing.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupRaceConditionTest(t *testing.T) TokenStore {
 	t.Helper()
 
@@ -600,6 +604,8 @@ func TestTokenStore_PlatformSpecificBehavior(t *testing.T) {
 }
 
 // setupPlatformTest creates a token store for platform-specific testing.
+//
+//nolint:ireturn // Test helper requires interface return
 func setupPlatformTest(t *testing.T) TokenStore {
 	t.Helper()
 

@@ -119,7 +119,7 @@ func TestCreateServiceDiscoveryProvider_DefaultKubernetes(t *testing.T) {
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
 	// This will fail because we don't have k8s config, but we can check the error
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, sd)
 }
 
@@ -134,7 +134,7 @@ func TestCreateServiceDiscoveryProvider_UnsupportedProvider(t *testing.T) {
 
 	sd, err := CreateServiceDiscoveryProvider(cfg, logger)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, sd)
 	assert.Contains(t, err.Error(), "invalid service configuration")
 }

@@ -230,7 +230,7 @@ func performGracefulShutdown(t *testing.T, server *GatewayServer, ctx context.Co
 	defer shutdownCancel()
 
 	err := server.Shutdown(shutdownCtx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify context was canceled
 	select {

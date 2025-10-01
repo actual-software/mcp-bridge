@@ -30,6 +30,8 @@ type tokenData struct {
 }
 
 // newEncryptedFileStore creates a new encrypted file-based token store.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func newEncryptedFileStore(appName string) (TokenStore, error) {
 	// Get user config directory.
 	configDir, err := os.UserConfigDir()

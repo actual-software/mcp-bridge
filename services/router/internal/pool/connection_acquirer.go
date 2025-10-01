@@ -20,7 +20,8 @@ func CreateConnectionAcquirer(pool *Pool) *ConnectionAcquirer {
 }
 
 // AcquireConnection acquires a connection from the pool.
-
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (a *ConnectionAcquirer) AcquireConnection(ctx context.Context) (Connection, error) {
 	if err := a.validatePool(); err != nil {
 		return nil, err
@@ -69,7 +70,8 @@ func (a *ConnectionAcquirer) recordWaitDuration(start time.Time) {
 }
 
 // tryGetIdleConnection attempts to get an idle connection.
-
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (a *ConnectionAcquirer) tryGetIdleConnection() Connection {
 	select {
 	case conn := <-a.pool.idle:
@@ -96,7 +98,8 @@ func (a *ConnectionAcquirer) activateConnection(conn *pooledConn) {
 }
 
 // tryCreateNewConnection attempts to create a new connection if within limits.
-
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (a *ConnectionAcquirer) tryCreateNewConnection(ctx context.Context) (Connection, error) {
 	if !a.canCreateNewConnection() {
 		return nil, ErrPoolExhausted
@@ -122,7 +125,8 @@ func (a *ConnectionAcquirer) canCreateNewConnection() bool {
 }
 
 // waitForConnection waits for an available connection.
-
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (a *ConnectionAcquirer) waitForConnection(ctx context.Context) (Connection, error) {
 	waiter := &ConnectionWaiter{
 		pool:    a.pool,
@@ -158,7 +162,8 @@ func (w *ConnectionWaiter) QueueRequest() error {
 }
 
 // WaitForConnection waits for a connection to become available.
-
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (w *ConnectionWaiter) WaitForConnection() (Connection, error) {
 	select {
 	case conn := <-w.channel:
@@ -171,7 +176,8 @@ func (w *ConnectionWaiter) WaitForConnection() (Connection, error) {
 }
 
 // handleReceivedConnection processes a received connection.
-
+//
+//nolint:ireturn // Pool/manager pattern requires interface return
 func (w *ConnectionWaiter) handleReceivedConnection(conn *pooledConn) (Connection, error) {
 	if conn == nil {
 		return nil, ErrPoolClosed

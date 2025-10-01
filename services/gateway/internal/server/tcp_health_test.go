@@ -67,7 +67,7 @@ func TestTCPHealthServer_Start(t *testing.T) {
 	// Test with port 0 (disabled)
 	server := CreateTCPHealthCheckServer(0, checker, metrics, logger)
 	err := server.Start()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, server.listener)
 
 	// Test with valid port (let system assign port)
@@ -90,7 +90,7 @@ func TestTCPHealthServer_Start(t *testing.T) {
 
 	// Stop server
 	err = server.Stop()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify server is no longer listening
 	_, err = dialer.DialContext(context.Background(), "tcp", addr.String())

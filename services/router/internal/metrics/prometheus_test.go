@@ -401,6 +401,7 @@ func setupHistogramTest(t *testing.T, logger *zap.Logger) (*PrometheusExporter, 
 	}()
 
 	time.Sleep(testIterations * time.Millisecond)
+
 	return exporter, ctx, cancel
 }
 
@@ -422,6 +423,7 @@ func fetchHistogramMetrics(t *testing.T, ctx context.Context, exporter *Promethe
 	if err != nil {
 		t.Fatalf("Failed to read response: %v", err)
 	}
+
 	return string(body)
 }
 
@@ -489,6 +491,7 @@ func setupConcurrentTest(t *testing.T, logger *zap.Logger) (*PrometheusExporter,
 	}()
 
 	time.Sleep(testIterations * time.Millisecond)
+
 	return exporter, ctx, cancel
 }
 
@@ -517,12 +520,14 @@ func startConcurrentReads(ctx context.Context, addr string) chan error {
 			req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://%s/metrics", addr), nil)
 			if err != nil {
 				errors <- fmt.Errorf("failed to create request: %w", err)
+
 				return
 			}
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				errors <- err
+
 				return
 			}
 			_ = resp.Body.Close()

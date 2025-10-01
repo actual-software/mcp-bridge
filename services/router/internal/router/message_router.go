@@ -84,7 +84,9 @@ func NewMessageRouter(
 func (mr *MessageRouter) Start(ctx context.Context) {
 	mr.wg.Add(DefaultRetryCountLimited)
 
+	//nolint:contextcheck // Background goroutines use router's internal context mr.ctx for lifecycle management
 	go mr.handleStdinToWS()
+	//nolint:contextcheck // Background goroutines use router's internal context mr.ctx for lifecycle management
 	go mr.handleWSToStdout()
 	go mr.handleConnectionStateChanges()
 }
@@ -559,7 +561,9 @@ func (mr *MessageRouter) handleFallbackToGateway(
 }
 
 // processRequestWithFallback attempts direct connection first, then falls back to gateway on failure.
-func (mr *MessageRouter) processRequestWithFallback(ctx context.Context, req *mcp.Request, data []byte, startTime time.Time) error {
+func (mr *MessageRouter) processRequestWithFallback(
+	ctx context.Context, req *mcp.Request, data []byte, startTime time.Time,
+) error {
 	directConfig := mr.config.GetDirectConfig()
 
 	// Check if fallback is disabled.
@@ -639,6 +643,7 @@ func (mr *MessageRouter) handleDirectError(req *mcp.Request, serverURL string, e
 		zap.String("server_url", serverURL),
 		zap.Error(err),
 	)
+
 	return fmt.Errorf("%s: %w", msg, err)
 }
 
@@ -685,7 +690,10 @@ func (mr *MessageRouter) processDirectRequestWithContext(
 	return nil
 }
 
-func (mr *MessageRouter) processDirectRequest(ctx context.Context, req *mcp.Request, data []byte, startTime time.Time) error {
+//nolint:funlen // Function is 61 lines, just over the 60 limit, but splitting would harm readability
+func (mr *MessageRouter) processDirectRequest(
+	ctx context.Context, req *mcp.Request, data []byte, startTime time.Time,
+) error {
 	// Create response channel for correlation - buffered to prevent blocking.
 	respChan := make(chan *mcp.Response, 1)
 
@@ -725,7 +733,7 @@ func (mr *MessageRouter) processDirectRequest(ctx context.Context, req *mcp.Requ
 	}
 
 	// Send request via direct client.
-	resp, err := client.SendRequest(mr.ctx, req)
+	resp, err := client.SendRequest(ctx, req)
 	if err != nil {
 		cleanup() // Clean up on send error
 		mr.metricsCol.IncrementErrors()
@@ -759,7 +767,11 @@ func (mr *MessageRouter) processDirectRequest(ctx context.Context, req *mcp.Requ
 }
 
 // processGatewayRequest processes a request via gateway connection.
-func (mr *MessageRouter) processGatewayRequest(ctx context.Context, req *mcp.Request, data []byte, startTime time.Time) error {
+//
+//nolint:funlen // Function is 61 lines, just over the 60 limit, but splitting would harm readability
+func (mr *MessageRouter) processGatewayRequest(
+	ctx context.Context, req *mcp.Request, data []byte, startTime time.Time,
+) error {
 	// Create response channel for correlation - buffered to prevent blocking.
 	respChan := make(chan *mcp.Response, 1)
 

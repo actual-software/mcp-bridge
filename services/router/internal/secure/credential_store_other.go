@@ -10,6 +10,8 @@ import (
 type credentialStore struct{}
 
 // newCredentialStore returns an error on non-Windows platforms.
+//
+//nolint:ireturn // Factory pattern requires interface return
 func newCredentialStore(appName string) (TokenStore, error) {
 	return nil, errors.New("credential store not available on this platform")
 }

@@ -41,7 +41,7 @@ func CreateFrontendFactory(logger *zap.Logger) *DefaultFactory {
 
 // CreateFrontend creates a frontend instance based on the provided configuration.
 //
-
+//nolint:ireturn // Factory pattern requires interface return
 func (f *DefaultFactory) CreateFrontend(
 	config FrontendConfig,
 	router RequestRouter,
@@ -63,7 +63,7 @@ func (f *DefaultFactory) SupportedProtocols() []string {
 
 // createStdioFrontend creates a stdio frontend instance.
 //
-
+//nolint:ireturn // Factory pattern requires interface return
 func (f *DefaultFactory) createStdioFrontend(
 	config FrontendConfig,
 	router RequestRouter,

@@ -103,6 +103,7 @@ func runNewRouterTest(t *testing.T, tt struct {
 	if tt.wantError {
 		if err == nil {
 			t.Error("Expected error but got none")
+
 			return
 		}
 
@@ -115,11 +116,13 @@ func runNewRouterTest(t *testing.T, tt struct {
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
+
 		return
 	}
 
 	if router == nil {
 		t.Error("Expected router to be created")
+
 		return
 	}
 
@@ -388,6 +391,7 @@ func runMessageProcessingTest(t *testing.T, router *LocalRouter, tt struct {
 		var resp mcp.Response
 		if err := json.Unmarshal(data, &resp); err != nil {
 			t.Errorf("Failed to unmarshal response: %v", err)
+
 			return
 		}
 
@@ -1056,6 +1060,7 @@ func setupCorrelationTest(t *testing.T, serverURL string) (*LocalRouter, context
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	return router, ctx, cancel
 }
 
@@ -1183,11 +1188,14 @@ func verifyAllResponsesReceived(
 // TestMessageRouter_ConnectionStateHandling tests message routing behavior.
 // during different connection states.
 func createConnectionStateTestServer(t *testing.T, mockConnectAttempts *int32) *httptest.Server {
+	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts := atomic.AddInt32(mockConnectAttempts, 1)
 		if attempts < constants.TestMaxRetries {
 			// Fail connection.
 			w.WriteHeader(http.StatusServiceUnavailable)
+
 			return
 		}
 
@@ -1217,6 +1225,7 @@ func createConnectionStateTestServer(t *testing.T, mockConnectAttempts *int32) *
 								return id
 							}
 						}
+
 						return nil
 					}()},
 			}
@@ -1228,6 +1237,7 @@ func createConnectionStateTestServer(t *testing.T, mockConnectAttempts *int32) *
 }
 
 func setupConnectionStateTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
+	t.Helper()
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1240,6 +1250,7 @@ func setupConnectionStateTestRouter(t *testing.T, mockServer *httptest.Server) *
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
+
 	return router
 }
 
@@ -1276,7 +1287,7 @@ func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
 	defer mockServer.Close()
 
 	router := setupConnectionStateTestRouter(t, mockServer)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -1620,6 +1631,8 @@ func TestMessageRouter_ConcurrentRequests(t *testing.T) {
 
 // TestMessageRouter_RequestTimeout tests timeout handling for requests.
 func createDelayedResponseServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
@@ -1640,6 +1653,7 @@ func createDelayedResponseServer(t *testing.T) *httptest.Server {
 								return id
 							}
 						}
+
 						return nil
 					}()},
 			}
@@ -1651,6 +1665,7 @@ func createDelayedResponseServer(t *testing.T) *httptest.Server {
 }
 
 func setupTimeoutTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
+	t.Helper()
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1663,7 +1678,9 @@ func setupTimeoutTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRou
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
+
 	return router
+
 }
 
 func testRequestTimeout(t *testing.T, router *LocalRouter) {
@@ -1690,7 +1707,7 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 	defer mockServer.Close()
 
 	router := setupTimeoutTestRouter(t, mockServer)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -1702,7 +1719,10 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 
 // TestMessageRouter_MetricsCollection tests that metrics are properly collected during routing.
 func createMetricsTestServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
 	return createMockWebSocketServer(t, func(conn *websocket.Conn) {
+
 		for {
 			var msg gateway.WireMessage
 			if err := conn.ReadJSON(&msg); err != nil {
@@ -1720,6 +1740,7 @@ func createMetricsTestServer(t *testing.T) *httptest.Server {
 								return id
 							}
 						}
+
 						return nil
 					}()},
 			}
@@ -1731,6 +1752,7 @@ func createMetricsTestServer(t *testing.T) *httptest.Server {
 }
 
 func setupMetricsTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRouter {
+	t.Helper()
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -1743,6 +1765,7 @@ func setupMetricsTestRouter(t *testing.T, mockServer *httptest.Server) *LocalRou
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
+
 	return router
 }
 
@@ -2097,6 +2120,7 @@ func extractMCPPayloadID(mcpPayload interface{}) interface{} {
 			return id
 		}
 	}
+
 	return nil
 }
 
@@ -2115,6 +2139,7 @@ func setupQueueLifecycleRouter(t *testing.T, serverURL string) *LocalRouter {
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
 	require.NoError(t, err)
+
 	return router
 }
 
@@ -2172,6 +2197,7 @@ func waitForAllQueuedResponses(
 				return false
 			}
 		}
+
 		return true
 	}, 5*time.Second, 100*time.Millisecond, "All queued requests should be processed")
 }
@@ -2522,7 +2548,9 @@ func setupFallbackGatewayServer(t *testing.T) *httptest.Server {
 							if id, exists := payload["id"]; exists {
 								return id
 							}
+
 						}
+
 						return nil
 					}(),
 				},
@@ -2535,7 +2563,9 @@ func setupFallbackGatewayServer(t *testing.T) *httptest.Server {
 }
 
 func createFallbackTestConfig(gatewayURL string) *config.Config {
+
 	wsURL := "ws" + strings.TrimPrefix(gatewayURL, "http")
+
 	return &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
 			Endpoints: []config.GatewayEndpoint{
@@ -2560,7 +2590,9 @@ func setupFallbackRouter(t *testing.T, cfg *config.Config) *LocalRouter {
 	t.Helper()
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
+
 	require.NoError(t, err)
+
 	return router
 }
 
@@ -2783,7 +2815,9 @@ func createRoutingTestRouter(t *testing.T, serverURL string, tt routingDecisionT
 	}
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
+
 	require.NoError(t, err)
+
 	return router
 }
 
@@ -2978,7 +3012,9 @@ func createProtocolTestRouter(t *testing.T, serverURL string) *LocalRouter {
 	}
 
 	router, err := NewForTesting(cfg, testutil.NewTestLogger(t))
+
 	require.NoError(t, err)
+
 	return router
 }
 
@@ -3034,7 +3070,11 @@ func validateProtocolMetrics(t *testing.T, router *LocalRouter, protocolMethods 
 // =====================================================================================
 
 // BenchmarkRouter_ConcurrentRequests benchmarks concurrent request processing.
+
 func createBenchmarkEchoServer(tb testing.TB) *httptest.Server {
+
+	tb.Helper()
+
 	return createMockWebSocketServer(tb, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
@@ -3051,13 +3091,16 @@ func createBenchmarkEchoServer(tb testing.TB) *httptest.Server {
 						if payload, ok := msg.MCPPayload.(map[string]interface{}); ok {
 							if id, exists := payload["id"]; exists {
 								return id
+
 							}
+
 						}
+
 						return nil
 					}()},
 			}
 			if err := conn.WriteJSON(resp); err != nil {
-				b.Logf("Failed to write JSON response: %v", err)
+				tb.Logf("Failed to write JSON response: %v", err)
 			}
 		}
 	})
@@ -3077,8 +3120,11 @@ func setupConcurrentBenchmarkRouter(b *testing.B, mockServer *httptest.Server) *
 
 	router, err := NewForTesting(cfg, zap.NewNop())
 	if err != nil {
+
 		b.Fatalf("Failed to create router: %v", err)
+
 	}
+
 	return router
 }
 
@@ -3121,7 +3167,11 @@ func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
 }
 
 // BenchmarkRouter_LargePayloads benchmarks processing of large request/response payloads.
+
 func createLargePayloadServer(tb testing.TB, largeData string) *httptest.Server {
+
+	tb.Helper()
+
 	return createMockWebSocketServer(tb, func(conn *websocket.Conn) {
 		for {
 			var msg gateway.WireMessage
@@ -3141,20 +3191,24 @@ func createLargePayloadServer(tb testing.TB, largeData string) *httptest.Server 
 						if payload, ok := msg.MCPPayload.(map[string]interface{}); ok {
 							if id, exists := payload["id"]; exists {
 								return id
+
 							}
+
 						}
+
 						return nil
 					}(),
 				},
 			}
 			if err := conn.WriteJSON(resp); err != nil {
-				b.Logf("Failed to write JSON response: %v", err)
+				tb.Logf("Failed to write JSON response: %v", err)
 			}
 		}
 	})
 }
 
 func setupLargePayloadBenchmarkRouter(b *testing.B, mockServer *httptest.Server) *LocalRouter {
+	b.Helper()
 	wsURL := "ws" + strings.TrimPrefix(mockServer.URL, "http")
 	cfg := &config.Config{
 		GatewayPool: config.GatewayPoolConfig{
@@ -3167,12 +3221,15 @@ func setupLargePayloadBenchmarkRouter(b *testing.B, mockServer *httptest.Server)
 
 	router, err := NewForTesting(cfg, zap.NewNop())
 	if err != nil {
+
 		b.Fatalf("Failed to create router: %v", err)
 	}
+
 	return router
 }
 
 func runLargePayloadBenchmark(b *testing.B, router *LocalRouter, largeData string) {
+	b.Helper()
 	requestTemplate := `{"jsonrpc":"2.0","method":"benchmark.large","params":{"data":"%s"},"id":"large-bench"}`
 	request := fmt.Sprintf(requestTemplate, largeData)
 

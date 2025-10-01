@@ -103,7 +103,7 @@ func causeCircuitToOpen(
 
 		allowed, err := limiter.Allow(ctx, "test-key", config)
 
-		assert.NoError(t, err) // Fallback should work
+		require.NoError(t, err) // Fallback should work
 		assert.True(t, allowed)
 	}
 }
@@ -187,7 +187,7 @@ func TestRedisSessionManagerWithCircuitBreaker_Get(t *testing.T) {
 
 	_, err = manager.Get(ctx, "missing-key")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "key not found")
 	assert.Equal(t, circuit.StateClosed, manager.GetCircuitBreakerState())
 
@@ -197,7 +197,7 @@ func TestRedisSessionManagerWithCircuitBreaker_Get(t *testing.T) {
 
 		_, err = manager.Get(ctx, "error-key")
 
-		assert.Error(t, err)
+		require.Error(t, err)
 	}
 
 	// Circuit should be open
@@ -206,7 +206,7 @@ func TestRedisSessionManagerWithCircuitBreaker_Get(t *testing.T) {
 	// Next request should fail immediately
 	_, err = manager.Get(ctx, "any-key")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "circuit breaker is open")
 
 	// Ensure all expectations were met
@@ -247,12 +247,12 @@ func TestRedisSessionManagerWithCircuitBreaker_SetAndDelete(t *testing.T) {
 	// Operations should fail when circuit is open
 	err = manager.Set(ctx, "key", "value", time.Minute)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "circuit breaker is open")
 
 	err = manager.Delete(ctx, "key")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "circuit breaker is open")
 
 	// Ensure all expectations were met

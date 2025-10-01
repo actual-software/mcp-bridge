@@ -233,7 +233,7 @@ func testPerIPConnectionLimits(t *testing.T, serverAddr string) []net.Conn {
 
 		buf := make([]byte, 1)
 		_, err := conn4.Read(buf)
-		assert.Error(t, err, "Expected connection to be closed due to per-IP limit")
+		require.Error(t, err, "Expected connection to be closed due to per-IP limit")
 
 		_ = conn4.Close()
 	}

@@ -253,6 +253,7 @@ func createIncompletePayloadData() []byte {
 	_ = binary.Write(buf, binary.BigEndian, uint32(0))   // Reserved padding
 	_ = binary.Write(buf, binary.BigEndian, uint32(100)) // Claims 100 bytes
 	buf.WriteString("short")                             // But only provides 5
+
 	return buf.Bytes()
 }
 

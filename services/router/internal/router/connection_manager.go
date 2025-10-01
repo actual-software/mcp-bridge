@@ -187,10 +187,11 @@ func (cm *ConnectionManager) maintainConnection(ctx context.Context) {
 
 // connect establishes the WebSocket connection.
 func (cm *ConnectionManager) connect(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(cm.ctx, defaultTimeoutSeconds*time.Second)
+	connCtx, cancel := context.WithTimeout(cm.ctx, defaultTimeoutSeconds*time.Second)
 	defer cancel()
 
-	return cm.gwClient.Connect(ctx)
+	//nolint:contextcheck // connCtx is derived from cm.ctx, the manager's lifecycle context
+	return cm.gwClient.Connect(connCtx)
 }
 
 // handleConnection manages an active connection with keepalive.

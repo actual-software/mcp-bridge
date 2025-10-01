@@ -84,6 +84,7 @@ func setupNamespaceRouterForTesting(t *testing.T, logger *zap.Logger) *Namespace
 	if err != nil {
 		t.Fatalf("Failed to create namespace router: %v", err)
 	}
+
 	return router
 }
 
@@ -178,6 +179,7 @@ func validateExpectedMatch(t *testing.T, tags []string, tt namespaceRouterTest) 
 
 	if len(tags) == 0 {
 		t.Errorf("Expected tags for method %s, got none", tt.method)
+
 		return
 	}
 
@@ -203,6 +205,7 @@ func containsTag(tags []string, expectedTag string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -487,6 +490,7 @@ func setupMultipleMatchesRouter(t *testing.T, config NamespaceRoutingConfig, log
 	if err != nil {
 		t.Fatalf("Failed to create namespace router: %v", err)
 	}
+
 	return router
 }
 
@@ -494,14 +498,16 @@ func testMultipleMatchesRouting(t *testing.T, router *NamespaceRouter) {
 	t.Helper()
 	req := &mcp.Request{Method: "test.command"}
 	tags, err := router.RouteRequest(req)
-	
+
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
+
 		return
 	}
 
 	if len(tags) == 0 {
 		t.Error("Expected tags for test.command")
+
 		return
 	}
 
@@ -511,9 +517,10 @@ func testMultipleMatchesRouting(t *testing.T, router *NamespaceRouter) {
 func verifyPriorityTags(t *testing.T, tags []string) {
 	t.Helper()
 	expectedTags := []string{"specific"}
-	
+
 	if len(tags) != len(expectedTags) {
 		t.Errorf("Expected %d tags, got %d: %v", len(expectedTags), len(tags), tags)
+
 		return
 	}
 

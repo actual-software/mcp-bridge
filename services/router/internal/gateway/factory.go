@@ -29,7 +29,8 @@ type GatewayClient interface {
 }
 
 // NewGatewayClient creates a new gateway client based on the URL scheme.
-
+//
+//nolint:ireturn // Factory pattern requires interface return
 func NewGatewayClient(cfg config.GatewayConfig, logger *zap.Logger) (GatewayClient, error) {
 	u, err := url.Parse(cfg.URL)
 	if err != nil {
@@ -49,7 +50,8 @@ func NewGatewayClient(cfg config.GatewayConfig, logger *zap.Logger) (GatewayClie
 }
 
 // for high availability and efficient resource utilization across multiple gateway endpoints.
-
+//
+//nolint:ireturn // Factory pattern requires interface return
 func NewGatewayClientWithPool(ctx context.Context, cfg *config.Config, logger *zap.Logger) (GatewayClient, error) {
 	logger.Info("Creating pool-based gateway client",
 		zap.Int("endpoints", len(cfg.GetGatewayEndpoints())),

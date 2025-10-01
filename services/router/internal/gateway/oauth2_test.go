@@ -431,7 +431,7 @@ func testOAuth2ErrorCase(t *testing.T, tt oauth2ErrorTest, logger *zap.Logger) {
 
 	client := NewOAuth2Client(cfg, logger, http.DefaultClient)
 	_, err := client.GetToken(context.Background())
-	
+
 	if (err != nil) != tt.wantErr {
 		t.Errorf("GetToken() error = %v, wantErr %v", err, tt.wantErr)
 	}
@@ -455,6 +455,8 @@ func TestOAuth2Client_ConcurrentAccess(t *testing.T) {
 }
 
 func createConcurrentOAuth2Server(t *testing.T, requestCount *int32) *httptest.Server {
+	t.Helper()
+
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(requestCount, 1)
 		time.Sleep(testIterations * time.Millisecond)
@@ -482,6 +484,7 @@ func createOAuth2TestClient(serverURL string, logger *zap.Logger) *OAuth2Client 
 			ClientSecret:  "test",
 		},
 	}
+
 	return NewOAuth2Client(cfg, logger, http.DefaultClient)
 }
 

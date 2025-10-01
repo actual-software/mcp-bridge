@@ -109,7 +109,7 @@ type GatewayPool struct {
 }
 
 // NewGatewayPool creates a new gateway pool with the given configuration.
-func NewGatewayPool(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*GatewayPool, error) {
+func NewGatewayPool(_ context.Context, cfg *config.Config, logger *zap.Logger) (*GatewayPool, error) {
 	endpoints := cfg.GetGatewayEndpoints()
 	if len(endpoints) == 0 {
 		return nil, errors.New("no gateway endpoints configured")
@@ -118,8 +118,10 @@ func NewGatewayPool(ctx context.Context, cfg *config.Config, logger *zap.Logger)
 	lbConfig := cfg.GetLoadBalancerConfig()
 	sdConfig := cfg.GetServiceDiscoveryConfig()
 
-	ctx, cancel := context.WithCancel(context.Background()) //nolint:contextcheck // Creating new root context for pool lifecycle
+	// Create new root context for pool lifecycle - not using passed context
+	ctx, cancel := context.WithCancel(context.Background())
 
+	//nolint:contextcheck // Using new root context for pool lifecycle management
 	pool := createGatewayPoolStruct(endpoints, lbConfig, sdConfig, logger, ctx, cancel)
 
 	// Initialize endpoint wrappers
@@ -213,6 +215,7 @@ func createSingleEndpointWrapper(
 	}
 }
 
+//nolint:ireturn // Factory pattern requires interface return
 func wrapWithCircuitBreakerIfEnabled(
 	client GatewayClient,
 	endpointConfig config.GatewayEndpoint,
