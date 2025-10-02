@@ -7,8 +7,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 )
 

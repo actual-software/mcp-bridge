@@ -239,7 +239,7 @@ func TestTCPConnection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to TCP server: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	t.Log("Connected successfully")
 
@@ -260,7 +260,7 @@ func TestTCPConnection(t *testing.T) {
 	}
 
 	// Read response with timeout
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	msgType, payload, err := transport.ReceiveMessage()
 	if err != nil {
 		t.Logf("Request was received by router: %v", requestReceived)
@@ -327,7 +327,7 @@ func TestTCPConnectionLimit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("First connection should succeed: %v", err)
 	}
-	defer conn1.Close()
+	defer func() { _ = conn1.Close() }()
 
 	// Give it time to register
 	time.Sleep(200 * time.Millisecond)
@@ -343,7 +343,7 @@ func TestTCPConnectionLimit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to dial second connection: %v", err)
 	}
-	defer conn2.Close()
+	defer func() { _ = conn2.Close() }()
 
 	// The connection is accepted but should be closed by the server due to limit
 	time.Sleep(200 * time.Millisecond)

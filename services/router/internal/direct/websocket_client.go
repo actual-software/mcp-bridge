@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 )
 

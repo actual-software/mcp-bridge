@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+	"github.com/gorilla/websocket"
 )
 
 // WebSocketRequestHandler handles WebSocket request processing.

@@ -238,7 +238,7 @@ func TestSSEStreamConnection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to SSE stream: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)
@@ -311,7 +311,7 @@ func TestSSERequestEndpoint(t *testing.T) {
 		t.Fatalf("Failed to establish stream: %v", err)
 	}
 	if streamResp != nil && streamResp.Body != nil {
-		defer streamResp.Body.Close()
+		defer func() { _ = streamResp.Body.Close() }()
 	}
 
 	// Start reading from stream in background
@@ -356,7 +356,7 @@ func TestSSERequestEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusAccepted {
 		body, _ := io.ReadAll(resp.Body)

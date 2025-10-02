@@ -342,10 +342,13 @@ func TestWebSocketConnectionLimit(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// Second connection should be rejected
-	ws2, resp, err := websocket.DefaultDialer.Dial(ts.url, nil)
+	ws2, resp2, err := websocket.DefaultDialer.Dial(ts.url, nil)
 	if err == nil {
-		ws2.Close()
+		_ = ws2.Close()
 		t.Fatal("Second connection should have been rejected")
+	}
+	if resp2 != nil && resp2.Body != nil {
+		_ = resp2.Body.Close()
 	}
 
 	if resp != nil && resp.StatusCode != http.StatusServiceUnavailable {
@@ -370,11 +373,14 @@ func TestWebSocketInvalidMessage(t *testing.T) {
 	ts := setupTestServer(t, config, router, auth, sessions)
 	defer ts.cleanup()
 
-	ws, _, err := websocket.DefaultDialer.Dial(ts.url, nil)
+	ws, resp, err := websocket.DefaultDialer.Dial(ts.url, nil)
 	if err != nil {
 		t.Fatalf("Failed to connect: %v", err)
 	}
-	defer ws.Close()
+	if resp != nil && resp.Body != nil {
+		defer func() { _ = resp.Body.Close() }()
+	}
+	defer func() { _ = ws.Close() }()
 
 	// Send invalid JSON
 	if err := ws.WriteMessage(websocket.TextMessage, []byte("invalid json")); err != nil {

@@ -13,8 +13,8 @@ import (
 
 	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 
-	"github.com/gorilla/websocket"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
