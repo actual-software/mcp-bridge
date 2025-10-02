@@ -118,7 +118,7 @@ The server-side component that provides universal protocol routing to any backen
 ## 🔒 Enterprise-Grade Security
 
 ### **Security Tooling & Compliance** 🛡️
-- **10+ Automated Security Tools** - Gosec, Semgrep, CodeQL, Trivy, Snyk, Nancy, OSV Scanner, TruffleHog
+- **10+ Automated Security Tools** - SAST (Gosec, Semgrep, Staticcheck), Container Security (Trivy, Grype), Dependency Scanning (OSV Scanner, OWASP Dependency Check, govulncheck), IaC Security (Checkov, Terrascan), Secret Detection (TruffleHog)
 - **SBOM Generation** - Automated Software Bill of Materials with CycloneDX and SPDX formats
 - **Compliance Reports** - SOC2, ISO 27001, PCI-DSS, HIPAA, GDPR alignment assessments
 - **Comprehensive Threat Model** - STRIDE analysis with 36 threat scenarios
