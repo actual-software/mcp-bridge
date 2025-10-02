@@ -7,8 +7,8 @@ RUN apk add --no-cache git ca-certificates
 # Set working directory
 WORKDIR /build
 
-# Copy main project go.mod (needed for replace directive)
-COPY go.mod go.sum ../../
+# Copy workspace file and main project go.mod (needed for replace directive)
+COPY go.work go.mod go.sum ../../
 
 # Copy go mod files for gateway
 COPY services/gateway/go.mod services/gateway/go.sum ./

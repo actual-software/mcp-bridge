@@ -11,12 +11,8 @@ WORKDIR /build
 COPY . /src/
 WORKDIR /src/services/router
 
-# Remove problematic go.work files
-RUN find /src -name "go.work*" -delete || true
-
-# Download dependencies and update go.sum
+# Download dependencies
 RUN go mod download
-RUN go mod tidy
 
 # Build arguments
 ARG VERSION=v1.0.0
