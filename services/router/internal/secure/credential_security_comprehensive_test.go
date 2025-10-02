@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	testIterations    = 100
-	testMaxIterations = 250
-	testTimeout       = 180 // Increased from 50 to account for serialized keychain operations
+	testIterations        = 100
+	testMaxIterations     = 250
+	stressTestNumTokens   = 50  // Number of tokens for stress test
+	stressTestMaxTokens   = 100 // Maximum tokens for extended stress testing
 )
 
 func TestCredentialStore_SecurityBoundaries(t *testing.T) {
@@ -528,7 +529,7 @@ func validateRaceConditionResults(t *testing.T, errors chan error) {
 
 func TestTokenStore_StressTest(t *testing.T) {
 	// Use descriptive stress test environment instead of complex inline logic.
-	env := EstablishStressTestEnvironment(t, "stress-test", testTimeout)
+	env := EstablishStressTestEnvironment(t, "stress-test", stressTestNumTokens)
 	defer env.Cleanup()
 
 	start := time.Now()

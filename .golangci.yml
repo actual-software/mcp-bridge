@@ -1,4 +1,6 @@
-# Configuration for golangci-lint
+# Configuration for golangci-lint v2.4.0
+version: "2"
+
 run:
   timeout: 10m
   tests: true

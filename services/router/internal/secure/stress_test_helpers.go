@@ -12,7 +12,8 @@ import (
 
 const (
 	// StressTestTimeout is the timeout for stress testing operations.
-	StressTestTimeout = 2 * time.Minute
+	// Increased to accommodate serialized keychain operations (50 tokens × 3 ops each = 150 ops)
+	StressTestTimeout = 5 * time.Minute
 	// TokenByteLength is the length in bytes for random tokens.
 	TokenByteLength = 32
 )
