@@ -39,6 +39,9 @@ type GatewayServer struct {
 	// Frontend management
 	frontends []frontends.Frontend
 
+	// Health HTTP server
+	healthServer *HealthHTTPServer
+
 	// Server lifecycle
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -113,12 +116,31 @@ func BootstrapGatewayServer(
 			zap.String("protocol", frontendCfg.Protocol))
 	}
 
+	// Initialize health HTTP server
+	if cfg.Server.HealthPort > 0 {
+		s.healthServer = NewHealthHTTPServer(
+			cfg.Server.HealthPort,
+			health,
+			router,
+			s,
+			logger,
+		)
+		logger.Info("created health HTTP server", zap.Int("port", cfg.Server.HealthPort))
+	}
+
 	return s
 }
 
 // Start starts the gateway server and all configured frontends.
 func (s *GatewayServer) Start() error {
 	s.logger.Info("starting gateway server", zap.Int("frontends", len(s.frontends)))
+
+	// Start health HTTP server if configured
+	if s.healthServer != nil {
+		if err := s.healthServer.Start(); err != nil {
+			return fmt.Errorf("failed to start health HTTP server: %w", err)
+		}
+	}
 
 	// Start all frontends
 	for _, frontend := range s.frontends {
@@ -127,7 +149,10 @@ func (s *GatewayServer) Start() error {
 				zap.String("name", frontend.GetName()),
 				zap.String("protocol", frontend.GetProtocol()),
 				zap.Error(err))
-			// Stop previously started frontends
+			// Stop health server and previously started frontends
+			if s.healthServer != nil {
+				s.healthServer.Stop(s.ctx)
+			}
 			s.stopStartedFrontends()
 			return fmt.Errorf("failed to start frontend %s: %w", frontend.GetName(), err)
 		}
@@ -161,6 +186,13 @@ func (s *GatewayServer) Shutdown(ctx context.Context) error {
 
 	// Cancel context to signal shutdown
 	s.cancel()
+
+	// Stop health HTTP server
+	if s.healthServer != nil {
+		if err := s.healthServer.Stop(ctx); err != nil {
+			s.logger.Warn("error stopping health HTTP server", zap.Error(err))
+		}
+	}
 
 	// Stop all frontends
 	s.stopStartedFrontends()

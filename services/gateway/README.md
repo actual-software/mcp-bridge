@@ -585,13 +585,23 @@ For detailed troubleshooting information, see the [Troubleshooting Guide](docs/T
    kubectl scale deployment mcp-gateway -n mcp-system --replicas=5
    ```
 
-## Current Limitations
+## Health Endpoints
 
-The following features are documented in planning materials but not yet fully implemented:
+The gateway provides comprehensive health check endpoints for monitoring:
 
-- **Granular Health Endpoints**: Only `/health`, `/healthz`, and `/ready` are implemented. Per-protocol and per-component health endpoints are planned
+### Overall Health
+- `/health` - Detailed system health with all subsystems
+- `/healthz` - Simple liveness check (Kubernetes compatible)
+- `/ready` - Readiness check (Kubernetes compatible)
 
-This limitation does not affect the core functionality of routing MCP requests to backend servers.
+### Granular Health Endpoints
+- `/health/frontends` - Health status of all frontends
+- `/health/frontend/{protocol}` - Health of specific frontend (http, sse, websocket, tcp, stdio)
+- `/health/backends` - Health status of all backend servers
+- `/health/backend/{name}` - Health of specific backend server
+- `/health/components` - Detailed component health (Redis, service discovery, etc.)
+
+All health endpoints are served on the configured `health_port` (default: 8090).
 
 **Fully Implemented:**
 - ✅ **All Frontend Protocols**: WebSocket, HTTP, SSE, TCP Binary, and stdio frontends are fully implemented
