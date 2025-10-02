@@ -590,9 +590,8 @@ For detailed troubleshooting information, see the [Troubleshooting Guide](docs/T
 The following features are documented in planning materials but not yet fully implemented:
 
 - **Granular Health Endpoints**: Only `/health`, `/healthz`, and `/ready` are implemented. Per-protocol and per-component health endpoints are planned
-- **HTTP/SSE Backends**: Backend support is currently limited to stdio, WebSocket, and SSE protocols
 
-These limitations do not affect the core functionality of routing MCP requests to backend servers.
+This limitation does not affect the core functionality of routing MCP requests to backend servers.
 
 **Fully Implemented:**
 - ✅ **All Frontend Protocols**: WebSocket, HTTP, SSE, TCP Binary, and stdio frontends are fully implemented

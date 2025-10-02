@@ -73,6 +73,7 @@ The Router supports direct connections to local MCP servers using:
 The Gateway routes requests to backend MCP servers using:
 - **stdio** - Subprocess-based servers
 - **WebSocket** - WebSocket protocol servers
+- **HTTP** - HTTP-based MCP servers
 - **SSE** - Server-Sent Events servers
 
 #### Client Connection Methods
@@ -112,7 +113,7 @@ The server-side component that provides universal protocol routing to any backen
 - 🔍 **Service Discovery** - Kubernetes, Consul, and static configuration support
 - 🛡️ **Health Monitoring** - Comprehensive health checks for orchestration systems
 - 📊 **Full Observability** - Metrics, logging, distributed tracing support
-- 🚀 **Backend Protocol Support** - stdio, WebSocket, SSE server connectivity
+- 🚀 **Backend Protocol Support** - stdio, WebSocket, HTTP, SSE server connectivity
 
 ## 🔒 Enterprise-Grade Security
 
