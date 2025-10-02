@@ -1,14 +1,20 @@
 # Build artifacts
 *.test
 *.out
+*.coverprofile
 coverage.out
 coverage.html
+test-report.json
 
 # Compiled binaries (ignore all binaries in bin/ directories)
 */bin/*
 bin/
 mcp-gateway
 mcp-router
+
+# Lint artifacts
+lint-fix-logs/
+lint_output.txt
 
 # Temporary files
 *.tmp
@@ -49,7 +55,7 @@ logs/
 
 # Security and Performance reports
 security-reports/
-test/performance/
+test/performance/testdata/*.json
 *.sarif
 
 # Runtime data
@@ -79,5 +85,3 @@ target/
 # Go workspace file
 go.work.sum.lock
 
-#
-coverage.out
