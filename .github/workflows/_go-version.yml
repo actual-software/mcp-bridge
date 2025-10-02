@@ -1,0 +1,37 @@
+name: Get Go Version
+
+# Reusable workflow to extract Go version from go.mod
+# Usage in other workflows:
+#
+# jobs:
+#   get-go-version:
+#     uses: ./.github/workflows/_go-version.yml
+#
+#   your-job:
+#     needs: get-go-version
+#     steps:
+#       - uses: actions/setup-go@v5
+#         with:
+#           go-version: ${{ needs.get-go-version.outputs.go-version }}
+
+on:
+  workflow_call:
+    outputs:
+      go-version:
+        description: "Go version from go.mod"
+        value: ${{ jobs.get-version.outputs.go-version }}
+
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      go-version: ${{ steps.get-go-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract Go version from go.mod
+        id: get-go-version
+        run: |
+          GO_VERSION=$(awk '/^go / {print $2}' go.mod)
+          echo "version=$GO_VERSION" >> $GITHUB_OUTPUT
+          echo "📋 Go version from go.mod: $GO_VERSION"
