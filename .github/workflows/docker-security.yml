@@ -61,7 +61,7 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
 
     - name: Build Docker image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: ./Dockerfile.${{ matrix.component }}
@@ -81,7 +81,7 @@ jobs:
         severity: 'CRITICAL,HIGH,MEDIUM'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-${{ matrix.component }}-results.sarif'
@@ -95,7 +95,7 @@ jobs:
         exit-code: '1'
 
     - name: Run Grype vulnerability scanner
-      uses: anchore/scan-action@v3
+      uses: anchore/scan-action@v4
       id: grype
       with:
         image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
@@ -104,7 +104,7 @@ jobs:
         acs-report-enable: true
 
     - name: Upload Grype scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: ${{ steps.grype.outputs.sarif }}
@@ -120,13 +120,13 @@ jobs:
 
     - name: Upload Docker Scout scan results
       if: github.event_name != 'pull_request'
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'scout-${{ matrix.component }}-results.sarif'
 
     - name: Push Docker image
       if: github.event_name != 'pull_request'
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: ./Dockerfile.${{ matrix.component }}

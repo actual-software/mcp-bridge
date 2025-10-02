@@ -42,7 +42,7 @@ jobs:
     needs: prepare
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           
@@ -57,13 +57,13 @@ jobs:
           generateSarif: true
           
       - name: Upload Semgrep results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: semgrep.sarif
           
       - name: Run CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
         with:
           languages: go
           
@@ -73,7 +73,7 @@ jobs:
           staticcheck -f sarif ./... > staticcheck.sarif || true
           
       - name: Upload Staticcheck results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: staticcheck.sarif
@@ -106,7 +106,7 @@ jobs:
           output: 'trivy-router.sarif'
           
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-gateway.sarif'
@@ -118,7 +118,7 @@ jobs:
           grype mcp-router:scan -o sarif > grype-router.sarif
           
       - name: Upload Grype results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: grype-results-${{ needs.prepare.outputs.scan-id }}
           path: grype-*.sarif
@@ -139,7 +139,7 @@ jobs:
           output_file_path: checkov.sarif
           
       - name: Upload Checkov results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: checkov.sarif
@@ -152,7 +152,7 @@ jobs:
             -o sarif > terrascan.sarif || true
             
       - name: Upload Terrascan results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terrascan-results-${{ needs.prepare.outputs.scan-id }}
           path: terrascan.sarif
@@ -223,7 +223,7 @@ jobs:
           EOF
           
       - name: Upload compliance results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: compliance-validation-${{ needs.prepare.outputs.scan-id }}
           path: compliance-validation/
@@ -234,7 +234,7 @@ jobs:
     needs: prepare
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           
@@ -272,7 +272,7 @@ jobs:
           go mod verify || echo "⚠️  Some packages could not be verified"
           
       - name: Upload supply chain results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: supply-chain-${{ needs.prepare.outputs.scan-id }}
           path: |
@@ -330,7 +330,7 @@ jobs:
           docker-compose -f docker-compose.test.yml down -v
           
       - name: Upload runtime results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: runtime-analysis-${{ needs.prepare.outputs.scan-id }}
           path: |
@@ -348,7 +348,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
           
@@ -516,7 +516,7 @@ jobs:
           EOF
           
       - name: Upload final report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-report-${{ needs.prepare.outputs.scan-id }}
           path: final-report/
