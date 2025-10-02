@@ -47,8 +47,9 @@ go.sum.lock
 *.log
 logs/
 
-# Security reports
+# Security and Performance reports
 security-reports/
+test/performance/
 *.sarif
 
 # Runtime data
