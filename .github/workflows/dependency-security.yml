@@ -83,34 +83,54 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          
-      - name: Install go-licenses
+
+      - name: Install go-license-detector
         run: |
-          go install github.com/google/go-licenses@latest
-          
+          go install github.com/go-enry/go-license-detector/v4/cmd/license-detector@latest
+
       - name: Check licenses for Gateway
         run: |
           cd services/gateway
-          go-licenses check ./... --allowed_licenses=MIT,Apache-2.0,BSD-3-Clause,BSD-2-Clause \
-            --ignore github.com/poiley/mcp-bridge/services/gateway/internal
+          echo "Detecting licenses in Gateway dependencies..."
+          license-detector -f json . > ../../gateway-licenses.json
+
+          # Check for problematic licenses
+          if grep -q '"type":"GPL\|LGPL\|AGPL"' ../../gateway-licenses.json; then
+            echo "❌ Found GPL-family licenses which may be incompatible"
+            cat ../../gateway-licenses.json | jq '.[] | select(.type | contains("GPL"))'
+            exit 1
+          fi
+          echo "✅ No problematic licenses found in Gateway"
 
       - name: Check licenses for Router
         run: |
           cd services/router
-          go-licenses check ./... --allowed_licenses=MIT,Apache-2.0,BSD-3-Clause,BSD-2-Clause \
-            --ignore github.com/poiley/mcp-bridge/services/router/internal
-          
-      - name: Generate license report
+          echo "Detecting licenses in Router dependencies..."
+          license-detector -f json . > ../../router-licenses.json
+
+          # Check for problematic licenses
+          if grep -q '"type":"GPL\|LGPL\|AGPL"' ../../router-licenses.json; then
+            echo "❌ Found GPL-family licenses which may be incompatible"
+            cat ../../router-licenses.json | jq '.[] | select(.type | contains("GPL"))'
+            exit 1
+          fi
+          echo "✅ No problematic licenses found in Router"
+
+      - name: Generate human-readable reports
         run: |
-          cd services/gateway
-          go-licenses report ./... > ../../gateway-licenses.csv
-          cd ../router
-          go-licenses report ./... > ../../router-licenses.csv
-          
+          echo "# Gateway License Report" > gateway-licenses.txt
+          cat gateway-licenses.json | jq -r '.[] | "\(.name): \(.type)"' >> gateway-licenses.txt
+
+          echo "# Router License Report" > router-licenses.txt
+          cat router-licenses.json | jq -r '.[] | "\(.name): \(.type)"' >> router-licenses.txt
+
       - name: Upload license reports
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: license-reports
           path: |
-            gateway-licenses.csv
-            router-licenses.csv
+            gateway-licenses.json
+            gateway-licenses.txt
+            router-licenses.json
+            router-licenses.txt
