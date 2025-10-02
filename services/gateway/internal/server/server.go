@@ -22,7 +22,8 @@ import (
 type contextKey string
 
 const (
-	sessionContextKey contextKey = "session"
+	sessionContextKey       contextKey    = "session"
+	frontendShutdownTimeout               = 30 * time.Second
 )
 
 // GatewayServer handles MCP client connections through pluggable frontends.
@@ -111,6 +112,7 @@ func (s *GatewayServer) initializeFrontends(
 			logger.Info("skipping disabled frontend",
 				zap.String("name", frontendCfg.Name),
 				zap.String("protocol", frontendCfg.Protocol))
+
 			continue
 		}
 
@@ -192,7 +194,7 @@ func (s *GatewayServer) Start() error {
 
 // stopStartedFrontends stops all frontends that have been started.
 func (s *GatewayServer) stopStartedFrontends(ctx context.Context) {
-	shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(ctx, frontendShutdownTimeout)
 	defer cancel()
 
 	for _, frontend := range s.frontends {

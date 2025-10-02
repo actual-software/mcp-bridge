@@ -209,6 +209,7 @@ func (h *HealthHTTPServer) handleFrontendsHealth(w http.ResponseWriter, r *http.
 	for _, f := range frontends {
 		if !f.Healthy {
 			allHealthy = false
+
 			break
 		}
 	}
@@ -242,6 +243,7 @@ func (h *HealthHTTPServer) handleFrontendHealth(w http.ResponseWriter, r *http.R
 	for i := range frontends {
 		if frontends[i].Protocol == frontendName {
 			found = &frontends[i]
+
 			break
 		}
 	}
@@ -276,6 +278,7 @@ func (h *HealthHTTPServer) handleBackendsHealth(w http.ResponseWriter, r *http.R
 	for _, b := range backends {
 		if !b.Healthy {
 			allHealthy = false
+
 			break
 		}
 	}
@@ -349,11 +352,11 @@ func (h *HealthHTTPServer) handleComponentsHealth(w http.ResponseWriter, r *http
 
 // getFrontendsHealth returns health status of all frontends.
 func (h *HealthHTTPServer) getFrontendsHealth() []FrontendHealth {
-	var result []FrontendHealth
-
 	if h.server == nil {
-		return result
+		return []FrontendHealth{}
 	}
+
+	result := make([]FrontendHealth, 0, len(h.server.frontends))
 
 	for _, frontend := range h.server.frontends {
 		metrics := frontend.GetMetrics()
@@ -376,14 +379,14 @@ func (h *HealthHTTPServer) getFrontendsHealth() []FrontendHealth {
 
 // getBackendsHealth returns health status of all backends.
 func (h *HealthHTTPServer) getBackendsHealth() []BackendHealth {
-	var result []BackendHealth
-
 	if h.router == nil {
-		return result
+		return []BackendHealth{}
 	}
 
 	// Get backend health from router/discovery
 	status := h.health.GetStatus()
+
+	result := make([]BackendHealth, 0, len(status.Checks))
 
 	for _, check := range status.Checks {
 		result = append(result, BackendHealth{

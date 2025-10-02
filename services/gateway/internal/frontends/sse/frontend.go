@@ -24,7 +24,8 @@ import (
 type contextKey string
 
 const (
-	contextKeySession contextKey = "session"
+	contextKeySession     contextKey    = "session"
+	shutdownGracePeriod                 = 30 * time.Second
 )
 
 // Wire message represents the wire protocol message format.
@@ -239,7 +240,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	select {
 	case <-done:
 		f.logger.Info("sse frontend stopped gracefully")
-	case <-time.After(30 * time.Second):
+	case <-time.After(shutdownGracePeriod):
 		f.logger.Warn("sse frontend shutdown timeout")
 	}
 

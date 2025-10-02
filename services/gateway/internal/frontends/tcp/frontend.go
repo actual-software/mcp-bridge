@@ -22,7 +22,8 @@ import (
 type contextKey string
 
 const (
-	contextKeySession contextKey = "session"
+	contextKeySession   contextKey    = "session"
+	shutdownGracePeriod               = 30 * time.Second
 )
 
 // ClientConnection represents a connected TCP client.
@@ -139,7 +140,8 @@ func (f *Frontend) Start(ctx context.Context) error {
 		}
 		f.logger.Info("starting TCP Binary frontend with TLS", zap.String("address", addr))
 	} else {
-		listener, err = net.Listen("tcp", addr)
+		lc := &net.ListenConfig{}
+		listener, err = lc.Listen(ctx, "tcp", addr)
 		if err != nil {
 			return fmt.Errorf("failed to create listener: %w", err)
 		}
@@ -198,7 +200,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	select {
 	case <-done:
 		f.logger.Info("tcp binary frontend stopped gracefully")
-	case <-time.After(30 * time.Second):
+	case <-time.After(shutdownGracePeriod):
 		f.logger.Warn("tcp binary frontend shutdown timeout")
 	}
 
@@ -243,6 +245,7 @@ func (f *Frontend) acceptConnections() {
 					return
 				default:
 					f.logger.Error("Failed to accept connection", zap.Error(err))
+
 					continue
 				}
 			}
@@ -376,6 +379,7 @@ func (f *Frontend) handleClientMessages(ctx context.Context, client *ClientConne
 				req, ok := payload.(*mcp.Request)
 				if !ok {
 					client.logger.Error("Invalid request payload type")
+
 					continue
 				}
 

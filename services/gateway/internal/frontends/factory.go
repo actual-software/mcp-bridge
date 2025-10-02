@@ -84,6 +84,7 @@ func (a *stdioSessionAdapter) CreateSession(ctx context.Context, clientID string
 	if err != nil {
 		return "", err
 	}
+
 	return sess.ID, nil
 }
 
@@ -92,6 +93,7 @@ func (a *stdioSessionAdapter) ValidateSession(ctx context.Context, sessionID str
 	if err != nil {
 		return false, err
 	}
+
 	return sess != nil, nil
 }
 
@@ -124,6 +126,7 @@ func CreateFrontend(
 	logger *zap.Logger,
 ) (types.Frontend, error) {
 	factory := CreateFrontendFactory(logger)
+
 	return factory.CreateFrontend(
 		types.FrontendConfig{
 			Name:     name,

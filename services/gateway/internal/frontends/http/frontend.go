@@ -216,6 +216,7 @@ func (f *Frontend) GetMetrics() types.FrontendMetrics {
 // handleRequest handles HTTP POST requests with JSON-RPC payloads.
 func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 	ctx := f.initializeRequestContext(r)
+	r = r.WithContext(ctx)
 
 	if !f.validateHTTPMethod(w, r.Method) {
 		return
@@ -223,21 +224,22 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 
 	r.Body = nethttp.MaxBytesReader(w, r.Body, f.config.MaxRequestSize)
 
-	authClaims, ok := f.authenticateRequest(w, r, ctx)
+	authClaims, ok := f.authenticateRequest(w, r, r.Context())
 	if !ok {
 		return
 	}
 
-	ctx = logging.ContextWithUserInfo(ctx, authClaims.Subject, "")
+	ctx = logging.ContextWithUserInfo(r.Context(), authClaims.Subject, "")
+	r = r.WithContext(ctx)
 
-	body, ok := f.readRequestBody(w, r, ctx)
+	body, ok := f.readRequestBody(w, r, r.Context())
 	if !ok {
 		return
 	}
 
-	resp, err := f.processRequest(ctx, body, authClaims)
+	resp, err := f.processRequest(r.Context(), body, authClaims)
 	if err != nil {
-		f.handleProcessingError(w, ctx, err, body)
+		f.handleProcessingError(w, r.Context(), err, body)
 		return
 	}
 
