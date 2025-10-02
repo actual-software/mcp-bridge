@@ -297,7 +297,7 @@ jobs:
 
       - name: Setup test environment
         run: |
-          docker compose -f ./docker-compose.test.yml up -d
+          docker compose -f test/docker-compose.test.yml up -d
           sleep 10
 
       - name: Run dynamic analysis
@@ -309,12 +309,12 @@ jobs:
           docker ps --format "table {{.Names}}\t{{.Ports}}" > exposed-ports.txt
 
           # Check for running processes
-          docker compose -f ./docker-compose.test.yml exec -T gateway ps aux > gateway-processes.txt || true
-          docker compose -f ./docker-compose.test.yml exec -T router ps aux > router-processes.txt || true
+          docker compose -f test/docker-compose.test.yml exec -T gateway ps aux > gateway-processes.txt || true
+          docker compose -f test/docker-compose.test.yml exec -T router ps aux > router-processes.txt || true
 
           # Check for open files
-          docker compose -f ./docker-compose.test.yml exec -T gateway lsof -n > gateway-files.txt || true
-          docker compose -f ./docker-compose.test.yml exec -T router lsof -n > router-files.txt || true
+          docker compose -f test/docker-compose.test.yml exec -T gateway lsof -n > gateway-files.txt || true
+          docker compose -f test/docker-compose.test.yml exec -T router lsof -n > router-files.txt || true
 
       - name: Security headers test
         run: |
@@ -334,7 +334,7 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          docker compose -f ./docker-compose.test.yml down -v
+          docker compose -f test/docker-compose.test.yml down -v
           
       - name: Upload runtime results
         uses: actions/upload-artifact@v4
