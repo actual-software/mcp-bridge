@@ -4,11 +4,14 @@ FROM golang:1.25-alpine AS builder
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates
 
+# Disable Go workspace mode in Docker build
+ENV GOWORK=off
+
 # Set working directory
 WORKDIR /build
 
-# Copy workspace file and main project go.mod (needed for replace directive)
-COPY go.work go.mod go.sum ../../
+# Copy main project go.mod (needed for replace directive)
+COPY go.mod go.sum ../../
 
 # Copy go mod files for gateway
 COPY services/gateway/go.mod services/gateway/go.sum ./

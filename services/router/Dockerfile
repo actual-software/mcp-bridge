@@ -4,6 +4,9 @@ FROM golang:1.25-alpine AS builder
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates
 
+# Disable Go workspace mode in Docker build
+ENV GOWORK=off
+
 # Set working directory
 WORKDIR /build
 
