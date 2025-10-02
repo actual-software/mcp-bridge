@@ -68,7 +68,7 @@ jobs:
         sarif_file: reports/dependency-check-report.sarif
 
     - name: Upload dependency check report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: dependency-check-report
@@ -131,7 +131,7 @@ jobs:
         done
 
     - name: Upload govulncheck results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: govulncheck-reports
@@ -169,7 +169,7 @@ jobs:
         cat nancy-report.txt
 
     - name: Upload Nancy results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: nancy-report
