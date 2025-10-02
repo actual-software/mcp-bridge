@@ -97,11 +97,11 @@ jobs:
 
     - name: Free up disk space
       run: |
-        # Remove unnecessary packages to free up space
+        # Remove unnecessary packages to free up space (but keep tools we need like Go)
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        # Don't delete AGENT_TOOLSDIRECTORY - it contains Go and other tools we need
         df -h
 
     - name: Set up test environment
