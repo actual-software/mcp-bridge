@@ -77,6 +77,11 @@ jobs:
       contents: read
       actions: read
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.2.3
+    with:
+      scan-args: |-
+        -r
+        --config=.github/config/osv-scanner.toml
+        ./
 
   license-scan:
     name: License Compliance Check

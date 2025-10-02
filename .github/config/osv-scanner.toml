@@ -1,0 +1,6 @@
+# OSV Scanner configuration
+# https://google.github.io/osv-scanner/configuration/
+
+[[IgnoredVulns]]
+id = "GO-2025-3955"
+reason = "False positive: go.mod specifies 'go 1.25' (minor version only per Go convention), but GitHub Actions setup-go automatically installs latest patch (1.25.1+) which includes the fix. Scanner incorrectly interprets 'go 1.25' as exactly '1.25.0'."
