@@ -1,4 +1,7 @@
-.PHONY: help test build clean lint fmt coverage install check
+.PHONY: help test build clean lint fmt coverage install check check-go-version
+
+# Extract Go version from go.mod (industry standard approach)
+GO_VERSION := $(shell awk '/^go / {print $$2}' go.mod)
 
 # Default target
 all: test
@@ -16,7 +19,7 @@ test:
 
 # Build all services
 build:
-	@echo "🏗️  Building all services..."
+	@echo "🏗️  Building all services (Go $(GO_VERSION))..."
 	@$(MAKE) -C services/gateway build
 	@$(MAKE) -C services/router build
 	@echo "✅ Build complete!"
@@ -46,6 +49,20 @@ fmt:
 	@$(MAKE) -C services/gateway fmt
 	@$(MAKE) -C services/router fmt
 	@echo "✅ Formatting complete!"
+
+# Check Go version compatibility
+check-go-version:
+	@INSTALLED_GO=$$(go version | awk '{print $$3}' | sed 's/go//'); \
+	REQUIRED_GO=$(GO_VERSION); \
+	echo "Required Go version: $$REQUIRED_GO"; \
+	echo "Installed Go version: $$INSTALLED_GO"; \
+	if [ "$$(printf '%s\n' "$$REQUIRED_GO" "$$INSTALLED_GO" | sort -V | head -n1)" != "$$REQUIRED_GO" ]; then \
+		echo "❌ Go version $$INSTALLED_GO is older than required $$REQUIRED_GO"; \
+		echo "   Upgrade with: brew upgrade go"; \
+		exit 1; \
+	else \
+		echo "✅ Go version is compatible"; \
+	fi
 
 # Run all quality checks
 check: lint test
