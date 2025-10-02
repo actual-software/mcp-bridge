@@ -224,16 +224,18 @@ func testWebSocketDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 
 // TestHealthCheckMethodsCoverage tests HealthCheck methods to improve coverage.
 func TestHealthCheckMethodsCoverage(t *testing.T) {
-	logger := zaptest.NewLogger(t)
 	t.Run("SSE Discovery HealthCheck", func(t *testing.T) {
+		logger := zaptest.NewLogger(t)
 		testSSEDiscoveryHealthCheck(t, logger)
 	})
 
 	t.Run("Stdio Discovery HealthCheck", func(t *testing.T) {
+		logger := zaptest.NewLogger(t)
 		testStdioDiscoveryHealthCheck(t, logger)
 	})
 
 	t.Run("WebSocket Discovery HealthCheck", func(t *testing.T) {
+		logger := zaptest.NewLogger(t)
 		testWebSocketDiscoveryHealthCheck(t, logger)
 	})
 }

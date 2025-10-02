@@ -94,6 +94,60 @@ func testNamespaceOperations(t *testing.T, client kubernetes.Interface) {
 
 	assert.True(t, found, "Test namespace should be created")
 
+	// Create a test service in the namespace so discovery can find it
+	service := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-service",
+			Namespace: "test-mcp-namespace",
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{
+					Name:     "http",
+					Port:     8080,
+					Protocol: v1.ProtocolTCP,
+				},
+			},
+			Selector: map[string]string{
+				"app": "test",
+			},
+		},
+	}
+
+	_, err = client.CoreV1().Services("test-mcp-namespace").Create(context.Background(), service, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("Failed to create test service: %v", err)
+	}
+
+	// Create endpoints for the service
+	endpoints := &v1.Endpoints{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-service",
+			Namespace: "test-mcp-namespace",
+		},
+		Subsets: []v1.EndpointSubset{
+			{
+				Addresses: []v1.EndpointAddress{
+					{
+						IP: "10.0.0.1",
+					},
+				},
+				Ports: []v1.EndpointPort{
+					{
+						Name:     "http",
+						Port:     8080,
+						Protocol: v1.ProtocolTCP,
+					},
+				},
+			},
+		},
+	}
+
+	_, err = client.CoreV1().Endpoints("test-mcp-namespace").Create(context.Background(), endpoints, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("Failed to create test endpoints: %v", err)
+	}
+
 	// Cleanup namespace
 
 	defer func() {
