@@ -234,7 +234,7 @@ cd mcp-bridge
 docker run -p 8443:8443 poiley/mcp-gateway:latest
 
 # Kubernetes
-kubectl apply -k deployments/kubernetes/
+kubectl apply -k deployment/kubernetes/
 ```
 
 ### Migration Notes

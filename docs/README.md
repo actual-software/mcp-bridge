@@ -20,7 +20,7 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 ### **🚀 Deployment Guides**
 - [Docker Deployment](deployment/docker.md) - Container-based deployment with Docker Compose
 - [Helm Deployment](deployment/helm.md) - Kubernetes deployment with Helm charts
-- [Kubernetes Deployment](../deployments/kubernetes/README.md) - Native Kubernetes manifests
+- [Kubernetes Deployment](../deployment/kubernetes/README.md) - Native Kubernetes manifests
 <!-- TODO: Create this documentation
 - [Installation Validation](../test/installation/validation-summary.md) - Automated installation testing
 -->
@@ -91,7 +91,7 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 ### **For DevOps Engineers**
 1. Review service documentation ([Gateway](../services/gateway/README.md), [Router](../services/router/README.md))
 2. Set up CI/CD with [GitHub Actions](../.github/workflows/)
-3. Deploy with [Helm Charts](../helm/mcp-bridge/)
+3. Deploy with [Helm Charts](../deployment/helm/mcp-bridge/)
 4. Configure [Monitoring & Alerting](monitoring.md)
 
 ### **For Security Teams**

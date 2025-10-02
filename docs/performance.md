@@ -91,7 +91,7 @@ Router Memory Usage (1k servers):
 #### k6 Performance Test
 
 ```javascript
-// benchmarks/k6/performance-test.js
+// test/benchmarks/k6/performance-test.js
 import ws from 'k6/ws';
 import { check } from 'k6';
 
@@ -140,7 +140,7 @@ export default function () {
 
 ```bash
 #!/bin/bash
-# benchmarks/scripts/http-load-test.sh
+# test/benchmarks/scripts/http-load-test.sh
 
 wrk -t12 -c400 -d30s \
     -H "Authorization: Bearer test-token" \
@@ -152,7 +152,7 @@ wrk -t12 -c400 -d30s \
 #### Go Benchmark Tests
 
 ```go
-// benchmarks/go/gateway_test.go
+// test/benchmarks/go/gateway_test.go
 func BenchmarkGatewayThroughput(b *testing.B) {
     gateway := setupTestGateway()
     defer gateway.Close()

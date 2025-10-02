@@ -86,7 +86,7 @@ After running quickstart, you'll have:
 
 ```
 mcp-bridge/
-├── configs/
+├── examples/configs/
 │   ├── gateway.yaml      # Gateway configuration
 │   └── router.yaml       # Router configuration
 ├── logs/
@@ -176,7 +176,7 @@ Options:
 
 **Output**:
 - Compiled binaries in `services/*/bin/`
-- Configuration files in `configs/`
+- Configuration files in `examples/configs/`
 - Running services on ports 8080 (Gateway) and 9091 (Router)
 - Optional Docker services (Redis, Prometheus, Grafana)
 
@@ -251,7 +251,7 @@ journalctl -u mcp-router -f
 
 The quickstart script generates sensible defaults with full universal protocol support:
 
-**Gateway** (`configs/gateway.yaml`):
+**Gateway** (`examples/configs/gateway.yaml`):
 ```yaml
 server:
   # Multi-frontend support - all protocols available
@@ -338,7 +338,7 @@ logging:
   level: debug
 ```
 
-**Router** (`configs/router.yaml`):
+**Router** (`examples/configs/router.yaml`):
 ```yaml
 # Universal protocol support with auto-detection
 direct_clients:
@@ -469,8 +469,8 @@ tail -f logs/gateway.log
 tail -f logs/router.log
 
 # Validate configuration
-services/gateway/bin/mcp-gateway --config configs/gateway.yaml --validate
-services/router/bin/mcp-router --config configs/router.yaml --validate
+services/gateway/bin/mcp-gateway --config examples/configs/gateway.yaml --validate
+services/router/bin/mcp-router --config examples/configs/router.yaml --validate
 ```
 
 #### Docker Issues
@@ -493,7 +493,7 @@ Enable verbose logging:
 ./quickstart.sh --verbose
 
 # In configuration
-# Edit configs/gateway.yaml and configs/router.yaml
+# Edit examples/configs/gateway.yaml and examples/configs/router.yaml
 logging:
   level: debug
 ```
@@ -578,7 +578,7 @@ echo '{
 **Test Protocol Auto-Detection (Router Direct Mode)**:
 ```bash
 # Test router's auto-detection capability
-services/router/bin/mcp-router --config configs/router.yaml --test-detection
+services/router/bin/mcp-router --config examples/configs/router.yaml --test-detection
 ```
 
 **Test Cross-Protocol Load Balancing**:
