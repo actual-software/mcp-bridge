@@ -276,12 +276,15 @@ func TestSSEStreamConnection(t *testing.T) {
 }
 
 func TestSSERequestEndpoint(t *testing.T) {
-	requestReceived := false
-	responseReceived := false
+	requestReceivedChan := make(chan bool, 1)
+	responseReceivedChan := make(chan bool, 1)
 	router := &mockRouter{
 		requestHandler: func(ctx context.Context, req *mcp.Request, namespace string) (*mcp.Response, error) {
 			t.Logf("Router received request: method=%s, id=%v", req.Method, req.ID)
-			requestReceived = true
+			select {
+			case requestReceivedChan <- true:
+			default:
+			}
 			return &mcp.Response{
 				JSONRPC: "2.0",
 				ID:      req.ID,
@@ -324,7 +327,10 @@ func TestSSERequestEndpoint(t *testing.T) {
 			}
 			t.Logf("Stream received: %s", strings.TrimSpace(line))
 			if strings.Contains(line, "echo") {
-				responseReceived = true
+				select {
+				case responseReceivedChan <- true:
+				default:
+				}
 			}
 		}
 	}()
@@ -363,13 +369,19 @@ func TestSSERequestEndpoint(t *testing.T) {
 		t.Errorf("Expected status 202, got %d, body: %s", resp.StatusCode, string(body))
 	}
 
-	if !requestReceived {
+	// Wait for request to be received
+	select {
+	case <-requestReceivedChan:
+		// Request received
+	case <-time.After(1 * time.Second):
 		t.Error("Router did not receive the request")
 	}
 
 	// Wait for response on stream
-	time.Sleep(500 * time.Millisecond)
-	if !responseReceived {
+	select {
+	case <-responseReceivedChan:
+		// Response received
+	case <-time.After(1 * time.Second):
 		t.Error("Response not received on stream")
 	}
 

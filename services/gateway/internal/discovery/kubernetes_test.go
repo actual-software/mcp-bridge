@@ -116,19 +116,22 @@ func testKubernetesDiscoveryIntegration(t *testing.T, client kubernetes.Interfac
 	logger := testutil.NewTestLogger(t)
 
 	// Create discovery instance with real client
+	discoveryCtx, discoveryCancel := context.WithCancel(context.Background())
 	discovery := &KubernetesDiscovery{
 		config:    cfg,
 		logger:    logger,
 		client:    client,
 		endpoints: make(map[string][]Endpoint),
+		ctx:       discoveryCtx,
+		cancel:    discoveryCancel,
 	}
 
 	// Test discovery operations
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	testCtx, testCancel := context.WithTimeout(context.Background(), 30*time.Second)
 
-	defer cancel()
+	defer testCancel()
 
-	err := discovery.Start(ctx)
+	err := discovery.Start(testCtx)
 	if err != nil {
 		t.Fatalf("Failed to start discovery: %v", err)
 	}
@@ -539,14 +542,13 @@ func setupTestDiscovery(
 ) *KubernetesDiscovery {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	defer cancel()
-
 	return &KubernetesDiscovery{
 		config:    config,
 		logger:    logger,
 		client:    client,
 		endpoints: make(map[string][]Endpoint),
 		ctx:       ctx,
+		cancel:    cancel,
 	}
 }
 
@@ -620,6 +622,9 @@ func verifyEndpointWeights(t *testing.T, ep Endpoint, testName string) {
 func TestKubernetesDiscovery_GetEndpoints(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	discovery := &KubernetesDiscovery{
 		logger: logger,
 		endpoints: map[string][]Endpoint{
@@ -631,7 +636,9 @@ func TestKubernetesDiscovery_GetEndpoints(t *testing.T) {
 				{Service: "service3", Namespace: "namespace2", Address: "10.0.0.3", Port: 8080},
 			},
 		},
-		mu: sync.RWMutex{},
+		mu:     sync.RWMutex{},
+		ctx:    ctx,
+		cancel: cancel,
 	}
 
 	tests := []struct {
@@ -678,10 +685,15 @@ func TestKubernetesDiscovery_GetAllEndpoints(t *testing.T) {
 		},
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	discovery := &KubernetesDiscovery{
 		logger:    logger,
 		endpoints: originalEndpoints,
 		mu:        sync.RWMutex{},
+		ctx:       ctx,
+		cancel:    cancel,
 	}
 
 	allEndpoints := discovery.GetAllEndpoints()
@@ -702,6 +714,9 @@ func TestKubernetesDiscovery_GetAllEndpoints(t *testing.T) {
 func TestKubernetesDiscovery_ListNamespaces(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	discovery := &KubernetesDiscovery{
 		logger: logger,
 		endpoints: map[string][]Endpoint{
@@ -709,7 +724,9 @@ func TestKubernetesDiscovery_ListNamespaces(t *testing.T) {
 			"namespace2": {{Service: "service2"}},
 			"namespace3": {{Service: "service3"}},
 		},
-		mu: sync.RWMutex{},
+		mu:     sync.RWMutex{},
+		ctx:    ctx,
+		cancel: cancel,
 	}
 
 	namespaces := discovery.ListNamespaces()
