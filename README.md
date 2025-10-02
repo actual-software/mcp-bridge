@@ -76,10 +76,12 @@ The Gateway routes requests to backend MCP servers using:
 - **SSE** - Server-Sent Events servers
 
 #### Client Connection Methods
-Clients connect to the Gateway using:
-- **WebSocket** (port 8443)
-- **TCP Binary** protocol (port 8444)
-- **stdio** frontend integration
+Clients connect to the Gateway using any of these native frontend protocols:
+- **WebSocket** (port 8443) - Full bidirectional communication
+- **HTTP** (port 8080) - REST-style request/response
+- **SSE** (port 8081) - Server-Sent Events streaming
+- **TCP Binary** (port 8444) - High-performance wire protocol
+- **stdio** - Process/CLI integration
 
 #### Performance Characteristics
 - **Direct Connections**: Reduced latency by bypassing gateway for local servers

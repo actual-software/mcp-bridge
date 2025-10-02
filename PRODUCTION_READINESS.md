@@ -25,8 +25,10 @@ MCP Bridge has been extensively tested and validated for production deployment w
 - [ ] 2 CPU cores, 4GB RAM per service instance
 
 **Network Requirements**:
-- [ ] Port 8443 (Gateway WebSocket) accessible
-- [ ] Port 8444 (Gateway TCP Binary) accessible
+- [ ] Port 8443 (Gateway WebSocket frontend) accessible
+- [ ] Port 8080 (Gateway HTTP frontend) accessible
+- [ ] Port 8081 (Gateway SSE frontend) accessible
+- [ ] Port 8444 (Gateway TCP Binary frontend) accessible
 - [ ] Port 9090 (Gateway metrics) accessible to Prometheus
 - [ ] Port 9091 (Router metrics) accessible to Prometheus
 - [ ] Port 6379 (Redis) accessible to Gateway instances
@@ -48,7 +50,7 @@ MCP Bridge has been extensively tested and validated for production deployment w
 - [ ] Client authentication mode set (`none`, `request`, or `require`)
 
 **Input Validation & Rate Limiting**:
-- [ ] Request size limits configured (default: 1MB HTTP, 10MB WebSocket/TCP)
+- [ ] Request size limits configured per frontend (default: 1MB HTTP, 10MB WebSocket/TCP)
 - [ ] Rate limiting enabled and configured
 - [ ] Per-IP connection limits set
 - [ ] Per-user rate limits configured in JWT claims
@@ -64,13 +66,14 @@ MCP Bridge has been extensively tested and validated for production deployment w
 ### 3. Service Configuration
 
 **Gateway Configuration**:
+- [ ] Frontend protocols configured (WebSocket, HTTP, SSE, TCP Binary, stdio)
 - [ ] Backend servers configured (stdio, WebSocket, SSE)
 - [ ] Service discovery configured (Kubernetes/Consul/Static)
 - [ ] Load balancing strategy selected
 - [ ] Circuit breakers configured (failure/success thresholds)
 - [ ] Health check intervals configured
 - [ ] Session storage configured (Redis URL, credentials)
-- [ ] Maximum connections configured based on capacity
+- [ ] Maximum connections configured per frontend based on capacity
 
 **Router Configuration**:
 - [ ] Gateway URL configured
@@ -126,8 +129,8 @@ MCP Bridge has been extensively tested and validated for production deployment w
 - [ ] `/healthz` endpoint responding (liveness probe)
 - [ ] `/ready` endpoint responding (readiness probe)
 - [ ] `/health` endpoint providing detailed component status
-- [ ] TCP health check configured (Gateway port 9002)
 - [ ] Health check intervals and timeouts configured
+- [ ] Per-frontend health monitoring configured
 
 ### 6. Performance Tuning
 

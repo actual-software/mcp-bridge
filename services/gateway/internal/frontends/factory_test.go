@@ -2,13 +2,19 @@ package frontends
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
@@ -37,34 +43,61 @@ type mockAuthProvider struct {
 	shouldAuthenticate bool
 }
 
-func (m *mockAuthProvider) Authenticate(
-	ctx context.Context,
-	credentials map[string]string,
-) (bool, error) {
-	return m.shouldAuthenticate, nil
-}
-
-func (m *mockAuthProvider) GetUserInfo(
-	ctx context.Context,
-	credentials map[string]string,
-) (map[string]interface{}, error) {
-	return map[string]interface{}{
-		"user_id": "test-user",
-		"scopes":  []string{"read", "write"},
+func (m *mockAuthProvider) Authenticate(r *http.Request) (*auth.Claims, error) {
+	if !m.shouldAuthenticate {
+		return nil, fmt.Errorf("authentication failed")
+	}
+	return &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "test-user"},
 	}, nil
 }
 
-type mockSessionManager struct{}
-
-func (m *mockSessionManager) CreateSession(ctx context.Context, clientID string) (string, error) {
-	return "mock-session-id", nil
+func (m *mockAuthProvider) ValidateToken(token string) (*auth.Claims, error) {
+	return &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "test-user"},
+	}, nil
 }
 
-func (m *mockSessionManager) ValidateSession(ctx context.Context, sessionID string) (bool, error) {
-	return sessionID == "mock-session-id", nil
+type mockSessionManager struct {
+	sessions map[string]*session.Session
 }
 
-func (m *mockSessionManager) DestroySession(ctx context.Context, sessionID string) error {
+func newMockSessionManager() *mockSessionManager {
+	return &mockSessionManager{
+		sessions: make(map[string]*session.Session),
+	}
+}
+
+func (m *mockSessionManager) CreateSession(claims *auth.Claims) (*session.Session, error) {
+	sess := &session.Session{
+		ID:        "test-session-id",
+		User:      "test-user",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(1 * time.Hour),
+	}
+	m.sessions[sess.ID] = sess
+	return sess, nil
+}
+
+func (m *mockSessionManager) GetSession(id string) (*session.Session, error) {
+	if sess, ok := m.sessions[id]; ok {
+		return sess, nil
+	}
+	return nil, fmt.Errorf("session not found")
+}
+
+func (m *mockSessionManager) UpdateSession(sess *session.Session) error {
+	m.sessions[sess.ID] = sess
+	return nil
+}
+
+func (m *mockSessionManager) RemoveSession(id string) error {
+	delete(m.sessions, id)
+	return nil
+}
+
+func (m *mockSessionManager) Close() error {
 	return nil
 }
 
@@ -85,7 +118,7 @@ func TestDefaultFactory_SupportedProtocols(t *testing.T) {
 	factory := CreateFrontendFactory(logger)
 
 	protocols := factory.SupportedProtocols()
-	expected := []string{"stdio"}
+	expected := []string{"stdio", "websocket", "http", "sse", "tcp_binary"}
 
 	assert.Equal(t, expected, protocols)
 }
@@ -97,7 +130,7 @@ func TestDefaultFactory_CreateFrontend_UnsupportedProtocol(t *testing.T) {
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
 	auth := &mockAuthProvider{shouldAuthenticate: true}
-	sessions := &mockSessionManager{}
+	sessions := newMockSessionManager()
 
 	config := FrontendConfig{
 		Name:     "test",
@@ -125,7 +158,7 @@ func TestDefaultFactory_CreateStdioFrontend(t *testing.T) {
 			factory := CreateFrontendFactory(logger)
 			router := &mockRequestRouter{}
 			auth := &mockAuthProvider{shouldAuthenticate: true}
-			sessions := &mockSessionManager{}
+			sessions := newMockSessionManager()
 
 			frontendConfig := FrontendConfig{
 				Name:     "test-stdio",
@@ -324,7 +357,7 @@ func TestFrontendWrapper_GetMetrics(t *testing.T) {
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
 	auth := &mockAuthProvider{shouldAuthenticate: true}
-	sessions := &mockSessionManager{}
+	sessions := newMockSessionManager()
 
 	config := FrontendConfig{
 		Name:     "test-stdio",
@@ -360,7 +393,7 @@ func TestDefaultFactory_ComplexConfigurationParsing(t *testing.T) {
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
 	auth := &mockAuthProvider{shouldAuthenticate: true}
-	sessions := &mockSessionManager{}
+	sessions := newMockSessionManager()
 
 	// Test complex stdio configuration with all possible fields
 	stdioConfig := FrontendConfig{
@@ -403,7 +436,7 @@ func TestDefaultFactory_EdgeCases(t *testing.T) {
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
 	auth := &mockAuthProvider{shouldAuthenticate: true}
-	sessions := &mockSessionManager{}
+	sessions := newMockSessionManager()
 
 	tests := createFactoryEdgeCaseTests()
 
@@ -588,7 +621,7 @@ func BenchmarkDefaultFactory_CreateStdioFrontend(b *testing.B) {
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
 	auth := &mockAuthProvider{shouldAuthenticate: true}
-	sessions := &mockSessionManager{}
+	sessions := newMockSessionManager()
 
 	config := FrontendConfig{
 		Name:     "bench-stdio",
@@ -617,7 +650,7 @@ func TestDefaultFactory_ConfigurationDefaults(t *testing.T) {
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
 	auth := &mockAuthProvider{shouldAuthenticate: true}
-	sessions := &mockSessionManager{}
+	sessions := newMockSessionManager()
 
 	// Test that missing configuration fields use proper defaults
 	config := FrontendConfig{
@@ -649,7 +682,7 @@ func TestDefaultFactory_ModesConfigurationParsing(t *testing.T) {
 	factory := CreateFrontendFactory(logger)
 	router := &mockRequestRouter{}
 	auth := &mockAuthProvider{shouldAuthenticate: true}
-	sessions := &mockSessionManager{}
+	sessions := newMockSessionManager()
 
 	tests := createModesConfigurationTests()
 

@@ -5,13 +5,18 @@ MCP Gateway provides universal protocol support for the Model Context Protocol, 
 ## Features
 
 ### Universal Protocol Support
-- **Frontend Protocols**: stdio (WebSocket and TCP Binary connections handled through HTTP server layer)
+- **Frontend Protocols**: WebSocket, HTTP, SSE, TCP Binary, stdio - all natively supported
 - **Backend Protocols**: stdio, WebSocket, SSE - all supported
 - **Protocol Routing**: Intelligent routing across mixed protocol backends
 - **Service Discovery**: Automatic backend discovery with health checking
 
 ### Core Functionality
-- **Multi-Protocol Interface**: WebSocket (8443), TCP Binary (8444), and stdio support
+- **Multi-Protocol Interface**: Native support for all major protocols
+  - WebSocket (port 8443) - Full bidirectional communication
+  - HTTP (port 8080) - REST-style request/response
+  - SSE (port 8081) - Server-Sent Events with dual endpoints
+  - TCP Binary (port 8444) - Wire protocol for high performance
+  - stdio - Process-based integration
 - **Service Discovery**: Kubernetes, Consul, and static configuration support
 - **Load Balancing**: Protocol-aware strategies (round-robin, least-connections, weighted)
 - **Circuit Breakers**: Failure detection and recovery with graceful degradation
@@ -69,10 +74,14 @@ MCP Gateway provides universal protocol support for the Model Context Protocol, 
 | **WebSocket**    |   ✅   | WebSocket MCP servers |
 | **SSE**          |   ✅   | Server-Sent Events MCP servers |
 
-**Client Connection Methods:**
-- WebSocket connections (port 8443)
-- TCP Binary protocol (port 8444)
-- stdio frontend for subprocess integration
+### Frontend Protocol Support
+| Frontend Protocol | Port | Status | Use Case |
+|:------------------|:----:|:------:|:---------|
+| **WebSocket**     | 8443 |   ✅   | Real-time bidirectional communication |
+| **HTTP**          | 8080 |   ✅   | REST-style request/response |
+| **SSE**           | 8081 |   ✅   | Server-pushed events with separate request endpoint |
+| **TCP Binary**    | 8444 |   ✅   | High-performance binary protocol |
+| **stdio**         |  -   |   ✅   | Process/CLI integration |
 
 ## Deployment
 
@@ -138,41 +147,66 @@ The gateway supports simultaneous multi-protocol operation with Phase 3 universa
 ```yaml
 version: 1
 server:
-  host: 0.0.0.0
-  port: 8443                   # Primary WebSocket port
+  # Multi-frontend architecture - all protocols supported
+  frontends:
+    # WebSocket Frontend
+    - name: websocket-main
+      protocol: websocket
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8443
+        max_connections: 50000
+        allowed_origins:
+          - https://app.example.com
+          - https://dashboard.example.com
+          - http://localhost:3000  # Development
+        tls:
+          enabled: true
+          cert_file: /etc/mcp-gateway/tls/tls.crt
+          key_file: /etc/mcp-gateway/tls/tls.key
+
+    # HTTP API Frontend
+    - name: http-api
+      protocol: http
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8080
+        request_path: /api/v1/mcp
+
+    # SSE Streaming Frontend
+    - name: sse-stream
+      protocol: sse
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8081
+        stream_endpoint: /events
+        request_endpoint: /api/v1/request
+
+    # TCP Binary Frontend
+    - name: tcp-binary
+      protocol: tcp_binary
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8444
+        tls:
+          enabled: true
+          cert_file: /etc/mcp-gateway/tls/tls.crt
+          key_file: /etc/mcp-gateway/tls/tls.key
+
+    # stdio Frontend for CLI integration
+    - name: stdio-cli
+      protocol: stdio
+      enabled: true
+      config:
+        mode: unix_socket
+        socket_path: /tmp/mcp-gateway.sock
+
+  # Metrics configuration
   metrics_port: 9090
-  max_connections: 50000
-  connection_buffer_size: 65536
-  protocol: both               # Options: websocket, tcp, both, universal
-  tcp_port: 8444              # TCP Binary protocol port 
-  tcp_health_port: 9002       # Dedicated TCP health check port (optional)
-  
-  # stdio Frontend Support
-  stdio_frontend:
-    enabled: true
-    modes:
-      - type: "unix_socket"
-        path: "/tmp/mcp-gateway.sock"
-        enabled: true
-      - type: "stdin_stdout"
-        enabled: true
-  
-  # WebSocket Origin Validation
-  # Configure allowed origins for CORS/CSRF protection
-  allowed_origins:
-    - https://app.example.com
-    - https://dashboard.example.com
-    - http://localhost:3000  # Development
-    # - "*"                  # WARNING: Wildcard allows any origin - insecure!
-  
-  # TLS Configuration
-  tls:
-    enabled: true
-    cert_file: /etc/mcp-gateway/tls/tls.crt
-    key_file: /etc/mcp-gateway/tls/tls.key
-    ca_file: /etc/mcp-gateway/tls/ca.crt  # For mTLS client verification
-    min_version: "1.3"      # Recommended. Use "1.2" only for legacy compatibility
-    client_auth: none       # Options: "none", "request", "require"
 
 auth:
   provider: jwt
@@ -555,11 +589,15 @@ For detailed troubleshooting information, see the [Troubleshooting Guide](docs/T
 
 The following features are documented in planning materials but not yet fully implemented:
 
-- **Frontend Protocols**: Currently only stdio frontend is fully implemented. WebSocket and TCP Binary connections are handled through the HTTP server layer
 - **Granular Health Endpoints**: Only `/health`, `/healthz`, and `/ready` are implemented. Per-protocol and per-component health endpoints are planned
 - **HTTP/SSE Backends**: Backend support is currently limited to stdio, WebSocket, and SSE protocols
 
 These limitations do not affect the core functionality of routing MCP requests to backend servers.
+
+**Fully Implemented:**
+- ✅ **All Frontend Protocols**: WebSocket, HTTP, SSE, TCP Binary, and stdio frontends are fully implemented
+- ✅ **Multi-Protocol Gateway**: All frontends can run simultaneously with independent configuration
+- ✅ **Protocol-Aware Routing**: Intelligent routing across mixed protocol backends
 
 ## Security Considerations
 

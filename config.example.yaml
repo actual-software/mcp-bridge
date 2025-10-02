@@ -1,0 +1,163 @@
+# MCP Gateway Configuration Example
+# This file demonstrates the new multi-frontend architecture
+
+server:
+  # Frontend configurations - supports multiple protocols simultaneously
+  frontends:
+    # WebSocket Frontend
+    - name: websocket-main
+      protocol: websocket
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8443
+        max_connections: 10000
+        read_timeout: 60s
+        write_timeout: 60s
+        ping_interval: 30s
+        pong_timeout: 10s
+        max_message_size: 1048576
+        allowed_origins:
+          - "*"
+        tls:
+          enabled: false
+          cert_file: /certs/server.crt
+          key_file: /certs/server.key
+
+    # HTTP Frontend
+    - name: http-api
+      protocol: http
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8080
+        request_path: /api/v1/mcp
+        max_request_size: 1048576
+        read_timeout: 30s
+        write_timeout: 30s
+        tls:
+          enabled: false
+          cert_file: /certs/server.crt
+          key_file: /certs/server.key
+
+    # Server-Sent Events (SSE) Frontend
+    - name: sse-stream
+      protocol: sse
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8081
+        stream_endpoint: /events
+        request_endpoint: /api/v1/request
+        keep_alive: 30s
+        buffer_size: 256
+        max_connections: 10000
+        read_timeout: 0s  # No timeout for streaming
+        write_timeout: 30s
+        tls:
+          enabled: false
+          cert_file: /certs/server.crt
+          key_file: /certs/server.key
+
+    # TCP Binary Frontend
+    - name: tcp-binary
+      protocol: tcp_binary
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8444
+        max_connections: 10000
+        read_timeout: 60s
+        write_timeout: 60s
+        tls:
+          enabled: false
+          cert_file: /certs/server.crt
+          key_file: /certs/server.key
+
+    # Stdio Frontend (for CLI integration)
+    - name: stdio-cli
+      protocol: stdio
+      enabled: true
+      config:
+        mode: stdio  # or "unix_socket"
+        socket_path: /tmp/mcp-gateway.sock
+        max_concurrent_clients: 100
+        cleanup_interval: 5m
+        idle_timeout: 30m
+
+# Router configuration
+router:
+  default_namespace: default
+  timeout: 30s
+
+# Authentication configuration
+auth:
+  enabled: true
+  type: bearer
+  bearer:
+    secret_key: your-secret-key-here
+    token_expiry: 24h
+  per_message_auth: false
+  per_message_auth_cache: 10000
+
+# Session management
+sessions:
+  type: memory  # or "redis"
+  ttl: 1h
+  cleanup_interval: 5m
+  redis:
+    address: localhost:6379
+    password: ""
+    db: 0
+
+# Rate limiting
+rate_limit:
+  enabled: true
+  requests_per_minute: 1000
+  burst_size: 100
+  per_ip: true
+  whitelist:
+    - 127.0.0.1
+    - ::1
+
+# CORS configuration
+cors:
+  enabled: true
+  allowed_origins:
+    - "*"
+  allowed_methods:
+    - GET
+    - POST
+    - OPTIONS
+  allowed_headers:
+    - "*"
+  expose_headers:
+    - X-Request-ID
+  max_age: 86400
+
+# Observability
+observability:
+  metrics:
+    enabled: true
+    port: 9090
+    path: /metrics
+    namespace: mcp_gateway
+
+  logging:
+    level: info
+    format: json
+    output: stdout
+    include_caller: false
+    include_stacktrace: error
+
+  tracing:
+    enabled: false
+    service_name: mcp-gateway
+    sample_rate: 0.1
+
+# Health checks
+health:
+  liveness_path: /health/live
+  readiness_path: /health/ready
+  port: 8080
+  include_details: true

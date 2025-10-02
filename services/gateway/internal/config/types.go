@@ -23,22 +23,31 @@ type Config struct {
 
 // ServerConfig represents the HTTP server configuration.
 type ServerConfig struct {
-	Host                 string              `mapstructure:"host"`
-	Port                 int                 `mapstructure:"port"`
-	TCPPort              int                 `mapstructure:"tcp_port"`
-	TCPHealthPort        int                 `mapstructure:"tcp_health_port"`
-	MetricsPort          int                 `mapstructure:"metrics_port"`
-	HealthPort           int                 `mapstructure:"health_port"`
-	MaxConnections       int                 `mapstructure:"max_connections"`
-	MaxConnectionsPerIP  int                 `mapstructure:"max_connections_per_ip"`
-	ConnectionBufferSize int                 `mapstructure:"connection_buffer_size"`
-	ReadTimeout          int                 `mapstructure:"read_timeout"`
-	WriteTimeout         int                 `mapstructure:"write_timeout"`
-	IdleTimeout          int                 `mapstructure:"idle_timeout"`
-	Protocol             string              `mapstructure:"protocol"` // "websocket", "tcp", "both", or "stdio"
-	AllowedOrigins       []string            `mapstructure:"allowed_origins"`
-	TLS                  TLSConfig           `mapstructure:"tls"`
-	StdioFrontend        StdioFrontendConfig `mapstructure:"stdio_frontend"`
+	Host                 string                `mapstructure:"host"`
+	Port                 int                   `mapstructure:"port"`
+	TCPPort              int                   `mapstructure:"tcp_port"`
+	TCPHealthPort        int                   `mapstructure:"tcp_health_port"`
+	MetricsPort          int                   `mapstructure:"metrics_port"`
+	HealthPort           int                   `mapstructure:"health_port"`
+	MaxConnections       int                   `mapstructure:"max_connections"`
+	MaxConnectionsPerIP  int                   `mapstructure:"max_connections_per_ip"`
+	ConnectionBufferSize int                   `mapstructure:"connection_buffer_size"`
+	ReadTimeout          int                   `mapstructure:"read_timeout"`
+	WriteTimeout         int                   `mapstructure:"write_timeout"`
+	IdleTimeout          int                   `mapstructure:"idle_timeout"`
+	Protocol             string                `mapstructure:"protocol"` // "websocket", "tcp", "both", or "stdio" (deprecated, use Frontends)
+	AllowedOrigins       []string              `mapstructure:"allowed_origins"`
+	TLS                  TLSConfig             `mapstructure:"tls"`
+	StdioFrontend        StdioFrontendConfig   `mapstructure:"stdio_frontend"`
+	Frontends            []FrontendConfigEntry `mapstructure:"frontends"`
+}
+
+// FrontendConfigEntry represents a single frontend configuration entry.
+type FrontendConfigEntry struct {
+	Name     string                 `mapstructure:"name"`
+	Protocol string                 `mapstructure:"protocol"` // "websocket", "http", "sse", "tcp_binary", "stdio"
+	Enabled  bool                   `mapstructure:"enabled"`
+	Config   map[string]interface{} `mapstructure:"config"`
 }
 
 // TLSConfig represents TLS configuration.

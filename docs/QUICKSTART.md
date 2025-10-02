@@ -254,23 +254,46 @@ The quickstart script generates sensible defaults with full universal protocol s
 **Gateway** (`configs/gateway.yaml`):
 ```yaml
 server:
-  protocol: both           # WebSocket (8443) + TCP Binary (8444)
-  websocket:
-    host: 0.0.0.0
-    port: 8443
-    tls_enabled: false     # Development only
-  tcp_binary:
-    host: 0.0.0.0
-    port: 8444
-    tls_enabled: false
-  stdio_frontend:          # NEW: Direct stdio client support
-    enabled: true
-    modes:
-      - type: "unix_socket"
-        path: "/tmp/mcp-gateway.sock"
-        enabled: true
-      - type: "stdin_stdout"
-        enabled: true
+  # Multi-frontend support - all protocols available
+  frontends:
+    - name: websocket-main
+      protocol: websocket
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8443
+        tls:
+          enabled: false  # Development only
+
+    - name: http-api
+      protocol: http
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8080
+
+    - name: sse-stream
+      protocol: sse
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8081
+
+    - name: tcp-binary
+      protocol: tcp_binary
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8444
+        tls:
+          enabled: false
+
+    - name: stdio-cli
+      protocol: stdio
+      enabled: true
+      config:
+        mode: unix_socket
+        socket_path: /tmp/mcp-gateway.sock
 
 # Universal backend support - ALL protocols supported
 backends:

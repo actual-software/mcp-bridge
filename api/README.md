@@ -32,10 +32,11 @@ The Gateway API is the server-side component with universal protocol support tha
 The Gateway API supports multiple frontend and backend protocol combinations:
 
 **Frontend Protocols:**
-- **WebSocket** (`wss://localhost:8443`) - Primary real-time interface
+- **WebSocket** (`wss://localhost:8443`) - Full bidirectional real-time interface
+- **HTTP** (`http://localhost:8080/api/v1/mcp`) - REST-style request/response
+- **SSE** (`http://localhost:8081/events`) - Server-Sent Events streaming
 - **TCP Binary** (`tcps://localhost:8444`) - High-performance binary protocol
-- **HTTP REST** (`https://localhost:8443/api/v1`) - RESTful interface
-- **stdio** (Unix socket: `/tmp/mcp-gateway.sock`) - Direct local connections
+- **stdio** (Unix socket: `/tmp/mcp-gateway.sock`) - Process/CLI integration
 
 **Backend Integration:**
 - Routes to stdio, WebSocket, HTTP, SSE, and TCP Binary servers
