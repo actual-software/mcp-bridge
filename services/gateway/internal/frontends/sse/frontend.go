@@ -342,8 +342,10 @@ func (f *Frontend) checkConnectionLimit(w nethttp.ResponseWriter) bool {
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return false
 	}
+
 	return true
 }
 
@@ -359,8 +361,10 @@ func (f *Frontend) authenticateStreamRequest(
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return authClaims, true
 }
 
@@ -376,8 +380,10 @@ func (f *Frontend) createStreamSession(
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return sess, true
 }
 
@@ -441,6 +447,7 @@ func (f *Frontend) handleStreamLoop(stream *StreamConnection) {
 			// Write event
 			if _, err := fmt.Fprintf(stream.Writer, "data: %s\n\n", event); err != nil {
 				stream.logger.Error("Failed to write event", zap.Error(err))
+
 				return
 			}
 
@@ -484,11 +491,13 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 	resp, err := f.processRequest(ctx, body, stream)
 	if err != nil {
 		f.handleAPIProcessingError(w, ctx, err, body)
+
 		return
 	}
 
 	if err := f.sendEventToStream(stream, resp); err != nil {
 		f.handleStreamSendError(w, ctx, err)
+
 		return
 	}
 
@@ -501,8 +510,10 @@ func (f *Frontend) validatePostMethod(w nethttp.ResponseWriter, method string) b
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return false
 	}
+
 	return true
 }
 
@@ -518,8 +529,10 @@ func (f *Frontend) authenticateAPIRequest(
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return authClaims, true
 }
 
@@ -535,8 +548,10 @@ func (f *Frontend) readAPIRequestBody(
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return body, true
 }
 
@@ -547,8 +562,10 @@ func (f *Frontend) findUserStream(w nethttp.ResponseWriter, userID string) (*Str
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return stream, true
 }
 
@@ -689,6 +706,7 @@ func (f *Frontend) handleHealth(w nethttp.ResponseWriter, r *nethttp.Request) {
 
 	if !running {
 		w.WriteHeader(nethttp.StatusServiceUnavailable)
+
 		return
 	}
 

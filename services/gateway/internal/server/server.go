@@ -182,6 +182,7 @@ func (s *GatewayServer) Start() error {
 				_ = s.healthServer.Stop(s.ctx)
 			}
 			s.stopStartedFrontends(s.ctx)
+
 			return fmt.Errorf("failed to start frontend %s: %w", frontend.GetName(), err)
 		}
 		s.logger.Info("started frontend",
@@ -190,6 +191,7 @@ func (s *GatewayServer) Start() error {
 	}
 
 	s.logger.Info("gateway server started successfully")
+
 	return nil
 }
 

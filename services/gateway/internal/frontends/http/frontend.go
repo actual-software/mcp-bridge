@@ -295,8 +295,10 @@ func (f *Frontend) readRequestBody(
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return body, true
 }
 
@@ -373,6 +375,7 @@ func (f *Frontend) handleHealth(w nethttp.ResponseWriter, r *nethttp.Request) {
 
 	if !running {
 		w.WriteHeader(nethttp.StatusServiceUnavailable)
+
 		return
 	}
 

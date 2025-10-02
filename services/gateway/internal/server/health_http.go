@@ -148,12 +148,14 @@ func (h *HealthHTTPServer) Stop(ctx context.Context) error {
 	if h.httpServer != nil {
 		if err := h.httpServer.Shutdown(ctx); err != nil {
 			h.logger.Warn("health HTTP server shutdown error", zap.Error(err))
+
 			return err
 		}
 	}
 
 	h.wg.Wait()
 	h.logger.Info("health HTTP server stopped")
+
 	return nil
 }
 
@@ -200,6 +202,7 @@ func (h *HealthHTTPServer) handleReady(w http.ResponseWriter, r *http.Request) {
 func (h *HealthHTTPServer) handleFrontendsHealth(w http.ResponseWriter, r *http.Request) {
 	if h.server == nil {
 		h.sendError(w, http.StatusServiceUnavailable, "gateway server not available")
+
 		return
 	}
 
@@ -233,6 +236,7 @@ func (h *HealthHTTPServer) handleFrontendHealth(w http.ResponseWriter, r *http.R
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < minPathParts {
 		h.sendError(w, http.StatusBadRequest, "invalid frontend path")
+
 		return
 	}
 
@@ -250,6 +254,7 @@ func (h *HealthHTTPServer) handleFrontendHealth(w http.ResponseWriter, r *http.R
 
 	if found == nil {
 		h.sendError(w, http.StatusNotFound, fmt.Sprintf("frontend %s not found", frontendName))
+
 		return
 	}
 
@@ -269,6 +274,7 @@ func (h *HealthHTTPServer) handleFrontendHealth(w http.ResponseWriter, r *http.R
 func (h *HealthHTTPServer) handleBackendsHealth(w http.ResponseWriter, r *http.Request) {
 	if h.router == nil {
 		h.sendError(w, http.StatusServiceUnavailable, "router not available")
+
 		return
 	}
 
@@ -302,6 +308,7 @@ func (h *HealthHTTPServer) handleBackendHealth(w http.ResponseWriter, r *http.Re
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < minPathParts {
 		h.sendError(w, http.StatusBadRequest, "invalid backend path")
+
 		return
 	}
 
@@ -319,6 +326,7 @@ func (h *HealthHTTPServer) handleBackendHealth(w http.ResponseWriter, r *http.Re
 
 	if found == nil {
 		h.sendError(w, http.StatusNotFound, fmt.Sprintf("backend %s not found", backendName))
+
 		return
 	}
 
@@ -407,6 +415,7 @@ func (h *HealthHTTPServer) getStatusString(healthy bool) string {
 	if healthy {
 		return "healthy"
 	}
+
 	return "unhealthy"
 }
 

@@ -171,6 +171,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	f.mu.Lock()
 	if !f.running {
 		f.mu.Unlock()
+
 		return nil
 	}
 	f.running = false
@@ -226,6 +227,7 @@ func (f *Frontend) GetProtocol() string {
 func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	f.metricsMu.RLock()
 	defer f.metricsMu.RUnlock()
+
 	return f.metrics
 }
 
@@ -288,6 +290,7 @@ func (f *Frontend) handleConnection(parentCtx context.Context, conn net.Conn) {
 func (f *Frontend) initializeConnectionContext(parentCtx context.Context) context.Context {
 	traceID := logging.GenerateTraceID()
 	requestID := logging.GenerateRequestID()
+
 	return logging.ContextWithTracing(parentCtx, traceID, requestID)
 }
 
@@ -298,8 +301,10 @@ func (f *Frontend) checkConnectionLimit(clientIP string) bool {
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return false
 	}
+
 	return true
 }
 
@@ -313,8 +318,10 @@ func (f *Frontend) createConnectionSession(clientIP string) (*session.Session, b
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return sess, true
 }
 
@@ -325,6 +332,7 @@ func (f *Frontend) setupClientConnection(
 	clientIP string,
 ) *ClientConnection {
 	connCtx, connCancel := context.WithCancel(f.ctx)
+
 	return &ClientConnection{
 		ID:        sess.ID,
 		Conn:      conn,
@@ -371,6 +379,7 @@ func (f *Frontend) handleClientMessages(ctx context.Context, client *ClientConne
 			msgType, payload, err := client.Transport.ReceiveMessage()
 			if err != nil {
 				client.logger.Error("Failed to receive message", zap.Error(err))
+
 				return
 			}
 
@@ -423,6 +432,7 @@ func (f *Frontend) processRequest(ctx context.Context, client *ClientConnection,
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return err
 	}
 
@@ -431,6 +441,7 @@ func (f *Frontend) processRequest(ctx context.Context, client *ClientConnection,
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return fmt.Errorf("failed to send response: %w", err)
 	}
 
@@ -524,5 +535,6 @@ func getIPFromAddr(addr string) string {
 	if err != nil {
 		return addr
 	}
+
 	return host
 }

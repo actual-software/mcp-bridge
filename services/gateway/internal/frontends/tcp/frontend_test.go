@@ -72,6 +72,7 @@ func (m *mockRouter) RouteRequest(ctx context.Context, req *mcp.Request, namespa
 	if m.requestHandler != nil {
 		return m.requestHandler(ctx, req, namespace)
 	}
+
 	return &mcp.Response{
 		JSONRPC: "2.0",
 		ID:      req.ID,
@@ -87,6 +88,7 @@ func (m *mockAuth) Authenticate(r *http.Request) (*auth.Claims, error) {
 	if m.authenticateHandler != nil {
 		return m.authenticateHandler(r)
 	}
+
 	return &auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{Subject: "test-user"},
 	}, nil
@@ -117,6 +119,7 @@ func (m *mockSessionManager) CreateSession(claims *auth.Claims) (*session.Sessio
 		ExpiresAt: time.Now().Add(1 * time.Hour),
 	}
 	m.sessions[sess.ID] = sess
+
 	return sess, nil
 }
 
@@ -124,16 +127,19 @@ func (m *mockSessionManager) GetSession(id string) (*session.Session, error) {
 	if sess, ok := m.sessions[id]; ok {
 		return sess, nil
 	}
+
 	return nil, fmt.Errorf("session not found")
 }
 
 func (m *mockSessionManager) UpdateSession(sess *session.Session) error {
 	m.sessions[sess.ID] = sess
+
 	return nil
 }
 
 func (m *mockSessionManager) RemoveSession(id string) error {
 	delete(m.sessions, id)
+
 	return nil
 }
 
@@ -234,6 +240,7 @@ func setupTCPTestWithMocks(t *testing.T, requestReceived *bool) *testServer {
 		requestHandler: func(ctx context.Context, req *mcp.Request, namespace string) (*mcp.Response, error) {
 			t.Logf("Router received request: method=%s, id=%v", req.Method, req.ID)
 			*requestReceived = true
+
 			return &mcp.Response{
 				JSONRPC: "2.0",
 				ID:      req.ID,
@@ -264,6 +271,7 @@ func connectToTCPServer(t *testing.T, addr string) net.Conn {
 	}
 
 	t.Log("Connected successfully")
+
 	return conn
 }
 
@@ -309,6 +317,7 @@ func receiveTCPResponse(t *testing.T, conn net.Conn, requestReceived *bool) *mcp
 	}
 
 	t.Logf("Received response: %+v", resp)
+
 	return resp
 }
 

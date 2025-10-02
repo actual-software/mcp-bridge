@@ -547,6 +547,7 @@ func (f *Frontend) handleClientWrite(client *ClientConnection) {
 
 			if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				client.logger.Error("Ping error", zap.Error(err))
+
 				return
 			}
 		}
@@ -641,6 +642,7 @@ func (f *Frontend) extractRequestID(data []byte) interface{} {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil
 	}
+
 	return raw["id"]
 }
 
@@ -763,6 +765,7 @@ func makeOriginChecker(allowedOrigins []string) func(*http.Request) bool {
 		if origin == "" {
 			return true
 		}
+
 		return originMap[origin]
 	}
 }
@@ -773,5 +776,6 @@ func getIPFromAddr(addr string) string {
 	if err != nil {
 		return addr
 	}
+
 	return host
 }

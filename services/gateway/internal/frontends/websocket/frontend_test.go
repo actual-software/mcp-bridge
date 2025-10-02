@@ -76,6 +76,7 @@ func (m *mockRouter) RouteRequest(ctx context.Context, req *mcp.Request, namespa
 	if m.requestHandler != nil {
 		return m.requestHandler(ctx, req, namespace)
 	}
+
 	return &mcp.Response{
 		JSONRPC: "2.0",
 		ID:      req.ID,
@@ -91,6 +92,7 @@ func (m *mockAuth) Authenticate(r *http.Request) (*auth.Claims, error) {
 	if m.authenticateHandler != nil {
 		return m.authenticateHandler(r)
 	}
+
 	return &auth.Claims{}, nil
 }
 
@@ -117,6 +119,7 @@ func (m *mockSessionManager) CreateSession(claims *auth.Claims) (*session.Sessio
 		ExpiresAt: time.Now().Add(1 * time.Hour),
 	}
 	m.sessions[sess.ID] = sess
+
 	return sess, nil
 }
 
@@ -124,16 +127,19 @@ func (m *mockSessionManager) GetSession(id string) (*session.Session, error) {
 	if sess, ok := m.sessions[id]; ok {
 		return sess, nil
 	}
+
 	return nil, fmt.Errorf("session not found")
 }
 
 func (m *mockSessionManager) UpdateSession(sess *session.Session) error {
 	m.sessions[sess.ID] = sess
+
 	return nil
 }
 
 func (m *mockSessionManager) RemoveSession(id string) error {
 	delete(m.sessions, id)
+
 	return nil
 }
 
@@ -234,6 +240,7 @@ func setupWebSocketTestWithMocks(t *testing.T, requestReceived *bool) *testServe
 		requestHandler: func(ctx context.Context, req *mcp.Request, namespace string) (*mcp.Response, error) {
 			t.Logf("Router received request: method=%s, id=%v", req.Method, req.ID)
 			*requestReceived = true
+
 			return &mcp.Response{
 				JSONRPC: "2.0",
 				ID:      req.ID,
@@ -245,6 +252,7 @@ func setupWebSocketTestWithMocks(t *testing.T, requestReceived *bool) *testServe
 	auth := &mockAuth{
 		authenticateHandler: func(r *http.Request) (*auth.Claims, error) {
 			t.Logf("Auth called for %s", r.RemoteAddr)
+
 			return &auth.Claims{}, nil
 		},
 	}
@@ -278,6 +286,7 @@ func connectToWebSocket(t *testing.T, url string) *websocket.Conn {
 	}
 
 	t.Log("Connected successfully")
+
 	return ws
 }
 
@@ -315,6 +324,7 @@ func receiveWebSocketResponse(t *testing.T, ws *websocket.Conn, requestReceived 
 	}
 
 	t.Logf("Received response: %+v", response)
+
 	return response
 }
 
