@@ -431,11 +431,11 @@ func (b *Backend) selectEndpoint() int {
 
 	// Safe modulo operation with bounds checking
 	nextID := atomic.AddUint64(&b.requestID, 1)
-	
+
 	// Use modulo to get index within bounds, avoiding overflow concerns
 	// by working with the remainder which is guaranteed < endpointCount
 	remainder := nextID % uint64(endpointCount)
-	
+
 	// remainder is guaranteed to fit in int since endpointCount comes from len()
 	// and Go slice lengths are bounded by int (max int32 on 32-bit, int64 on 64-bit)
 	// Since remainder < endpointCount and endpointCount <= MaxInt, this is safe

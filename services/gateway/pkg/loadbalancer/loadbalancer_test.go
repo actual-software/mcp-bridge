@@ -383,13 +383,13 @@ func runConcurrentAccessTests(t *testing.T, loadBalancers []struct {
 
 func executeConcurrentOperations(t *testing.T, lb LoadBalancer) *sync.Map {
 	t.Helper()
-	
+
 	var wg sync.WaitGroup
 	selections := &sync.Map{}
 
 	startConcurrentSelections(&wg, lb, selections)
 	startConcurrentUpdates(&wg, lb)
-	
+
 	wg.Wait()
 
 	return selections
@@ -436,14 +436,14 @@ func createUpdateEndpoints(iter int) []*discovery.Endpoint {
 
 func verifyConcurrentResults(t *testing.T, selections *sync.Map) {
 	t.Helper()
-	
+
 	count := 0
 	selections.Range(func(_, _ interface{}) bool {
 		count++
 
 		return true
 	})
-	
+
 	if count == 0 {
 		t.Error("Expected some endpoints to be selected")
 	}

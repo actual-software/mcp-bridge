@@ -16,6 +16,7 @@ import (
 )
 
 // TestCredentialStore_SecurityEdgeCases tests various security edge cases.
+// Uses mock store for fast, reliable edge case testing without external dependencies.
 func TestCredentialStore_SecurityEdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -25,32 +26,32 @@ func TestCredentialStore_SecurityEdgeCases(t *testing.T) {
 	}{
 		{
 			name:      "memory corruption protection",
-			setupFunc: setupCredentialStore,
+			setupFunc: setupMockStore,
 			testFunc:  testMemoryCorruptionProtection,
 		},
 		{
 			name:      "concurrent access safety",
-			setupFunc: setupCredentialStore,
+			setupFunc: setupMockStore,
 			testFunc:  testConcurrentAccessSafety,
 		},
 		{
 			name:      "injection attack protection",
-			setupFunc: setupCredentialStore,
+			setupFunc: setupMockStore,
 			testFunc:  testInjectionAttackProtection,
 		},
 		{
 			name:      "buffer overflow protection",
-			setupFunc: setupCredentialStore,
+			setupFunc: setupMockStore,
 			testFunc:  testBufferOverflowProtection,
 		},
 		{
 			name:      "timing attack resistance",
-			setupFunc: setupCredentialStore,
+			setupFunc: setupMockStore,
 			testFunc:  testTimingAttackResistance,
 		},
 		{
 			name:      "resource exhaustion handling",
-			setupFunc: setupCredentialStore,
+			setupFunc: setupMockStore,
 			testFunc:  testResourceExhaustionHandling,
 		},
 	}
@@ -71,6 +72,13 @@ func TestCredentialStore_SecurityEdgeCases(t *testing.T) {
 			}
 		})
 	}
+}
+
+//nolint:ireturn // Test helper requires interface return
+func setupMockStore(t *testing.T) TokenStore {
+	t.Helper()
+
+	return newMockStore()
 }
 
 //nolint:ireturn // Test helper requires interface return
@@ -818,6 +826,8 @@ func averageDuration(durations []time.Duration) time.Duration {
 }
 
 // Benchmark security-related operations.
+//
+//nolint:ireturn // setupCredentialStoreForBench returns interface for test helper
 func BenchmarkCredentialStore_SecurityOperations(b *testing.B) {
 	store := setupCredentialStoreForBench(b)
 	if store == nil {
@@ -853,7 +863,7 @@ func BenchmarkCredentialStore_SecurityOperations(b *testing.B) {
 			_ = store.Store(malformedKey, malformedToken)
 		}
 	})
-} //nolint:ireturn // setupCredentialStoreForBench below returns interface for test helper
+}
 
 // Helper for testing.B.
 //

@@ -121,7 +121,7 @@ func testValidServerPrivateKey(t *testing.T) {
 	tempDir := t.TempDir()
 	_, keyFile, _ := CreateTestCertificates(t, tempDir)
 
-	// #nosec G304 - reading test-generated key file  
+	// #nosec G304 - reading test-generated key file
 	serverKeyPEM, err := os.ReadFile(keyFile)
 	require.NoError(t, err)
 

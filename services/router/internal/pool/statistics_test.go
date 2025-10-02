@@ -53,7 +53,7 @@ func verifyInitialPoolState(t *testing.T, pool *Pool) {
 func testAcquiringConnections(t *testing.T, pool *Pool, ctx context.Context) []Connection {
 	t.Helper()
 	conns := make([]Connection, 3)
-	
+
 	// Acquire first connection
 	conn1, err := pool.Acquire(ctx)
 	require.NoError(t, err)
@@ -89,7 +89,7 @@ func testAcquiringConnections(t *testing.T, pool *Pool, ctx context.Context) []C
 
 func testReleasingConnections(t *testing.T, pool *Pool, conns []Connection) {
 	t.Helper()
-	
+
 	// Release first connection
 	err := pool.Release(conns[0])
 	require.NoError(t, err)

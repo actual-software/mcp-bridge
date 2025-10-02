@@ -19,9 +19,9 @@ import (
 	"go.uber.org/zap/zaptest"
 
 	common "github.com/poiley/mcp-bridge/pkg/common/config"
+	gatewayTestutil "github.com/poiley/mcp-bridge/services/gateway/test/testutil"
 	"github.com/poiley/mcp-bridge/services/router/internal/config"
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
-	gatewayTestutil "github.com/poiley/mcp-bridge/services/gateway/test/testutil"
 	"github.com/poiley/mcp-bridge/test/testutil"
 )
 
@@ -423,7 +423,6 @@ func createMTLSCertificates(t *testing.T) (string, string) {
 	return certFile, keyFile
 }
 
-
 func validateConnectResult(t *testing.T, err error, client *Client, tt struct {
 	name          string
 	authType      string
@@ -520,7 +519,7 @@ func createTestGatewayClient(t *testing.T, serverURL string) *Client {
 	t.Helper()
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	logger := testutil.NewTestLogger(t)
-	
+
 	return &Client{
 		config: config.GatewayConfig{
 			URL: wsURL,
@@ -739,7 +738,7 @@ func createTestResponseMessages() []WireMessage {
 
 func verifyReceiveResponses(t *testing.T, client *Client) {
 	t.Helper()
-	
+
 	// Receive first response (success)
 	resp1, err := client.ReceiveResponse()
 	if err != nil {
@@ -846,7 +845,7 @@ func createPingHandlerServer(t *testing.T, pingReceived chan<- bool) *httptest.S
 
 func verifyPingPong(t *testing.T, client *Client, pingReceived <-chan bool) {
 	t.Helper()
-	
+
 	// Send ping
 	err := client.SendPing()
 	if err != nil {
@@ -870,7 +869,7 @@ func TestClient_Close(t *testing.T) {
 	client := createTestGatewayClient(t, server.URL)
 	// Test closing when not connected
 	verifyCloseWhenDisconnected(t, client)
-	
+
 	// Connect and test normal close
 	connectTestClient(t, client)
 	verifyCloseWhenConnected(t, client, closeReceived)
@@ -914,7 +913,7 @@ func verifyCloseWhenDisconnected(t *testing.T, client *Client) {
 
 func verifyCloseWhenConnected(t *testing.T, client *Client, closeReceived <-chan bool) {
 	t.Helper()
-	
+
 	// Close connection
 	err := client.Close()
 	if err != nil {
@@ -1022,7 +1021,7 @@ func createEchoServer(t *testing.T) *httptest.Server {
 
 func runConcurrentSends(t *testing.T, client *Client) {
 	t.Helper()
-	
+
 	var wg sync.WaitGroup
 	errors := make(chan error, constants.TestBatchSize)
 
@@ -1130,7 +1129,7 @@ func createBenchmarkClient(b *testing.B, serverURL string) *Client {
 	b.Helper()
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	logger := zaptest.NewLogger(b)
-	
+
 	return &Client{
 		config: config.GatewayConfig{
 			URL: wsURL,
@@ -1321,7 +1320,7 @@ func verifyConnectError(t *testing.T, client *Client, tt struct {
 
 		return
 	}
-	
+
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 
@@ -1371,7 +1370,7 @@ func createDropConnectionServer(t *testing.T, connectChan chan<- struct{}) *http
 
 func verifyNetworkFailureHandling(t *testing.T, client *Client, connectChan <-chan struct{}) {
 	t.Helper()
-	
+
 	// Wait for connection to be established
 	<-connectChan
 
@@ -1454,7 +1453,6 @@ func getAuthenticationEdgeCaseTests() []struct {
 	}
 }
 
-
 func createErrorAuthHandler(t *testing.T, expectAuth bool) http.HandlerFunc {
 
 	t.Helper()
@@ -1463,7 +1461,6 @@ func createErrorAuthHandler(t *testing.T, expectAuth bool) http.HandlerFunc {
 		http.Error(w, "Should not reach here", http.StatusInternalServerError)
 	}
 }
-
 
 func createNoAuthHandler(t *testing.T, expectAuth bool) http.HandlerFunc {
 
@@ -1495,7 +1492,7 @@ func runAuthenticationTest(t *testing.T, tt struct {
 	errorContains  string
 }) {
 	t.Helper()
-	
+
 	server := httptest.NewServer(tt.serverHandler(t, tt.expectAuthCall))
 	defer server.Close()
 
@@ -1510,7 +1507,7 @@ func createAuthTestClient(t *testing.T, serverURL string, authConfig common.Auth
 	t.Helper()
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
 	logger := testutil.NewTestLogger(t)
-	
+
 	return &Client{
 		config: config.GatewayConfig{
 			URL:  wsURL,
@@ -1529,7 +1526,7 @@ func createAuthTestClient(t *testing.T, serverURL string, authConfig common.Auth
 
 func verifyAuthResult(t *testing.T, err error, wantError bool, errorContains string, client *Client) {
 	t.Helper()
-	
+
 	if wantError {
 		if err == nil {
 
@@ -1539,14 +1536,12 @@ func verifyAuthResult(t *testing.T, err error, wantError bool, errorContains str
 		}
 		if errorContains != "" && !strings.Contains(err.Error(), errorContains) {
 
-
 			t.Errorf("Expected error containing '%s', got '%s'", errorContains, err.Error())
 
 		}
 
 		return
 	}
-	
 
 	if err != nil {
 
@@ -1736,7 +1731,6 @@ func TestClient_ConnectionLifecycle(t *testing.T) {
 	testConnectionLifecycles(t, client)
 }
 
-
 func createLifecycleTestServer(t *testing.T) *httptest.Server {
 
 	t.Helper()
@@ -1850,7 +1844,6 @@ func testSingleMalformedMessage(t *testing.T, msg string) {
 	client := createMalformedMessageClient(t, server.URL)
 	testMalformedMessageReceive(t, client)
 }
-
 
 func createMalformedMessageServer(t *testing.T, msg string) *httptest.Server {
 

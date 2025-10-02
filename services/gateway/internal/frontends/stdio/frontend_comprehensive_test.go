@@ -694,7 +694,7 @@ func testFailedAuth(
 
 	request := createAuthTestRequest()
 	testConn := executeAuthRequest(t, failingFrontend, request)
-	
+
 	syncBuf, ok := testConn.writer.(*syncBuffer)
 	require.True(t, ok, "writer should be a syncBuffer")
 	verifyAuthFailureResponse(t, syncBuf)
@@ -708,7 +708,7 @@ func setupFailingAuthFrontend(
 	logger *zap.Logger,
 ) *Frontend {
 	t.Helper()
-	
+
 	failingMockAuth := &MockAuthProviderWithError{
 		shouldAuthFail: true,
 	}
@@ -716,7 +716,7 @@ func setupFailingAuthFrontend(
 
 	err := failingFrontend.Start(context.Background())
 	require.NoError(t, err)
-	
+
 	return failingFrontend
 }
 
@@ -739,7 +739,7 @@ func createAuthTestRequest() mcp.Request {
 
 func executeAuthRequest(t *testing.T, frontend *Frontend, request mcp.Request) *testConnection {
 	t.Helper()
-	
+
 	requestData, err := json.Marshal(request)
 	require.NoError(t, err)
 
@@ -763,13 +763,13 @@ func executeAuthRequest(t *testing.T, frontend *Frontend, request mcp.Request) *
 	time.Sleep(responseProcessingTimeout)
 	close(reader.done)
 	time.Sleep(connectionCleanupTimeout)
-	
+
 	return testConn
 }
 
 func verifyAuthFailureResponse(t *testing.T, writer *syncBuffer) {
 	t.Helper()
-	
+
 	assert.Positive(t, writer.Len(), "Expected auth failure response")
 
 	var errorResp mcp.Response
@@ -1491,7 +1491,7 @@ func benchmarkSingleRequest(frontend *Frontend, conn *ClientConnection, request 
 
 	go func() {
 		defer wg.Done()
-		
+
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 

@@ -864,6 +864,7 @@ func TestTokenStore_PerformanceUnderLoad(t *testing.T) {
 }
 
 // setupPerformanceTest creates a token store for performance testing.
+//
 //nolint:ireturn // Test helper requires interface return.
 func setupPerformanceTest(t *testing.T) TokenStore {
 	t.Helper()

@@ -594,9 +594,13 @@ run_test_analysis() {
     fi
 
     # Production-quality JSON-based test counting using main test run output
+    local incomplete_count=0
     if parse_json_from_test_output "${test_output}"; then
         echo "Using production-quality JSON-based counting from main test run"
-        echo "Test counts: ${total_tests} total, ${passed_tests} passed, ${failed_tests} failed, ${skipped_tests} skipped"
+        # Calculate incomplete tests from the JSON parse output
+        local tests_with_explicit_results=$((passed_tests + failed_tests + skipped_tests))
+        incomplete_count=$((total_tests - tests_with_explicit_results))
+        echo "Test counts: ${total_tests} total, ${passed_tests} passed, ${failed_tests} failed, ${skipped_tests} skipped, ${incomplete_count} incomplete"
     else
         echo "JSON parsing failed, using enhanced text-based fallback"
         count_tests_with_text_fallback "${test_output}"
@@ -653,14 +657,14 @@ run_test_analysis() {
     # Display results with comprehensive accounting
     if [[ ${test_status} == "PASS" ]]; then
         print_success "Tests: ${effective_passed_tests}/${total_tests} passed (${effective_failed_tests} failed, ${skipped_tests} skipped)"
-        if [[ ${unaccounted_tests} -gt 0 ]]; then
-            print_info "Note: ${unaccounted_tests} tests completed without explicit status (counted as passed)"
+        if [[ ${incomplete_count} -gt 0 ]]; then
+            print_info "Note: ${incomplete_count} tests completed without explicit status (counted as passed)"
         fi
         print_info "Executed ${total_tests} tests from ${total_discoverable_tests} discoverable test functions"
     else
         print_error "Tests: ${effective_passed_tests}/${total_tests} passed (${effective_failed_tests} failed, ${skipped_tests} skipped)"
-        if [[ ${unaccounted_tests} -gt 0 ]]; then
-            print_warning "${unaccounted_tests} tests completed without explicit status (status unknown)"
+        if [[ ${incomplete_count} -gt 0 ]]; then
+            print_warning "${incomplete_count} tests completed without explicit status (status unknown)"
         fi
         print_info "Executed ${total_tests} tests from ${total_discoverable_tests} discoverable test functions"
         if [[ ${failed_tests} -gt 0 ]]; then
@@ -865,7 +869,10 @@ run_coverage_analysis() {
     } > "${coverage_output}" 2>&1
 
     # Merge coverage profiles and track individual module coverage
-    local -A module_coverage_map
+    # Use parallel arrays for Bash 3.2 compatibility (no associative arrays)
+    local module_names=()
+    local module_coverages=()
+
     if [[ ${#temp_profiles[@]} -gt 0 ]]; then
         print_info "Merging coverage profiles from ${#temp_profiles[@]} successful modules..."
         echo "mode: atomic" > "${coverage_profile}"
@@ -876,7 +883,10 @@ run_coverage_analysis() {
             if [[ -f "${profile}" ]]; then
                 local module_name=$(basename "${profile}" | sed 's/.*\.out\.//')
                 local module_cov=$(go tool cover -func="${profile}" 2>/dev/null | grep "^total:" | awk '{print $3}' | sed 's/%$//' || echo "0")
-                module_coverage_map["${module_name}"]="${module_cov}"
+
+                # Store in parallel arrays
+                module_names+=("${module_name}")
+                module_coverages+=("${module_cov}")
 
                 local profile_lines=$(tail -n +2 "${profile}" | wc -l)
                 tail -n +2 "${profile}" >> "${coverage_profile}" 2>/dev/null || true
@@ -919,10 +929,10 @@ run_coverage_analysis() {
             echo "=== MODULE COVERAGE STATUS ==="
             echo "Total modules: ${#go_modules[@]} (${testable_modules} testable, ${#skipped_modules[@]} skipped)"
             echo "Modules successfully collected (${#successful_modules[@]}/${testable_modules}):"
-            if [[ ${#successful_modules[@]} -gt 0 ]]; then
-                for module in "${successful_modules[@]}"; do
-                    local mod_cov="${module_coverage_map[${module}]:-N/A}"
-                    echo "  ✅ ${module}: ${mod_cov}% coverage"
+            if [[ ${#module_names[@]} -gt 0 ]]; then
+                # Display coverage for each module using parallel arrays
+                for i in "${!module_names[@]}"; do
+                    echo "  ✅ ${module_names[$i]}: ${module_coverages[$i]}% coverage"
                 done
             else
                 echo "  (none)"

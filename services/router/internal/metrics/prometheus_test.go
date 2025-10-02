@@ -376,7 +376,7 @@ func TestPrometheusExporter_ResponseSizeHistogram(t *testing.T) {
 func setupHistogramTest(t *testing.T, logger *zap.Logger) (*PrometheusExporter, context.Context, context.CancelFunc) {
 	t.Helper()
 	exporter := NewPrometheusExporter(":0", logger)
-	
+
 	testMetrics := &RouterMetrics{
 		ResponseSizes: []int{
 			testTimeout,             // < testIterations

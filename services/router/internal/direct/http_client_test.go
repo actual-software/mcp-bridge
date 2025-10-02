@@ -502,14 +502,14 @@ func createHeaderTestServer() *httptest.Server {
 		// Check for custom header.
 		if r.Header.Get("X-Test-Header") != TestHeaderValue {
 			http.Error(w, "Missing header", http.StatusBadRequest)
-			
+
 			return
 		}
 
 		// Check User-Agent.
 		if r.Header.Get("User-Agent") != "Custom-Agent/1.0" {
 			http.Error(w, "Wrong user agent", http.StatusBadRequest)
-			
+
 			return
 		}
 
@@ -1016,7 +1016,7 @@ func launchConcurrentHTTPWorkers(
 		wg.Wait()
 		close(done)
 	}()
-	
+
 	return done
 }
 

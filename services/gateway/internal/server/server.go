@@ -611,7 +611,6 @@ func (s *GatewayServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	s.setupAndRegisterConnection(enrichedCtx, conn, sess, authClaims, clientIP, r.RemoteAddr)
 }
 
-
 func (s *GatewayServer) handleConnectionLimitError(
 	ctx context.Context,
 	w http.ResponseWriter,

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -134,8 +135,115 @@ func (s *keychainStore) isRecoverableError(err error) bool {
 		strings.Contains(errorStr, "fork/exec")
 }
 
+// executeCommandWithTimeout executes a command with proper timeout handling.
+// It ensures the process is killed if the context expires, preventing hung processes.
+func (s *keychainStore) executeCommandWithTimeout(ctx context.Context, cmd *exec.Cmd) error {
+	// Start the command
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	// Create a channel to signal completion
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	// Wait for either completion or context cancellation
+	select {
+	case err := <-done:
+		// Clean up process resources
+		if cmd.Process != nil {
+			_ = cmd.Process.Release()
+		}
+
+		return err
+	case <-ctx.Done():
+		// Context expired - forcibly kill the process
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		<-done // Wait for Wait() to finish
+		// Clean up process resources
+		if cmd.Process != nil {
+			_ = cmd.Process.Release()
+		}
+
+		return fmt.Errorf("command killed due to timeout: %w", ctx.Err())
+	}
+}
+
+// executeCommandWithOutputAndTimeout executes a command with output capture and timeout handling.
+func (s *keychainStore) executeCommandWithOutputAndTimeout(ctx context.Context, cmd *exec.Cmd) ([]byte, error) {
+	// Capture stdout
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	// Start the command
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	// Create channels for output and completion
+	type result struct {
+		output []byte
+		err    error
+	}
+	done := make(chan result, 1)
+
+	go func() {
+		// Read all output
+		output, err := io.ReadAll(stdout)
+		// Wait for command to complete
+		waitErr := cmd.Wait()
+		if waitErr != nil && err == nil {
+			err = waitErr
+		}
+		done <- result{output: output, err: err}
+	}()
+
+	// Wait for either completion or context cancellation
+	select {
+	case res := <-done:
+		// Clean up process resources
+		if cmd.Process != nil {
+			_ = cmd.Process.Release()
+		}
+
+		return res.output, res.err
+	case <-ctx.Done():
+		// Context expired - forcibly kill the process
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		<-done // Wait for goroutine to finish
+		// Clean up process resources
+		if cmd.Process != nil {
+			_ = cmd.Process.Release()
+		}
+
+		return nil, fmt.Errorf("command killed due to timeout: %w", ctx.Err())
+	}
+}
+
+// sanitizeKeychainInput is an alias for the shared validation function.
+// Kept for clarity that this is validating keychain inputs specifically.
+func sanitizeKeychainInput(s string) error {
+	return sanitizeTokenInput(s)
+}
+
 // Store saves a token to the macOS Keychain.
 func (s *keychainStore) Store(key, token string) error {
+	// Validate inputs before attempting keychain operations
+	if err := sanitizeKeychainInput(key); err != nil {
+		return fmt.Errorf("invalid key: %w", err)
+	}
+	if err := sanitizeKeychainInput(token); err != nil {
+		return fmt.Errorf("invalid token: %w", err)
+	}
+
 	return s.executeKeychainOperation("store", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
@@ -146,19 +254,17 @@ func (s *keychainStore) Store(key, token string) error {
 			"-w", token, // password
 			"-U") // update if exists
 
-		err := cmd.Run()
-
-		// Clean up process resources
-		if cmd.Process != nil {
-			_ = cmd.Process.Release()
-		}
-
-		return err
+		return s.executeCommandWithTimeout(ctx, cmd)
 	})
 }
 
 // Retrieve gets a token from the macOS Keychain.
 func (s *keychainStore) Retrieve(key string) (string, error) {
+	// Validate key before attempting keychain operations
+	if err := sanitizeKeychainInput(key); err != nil {
+		return "", fmt.Errorf("invalid key: %w", err)
+	}
+
 	var result string
 
 	err := s.executeKeychainOperation("retrieve", func(ctx context.Context) error {
@@ -170,13 +276,7 @@ func (s *keychainStore) Retrieve(key string) (string, error) {
 			"-s", serviceName, // service name
 			"-w") // return password only
 
-		output, err := cmd.Output()
-
-		// Clean up process resources
-		if cmd.Process != nil {
-			_ = cmd.Process.Release()
-		}
-
+		output, err := s.executeCommandWithOutputAndTimeout(ctx, cmd)
 		if err != nil {
 			if strings.Contains(err.Error(), "could not be found") {
 				return ErrTokenNotFound
@@ -205,6 +305,11 @@ func (s *keychainStore) Retrieve(key string) (string, error) {
 
 // Delete removes a token from the macOS Keychain.
 func (s *keychainStore) Delete(key string) error {
+	// Validate key before attempting keychain operations
+	if err := sanitizeKeychainInput(key); err != nil {
+		return fmt.Errorf("invalid key: %w", err)
+	}
+
 	return s.executeKeychainOperation("delete", func(ctx context.Context) error {
 		serviceName := s.serviceName()
 
@@ -213,13 +318,7 @@ func (s *keychainStore) Delete(key string) error {
 			"-a", key, // account name
 			"-s", serviceName) // service name
 
-		err := cmd.Run()
-
-		// Clean up process resources
-		if cmd.Process != nil {
-			_ = cmd.Process.Release()
-		}
-
+		err := s.executeCommandWithTimeout(ctx, cmd)
 		if err != nil {
 			// Don't treat "item not found" as an error.
 			// Exit status 44 means "The specified item could not be found in the keychain"

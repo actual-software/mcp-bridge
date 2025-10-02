@@ -783,7 +783,7 @@ func testRateLimiterUnderHighLoad(t *testing.T, tt highLoadTest) {
 	)
 
 	allowed := runHighLoadTest(ctx, tt.limiter, numGoroutines, requestsPerGoroutine)
-	
+
 	t.Logf("%s: %d allowed out of %d total",
 		tt.name, allowed, numGoroutines*requestsPerGoroutine)
 
@@ -821,7 +821,7 @@ func verifyHighLoadResults(t *testing.T, limiter RateLimiter, allowed int32, tot
 			t.Errorf("Rate limiter should have limited some requests")
 		}
 	} else {
-		// #nosec G115 - test code comparing request counts  
+		// #nosec G115 - test code comparing request counts
 		if allowed != int32(totalRequests) {
 			t.Errorf("NoOp limiter should allow all requests")
 		}

@@ -34,7 +34,7 @@ func TestTCPHandler_MetricsCollection(t *testing.T) {
 }
 
 func createTCPHandlerMetricsTests(metricsReg *metrics.Registry) []struct {
-	name string
+	name         string
 	setupHandler func(
 		*testing.T, *metrics.Registry,
 	) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
@@ -42,7 +42,7 @@ func createTCPHandlerMetricsTests(metricsReg *metrics.Registry) []struct {
 	checkMetrics func(*testing.T, *metrics.Registry)
 } {
 	return []struct {
-		name string
+		name         string
 		setupHandler func(
 			*testing.T, *metrics.Registry,
 		) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)
@@ -65,7 +65,7 @@ func createTCPHandlerMetricsTests(metricsReg *metrics.Registry) []struct {
 }
 
 func runTCPHandlerMetricsTests(t *testing.T, tests []struct {
-	name string
+	name         string
 	setupHandler func(
 		*testing.T, *metrics.Registry,
 	) (*TCPHandler, *MockAuthProvider, *MockRouter, *MockSessionManager, *MockRateLimiter)

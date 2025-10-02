@@ -134,6 +134,7 @@ func createExporter(cfg config.TracingConfig, logger *zap.Logger) (sdktrace.Span
 }
 
 // createSampler creates the appropriate sampler based on configuration.
+//
 //nolint:ireturn // Returns OpenTelemetry interface
 func createSampler(cfg config.TracingConfig) sdktrace.Sampler {
 	switch cfg.SamplerType {
@@ -149,6 +150,7 @@ func createSampler(cfg config.TracingConfig) sdktrace.Sampler {
 }
 
 // StartSpan starts a new span.
+//
 //nolint:ireturn // Returns OpenTelemetry interface
 func (t *OTelTracer) StartSpan(ctx context.Context, name string) (context.Context, trace.Span) {
 	if t.tracer == nil {

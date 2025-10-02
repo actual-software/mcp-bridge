@@ -50,6 +50,7 @@ func createTestRequestMetrics() (*prometheus.CounterVec, *prometheus.HistogramVe
 }
 
 // createTestTCPMetrics creates test TCP metrics.
+//
 //nolint:ireturn // Test helper returns prometheus interfaces
 func createTestTCPMetrics() (
 	prometheus.Gauge,

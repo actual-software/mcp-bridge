@@ -73,6 +73,7 @@ func InitTracer(cfg Config, logger *zap.Logger) (opentracing.Tracer, io.Closer, 
 }
 
 // StartSpanFromContext starts a new span from context.
+//
 //nolint:ireturn // Returns standard opentracing interface
 func StartSpanFromContext(
 	ctx context.Context, operationName string, opts ...opentracing.StartSpanOption,
@@ -90,6 +91,7 @@ func InjectHTTPHeaders(span opentracing.Span, req *http.Request) error {
 }
 
 // ExtractHTTPHeaders extracts tracing context from HTTP request.
+//
 //nolint:ireturn // Returns standard opentracing interface
 func ExtractHTTPHeaders(req *http.Request) (opentracing.SpanContext, error) {
 	return opentracing.GlobalTracer().Extract(

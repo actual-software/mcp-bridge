@@ -692,7 +692,6 @@ func runFailureScenarioTest(t *testing.T, tt failureScenarioTest) {
 	logger := zaptest.NewLogger(t)
 	manager := NewDirectClientManager(tt.config, logger)
 
-
 	timeout := tt.testTimeout
 	if timeout == 0 {
 		timeout = 15 * time.Second

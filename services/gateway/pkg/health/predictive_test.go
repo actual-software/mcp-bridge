@@ -240,7 +240,7 @@ func TestPredictiveHealthMonitor_GetPredictedHealth(t *testing.T) {
 	// Register endpoint
 	monitor.RegisterEndpoint(endpoint)
 	predicted, confidence = monitor.GetPredictedHealth(endpoint)
-	assert.True(t, predicted)        // Default predicted health
+	assert.True(t, predicted)                 // Default predicted health
 	assert.InDelta(t, 0.0, confidence, 0.001) // Default confidence
 }
 

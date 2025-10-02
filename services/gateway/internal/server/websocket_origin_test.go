@@ -38,7 +38,7 @@ func setupWebSocketOriginTestServer(t *testing.T) (*GatewayServer, *httptest.Ser
 	mockAuth := createOriginTestAuth()
 	mockSessions := createOriginTestSessions(mockAuth)
 	testRouter := createOriginTestRouter()
-	
+
 	server := createOriginTestGatewayServer(t, cfg, mockAuth, mockSessions, testRouter)
 	testServer := httptest.NewServer(http.HandlerFunc(server.handleWebSocket))
 
@@ -226,7 +226,7 @@ func setupWildcardOriginTestServer(t *testing.T) (*GatewayServer, *httptest.Serv
 	mockAuth := createOriginTestAuth()
 	mockSessions := createOriginTestSessions(mockAuth)
 	testRouter := createOriginTestRouter()
-	
+
 	server := createOriginTestGatewayServer(t, cfg, mockAuth, mockSessions, testRouter)
 	testServer := httptest.NewServer(http.HandlerFunc(server.handleWebSocket))
 

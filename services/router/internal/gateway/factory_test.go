@@ -50,7 +50,7 @@ func getWebSocketTests() []gatewayClientTest {
 		{
 			name: "WebSocket client (ws)",
 			cfg: config.GatewayConfig{
-				URL: fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
+				URL:        fmt.Sprintf("ws://localhost:%d", constants.TestHTTPPort),
 				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.Client",
@@ -59,7 +59,7 @@ func getWebSocketTests() []gatewayClientTest {
 		{
 			name: "WebSocket client (wss)",
 			cfg: config.GatewayConfig{
-				URL: fmt.Sprintf("wss://localhost:%d", constants.TestHTTPSPort),
+				URL:        fmt.Sprintf("wss://localhost:%d", constants.TestHTTPSPort),
 				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.Client",
@@ -73,7 +73,7 @@ func getTCPTests() []gatewayClientTest {
 		{
 			name: "TCP client (tcp)",
 			cfg: config.GatewayConfig{
-				URL: fmt.Sprintf("tcp://localhost:%d", constants.TestHTTPPort),
+				URL:        fmt.Sprintf("tcp://localhost:%d", constants.TestHTTPPort),
 				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.TCPClient",
@@ -82,7 +82,7 @@ func getTCPTests() []gatewayClientTest {
 		{
 			name: "TCP client with TLS (tcps)",
 			cfg: config.GatewayConfig{
-				URL: fmt.Sprintf("tcps://localhost:%d", constants.TestHTTPSPort),
+				URL:        fmt.Sprintf("tcps://localhost:%d", constants.TestHTTPSPort),
 				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.TCPClient",
@@ -91,7 +91,7 @@ func getTCPTests() []gatewayClientTest {
 		{
 			name: "TCP client with TLS (tcp+tls)",
 			cfg: config.GatewayConfig{
-				URL: fmt.Sprintf("tcp+tls://localhost:%d", constants.TestHTTPSPort),
+				URL:        fmt.Sprintf("tcp+tls://localhost:%d", constants.TestHTTPSPort),
 				Connection: common.ConnectionConfig{TimeoutMs: 5000},
 			},
 			wantType: "*gateway.TCPClient",
