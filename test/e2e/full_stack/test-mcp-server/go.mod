@@ -1,6 +1,8 @@
 module github.com/actual-software/mcp-bridge/test/e2e/full_stack/test-mcp-server
 
-go 1.21
+go 1.24
+
+toolchain go1.24.6
 
 require (
 	github.com/gorilla/mux v1.8.1
