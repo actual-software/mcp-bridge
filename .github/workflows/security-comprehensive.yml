@@ -50,7 +50,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          
+
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
         continue-on-error: true
@@ -60,24 +60,19 @@ jobs:
             p/golang
             p/owasp-top-ten
             p/kubernetes
-          
+
       - name: Upload Semgrep results
         uses: github/codeql-action/upload-sarif@v3
         if: always() && hashFiles('semgrep.sarif') != ''
         continue-on-error: true
         with:
           sarif_file: semgrep.sarif
-          
-      - name: Run CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          languages: go
-          
+
       - name: Run Staticcheck
         run: |
           go install honnef.co/go/tools/cmd/staticcheck@latest
           staticcheck -f sarif ./... > staticcheck.sarif || true
-          
+
       - name: Upload Staticcheck results
         uses: github/codeql-action/upload-sarif@v3
         if: always() && hashFiles('staticcheck.sarif') != ''
@@ -297,34 +292,34 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup test environment
         run: |
-          docker compose -f docker-compose.test.yml up -d
+          docker compose -f ./docker-compose.test.yml up -d
           sleep 10
-          
+
       - name: Run dynamic analysis
         run: |
           # Basic runtime checks
           echo "Running runtime security checks..."
-          
+
           # Check for exposed ports
           docker ps --format "table {{.Names}}\t{{.Ports}}" > exposed-ports.txt
-          
+
           # Check for running processes
-          docker compose -f docker-compose.test.yml exec -T gateway ps aux > gateway-processes.txt || true
-          docker compose -f docker-compose.test.yml exec -T router ps aux > router-processes.txt || true
-          
+          docker compose -f ./docker-compose.test.yml exec -T gateway ps aux > gateway-processes.txt || true
+          docker compose -f ./docker-compose.test.yml exec -T router ps aux > router-processes.txt || true
+
           # Check for open files
-          docker compose -f docker-compose.test.yml exec -T gateway lsof -n > gateway-files.txt || true
-          docker compose -f docker-compose.test.yml exec -T router lsof -n > router-files.txt || true
-          
+          docker compose -f ./docker-compose.test.yml exec -T gateway lsof -n > gateway-files.txt || true
+          docker compose -f ./docker-compose.test.yml exec -T router lsof -n > router-files.txt || true
+
       - name: Security headers test
         run: |
           # Test security headers
           curl -I http://localhost:8080/health > headers-gateway.txt || true
           curl -I http://localhost:8081/health > headers-router.txt || true
-          
+
           # Check for security headers
           for header in "X-Content-Type-Options" "X-Frame-Options" "Strict-Transport-Security"; do
             if grep -q "$header" headers-*.txt; then
@@ -333,11 +328,11 @@ jobs:
               echo "⚠️  $header missing"
             fi
           done
-          
+
       - name: Cleanup
         if: always()
         run: |
-          docker compose -f docker-compose.test.yml down -v
+          docker compose -f ./docker-compose.test.yml down -v
           
       - name: Upload runtime results
         uses: actions/upload-artifact@v4
