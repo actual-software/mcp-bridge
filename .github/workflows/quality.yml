@@ -146,7 +146,7 @@ jobs:
           
           echo "✅ Documentation completeness check passed"
 
-  api-documentation-check:
+  code-documentation-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -154,9 +154,9 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Check API documentation
+      - name: Check code documentation
         run: |
-          echo "📖 Checking API documentation..."
+          echo "📖 Checking code documentation..."
           
           # Check for exported functions with comments
           for service in gateway router; do
