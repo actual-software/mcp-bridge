@@ -28,13 +28,13 @@ jobs:
         run: |
           cd services/gateway
           cyclonedx-gomod mod -json -output ../../sbom-gateway.json
-          cyclonedx-gomod mod -xml -output ../../sbom-gateway.xml
+          cyclonedx-gomod mod -output ../../sbom-gateway.xml
           
       - name: Generate SBOM for Router
         run: |
           cd services/router
           cyclonedx-gomod mod -json -output ../../sbom-router.json
-          cyclonedx-gomod mod -xml -output ../../sbom-router.xml
+          cyclonedx-gomod mod -output ../../sbom-router.xml
           
       - name: Upload SBOM artifacts
         uses: actions/upload-artifact@v4

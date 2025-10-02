@@ -72,6 +72,7 @@ jobs:
       with:
         go-version: ${{ env.GO_VERSION }}
         cache: true
+        cache-dependency-path: test/e2e/k8s/go.sum
 
     - name: Cache Docker layers
       uses: actions/cache@v4
@@ -106,19 +107,19 @@ jobs:
 
     - name: Set up test environment
       if: github.event_name != 'pull_request' || !matrix.test-type.skip_on_pr
+      working-directory: test/e2e/k8s
       run: |
-        cd test/e2e/k8s
         go mod tidy
         make check-prereqs
 
     - name: Run Kubernetes E2E Tests
       if: github.event_name != 'pull_request' || !matrix.test-type.skip_on_pr
+      working-directory: test/e2e/k8s
       env:
         K8S_TEST_CLUSTER_NAME: mcp-e2e-test-${{ github.run_id }}
         K8S_TEST_NAMESPACE: mcp-e2e-${{ github.run_id }}
         K8S_DEBUG: ${{ github.event.inputs.debug_mode || 'false' }}
       run: |
-        cd test/e2e/k8s
         TEST_PATTERN="${{ github.event.inputs.test_pattern || matrix.test-type.pattern }}"
         TIMEOUT="${{ matrix.test-type.timeout }}"
 
@@ -130,8 +131,8 @@ jobs:
 
     - name: Collect test artifacts
       if: always()
+      working-directory: test/e2e/k8s
       run: |
-        cd test/e2e/k8s
         # Create artifacts directory
         mkdir -p artifacts
 
