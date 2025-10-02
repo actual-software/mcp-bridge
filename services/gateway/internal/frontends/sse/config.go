@@ -6,6 +6,20 @@ import (
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
 )
 
+const (
+	defaultHost            = "0.0.0.0"
+	defaultPort            = 8081
+	defaultStreamEndpoint  = "/events"
+	defaultRequestEndpoint = "/api/v1/request"
+	defaultKeepAlive       = 30 * time.Second
+	defaultMaxConnections  = 10000
+	defaultBufferSize      = 256
+	defaultReadTimeout     = 30 * time.Second
+	defaultWriteTimeout    = 30 * time.Second
+	streamCloseTimeout     = 5 * time.Second
+	shutdownTimeout        = 30 * time.Second
+)
+
 // Config holds SSE-specific configuration.
 type Config struct {
 	Host            string           `mapstructure:"host"`
@@ -23,30 +37,30 @@ type Config struct {
 // ApplyDefaults applies default values to the configuration.
 func (c *Config) ApplyDefaults() {
 	if c.Host == "" {
-		c.Host = "0.0.0.0"
+		c.Host = defaultHost
 	}
 	if c.Port == 0 {
-		c.Port = 8081
+		c.Port = defaultPort
 	}
 	if c.StreamEndpoint == "" {
-		c.StreamEndpoint = "/events"
+		c.StreamEndpoint = defaultStreamEndpoint
 	}
 	if c.RequestEndpoint == "" {
-		c.RequestEndpoint = "/api/v1/request"
+		c.RequestEndpoint = defaultRequestEndpoint
 	}
 	if c.KeepAlive == 0 {
-		c.KeepAlive = 30 * time.Second
+		c.KeepAlive = defaultKeepAlive
 	}
 	if c.MaxConnections == 0 {
-		c.MaxConnections = 10000
+		c.MaxConnections = defaultMaxConnections
 	}
 	if c.BufferSize == 0 {
-		c.BufferSize = 256
+		c.BufferSize = defaultBufferSize
 	}
 	if c.ReadTimeout == 0 {
-		c.ReadTimeout = 30 * time.Second
+		c.ReadTimeout = defaultReadTimeout
 	}
 	if c.WriteTimeout == 0 {
-		c.WriteTimeout = 30 * time.Second
+		c.WriteTimeout = defaultWriteTimeout
 	}
 }

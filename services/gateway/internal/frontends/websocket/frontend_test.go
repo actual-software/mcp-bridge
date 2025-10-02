@@ -17,15 +17,21 @@ import (
 
 // Test helpers
 
-// testServer wraps a frontend with cleanup
+// testServer wraps a frontend with cleanup.
 type testServer struct {
 	frontend *Frontend
 	url      string
 	t        *testing.T
 }
 
-// setupTestServer creates and starts a WebSocket frontend for testing
-func setupTestServer(t *testing.T, config Config, router *mockRouter, auth *mockAuth, sessions *mockSessionManager) *testServer {
+// setupTestServer creates and starts a WebSocket frontend for testing.
+func setupTestServer(
+	t *testing.T,
+	config Config,
+	router *mockRouter,
+	auth *mockAuth,
+	sessions *mockSessionManager,
+) *testServer {
 	t.Helper()
 
 	logger := zap.NewNop()
@@ -51,7 +57,7 @@ func setupTestServer(t *testing.T, config Config, router *mockRouter, auth *mock
 	return ts
 }
 
-// cleanup stops the test server
+// cleanup stops the test server.
 func (ts *testServer) cleanup() {
 	ts.t.Helper()
 	ctx := context.Background()
@@ -250,9 +256,9 @@ func TestWebSocketConnection(t *testing.T) {
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
-	defer ws.Close()
+	defer func() { _ = ws.Close() }()
 
 	t.Log("Connected successfully")
 
@@ -275,7 +281,7 @@ func TestWebSocketConnection(t *testing.T) {
 	}
 
 	// Read response with timeout
-	ws.SetReadDeadline(time.Now().Add(5 * time.Second))
+	_ = ws.SetReadDeadline(time.Now().Add(5 * time.Second))
 	var response map[string]interface{}
 	t.Log("Waiting for response...")
 	if err := ws.ReadJSON(&response); err != nil {
@@ -334,9 +340,9 @@ func TestWebSocketConnectionLimit(t *testing.T) {
 		t.Fatalf("First connection should succeed: %v", err)
 	}
 	if resp1 != nil && resp1.Body != nil {
-		defer resp1.Body.Close()
+		defer func() { _ = resp1.Body.Close() }()
 	}
-	defer ws1.Close()
+	defer func() { _ = ws1.Close() }()
 
 	// Give it time to register
 	time.Sleep(200 * time.Millisecond)
@@ -388,7 +394,7 @@ func TestWebSocketInvalidMessage(t *testing.T) {
 	}
 
 	// Should receive error response
-	ws.SetReadDeadline(time.Now().Add(5 * time.Second))
+	_ = ws.SetReadDeadline(time.Now().Add(5 * time.Second))
 	var response map[string]interface{}
 	if err := ws.ReadJSON(&response); err != nil {
 		t.Fatalf("Failed to read response: %v", err)
@@ -429,7 +435,7 @@ func TestWebSocketMetrics(t *testing.T) {
 	if err := frontend.Start(ctx); err != nil {
 		t.Fatalf("Failed to start frontend: %v", err)
 	}
-	defer frontend.Stop(ctx)
+	defer func() { _ = frontend.Stop(ctx) }()
 
 	// After start
 	metrics = frontend.GetMetrics()

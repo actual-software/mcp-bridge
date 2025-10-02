@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	nethttp "net/http"
 	"sync"
 	"time"
@@ -18,6 +17,12 @@ import (
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/types"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/logging"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+)
+
+type contextKey string
+
+const (
+	contextKeyUser contextKey = "user"
 )
 
 // WireMessage represents the wire protocol message format.
@@ -47,9 +52,8 @@ type Frontend struct {
 	mu      sync.RWMutex
 
 	// Metrics
-	metrics        types.FrontendMetrics
-	metricsMu      sync.RWMutex
-	requestCounter int64
+	metrics   types.FrontendMetrics
+	metricsMu sync.RWMutex
 
 	// Shutdown coordination
 	ctx        context.Context
@@ -163,7 +167,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Shutdown HTTP server
 	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
 
 		if err := f.server.Shutdown(shutdownCtx); err != nil {
@@ -181,7 +185,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	select {
 	case <-done:
 		f.logger.Info("http frontend stopped gracefully")
-	case <-time.After(30 * time.Second):
+	case <-time.After(shutdownTimeout):
 		f.logger.Warn("http frontend shutdown timeout")
 	}
 
@@ -211,24 +215,57 @@ func (f *Frontend) GetMetrics() types.FrontendMetrics {
 
 // handleRequest handles HTTP POST requests with JSON-RPC payloads.
 func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
-	// Initialize request context
+	ctx := f.initializeRequestContext(r)
+
+	if !f.validateHTTPMethod(w, r.Method) {
+		return
+	}
+
+	r.Body = nethttp.MaxBytesReader(w, r.Body, f.config.MaxRequestSize)
+
+	authClaims, ok := f.authenticateRequest(w, r, ctx)
+	if !ok {
+		return
+	}
+
+	ctx = logging.ContextWithUserInfo(ctx, authClaims.Subject, "")
+
+	body, ok := f.readRequestBody(w, r, ctx)
+	if !ok {
+		return
+	}
+
+	resp, err := f.processRequest(ctx, body, authClaims)
+	if err != nil {
+		f.handleProcessingError(w, ctx, err, body)
+		return
+	}
+
+	f.sendSuccessResponse(w, resp)
+}
+
+func (f *Frontend) initializeRequestContext(r *nethttp.Request) context.Context {
 	traceID := logging.GenerateTraceID()
 	requestID := logging.GenerateRequestID()
-	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
+	return logging.ContextWithTracing(r.Context(), traceID, requestID)
+}
 
-	// Only accept POST requests
-	if r.Method != nethttp.MethodPost {
+func (f *Frontend) validateHTTPMethod(w nethttp.ResponseWriter, method string) bool {
+	if method != nethttp.MethodPost {
 		f.sendHTTPError(w, nethttp.StatusMethodNotAllowed, "method not allowed")
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return false
 	}
+	return true
+}
 
-	// Check request size
-	r.Body = nethttp.MaxBytesReader(w, r.Body, f.config.MaxRequestSize)
-
-	// Authenticate request
+func (f *Frontend) authenticateRequest(
+	w nethttp.ResponseWriter,
+	r *nethttp.Request,
+	ctx context.Context,
+) (*authpkg.Claims, bool) {
 	authClaims, err := f.auth.Authenticate(r)
 	if err != nil {
 		logging.LogError(ctx, f.logger, "Authentication failed", err)
@@ -236,13 +273,16 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return authClaims, true
+}
 
-	// Add user info to context
-	ctx = logging.ContextWithUserInfo(ctx, authClaims.Subject, "")
-
-	// Read and parse request body
+func (f *Frontend) readRequestBody(
+	w nethttp.ResponseWriter,
+	r *nethttp.Request,
+	ctx context.Context,
+) ([]byte, bool) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logging.LogError(ctx, f.logger, "Failed to read request body", err)
@@ -250,34 +290,35 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return body, true
+}
 
-	// Process the message
-	resp, err := f.processRequest(ctx, body, authClaims)
-	if err != nil {
-		logging.LogError(ctx, f.logger, "Failed to process request", err,
-			zap.ByteString("body", body))
+func (f *Frontend) handleProcessingError(
+	w nethttp.ResponseWriter,
+	ctx context.Context,
+	err error,
+	body []byte,
+) {
+	logging.LogError(ctx, f.logger, "Failed to process request", err,
+		zap.ByteString("body", body))
 
-		// Send error response
-		errorResp := &mcp.Response{
-			JSONRPC: "2.0",
-			Error: &mcp.Error{
-				Code:    mcp.ErrorCodeInternalError,
-				Message: err.Error(),
-			},
-		}
-		f.sendJSONResponse(w, nethttp.StatusOK, errorResp)
-		f.updateMetrics(func(m *types.FrontendMetrics) {
-			m.ErrorCount++
-		})
-		return
+	errorResp := &mcp.Response{
+		JSONRPC: "2.0",
+		Error: &mcp.Error{
+			Code:    mcp.ErrorCodeInternalError,
+			Message: err.Error(),
+		},
 	}
+	f.sendJSONResponse(w, nethttp.StatusOK, errorResp)
+	f.updateMetrics(func(m *types.FrontendMetrics) {
+		m.ErrorCount++
+	})
+}
 
-	// Send successful response
+func (f *Frontend) sendSuccessResponse(w nethttp.ResponseWriter, resp *mcp.Response) {
 	f.sendJSONResponse(w, nethttp.StatusOK, resp)
-
-	// Update connection metrics (treat each request as a connection)
 	f.updateMetrics(func(m *types.FrontendMetrics) {
 		m.TotalConnections++
 		m.RequestCount++
@@ -308,7 +349,7 @@ func (f *Frontend) processRequest(ctx context.Context, data []byte, authClaims *
 	}
 
 	// Create a session context (HTTP requests are stateless, but we need to pass context)
-	ctx = context.WithValue(ctx, "user", authClaims.Subject)
+	ctx = context.WithValue(ctx, contextKeyUser, authClaims.Subject)
 
 	// Route the request
 	resp, err := f.router.RouteRequest(ctx, &req, wireMsg.TargetNamespace)
@@ -376,13 +417,4 @@ func (f *Frontend) createTLSConfig() *tls.Config {
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
 	}
-}
-
-// getIPFromAddr extracts IP address from net.Addr string.
-func getIPFromAddr(addr string) string {
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		return addr
-	}
-	return host
 }

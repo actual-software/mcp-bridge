@@ -28,7 +28,13 @@ type testServer struct {
 	t        *testing.T
 }
 
-func setupTestServer(t *testing.T, config Config, router *mockRouter, auth *mockAuth, sessions *mockSessionManager) *testServer {
+func setupTestServer(
+	t *testing.T,
+	config Config,
+	router *mockRouter,
+	auth *mockAuth,
+	sessions *mockSessionManager,
+) *testServer {
 	t.Helper()
 
 	logger := zap.NewNop()
@@ -358,7 +364,15 @@ func TestSSERequestEndpoint(t *testing.T) {
 
 	url := ts.url + config.RequestEndpoint
 	t.Logf("Sending request to %s", url)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
@@ -409,11 +423,19 @@ func TestSSEMethodNotAllowed(t *testing.T) {
 
 	// Try POST on stream endpoint (should be GET only)
 	url := ts.url + config.StreamEndpoint
-	resp, err := http.Post(url, "application/json", bytes.NewReader([]byte("{}")))
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	req1, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, bytes.NewReader([]byte("{}")))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	req1.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req1)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusMethodNotAllowed {
 		t.Errorf("Expected status 405, got %d", resp.StatusCode)
@@ -421,11 +443,17 @@ func TestSSEMethodNotAllowed(t *testing.T) {
 
 	// Try GET on request endpoint (should be POST only)
 	url = ts.url + config.RequestEndpoint
-	resp, err = http.Get(url)
+
+	req2, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	resp, err = client.Do(req2)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusMethodNotAllowed {
 		t.Errorf("Expected status 405, got %d", resp.StatusCode)

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	nethttp "net/http"
 	"sync"
 	"sync/atomic"
@@ -14,11 +13,18 @@ import (
 
 	"go.uber.org/zap"
 
+	authpkg "github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
 	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/types"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/logging"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+)
+
+type contextKey string
+
+const (
+	contextKeySession contextKey = "session"
 )
 
 // Wire message represents the wire protocol message format.
@@ -86,7 +92,6 @@ type Frontend struct {
 
 	// Request correlation
 	pendingRequests map[string]chan *mcp.Response
-	pendingMu       sync.RWMutex
 
 	// State management
 	running bool
@@ -216,7 +221,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Shutdown HTTP server
 	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
 
 		if err := f.server.Shutdown(shutdownCtx); err != nil {
@@ -265,38 +270,83 @@ func (f *Frontend) GetMetrics() types.FrontendMetrics {
 
 // handleSSEStream handles SSE stream connections.
 func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request) {
-	// Only accept GET requests
-	if r.Method != nethttp.MethodGet {
+	if !f.validateGetMethod(w, r.Method) {
+		return
+	}
+
+	ctx := f.initializeStreamContext(r)
+
+	flusher, ok := f.validateSSESupport(w)
+	if !ok {
+		return
+	}
+
+	if !f.checkConnectionLimit(w) {
+		return
+	}
+
+	authClaims, ok := f.authenticateStreamRequest(w, r, ctx)
+	if !ok {
+		return
+	}
+
+	sess, ok := f.createStreamSession(w, ctx, authClaims)
+	if !ok {
+		return
+	}
+
+	f.setSSEHeaders(w)
+
+	stream := f.createAndRegisterStream(sess, w, flusher, authClaims)
+
+	flusher.Flush()
+	f.handleStreamLoop(stream)
+	f.removeStream(sess.ID)
+}
+
+func (f *Frontend) validateGetMethod(w nethttp.ResponseWriter, method string) bool {
+	if method != nethttp.MethodGet {
 		f.sendHTTPError(w, nethttp.StatusMethodNotAllowed, "method not allowed")
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return false
 	}
+	return true
+}
 
-	// Initialize request context
+func (f *Frontend) initializeStreamContext(r *nethttp.Request) context.Context {
 	traceID := logging.GenerateTraceID()
 	requestID := logging.GenerateRequestID()
-	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
+	return logging.ContextWithTracing(r.Context(), traceID, requestID)
+}
 
-	// Check for SSE support
+func (f *Frontend) validateSSESupport(w nethttp.ResponseWriter) (nethttp.Flusher, bool) {
 	flusher, ok := w.(nethttp.Flusher)
 	if !ok {
 		nethttp.Error(w, "SSE not supported", nethttp.StatusInternalServerError)
-		return
+		return nil, false
 	}
+	return flusher, true
+}
 
-	// Check connection limits
+func (f *Frontend) checkConnectionLimit(w nethttp.ResponseWriter) bool {
 	currentCount := atomic.LoadInt64(&f.connCount)
 	if currentCount >= int64(f.config.MaxConnections) {
 		nethttp.Error(w, "Connection limit reached", nethttp.StatusServiceUnavailable)
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return false
 	}
+	return true
+}
 
-	// Authenticate request
+func (f *Frontend) authenticateStreamRequest(
+	w nethttp.ResponseWriter,
+	r *nethttp.Request,
+	ctx context.Context,
+) (*authpkg.Claims, bool) {
 	authClaims, err := f.auth.Authenticate(r)
 	if err != nil {
 		logging.LogError(ctx, f.logger, "Authentication failed", err)
@@ -304,10 +354,16 @@ func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request)
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return authClaims, true
+}
 
-	// Create session
+func (f *Frontend) createStreamSession(
+	w nethttp.ResponseWriter,
+	ctx context.Context,
+	authClaims *authpkg.Claims,
+) (*session.Session, bool) {
 	sess, err := f.sessions.CreateSession(authClaims)
 	if err != nil {
 		logging.LogError(ctx, f.logger, "Failed to create session", err)
@@ -315,16 +371,24 @@ func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request)
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return sess, true
+}
 
-	// Set SSE headers
+func (f *Frontend) setSSEHeaders(w nethttp.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
+}
 
-	// Create stream connection
+func (f *Frontend) createAndRegisterStream(
+	sess *session.Session,
+	w nethttp.ResponseWriter,
+	flusher nethttp.Flusher,
+	authClaims *authpkg.Claims,
+) *StreamConnection {
 	streamCtx, streamCancel := context.WithCancel(f.ctx)
 	stream := &StreamConnection{
 		ID:       sess.ID,
@@ -339,7 +403,6 @@ func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request)
 		logger:   f.logger.With(zap.String("stream_id", sess.ID)),
 	}
 
-	// Register stream
 	f.streamsMu.Lock()
 	f.streams[sess.ID] = stream
 	f.streamsMu.Unlock()
@@ -352,14 +415,7 @@ func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request)
 
 	stream.logger.Info("SSE stream connected", zap.String("user", authClaims.Subject))
 
-	// Flush headers to establish SSE connection
-	flusher.Flush()
-
-	// Handle stream (blocks until disconnected)
-	f.handleStreamLoop(stream)
-
-	// Cleanup on disconnect
-	f.removeStream(sess.ID)
+	return stream
 }
 
 // handleStreamLoop handles the event stream loop.
@@ -394,21 +450,65 @@ func (f *Frontend) handleStreamLoop(stream *StreamConnection) {
 
 // handleRequest handles POST requests.
 func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
-	// Initialize request context
+	ctx := f.initializeRequestContext(r)
+
+	if !f.validatePostMethod(w, r.Method) {
+		return
+	}
+
+	authClaims, ok := f.authenticateAPIRequest(w, r, ctx)
+	if !ok {
+		return
+	}
+
+	ctx = logging.ContextWithUserInfo(ctx, authClaims.Subject, "")
+
+	body, ok := f.readAPIRequestBody(w, r, ctx)
+	if !ok {
+		return
+	}
+
+	stream, ok := f.findUserStream(w, authClaims.Subject)
+	if !ok {
+		return
+	}
+
+	resp, err := f.processRequest(ctx, body, stream)
+	if err != nil {
+		f.handleAPIProcessingError(w, ctx, err, body)
+		return
+	}
+
+	if err := f.sendEventToStream(stream, resp); err != nil {
+		f.handleStreamSendError(w, ctx, err)
+		return
+	}
+
+	f.acknowledgeRequest(w)
+}
+
+func (f *Frontend) initializeRequestContext(r *nethttp.Request) context.Context {
 	traceID := logging.GenerateTraceID()
 	requestID := logging.GenerateRequestID()
-	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
+	return logging.ContextWithTracing(r.Context(), traceID, requestID)
+}
 
-	// Only accept POST requests
-	if r.Method != nethttp.MethodPost {
+func (f *Frontend) validatePostMethod(w nethttp.ResponseWriter, method string) bool {
+	if method != nethttp.MethodPost {
 		f.sendHTTPError(w, nethttp.StatusMethodNotAllowed, "method not allowed")
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return false
 	}
+	return true
+}
 
-	// Authenticate request
+func (f *Frontend) authenticateAPIRequest(
+	w nethttp.ResponseWriter,
+	r *nethttp.Request,
+	ctx context.Context,
+) (*authpkg.Claims, bool) {
 	authClaims, err := f.auth.Authenticate(r)
 	if err != nil {
 		logging.LogError(ctx, f.logger, "Authentication failed", err)
@@ -416,13 +516,16 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return authClaims, true
+}
 
-	// Add user info to context
-	ctx = logging.ContextWithUserInfo(ctx, authClaims.Subject, "")
-
-	// Read and parse request body
+func (f *Frontend) readAPIRequestBody(
+	w nethttp.ResponseWriter,
+	r *nethttp.Request,
+	ctx context.Context,
+) ([]byte, bool) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logging.LogError(ctx, f.logger, "Failed to read request body", err)
@@ -430,46 +533,52 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return body, true
+}
 
-	// Find session from auth claims
-	// In SSE, we need to find the stream associated with this user
-	stream := f.findStreamByUser(authClaims.Subject)
+func (f *Frontend) findUserStream(w nethttp.ResponseWriter, userID string) (*StreamConnection, bool) {
+	stream := f.findStreamByUser(userID)
 	if stream == nil {
 		f.sendHTTPError(w, nethttp.StatusNotFound, "stream not found")
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return stream, true
+}
 
-	// Process the message
-	resp, err := f.processRequest(ctx, body, stream)
-	if err != nil {
-		logging.LogError(ctx, f.logger, "Failed to process request", err,
-			zap.ByteString("body", body))
-		f.sendHTTPError(w, nethttp.StatusInternalServerError, err.Error())
-		f.updateMetrics(func(m *types.FrontendMetrics) {
-			m.ErrorCount++
-		})
-		return
-	}
+func (f *Frontend) handleAPIProcessingError(
+	w nethttp.ResponseWriter,
+	ctx context.Context,
+	err error,
+	body []byte,
+) {
+	logging.LogError(ctx, f.logger, "Failed to process request", err,
+		zap.ByteString("body", body))
+	f.sendHTTPError(w, nethttp.StatusInternalServerError, err.Error())
+	f.updateMetrics(func(m *types.FrontendMetrics) {
+		m.ErrorCount++
+	})
+}
 
-	// Send response via SSE stream
-	if err := f.sendEventToStream(stream, resp); err != nil {
-		logging.LogError(ctx, f.logger, "Failed to send event to stream", err)
-		f.sendHTTPError(w, nethttp.StatusInternalServerError, "failed to send response")
-		f.updateMetrics(func(m *types.FrontendMetrics) {
-			m.ErrorCount++
-		})
-		return
-	}
+func (f *Frontend) handleStreamSendError(
+	w nethttp.ResponseWriter,
+	ctx context.Context,
+	err error,
+) {
+	logging.LogError(ctx, f.logger, "Failed to send event to stream", err)
+	f.sendHTTPError(w, nethttp.StatusInternalServerError, "failed to send response")
+	f.updateMetrics(func(m *types.FrontendMetrics) {
+		m.ErrorCount++
+	})
+}
 
-	// Acknowledge request accepted
+func (f *Frontend) acknowledgeRequest(w nethttp.ResponseWriter) {
 	w.WriteHeader(nethttp.StatusAccepted)
 	_, _ = w.Write([]byte("accepted"))
-
 	f.updateMetrics(func(m *types.FrontendMetrics) {
 		m.RequestCount++
 	})
@@ -499,7 +608,7 @@ func (f *Frontend) processRequest(ctx context.Context, data []byte, stream *Stre
 	}
 
 	// Add session to context
-	ctx = context.WithValue(ctx, "session", stream.Session)
+	ctx = context.WithValue(ctx, contextKeySession, stream.Session)
 
 	// Route the request
 	resp, err := f.router.RouteRequest(ctx, &req, wireMsg.TargetNamespace)
@@ -534,7 +643,7 @@ func (f *Frontend) sendEventToStream(stream *StreamConnection, resp *mcp.Respons
 	select {
 	case stream.EventCh <- data:
 		return nil
-	case <-time.After(5 * time.Second):
+	case <-time.After(streamCloseTimeout):
 		return fmt.Errorf("stream write timeout")
 	}
 }
@@ -653,13 +762,4 @@ func (f *Frontend) createTLSConfig() *tls.Config {
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
 	}
-}
-
-// getIPFromAddr extracts IP address from net.Addr string.
-func getIPFromAddr(addr string) string {
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		return addr
-	}
-	return host
 }

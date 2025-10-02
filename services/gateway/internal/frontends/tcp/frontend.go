@@ -19,6 +19,12 @@ import (
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
+type contextKey string
+
+const (
+	contextKeySession contextKey = "session"
+)
+
 // ClientConnection represents a connected TCP client.
 type ClientConnection struct {
 	ID        string
@@ -253,28 +259,50 @@ func (f *Frontend) handleConnection(parentCtx context.Context, conn net.Conn) {
 	defer f.wg.Done()
 	defer func() { _ = conn.Close() }()
 
-	// Initialize request context
-	traceID := logging.GenerateTraceID()
-	requestID := logging.GenerateRequestID()
-	ctx := logging.ContextWithTracing(parentCtx, traceID, requestID)
-
+	ctx := f.initializeConnectionContext(parentCtx)
 	clientIP := getIPFromAddr(conn.RemoteAddr().String())
 
-	// Check connection limits
+	if !f.checkConnectionLimit(clientIP) {
+		return
+	}
+
+	transport := wire.NewTransport(conn)
+	sess, ok := f.createConnectionSession(clientIP)
+	if !ok {
+		return
+	}
+
+	clientConn := f.setupClientConnection(conn, transport, sess, clientIP)
+	f.registerConnection(clientConn, clientIP)
+
+	clientConn.logger.Info("TCP connection established")
+
+	f.handleClientMessages(ctx, clientConn)
+
+	f.removeConnection(sess.ID)
+}
+
+func (f *Frontend) initializeConnectionContext(parentCtx context.Context) context.Context {
+	traceID := logging.GenerateTraceID()
+	requestID := logging.GenerateRequestID()
+	return logging.ContextWithTracing(parentCtx, traceID, requestID)
+}
+
+func (f *Frontend) checkConnectionLimit(clientIP string) bool {
 	currentCount := atomic.LoadInt64(&f.connCount)
 	if currentCount >= int64(f.config.MaxConnections) {
 		f.logger.Warn("Connection limit reached", zap.String("client_ip", clientIP))
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return false
 	}
+	return true
+}
 
-	// Create wire transport
-	transport := wire.NewTransport(conn)
-
-	// For now, create a simple session without full authentication
-	// In production, this should implement proper TCP auth
+func (f *Frontend) createConnectionSession(clientIP string) (*session.Session, bool) {
+	// For now, create a simple session without full authentication.
+	// In production, this should implement proper TCP auth.
 	claims := &authpkg.Claims{}
 	sess, err := f.sessions.CreateSession(claims)
 	if err != nil {
@@ -282,15 +310,19 @@ func (f *Frontend) handleConnection(parentCtx context.Context, conn net.Conn) {
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
-		return
+		return nil, false
 	}
+	return sess, true
+}
 
-	// Create client connection context
+func (f *Frontend) setupClientConnection(
+	conn net.Conn,
+	transport *wire.Transport,
+	sess *session.Session,
+	clientIP string,
+) *ClientConnection {
 	connCtx, connCancel := context.WithCancel(f.ctx)
-	defer connCancel()
-
-	// Setup client connection
-	clientConn := &ClientConnection{
+	return &ClientConnection{
 		ID:        sess.ID,
 		Conn:      conn,
 		Transport: transport,
@@ -302,10 +334,11 @@ func (f *Frontend) handleConnection(parentCtx context.Context, conn net.Conn) {
 		lastUsed:  time.Now(),
 		logger:    f.logger.With(zap.String("session_id", sess.ID), zap.String("client_ip", clientIP)),
 	}
+}
 
-	// Register connection
+func (f *Frontend) registerConnection(clientConn *ClientConnection, clientIP string) {
 	f.connMu.Lock()
-	f.connections[sess.ID] = clientConn
+	f.connections[clientConn.Session.ID] = clientConn
 	f.connMu.Unlock()
 
 	atomic.AddInt64(&f.connCount, 1)
@@ -315,14 +348,6 @@ func (f *Frontend) handleConnection(parentCtx context.Context, conn net.Conn) {
 		m.ActiveConnections++
 		m.TotalConnections++
 	})
-
-	clientConn.logger.Info("TCP connection established")
-
-	// Handle messages
-	f.handleClientMessages(ctx, clientConn)
-
-	// Cleanup
-	f.removeConnection(sess.ID)
 }
 
 // handleClientMessages handles messages from a client.
@@ -386,7 +411,7 @@ func (f *Frontend) processRequest(ctx context.Context, client *ClientConnection,
 	})
 
 	// Add session to context
-	ctx = context.WithValue(ctx, "session", client.Session)
+	ctx = context.WithValue(ctx, contextKeySession, client.Session)
 
 	// Route the request (no namespace for TCP binary for now)
 	resp, err := f.router.RouteRequest(ctx, req, "")
@@ -448,15 +473,19 @@ func (f *Frontend) closeAllConnections() {
 // incrementIPConnCount increments the connection count for an IP.
 func (f *Frontend) incrementIPConnCount(ip string) {
 	val, _ := f.ipConnCount.LoadOrStore(ip, new(int64))
-	atomic.AddInt64(val.(*int64), 1)
+	if counter, ok := val.(*int64); ok {
+		atomic.AddInt64(counter, 1)
+	}
 }
 
 // decrementIPConnCount decrements the connection count for an IP.
 func (f *Frontend) decrementIPConnCount(ip string) {
 	if val, ok := f.ipConnCount.Load(ip); ok {
-		count := atomic.AddInt64(val.(*int64), -1)
-		if count <= 0 {
-			f.ipConnCount.Delete(ip)
+		if counter, ok := val.(*int64); ok {
+			count := atomic.AddInt64(counter, -1)
+			if count <= 0 {
+				f.ipConnCount.Delete(ip)
+			}
 		}
 	}
 }

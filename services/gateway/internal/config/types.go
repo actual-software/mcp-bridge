@@ -35,7 +35,8 @@ type ServerConfig struct {
 	ReadTimeout          int                   `mapstructure:"read_timeout"`
 	WriteTimeout         int                   `mapstructure:"write_timeout"`
 	IdleTimeout          int                   `mapstructure:"idle_timeout"`
-	Protocol             string                `mapstructure:"protocol"` // "websocket", "tcp", "both", or "stdio" (deprecated, use Frontends)
+	// Protocol specifies legacy protocol config (deprecated, use Frontends)
+	Protocol string `mapstructure:"protocol"`
 	AllowedOrigins       []string              `mapstructure:"allowed_origins"`
 	TLS                  TLSConfig             `mapstructure:"tls"`
 	StdioFrontend        StdioFrontendConfig   `mapstructure:"stdio_frontend"`

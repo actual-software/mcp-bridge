@@ -23,12 +23,15 @@ import (
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
+type contextKey string
+
 const (
-	defaultWriteWait      = 10 * time.Second
-	defaultPongWait       = 60 * time.Second
-	defaultPingPeriod     = 30 * time.Second
-	defaultMaxMessageSize = 10 * 1024 * 1024 // 10MB
-	wsHandlerCount        = 2                // read + write goroutines
+	contextKeySession contextKey = "session"
+
+	defaultWriteWait  = 10 * time.Second
+	defaultPongWait   = 60 * time.Second
+	defaultPingPeriod = 30 * time.Second
+	wsHandlerCount    = 2 // read + write goroutines
 )
 
 // WireMessage represents the wire protocol message format.
@@ -132,8 +135,8 @@ func CreateWebSocketFrontend(
 		sessions:    sessions,
 		connections: make(map[string]*ClientConnection),
 		upgrader: websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
+			ReadBufferSize:  defaultReadBufferSize,
+			WriteBufferSize: defaultWriteBufferSize,
 			CheckOrigin:     makeOriginChecker(config.AllowedOrigins),
 		},
 		ctx:        ctx,
@@ -216,7 +219,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Shutdown HTTP server
 	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
 
 		if err := f.server.Shutdown(shutdownCtx); err != nil {
@@ -240,7 +243,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	select {
 	case <-done:
 		f.logger.Info("websocket frontend stopped gracefully")
-	case <-time.After(30 * time.Second):
+	case <-time.After(shutdownTimeout):
 		f.logger.Warn("websocket frontend shutdown timeout")
 	}
 
@@ -419,7 +422,7 @@ func (f *Frontend) setupAndRegisterConnection(
 		ID:       sess.ID,
 		Conn:     conn,
 		Session:  sess,
-		WriteCh:  make(chan []byte, 256),
+		WriteCh:  make(chan []byte, defaultWriteChSize),
 		ClientIP: clientIP,
 		ctx:      connCtx,
 		cancel:   connCancel,
@@ -577,7 +580,7 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 	}
 
 	// Add session to context
-	ctx = context.WithValue(ctx, "session", client.Session)
+	ctx = context.WithValue(ctx, contextKeySession, client.Session)
 
 	// Route the request
 	resp, err := f.router.RouteRequest(ctx, &req, wireMsg.TargetNamespace)
@@ -601,7 +604,7 @@ func (f *Frontend) sendResponse(client *ClientConnection, resp *mcp.Response) er
 		return nil
 	case <-client.ctx.Done():
 		return fmt.Errorf("connection closed")
-	case <-time.After(5 * time.Second):
+	case <-time.After(streamCloseTimeout):
 		return fmt.Errorf("write timeout")
 	}
 }
@@ -699,15 +702,19 @@ func (f *Frontend) closeAllConnections() {
 // incrementIPConnCount increments the connection count for an IP.
 func (f *Frontend) incrementIPConnCount(ip string) {
 	val, _ := f.ipConnCount.LoadOrStore(ip, new(int64))
-	atomic.AddInt64(val.(*int64), 1)
+	if counter, ok := val.(*int64); ok {
+		atomic.AddInt64(counter, 1)
+	}
 }
 
 // decrementIPConnCount decrements the connection count for an IP.
 func (f *Frontend) decrementIPConnCount(ip string) {
 	if val, ok := f.ipConnCount.Load(ip); ok {
-		count := atomic.AddInt64(val.(*int64), -1)
-		if count <= 0 {
-			f.ipConnCount.Delete(ip)
+		if counter, ok := val.(*int64); ok {
+			count := atomic.AddInt64(counter, -1)
+			if count <= 0 {
+				f.ipConnCount.Delete(ip)
+			}
 		}
 	}
 }

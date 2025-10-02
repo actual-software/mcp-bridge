@@ -42,7 +42,11 @@ type stdioRouterAdapter struct {
 	router RequestRouter
 }
 
-func (a *stdioRouterAdapter) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
+func (a *stdioRouterAdapter) RouteRequest(
+	ctx context.Context,
+	req *mcp.Request,
+	targetNamespace string,
+) (*mcp.Response, error) {
 	return a.router.RouteRequest(ctx, req, targetNamespace)
 }
 
@@ -57,7 +61,10 @@ func (a *stdioAuthAdapter) Authenticate(ctx context.Context, credentials map[str
 	return true, nil
 }
 
-func (a *stdioAuthAdapter) GetUserInfo(ctx context.Context, credentials map[string]string) (map[string]interface{}, error) {
+func (a *stdioAuthAdapter) GetUserInfo(
+	ctx context.Context,
+	credentials map[string]string,
+) (map[string]interface{}, error) {
 	// Return empty user info for now
 	return map[string]interface{}{}, nil
 }
@@ -105,6 +112,8 @@ func CreateFrontendFactory(logger *zap.Logger) *DefaultFactory {
 }
 
 // CreateFrontend is a convenience function that creates a frontend without needing a factory instance.
+//
+//nolint:ireturn // Factory pattern legitimately requires interface return for polymorphism
 func CreateFrontend(
 	name string,
 	protocol string,

@@ -77,12 +77,34 @@ func BootstrapGatewayServer(
 		cancel:      cancel,
 	}
 
-	// Create per-message authenticator if enabled
-	if cfg.Auth.PerMessageAuth {
-		s.messageAuth = authpkg.CreateMessageLevelAuthenticator(auth, logger, cfg.Auth.PerMessageAuthCache)
-	}
+	s.initializeMessageAuth(cfg, auth, logger)
+	s.initializeFrontends(cfg, router, auth, sessions, logger)
+	s.initializeHealthServer(cfg, health, router, logger)
 
-	// Initialize frontends from configuration
+	return s
+}
+
+func (s *GatewayServer) initializeMessageAuth(
+	cfg *config.Config,
+	auth authpkg.Provider,
+	logger *zap.Logger,
+) {
+	if cfg.Auth.PerMessageAuth {
+		s.messageAuth = authpkg.CreateMessageLevelAuthenticator(
+			auth,
+			logger,
+			cfg.Auth.PerMessageAuthCache,
+		)
+	}
+}
+
+func (s *GatewayServer) initializeFrontends(
+	cfg *config.Config,
+	router *router.Router,
+	auth authpkg.Provider,
+	sessions session.Manager,
+	logger *zap.Logger,
+) {
 	s.frontends = make([]frontends.Frontend, 0, len(cfg.Server.Frontends))
 	for _, frontendCfg := range cfg.Server.Frontends {
 		if !frontendCfg.Enabled {
@@ -92,7 +114,6 @@ func BootstrapGatewayServer(
 			continue
 		}
 
-		// Create frontend using factory
 		frontend, err := frontends.CreateFrontend(
 			frontendCfg.Name,
 			frontendCfg.Protocol,
@@ -115,8 +136,14 @@ func BootstrapGatewayServer(
 			zap.String("name", frontendCfg.Name),
 			zap.String("protocol", frontendCfg.Protocol))
 	}
+}
 
-	// Initialize health HTTP server
+func (s *GatewayServer) initializeHealthServer(
+	cfg *config.Config,
+	health *health.Checker,
+	router *router.Router,
+	logger *zap.Logger,
+) {
 	if cfg.Server.HealthPort > 0 {
 		s.healthServer = NewHealthHTTPServer(
 			cfg.Server.HealthPort,
@@ -127,8 +154,6 @@ func BootstrapGatewayServer(
 		)
 		logger.Info("created health HTTP server", zap.Int("port", cfg.Server.HealthPort))
 	}
-
-	return s
 }
 
 // Start starts the gateway server and all configured frontends.
@@ -151,7 +176,7 @@ func (s *GatewayServer) Start() error {
 				zap.Error(err))
 			// Stop health server and previously started frontends
 			if s.healthServer != nil {
-				s.healthServer.Stop(s.ctx)
+				_ = s.healthServer.Stop(s.ctx)
 			}
 			s.stopStartedFrontends(s.ctx)
 			return fmt.Errorf("failed to start frontend %s: %w", frontend.GetName(), err)

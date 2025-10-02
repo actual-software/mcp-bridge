@@ -1,3 +1,4 @@
+//nolint:staticcheck // SA1019: Using deprecated v1.Endpoints API which is still widely used in k8s clusters.
 package discovery
 
 import (
@@ -143,7 +144,11 @@ func testNamespaceOperations(t *testing.T, client kubernetes.Interface) {
 		},
 	}
 
-	_, err = client.CoreV1().Endpoints("test-mcp-namespace").Create(context.Background(), endpoints, metav1.CreateOptions{})
+	_, err = client.CoreV1().Endpoints("test-mcp-namespace").Create(
+		context.Background(),
+		endpoints,
+		metav1.CreateOptions{},
+	)
 	if err != nil {
 		t.Fatalf("Failed to create test endpoints: %v", err)
 	}

@@ -25,7 +25,13 @@ type testServer struct {
 	t        *testing.T
 }
 
-func setupTestServer(t *testing.T, config Config, router *mockRouter, auth *mockAuth, sessions *mockSessionManager) *testServer {
+func setupTestServer(
+	t *testing.T,
+	config Config,
+	router *mockRouter,
+	auth *mockAuth,
+	sessions *mockSessionManager,
+) *testServer {
 	t.Helper()
 
 	logger := zap.NewNop()
@@ -378,7 +384,7 @@ func TestTCPMetrics(t *testing.T) {
 	if err := frontend.Start(ctx); err != nil {
 		t.Fatalf("Failed to start frontend: %v", err)
 	}
-	defer frontend.Stop(ctx)
+	defer func() { _ = frontend.Stop(ctx) }()
 
 	// After start
 	metrics = frontend.GetMetrics()

@@ -301,6 +301,8 @@ func (d *KubernetesDiscovery) getServiceEndpoints(
 }
 
 // convertToMCPEndpoints converts Kubernetes endpoints to MCP endpoints.
+//
+//nolint:staticcheck // SA1019: v1.Endpoints is deprecated but still widely used in k8s clusters.
 func (d *KubernetesDiscovery) convertToMCPEndpoints(
 	endpointList *v1.Endpoints,
 	svc *v1.Service,
@@ -318,6 +320,8 @@ func (d *KubernetesDiscovery) convertToMCPEndpoints(
 }
 
 // processSubset processes a single endpoint subset.
+//
+//nolint:staticcheck // SA1019: v1.EndpointSubset is deprecated but still widely used in k8s clusters.
 func (d *KubernetesDiscovery) processSubset(
 	subset *v1.EndpointSubset,
 	svc *v1.Service,

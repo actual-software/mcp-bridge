@@ -15,6 +15,13 @@ import (
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/router"
 )
 
+const (
+	healthReadTimeout  = 10 * time.Second
+	healthWriteTimeout = 10 * time.Second
+	healthIdleTimeout  = 30 * time.Second
+	minPathParts       = 4 // Minimum path parts for /health/frontend/{name} or /health/backend/{name}.
+)
+
 // HealthHTTPServer provides granular health check endpoints via HTTP.
 type HealthHTTPServer struct {
 	port   int
@@ -115,9 +122,9 @@ func (h *HealthHTTPServer) Start() error {
 	h.httpServer = &http.Server{
 		Addr:         addr,
 		Handler:      h.mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  30 * time.Second,
+		ReadTimeout:  healthReadTimeout,
+		WriteTimeout: healthWriteTimeout,
+		IdleTimeout:  healthIdleTimeout,
 	}
 
 	h.wg.Add(1)
@@ -173,7 +180,7 @@ func (h *HealthHTTPServer) handleHealth(w http.ResponseWriter, r *http.Request) 
 func (h *HealthHTTPServer) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	// Simple liveness - just check if server is running
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	_, _ = w.Write([]byte("OK"))
 }
 
 // handleReady returns readiness check (Kubernetes style).
@@ -182,10 +189,10 @@ func (h *HealthHTTPServer) handleReady(w http.ResponseWriter, r *http.Request) {
 
 	if status.Healthy && status.HealthyEndpoints > 0 {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("READY"))
+		_, _ = w.Write([]byte("READY"))
 	} else {
 		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write([]byte("NOT READY"))
+		_, _ = w.Write([]byte("NOT READY"))
 	}
 }
 
@@ -223,7 +230,7 @@ func (h *HealthHTTPServer) handleFrontendsHealth(w http.ResponseWriter, r *http.
 func (h *HealthHTTPServer) handleFrontendHealth(w http.ResponseWriter, r *http.Request) {
 	// Extract frontend name from path: /health/frontend/{name}
 	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 4 {
+	if len(parts) < minPathParts {
 		h.sendError(w, http.StatusBadRequest, "invalid frontend path")
 		return
 	}
@@ -290,7 +297,7 @@ func (h *HealthHTTPServer) handleBackendsHealth(w http.ResponseWriter, r *http.R
 func (h *HealthHTTPServer) handleBackendHealth(w http.ResponseWriter, r *http.Request) {
 	// Extract backend name from path: /health/backend/{namespace}/{name}
 	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 4 {
+	if len(parts) < minPathParts {
 		h.sendError(w, http.StatusBadRequest, "invalid backend path")
 		return
 	}

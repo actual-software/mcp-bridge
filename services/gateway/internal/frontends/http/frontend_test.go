@@ -25,7 +25,13 @@ type testServer struct {
 	t        *testing.T
 }
 
-func setupTestServer(t *testing.T, config Config, router *mockRouter, auth *mockAuth, sessions *mockSessionManager) *testServer {
+func setupTestServer(
+	t *testing.T,
+	config Config,
+	router *mockRouter,
+	auth *mockAuth,
+	sessions *mockSessionManager,
+) *testServer {
 	t.Helper()
 
 	logger := zap.NewNop()
@@ -245,11 +251,19 @@ func TestHTTPRequest(t *testing.T) {
 
 	url := ts.url + config.RequestPath
 	t.Logf("Sending request to %s", url)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)
@@ -309,11 +323,18 @@ func TestHTTPMethodNotAllowed(t *testing.T) {
 	defer ts.cleanup()
 
 	url := ts.url + config.RequestPath
-	resp, err := http.Get(url)
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusMethodNotAllowed {
 		t.Errorf("Expected status 405, got %d", resp.StatusCode)
@@ -351,11 +372,19 @@ func TestHTTPAuthenticationFailure(t *testing.T) {
 
 	body, _ := json.Marshal(wireMsg)
 	url := ts.url + config.RequestPath
-	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusUnauthorized {
 		t.Errorf("Expected status 401, got %d", resp.StatusCode)
@@ -377,11 +406,23 @@ func TestHTTPInvalidJSON(t *testing.T) {
 	defer ts.cleanup()
 
 	url := ts.url + config.RequestPath
-	resp, err := http.Post(url, "application/json", bytes.NewReader([]byte("invalid json")))
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPost,
+		url,
+		bytes.NewReader([]byte("invalid json")),
+	)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Should still return 200 with error in response
 	if resp.StatusCode != http.StatusOK {
@@ -414,11 +455,17 @@ func TestHTTPHealthEndpoint(t *testing.T) {
 	defer ts.cleanup()
 
 	url := ts.url + "/health"
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send health check: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)
