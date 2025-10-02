@@ -248,7 +248,7 @@ func connectToSSEStream(t *testing.T, url string) *http.Response {
 
 	t.Logf("Connecting to SSE stream at %s", url)
 
-	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
@@ -355,7 +355,7 @@ func setupSSERequestTest(t *testing.T, requestChan chan bool) *testServer {
 func establishSSEStream(t *testing.T, url string, responseChan chan bool) *http.Response {
 	t.Helper()
 
-	streamReq, _ := http.NewRequestWithContext(context.Background(), "GET", url, nil)
+	streamReq, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	streamClient := &http.Client{Timeout: 30 * time.Second}
 
 	streamResp, err := streamClient.Do(streamReq)

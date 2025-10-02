@@ -92,11 +92,13 @@ func (m *mockSessionManager) GetSession(id string) (*session.Session, error) {
 
 func (m *mockSessionManager) UpdateSession(sess *session.Session) error {
 	m.sessions[sess.ID] = sess
+
 	return nil
 }
 
 func (m *mockSessionManager) RemoveSession(id string) error {
 	delete(m.sessions, id)
+
 	return nil
 }
 
