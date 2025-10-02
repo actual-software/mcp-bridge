@@ -28,7 +28,7 @@ const (
 	defaultPongWait       = 60 * time.Second
 	defaultPingPeriod     = 30 * time.Second
 	defaultMaxMessageSize = 10 * 1024 * 1024 // 10MB
-	wsHandlerCount        = 2                 // read + write goroutines
+	wsHandlerCount        = 2                // read + write goroutines
 )
 
 // WireMessage represents the wire protocol message format.
@@ -210,7 +210,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Shutdown HTTP server
 	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
 		if err := f.server.Shutdown(shutdownCtx); err != nil {
@@ -450,7 +450,7 @@ func (f *Frontend) setupAndRegisterConnection(
 // handleClientRead handles reading from the client.
 func (f *Frontend) handleClientRead(client *ClientConnection, clientIP string) {
 	defer f.wg.Done()
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	defer f.removeConnection(client.ID)
 
 	// Configure connection settings
@@ -686,7 +686,7 @@ func (f *Frontend) closeAllConnections() {
 	f.connMu.Unlock()
 
 	for _, client := range connections {
-		client.Close()
+		_ = client.Close()
 	}
 }
 

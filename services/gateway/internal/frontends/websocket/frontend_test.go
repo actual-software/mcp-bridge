@@ -249,6 +249,9 @@ func TestWebSocketConnection(t *testing.T) {
 		}
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	defer ws.Close()
 
 	t.Log("Connected successfully")
@@ -326,9 +329,12 @@ func TestWebSocketConnectionLimit(t *testing.T) {
 	defer ts.cleanup()
 
 	// First connection should succeed
-	ws1, _, err := websocket.DefaultDialer.Dial(ts.url, nil)
+	ws1, resp1, err := websocket.DefaultDialer.Dial(ts.url, nil)
 	if err != nil {
 		t.Fatalf("First connection should succeed: %v", err)
+	}
+	if resp1 != nil && resp1.Body != nil {
+		defer resp1.Body.Close()
 	}
 	defer ws1.Close()
 

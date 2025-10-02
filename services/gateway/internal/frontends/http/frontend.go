@@ -163,7 +163,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Shutdown HTTP server
 	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
 		if err := f.server.Shutdown(shutdownCtx); err != nil {
@@ -331,7 +331,7 @@ func (f *Frontend) handleHealth(w nethttp.ResponseWriter, r *nethttp.Request) {
 	}
 
 	w.WriteHeader(nethttp.StatusOK)
-	w.Write([]byte("OK"))
+	_, _ = w.Write([]byte("OK"))
 }
 
 // sendHTTPError sends an HTTP error response.
@@ -343,7 +343,7 @@ func (f *Frontend) sendHTTPError(w nethttp.ResponseWriter, statusCode int, messa
 		"error": message,
 	}
 
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // sendJSONResponse sends a JSON response.

@@ -310,7 +310,9 @@ func TestSSERequestEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to establish stream: %v", err)
 	}
-	defer streamResp.Body.Close()
+	if streamResp != nil && streamResp.Body != nil {
+		defer streamResp.Body.Close()
+	}
 
 	// Start reading from stream in background
 	go func() {

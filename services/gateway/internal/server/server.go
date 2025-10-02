@@ -153,7 +153,7 @@ func (s *GatewayServer) Start() error {
 			if s.healthServer != nil {
 				s.healthServer.Stop(s.ctx)
 			}
-			s.stopStartedFrontends()
+			s.stopStartedFrontends(s.ctx)
 			return fmt.Errorf("failed to start frontend %s: %w", frontend.GetName(), err)
 		}
 		s.logger.Info("started frontend",
@@ -166,12 +166,12 @@ func (s *GatewayServer) Start() error {
 }
 
 // stopStartedFrontends stops all frontends that have been started.
-func (s *GatewayServer) stopStartedFrontends() {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+func (s *GatewayServer) stopStartedFrontends(ctx context.Context) {
+	shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	for _, frontend := range s.frontends {
-		if err := frontend.Stop(ctx); err != nil {
+		if err := frontend.Stop(shutdownCtx); err != nil {
 			s.logger.Error("error stopping frontend",
 				zap.String("name", frontend.GetName()),
 				zap.String("protocol", frontend.GetProtocol()),
@@ -195,7 +195,7 @@ func (s *GatewayServer) Shutdown(ctx context.Context) error {
 	}
 
 	// Stop all frontends
-	s.stopStartedFrontends()
+	s.stopStartedFrontends(ctx)
 
 	// Wait for all goroutines to finish
 	done := make(chan struct{})

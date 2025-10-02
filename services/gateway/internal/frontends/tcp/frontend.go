@@ -44,7 +44,7 @@ func (c *ClientConnection) Close() error {
 	}
 
 	if c.Transport != nil {
-		c.Transport.Close()
+		_ = c.Transport.Close()
 	}
 
 	return c.Conn.Close()
@@ -176,7 +176,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Close listener
 	if f.listener != nil {
-		f.listener.Close()
+		_ = f.listener.Close()
 	}
 
 	// Close all connections
@@ -243,20 +243,20 @@ func (f *Frontend) acceptConnections() {
 
 			// Handle connection in background
 			f.wg.Add(1)
-			go f.handleConnection(conn)
+			go f.handleConnection(f.ctx, conn)
 		}
 	}
 }
 
 // handleConnection handles a TCP connection.
-func (f *Frontend) handleConnection(conn net.Conn) {
+func (f *Frontend) handleConnection(parentCtx context.Context, conn net.Conn) {
 	defer f.wg.Done()
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Initialize request context
 	traceID := logging.GenerateTraceID()
 	requestID := logging.GenerateRequestID()
-	ctx := logging.ContextWithTracing(f.ctx, traceID, requestID)
+	ctx := logging.ContextWithTracing(parentCtx, traceID, requestID)
 
 	clientIP := getIPFromAddr(conn.RemoteAddr().String())
 
@@ -441,7 +441,7 @@ func (f *Frontend) closeAllConnections() {
 	f.connMu.Unlock()
 
 	for _, client := range connections {
-		client.Close()
+		_ = client.Close()
 	}
 }
 

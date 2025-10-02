@@ -18,8 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
@@ -29,6 +27,8 @@ import (
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/router"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/server"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
+	"github.com/alicebob/miniredis/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"

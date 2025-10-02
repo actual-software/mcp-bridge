@@ -216,7 +216,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 
 	// Shutdown HTTP server
 	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
 		if err := f.server.Shutdown(shutdownCtx); err != nil {
@@ -364,7 +364,7 @@ func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request)
 
 // handleStreamLoop handles the event stream loop.
 func (f *Frontend) handleStreamLoop(stream *StreamConnection) {
-	defer stream.Close()
+	defer func() { _ = stream.Close() }()
 
 	for {
 		select {
@@ -468,7 +468,7 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 
 	// Acknowledge request accepted
 	w.WriteHeader(nethttp.StatusAccepted)
-	w.Write([]byte("accepted"))
+	_, _ = w.Write([]byte("accepted"))
 
 	f.updateMetrics(func(m *types.FrontendMetrics) {
 		m.RequestCount++
@@ -582,7 +582,7 @@ func (f *Frontend) handleHealth(w nethttp.ResponseWriter, r *nethttp.Request) {
 	}
 
 	w.WriteHeader(nethttp.StatusOK)
-	w.Write([]byte("OK"))
+	_, _ = w.Write([]byte("OK"))
 }
 
 // sendHTTPError sends an HTTP error response.
@@ -594,7 +594,7 @@ func (f *Frontend) sendHTTPError(w nethttp.ResponseWriter, statusCode int, messa
 		"error": message,
 	}
 
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // removeStream removes a stream from the registry.
@@ -629,7 +629,7 @@ func (f *Frontend) closeAllStreams() {
 	f.streamsMu.Unlock()
 
 	for _, stream := range streams {
-		stream.Close()
+		_ = stream.Close()
 	}
 }
 

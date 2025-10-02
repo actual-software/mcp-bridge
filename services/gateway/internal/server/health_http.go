@@ -17,20 +17,20 @@ import (
 
 // HealthHTTPServer provides granular health check endpoints via HTTP.
 type HealthHTTPServer struct {
-	port    int
-	logger  *zap.Logger
-	health  *health.Checker
-	router  *router.Router
-	server  *GatewayServer
+	port   int
+	logger *zap.Logger
+	health *health.Checker
+	router *router.Router
+	server *GatewayServer
 
 	// HTTP server
 	httpServer *http.Server
 	mux        *http.ServeMux
 
 	// Shutdown coordination
-	ctx        context.Context
-	cancel     context.CancelFunc
-	wg         sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
 // HealthResponse represents a health check response.
@@ -43,11 +43,11 @@ type HealthResponse struct {
 
 // FrontendHealth represents frontend health status.
 type FrontendHealth struct {
-	Name      string    `json:"name"`
-	Protocol  string    `json:"protocol"`
-	Healthy   bool      `json:"healthy"`
-	Status    string    `json:"status"`
-	Metrics   FrontendMetrics `json:"metrics"`
+	Name     string          `json:"name"`
+	Protocol string          `json:"protocol"`
+	Healthy  bool            `json:"healthy"`
+	Status   string          `json:"status"`
+	Metrics  FrontendMetrics `json:"metrics"`
 }
 
 // FrontendMetrics represents frontend metrics.
@@ -423,5 +423,5 @@ func (h *HealthHTTPServer) sendError(w http.ResponseWriter, statusCode int, mess
 		"error": message,
 	}
 
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }

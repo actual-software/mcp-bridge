@@ -8,16 +8,16 @@ import (
 
 // Config holds WebSocket-specific configuration.
 type Config struct {
-	Host           string        `mapstructure:"host"`
-	Port           int           `mapstructure:"port"`
+	Host           string           `mapstructure:"host"`
+	Port           int              `mapstructure:"port"`
 	TLS            config.TLSConfig `mapstructure:"tls"`
-	MaxConnections int           `mapstructure:"max_connections"`
-	ReadTimeout    time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout   time.Duration `mapstructure:"write_timeout"`
-	PingInterval   time.Duration `mapstructure:"ping_interval"`
-	PongTimeout    time.Duration `mapstructure:"pong_timeout"`
-	MaxMessageSize int64         `mapstructure:"max_message_size"`
-	AllowedOrigins []string      `mapstructure:"allowed_origins"`
+	MaxConnections int              `mapstructure:"max_connections"`
+	ReadTimeout    time.Duration    `mapstructure:"read_timeout"`
+	WriteTimeout   time.Duration    `mapstructure:"write_timeout"`
+	PingInterval   time.Duration    `mapstructure:"ping_interval"`
+	PongTimeout    time.Duration    `mapstructure:"pong_timeout"`
+	MaxMessageSize int64            `mapstructure:"max_message_size"`
+	AllowedOrigins []string         `mapstructure:"allowed_origins"`
 }
 
 // ApplyDefaults applies default values to the configuration.
