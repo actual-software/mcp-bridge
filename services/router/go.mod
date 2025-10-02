@@ -1,8 +1,6 @@
 module github.com/actual-software/mcp-bridge/services/router
 
-go 1.25
-
-toolchain go1.25.0
+go 1.25.0
 
 require (
 	github.com/actual-software/mcp-bridge v0.0.0-00010101000000-000000000000
