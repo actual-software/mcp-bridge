@@ -53,11 +53,11 @@ jobs:
             done
           fi
 
-      - name: Make audit script executable
-        run: chmod +x ./audit.sh
+      - name: Make audit scripts executable
+        run: chmod +x ./scripts/audit-*.sh
 
-      - name: Run Audit Script
-        run: ./audit.sh
+      - name: Run Audit
+        run: make audit
         continue-on-error: true
 
       - name: Generate Summary

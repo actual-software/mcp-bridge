@@ -149,6 +149,40 @@ benchmark:
 	@$(MAKE) -C services/router benchmark
 
 # =============================================================================
+# AUDIT TARGETS
+# =============================================================================
+
+# Run comprehensive repository audit
+audit: audit-lint audit-test audit-coverage audit-report
+	@echo "✅ Full audit complete!"
+
+# Run linting audit
+audit-lint:
+	@echo "🔍 Running linting audit..."
+	@./scripts/audit-lint.sh
+
+# Run test audit
+audit-test:
+	@echo "🧪 Running test audit..."
+	@./scripts/audit-test.sh
+
+# Run coverage audit
+audit-coverage:
+	@echo "📊 Running coverage audit..."
+	@./scripts/audit-coverage.sh
+
+# Generate final audit report
+audit-report:
+	@echo "📋 Generating final audit report..."
+	@./scripts/audit-report.sh
+
+# Clean audit results
+audit-clean:
+	@echo "🧹 Cleaning audit results..."
+	@rm -rf audit-results
+	@echo "✅ Audit results cleaned!"
+
+# =============================================================================
 # UTILITY TARGETS
 # =============================================================================
 
@@ -191,6 +225,14 @@ help:
 	@echo "  make test-unit        - Unit tests only"
 	@echo "  make test-integration - Integration tests only"
 	@echo "  make benchmark        - Performance benchmarks"
+	@echo ""
+	@echo "📋 AUDIT:"
+	@echo "  make audit            - Run comprehensive audit (lint + test + coverage)"
+	@echo "  make audit-lint       - Run linting audit only"
+	@echo "  make audit-test       - Run test audit only"
+	@echo "  make audit-coverage   - Run coverage audit only"
+	@echo "  make audit-report     - Generate final audit report"
+	@echo "  make audit-clean      - Clean audit results"
 	@echo ""
 	@echo "🛠️  UTILITIES:"
 	@echo "  make install     - Install dependencies"
