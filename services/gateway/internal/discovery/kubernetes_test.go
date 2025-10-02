@@ -64,103 +64,98 @@ func testBasicKubernetesConnectivity(t *testing.T, client kubernetes.Interface) 
 func testNamespaceOperations(t *testing.T, client kubernetes.Interface) {
 	t.Helper()
 
-	// Test namespace operations
+	const testNS = "test-mcp-namespace"
+
+	createTestNamespace(t, client, testNS)
+	defer cleanupTestNamespace(t, client, testNS)
+
+	verifyNamespaceExists(t, client, testNS)
+	createTestServiceWithEndpoints(t, client, testNS)
+}
+
+func createTestNamespace(t *testing.T, client kubernetes.Interface, name string) {
+	t.Helper()
+
 	namespace := &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test-mcp-namespace",
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}
 
-	// Create test namespace
 	_, err := client.CoreV1().Namespaces().Create(context.Background(), namespace, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Failed to create test namespace: %v", err)
 	}
+}
 
-	// List namespaces to verify creation
+func verifyNamespaceExists(t *testing.T, client kubernetes.Interface, name string) {
+	t.Helper()
+
 	namespaces, err := client.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		t.Fatalf("Failed to list namespaces: %v", err)
 	}
 
-	found := false
-
 	for _, ns := range namespaces.Items {
-		if ns.Name == "test-mcp-namespace" {
-			found = true
-
-			break
+		if ns.Name == name {
+			return
 		}
 	}
 
-	assert.True(t, found, "Test namespace should be created")
+	t.Fatalf("Test namespace %s not found", name)
+}
 
-	// Create a test service in the namespace so discovery can find it
+func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, namespace string) {
+	t.Helper()
+
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-service",
-			Namespace: "test-mcp-namespace",
+			Namespace: namespace,
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
-					Name:     "http",
-					Port:     8080,
-					Protocol: v1.ProtocolTCP,
-				},
+				{Name: "http", Port: 8080, Protocol: v1.ProtocolTCP},
 			},
-			Selector: map[string]string{
-				"app": "test",
-			},
+			Selector: map[string]string{"app": "test"},
 		},
 	}
 
-	_, err = client.CoreV1().Services("test-mcp-namespace").Create(context.Background(), service, metav1.CreateOptions{})
+	_, err := client.CoreV1().Services(namespace).Create(context.Background(), service, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Failed to create test service: %v", err)
 	}
 
-	// Create endpoints for the service
+	createServiceEndpoints(t, client, namespace, "test-service")
+}
+
+func createServiceEndpoints(t *testing.T, client kubernetes.Interface, namespace, serviceName string) {
+	t.Helper()
+
 	endpoints := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-service",
-			Namespace: "test-mcp-namespace",
+			Name:      serviceName,
+			Namespace: namespace,
 		},
 		Subsets: []v1.EndpointSubset{
 			{
-				Addresses: []v1.EndpointAddress{
-					{
-						IP: "10.0.0.1",
-					},
-				},
-				Ports: []v1.EndpointPort{
-					{
-						Name:     "http",
-						Port:     8080,
-						Protocol: v1.ProtocolTCP,
-					},
-				},
+				Addresses: []v1.EndpointAddress{{IP: "10.0.0.1"}},
+				Ports:     []v1.EndpointPort{{Name: "http", Port: 8080, Protocol: v1.ProtocolTCP}},
 			},
 		},
 	}
 
-	_, err = client.CoreV1().Endpoints("test-mcp-namespace").Create(
-		context.Background(),
-		endpoints,
-		metav1.CreateOptions{},
-	)
+	_, err := client.CoreV1().Endpoints(namespace).Create(context.Background(), endpoints, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Failed to create test endpoints: %v", err)
 	}
+}
 
-	// Cleanup namespace
+func cleanupTestNamespace(t *testing.T, client kubernetes.Interface, name string) {
+	t.Helper()
 
-	defer func() {
-		err = client.CoreV1().Namespaces().Delete(context.Background(), "test-mcp-namespace", metav1.DeleteOptions{})
-		if err != nil {
-			t.Errorf("Failed to delete test namespace: %v", err)
-		}
-	}()
+	err := client.CoreV1().Namespaces().Delete(context.Background(), name, metav1.DeleteOptions{})
+	if err != nil {
+		t.Errorf("Failed to delete test namespace: %v", err)
+	}
 }
 
 func testKubernetesDiscoveryIntegration(t *testing.T, client kubernetes.Interface, kubeconfig string) {

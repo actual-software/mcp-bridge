@@ -203,11 +203,25 @@ func TestHTTPFrontendStartStop(t *testing.T) {
 }
 
 func TestHTTPRequest(t *testing.T) {
-	requestReceived := false
+	var requestReceived bool
+	ts := setupHTTPTestWithMocks(t, &requestReceived)
+	defer ts.cleanup()
+
+	body := createTestWireMessage(t)
+	resp := sendHTTPRequest(t, ts.url+"/api/v1/mcp", body)
+	defer resp.Body.Close()
+
+	verifyHTTPResponse(t, resp, &requestReceived)
+	verifyHTTPMetrics(t, ts.frontend)
+}
+
+func setupHTTPTestWithMocks(t *testing.T, requestReceived *bool) *httpTestServer {
+	t.Helper()
+
 	router := &mockRouter{
 		requestHandler: func(ctx context.Context, req *mcp.Request, namespace string) (*mcp.Response, error) {
 			t.Logf("Router received request: method=%s, id=%v", req.Method, req.ID)
-			requestReceived = true
+			*requestReceived = true
 			return &mcp.Response{
 				JSONRPC: "2.0",
 				ID:      req.ID,
@@ -215,13 +229,13 @@ func TestHTTPRequest(t *testing.T) {
 			}, nil
 		},
 	}
+
 	auth := &mockAuth{
 		authenticateHandler: func(r *http.Request) (*auth.Claims, error) {
 			t.Logf("Auth called for %s", r.RemoteAddr)
 			return &auth.Claims{}, nil
 		},
 	}
-	sessions := newMockSessionManager()
 
 	config := Config{
 		Host:        "127.0.0.1",
@@ -229,8 +243,11 @@ func TestHTTPRequest(t *testing.T) {
 		RequestPath: "/api/v1/mcp",
 	}
 
-	ts := setupTestServer(t, config, router, auth, sessions)
-	defer ts.cleanup()
+	return setupTestServer(t, config, router, auth, newMockSessionManager())
+}
+
+func createTestWireMessage(t *testing.T) []byte {
+	t.Helper()
 
 	wireMsg := map[string]interface{}{
 		"id":        "test-1",
@@ -249,7 +266,12 @@ func TestHTTPRequest(t *testing.T) {
 		t.Fatalf("Failed to marshal request: %v", err)
 	}
 
-	url := ts.url + config.RequestPath
+	return body
+}
+
+func sendHTTPRequest(t *testing.T, url string, body []byte) *http.Response {
+	t.Helper()
+
 	t.Logf("Sending request to %s", url)
 
 	client := &http.Client{Timeout: 5 * time.Second}
@@ -257,13 +279,19 @@ func TestHTTPRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
+
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+
+	return resp
+}
+
+func verifyHTTPResponse(t *testing.T, resp *http.Response, requestReceived *bool) {
+	t.Helper()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)
@@ -281,7 +309,7 @@ func TestHTTPRequest(t *testing.T) {
 
 	t.Logf("Received response: %+v", response)
 
-	if !requestReceived {
+	if !*requestReceived {
 		t.Error("Router did not receive the request")
 	}
 
@@ -296,13 +324,18 @@ func TestHTTPRequest(t *testing.T) {
 	} else {
 		t.Error("Response missing result field")
 	}
+}
 
-	// Verify metrics
+func verifyHTTPMetrics(t *testing.T, frontend *Frontend) {
+	t.Helper()
+
 	time.Sleep(100 * time.Millisecond)
-	metrics := ts.frontend.GetMetrics()
+
+	metrics := frontend.GetMetrics()
 	if metrics.TotalConnections == 0 {
 		t.Error("TotalConnections should be > 0")
 	}
+
 	if metrics.RequestCount == 0 {
 		t.Error("RequestCount should be > 0")
 	}
