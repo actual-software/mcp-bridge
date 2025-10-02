@@ -1,6 +1,6 @@
 # MCP Bridge
 
-[![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/go-1.23.0+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Test Coverage](https://img.shields.io/badge/coverage-80.3%25-brightgreen.svg)](COVERAGE.md)
 [![Security](https://img.shields.io/badge/security-OWASP%20compliant-green.svg)](docs/OWASP_SECURITY.md)
@@ -39,7 +39,7 @@ sudo ./scripts/install.sh --environment production --yes
 helm install mcp-bridge ./helm/mcp-bridge -f helm/mcp-bridge/values-production.yaml
 
 # Deploy with Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose up -d
 ```
 
 **[Installation Guide →](docs/installation-and-setup.md)**
@@ -60,24 +60,31 @@ Any Protocol        • Direct Connections     • Universal Backend   Any Proto
                                             • Service Discovery    • gRPC
 ```
 
-### Universal Protocol Support
-Full protocol conversion matrix supporting any frontend protocol to any backend protocol combination.
+### Protocol Support
 
-#### Protocol Compatibility Matrix
-| Frontend → Backend | stdio | WebSocket | HTTP | SSE | TCP Binary |
-|:-------------------|:-----:|:---------:|:----:|:---:|:----------:|
-| **stdio**          |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **WebSocket**      |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **HTTP**           |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **SSE**            |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **TCP Binary**     |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
+#### Router Direct Connections
+The Router supports direct connections to local MCP servers using:
+- **stdio** - Subprocess-based servers
+- **WebSocket** - WebSocket protocol servers (ws/wss)
+- **HTTP** - HTTP-based MCP servers
+- **SSE** - Server-Sent Events servers
 
-#### Performance Benchmarks
-**Direct Connection Performance** (bypassing gateway):
-- **Latency Improvement**: 65% reduction vs gateway routing
-- **Protocol Detection**: 98% accuracy across all protocols  
+#### Gateway Backend Support
+The Gateway routes requests to backend MCP servers using:
+- **stdio** - Subprocess-based servers
+- **WebSocket** - WebSocket protocol servers
+- **SSE** - Server-Sent Events servers
+
+#### Client Connection Methods
+Clients connect to the Gateway using:
+- **WebSocket** (port 8443)
+- **TCP Binary** protocol (port 8444)
+- **stdio** frontend integration
+
+#### Performance Characteristics
+- **Direct Connections**: Reduced latency by bypassing gateway for local servers
 - **Concurrent Connections**: 10,000+ simultaneous connections tested
-- **Memory Optimization**: 40% reduction through connection pooling
+- **Memory Optimization**: Efficient connection pooling and object reuse
 
 ### 🔧 Router (`services/router`)
 The client-side component that bridges local MCP clients to remote servers with universal protocol support.
@@ -85,9 +92,10 @@ The client-side component that bridges local MCP clients to remote servers with 
 **Key Features:**
 - 🔐 **Secure Credential Storage** - Platform-native keychains (macOS Keychain, Windows Credential Manager, Linux Secret Service)
 - 🔄 **Connection Management** - Automatic reconnection, connection pooling, health checks
-- 🚀 **Universal Protocol Support** - Direct connections to stdio, WebSocket, HTTP, SSE servers
-- 🎯 **Protocol Auto-Detection** - Automatic protocol detection with 98% accuracy
-- 📊 **Advanced Observability** - Built-in metrics, structured logging, OpenTelemetry distributed tracing
+- 🚀 **Direct Protocol Support** - Direct connections to stdio, WebSocket, HTTP, SSE servers
+- 🌐 **Gateway Integration** - WebSocket and TCP Binary connections to remote gateways
+- 🎯 **Protocol Auto-Detection** - Automatic identification of MCP server protocols
+- 📊 **Advanced Observability** - Built-in metrics, structured logging, distributed tracing support
 - 🛡️ **Enhanced Resilience** - Rate limiting, request deduplication, circuit breakers
 - ⚡ **Performance Optimization** - Memory optimization, timeout tuning, connection pooling
 
@@ -96,13 +104,13 @@ The server-side component that provides universal protocol routing to any backen
 
 **Key Features:**
 - 🔐 **Multi-Protocol Authentication** - Bearer tokens, OAuth2 with introspection, mTLS
-- ⚖️ **Cross-Protocol Load Balancing** - Load balancing across mixed protocol backends
-- 🔄 **Advanced Fault Tolerance** - Circuit breakers, retries, timeouts with protocol-aware recovery
-- 📈 **Horizontal Scalability** - Redis session storage with protocol state management
-- 🔍 **Universal Service Discovery** - Kubernetes, Consul, and static configuration support
-- 🛡️ **Predictive Health Monitoring** - Protocol-specific health checks with composite monitoring
-- 📊 **Full Observability** - Metrics, logging, OpenTelemetry distributed tracing across all protocols
-- 🚀 **Universal Backend Support** - stdio, WebSocket, HTTP, SSE server connectivity
+- ⚖️ **Load Balancing** - Intelligent load balancing across backend servers
+- 🔄 **Advanced Fault Tolerance** - Circuit breakers, retries, timeouts with graceful degradation
+- 📈 **Horizontal Scalability** - Redis session storage for multi-instance deployments
+- 🔍 **Service Discovery** - Kubernetes, Consul, and static configuration support
+- 🛡️ **Health Monitoring** - Comprehensive health checks for orchestration systems
+- 📊 **Full Observability** - Metrics, logging, distributed tracing support
+- 🚀 **Backend Protocol Support** - stdio, WebSocket, SSE server connectivity
 
 ## 🔒 Enterprise-Grade Security
 
@@ -140,10 +148,12 @@ The server-side component that provides universal protocol routing to any backen
 
 ### Prerequisites
 
-- **Go 1.21+** - For building from source
-- **Docker** - For containerized deployment
-- **Kubernetes** (optional) - For production deployment
-- **Redis** (optional) - For session storage and rate limiting
+- **Go 1.23.0+** (toolchain 1.24.5 recommended) - For building from source
+- **Docker** 24.0+ - For containerized deployment
+- **kubectl** 1.24+ - For Kubernetes deployment
+- **Kubernetes** 1.24+ (optional) - For production deployment
+- **Redis** 7.0+ (optional) - For session storage and rate limiting
+- **Helm** 3.10+ (optional) - For Kubernetes package management
 
 ### Installation Options
 
@@ -218,7 +228,7 @@ docker-compose up -d
 
 ### **Core Documentation**
 - [**📖 Documentation Index**](docs/README.md) - Complete documentation navigation
-- [**🏗️ Architecture Guide**](docs/architecture.md) - System design and components
+- [**🏗️ Service Documentation**](services/) - Gateway and Router architecture and design
 - [**🔒 Security Implementation**](docs/SECURITY_IMPLEMENTATION_SUMMARY.md) - Enterprise security overview
 - [**🧪 Testing Guide**](TESTING.md) - Comprehensive testing documentation
 - [**🚀 Production Readiness**](PRODUCTION_READINESS.md) - Production deployment checklist
@@ -230,8 +240,8 @@ docker-compose up -d
 - [**🔐 Security Best Practices**](docs/SECURITY.md) - Hardening and configuration
 
 ### **Deployment Guides**
-- [**🐳 Docker Deployment**](docs/DOCKER_DEPLOYMENT.md) - Container deployment with Docker Compose
-- [**⎈ Helm Deployment**](docs/HELM_DEPLOYMENT.md) - Kubernetes deployment with Helm charts
+- [**🐳 Docker Deployment**](docs/deployment/docker.md) - Container deployment with Docker Compose
+- [**⎈ Helm Deployment**](docs/deployment/helm.md) - Kubernetes deployment with Helm charts
 - [**☸️ Kubernetes Deployment**](deployments/kubernetes/README.md) - Native K8s manifests
 - [**✅ Installation Validation**](test/installation/validation-summary.md) - Automated testing
 

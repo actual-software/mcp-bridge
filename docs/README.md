@@ -10,7 +10,7 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 - [Configuration Guide](configuration.md) - Complete configuration reference
 
 ### **🏗️ Architecture & Design**
-- [Architecture Overview](architecture.md) - System design and components
+<!-- TODO: Create architecture.md - System design and components documentation -->
 - [Security Architecture](SECURITY.md) - Security model and threat analysis
 - [Protocol Implementation](protocol.md) - MCP protocol details
 - [OWASP Security](OWASP_SECURITY.md) - OWASP security scanning and compliance
@@ -18,10 +18,12 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 - [Incident Response](SECURITY_INCIDENT_RESPONSE.md) - Security incident procedures
 
 ### **🚀 Deployment Guides**
-- [Docker Deployment](DOCKER_DEPLOYMENT.md) - Container-based deployment with Docker Compose
-- [Helm Deployment](HELM_DEPLOYMENT.md) - Kubernetes deployment with Helm charts  
+- [Docker Deployment](deployment/docker.md) - Container-based deployment with Docker Compose
+- [Helm Deployment](deployment/helm.md) - Kubernetes deployment with Helm charts
 - [Kubernetes Deployment](../deployments/kubernetes/README.md) - Native Kubernetes manifests
+<!-- TODO: Create this documentation
 - [Installation Validation](../test/installation/validation-summary.md) - Automated installation testing
+-->
 
 ### **⚙️ Operations**
 - [Monitoring Guide](monitoring.md) - Prometheus, Grafana, and alerting
@@ -40,21 +42,29 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 ### **🧪 Testing & Quality**
 - [Production Testing Guide](../test/PRODUCTION_TESTING.md) - Production-ready testing with Docker
 - [Test Infrastructure](../test/README.md) - Complete testing framework documentation
+<!-- TODO: Create this documentation
 - [Testing Strategy](../TESTING.md) - Comprehensive testing documentation
 - [Code Quality Report](../CODE_QUALITY_IMPROVEMENTS_SUMMARY.md) - Quality metrics and improvements
 - [Production Readiness](../PRODUCTION_READINESS.md) - Production deployment checklist
 - [Final Audit](../FINAL_AUDIT.md) - Complete production readiness assessment
+-->
 
 ### **🔧 Development**
+<!-- TODO: Create this documentation
 - [Contributing Guide](../CONTRIBUTING.md) - How to contribute to the project
 - [Code of Conduct](../CODE_OF_CONDUCT.md) - Community guidelines
+-->
 - [API Documentation](api.md) - Complete API reference
 
 ### **📦 Release Information**
+<!-- TODO: Create this documentation
 - [Changelog](../CHANGELOG.md) - Version history and release notes
+-->
 - [Changelog Guide](changelog-guide.md) - Automated changelog and release process
 - [Versioning Strategy](../docs/VERSIONING_STRATEGY.md) - Release process and semantic versioning
+<!-- TODO: Create this documentation
 - [Enterprise Release Plan](../ENTERPRISE_RELEASE_PLAN.md) - Enterprise readiness roadmap
+-->
 
 ### **🎯 Service-Specific Documentation**
 - [Gateway Service](../services/gateway/README.md) - Gateway-specific documentation
@@ -63,21 +73,23 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 ## 📖 **Documentation by Use Case**
 
 ### **For Developers**
+<!-- TODO: Create this documentation
 1. Start with [Contributing Guide](../CONTRIBUTING.md)
+-->
 2. Review [API Documentation](api.md)
-3. Review [Architecture Overview](architecture.md)
+3. Review service documentation ([Gateway](../services/gateway/README.md), [Router](../services/router/README.md))
 4. Check [API Documentation](api.md)
 
 ### **For System Administrators**
 1. Review [Security Best Practices](SECURITY.md)
 2. Choose deployment method:
-   - [Docker Deployment](DOCKER_DEPLOYMENT.md) for containers
-   - [Helm Deployment](HELM_DEPLOYMENT.md) for Kubernetes
+   - [Docker Deployment](deployment/docker.md) for containers
+   - [Helm Deployment](deployment/helm.md) for Kubernetes
 3. Configure [Monitoring](monitoring.md)
 4. Configure [TLS & Encryption](tls.md)
 
 ### **For DevOps Engineers**
-1. Review [Architecture Overview](architecture.md)
+1. Review service documentation ([Gateway](../services/gateway/README.md), [Router](../services/router/README.md))
 2. Set up CI/CD with [GitHub Actions](../.github/workflows/)
 3. Deploy with [Helm Charts](../helm/mcp-bridge/)
 4. Configure [Monitoring & Alerting](monitoring.md)
@@ -89,7 +101,9 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 4. Review [Threat Model](THREAT_MODEL.md)
 
 ### **For Operations Teams**
+<!-- TODO: Create this documentation
 1. Review [Production Readiness](../PRODUCTION_READINESS.md)
+-->
 2. Set up [Monitoring](monitoring.md)
 3. Create [Troubleshooting Runbooks](troubleshooting.md)
 4. Review [Performance Guide](performance.md)
@@ -110,8 +124,10 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 - Grafana: `http://grafana:3000`
 
 ### **Default Ports**
-- Gateway HTTPS: `8443`
+- Gateway WebSocket: `8443`
+- Gateway TCP Binary: `8444`
 - Gateway Metrics: `9090`
+- Gateway Health (TCP): `9002`
 - Router Metrics: `9091`
 - Prometheus: `9092`
 - Grafana: `3000`

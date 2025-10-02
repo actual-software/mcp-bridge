@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All linting violations resolved (golangci-lint clean)
 - Installation script repository references corrected
 
-## [1.0.0-rc1] - 2025-08-04
+## [1.0.0-rc1] - 2024-08-04
 
 ### Added
 
@@ -205,7 +205,7 @@ connection:
 ### Dependencies
 
 #### **Runtime Dependencies**
-- Go 1.21+ for building from source
+- Go 1.23.0+ (toolchain 1.24.5 recommended) for building from source
 - Redis 6.0+ for session storage (optional)
 - PostgreSQL 12+ for persistent storage (optional)
 

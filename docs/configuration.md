@@ -185,7 +185,7 @@ server:
   port: integer                  # Default: 8443
   protocol: string               # Options: websocket, tcp, both
   tcp_port: integer             # Default: 8444
-  tcp_health_port: integer      # Default: 8445
+  tcp_health_port: integer      # Default: 9002
   metrics_port: integer         # Default: 9090
   max_connections: integer      # Default: 10000
   max_connections_per_ip: integer # Default: 100
@@ -207,8 +207,8 @@ server:
     cert_file: string          # TLS certificate file
     key_file: string           # TLS key file
     ca_file: string            # CA certificate for client verification
-    client_auth: string        # Options: none, request, require
-    min_version: string        # Options: "1.2", "1.3"
+    client_auth: string        # Options: none, request, require. Default: none
+    min_version: string        # Options: "1.2", "1.3". Default: "1.3" (recommended)
     cipher_suites: [string]    # Allowed cipher suites
 
 # Authentication configuration
@@ -221,7 +221,7 @@ auth:
   # JWT configuration (when type: jwt)
   jwt:
     issuer: string
-    audience: string
+    audience: string              # Default: "mcp-gateway"
     secret_key_env: string
     public_key_path: string
   
@@ -238,22 +238,22 @@ auth:
 
 # Session management
 sessions:
-  provider: string              # Options: memory, redis
-  ttl: integer                 # Session TTL in seconds
-  cleanup_interval: integer    # Cleanup interval in seconds
-  
+  provider: string              # Options: memory, redis. Default: memory
+  ttl: integer                 # Session TTL in seconds. Default: 3600
+  cleanup_interval: integer    # Cleanup interval in seconds. Default: 600
+
   # Redis configuration (when provider: redis)
   redis:
-    url: string                # Redis URL
+    url: string                # Redis URL. Format: redis://host:port/db
     addresses: [string]        # For Sentinel/Cluster
     password: string
     password_env: string
-    db: integer               # Database number
-    pool_size: integer        # Connection pool size
-    max_retries: integer
-    dial_timeout: integer     # Milliseconds
-    read_timeout: integer     # Milliseconds
-    write_timeout: integer    # Milliseconds
+    db: integer               # Database number. Default: 0
+    pool_size: integer        # Connection pool size. Default: 10
+    max_retries: integer      # Default: 3
+    dial_timeout: integer     # Milliseconds. Default: 5000
+    read_timeout: integer     # Milliseconds. Default: 3000
+    write_timeout: integer    # Milliseconds. Default: 3000
     sentinel_master_name: string # For Sentinel setup
 
 # Rate limiting

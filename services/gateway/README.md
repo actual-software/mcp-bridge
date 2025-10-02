@@ -5,17 +5,16 @@ MCP Gateway provides universal protocol support for the Model Context Protocol, 
 ## Features
 
 ### Universal Protocol Support
-- **Frontend Protocols**: stdio, WebSocket, HTTP, SSE, TCP Binary - all supported
-- **Backend Protocols**: stdio, WebSocket, HTTP, SSE, TCP Binary - all supported  
-- **Any-to-Any Conversion**: Complete protocol conversion matrix with 98% detection accuracy
-- **Cross-Protocol Load Balancing**: Intelligent routing across mixed protocol backends
-- **Protocol Auto-Detection**: Automatic protocol identification with fallback strategies
+- **Frontend Protocols**: stdio (WebSocket and TCP Binary connections handled through HTTP server layer)
+- **Backend Protocols**: stdio, WebSocket, SSE - all supported
+- **Protocol Routing**: Intelligent routing across mixed protocol backends
+- **Service Discovery**: Automatic backend discovery with health checking
 
 ### Core Functionality
-- **Multi-Protocol Interface**: Simultaneous WebSocket (8443), TCP Binary (8444), and stdio frontend support
+- **Multi-Protocol Interface**: WebSocket (8443), TCP Binary (8444), and stdio support
 - **Service Discovery**: Kubernetes, Consul, and static configuration support
-- **Load Balancing**: Protocol-aware strategies (round-robin, least-connections, weighted, cross-protocol)
-- **Circuit Breakers**: Per-protocol failure detection and recovery with graceful degradation
+- **Load Balancing**: Protocol-aware strategies (round-robin, least-connections, weighted)
+- **Circuit Breakers**: Failure detection and recovery with graceful degradation
   - Redis circuit breaker with configurable thresholds
   - Graceful degradation to in-memory operations
   - Half-open state for testing recovery
@@ -63,14 +62,17 @@ MCP Gateway provides universal protocol support for the Model Context Protocol, 
 • TCP Binary                        └─────────────┘                    • TCP Binary
 ```
 
-### Universal Protocol Matrix
-| Frontend → Backend | stdio | WebSocket | HTTP | SSE | TCP Binary |
-|:-------------------|:-----:|:---------:|:----:|:---:|:----------:|
-| **stdio**          |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **WebSocket**      |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **HTTP**           |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **SSE**            |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
-| **TCP Binary**     |   ✅   |     ✅     |  ✅   |  ✅  |     ✅      |
+### Backend Protocol Support
+| Backend Protocol | Status | Notes |
+|:-----------------|:------:|:------|
+| **stdio**        |   ✅   | Subprocess-based MCP servers |
+| **WebSocket**    |   ✅   | WebSocket MCP servers |
+| **SSE**          |   ✅   | Server-Sent Events MCP servers |
+
+**Client Connection Methods:**
+- WebSocket connections (port 8443)
+- TCP Binary protocol (port 8444)
+- stdio frontend for subprocess integration
 
 ## Deployment
 
@@ -84,7 +86,7 @@ MCP Gateway provides universal protocol support for the Model Context Protocol, 
 Deploy everything with one command:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/poiley/mcp-gateway/main/deploy/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/gateway/deploy/install.yaml
 ```
 
 This includes:
@@ -117,8 +119,8 @@ For more control, clone the repo and customize:
 
 ```bash
 # Clone repository
-git clone https://github.com/poiley/mcp-gateway
-cd mcp-gateway
+git clone https://github.com/poiley/mcp-bridge
+cd mcp-bridge/services/gateway
 
 # Edit configuration
 vim deploy/install.yaml
@@ -169,7 +171,7 @@ server:
     cert_file: /etc/mcp-gateway/tls/tls.crt
     key_file: /etc/mcp-gateway/tls/tls.key
     ca_file: /etc/mcp-gateway/tls/ca.crt  # For mTLS client verification
-    min_version: "1.2"      # Options: "1.2", "1.3"
+    min_version: "1.3"      # Recommended. Use "1.2" only for legacy compatibility
     client_auth: none       # Options: "none", "request", "require"
 
 auth:
@@ -277,7 +279,7 @@ logging:
 ### Environment Variables
 
 **Core Configuration:**
-- `JWT_SECRET_KEY`: Secret key for JWT validation
+- `MCP_JWT_SECRET_KEY`: Secret key for JWT validation (also accepts `JWT_SECRET_KEY` for compatibility)
 - `REDIS_URL`: Redis connection URL
 - `REDIS_PASSWORD`: Redis password (optional)
 
@@ -302,6 +304,15 @@ The service discovery supports both `provider` and `mode` fields for backward co
 - `mode`: Alias for `provider` (backward compatibility)
 - `namespace_selector`: List of namespace patterns to monitor
 - `refresh_rate`: How often to refresh service information
+
+### Recommended Namespaces
+When deploying MCP Gateway in Kubernetes, use these standard namespace conventions:
+
+- **Production**: `mcp-system` (recommended for production deployments)
+- **Staging**: `mcp-staging` (for staging environments)
+- **Development**: `mcp-dev` (for development environments)
+
+All examples in this documentation use `mcp-system` as the default namespace.
 
 ### Service Annotations
 MCP servers are discovered using Kubernetes service annotations:
@@ -416,26 +427,17 @@ Prometheus metrics are exposed at `:9090/metrics`:
 
 ## Health Checks
 
-### Predictive Health Monitoring
-The gateway provides comprehensive health monitoring with protocol-specific checks:
+The gateway provides health monitoring endpoints for Kubernetes and other orchestration systems:
 
-**Universal Health Endpoints:**
-- `/healthz`: Basic health check
-- `/ready`: Readiness check (requires healthy endpoints)  
-- `/health`: Detailed health status with checks
-- `/health/protocols`: Protocol-specific health status
+**Available Health Endpoints:**
+- `/healthz`: Basic health check (returns 200 OK when gateway is running)
+- `/ready`: Readiness check (returns 200 OK when gateway can accept traffic)
+- `/health`: Detailed health status with component checks
 
-**Protocol-Specific Health Checks:**
-- `/health/stdio`: stdio backend health status
-- `/health/websocket`: WebSocket backend health status
-- `/health/http`: HTTP backend health status
-- `/health/sse`: SSE backend health status
-- `/health/tcp_binary`: TCP Binary backend health status
-
-**Advanced Monitoring:**
-- `/health/load-balancer`: Cross-protocol load balancing status
-- `/health/discovery`: Service discovery health across all providers
-- `/health/circuit-breakers`: Circuit breaker states by protocol
+**Health Check Behavior:**
+- Health endpoints check Redis connectivity, backend availability, and internal component status
+- Failed health checks return appropriate HTTP status codes for orchestration systems
+- Configurable health check intervals and timeouts
 
 ## Documentation
 
@@ -548,6 +550,16 @@ For detailed troubleshooting information, see the [Troubleshooting Guide](docs/T
    ```bash
    kubectl scale deployment mcp-gateway -n mcp-system --replicas=5
    ```
+
+## Current Limitations
+
+The following features are documented in planning materials but not yet fully implemented:
+
+- **Frontend Protocols**: Currently only stdio frontend is fully implemented. WebSocket and TCP Binary connections are handled through the HTTP server layer
+- **Granular Health Endpoints**: Only `/health`, `/healthz`, and `/ready` are implemented. Per-protocol and per-component health endpoints are planned
+- **HTTP/SSE Backends**: Backend support is currently limited to stdio, WebSocket, and SSE protocols
+
+These limitations do not affect the core functionality of routing MCP requests to backend servers.
 
 ## Security Considerations
 

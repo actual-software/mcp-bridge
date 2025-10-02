@@ -171,7 +171,7 @@ Options:
 - Optional demo mode
 
 **Requirements**:
-- Git, Go 1.21+, Make
+- Git, Go 1.23.0+, Make
 - Optional: Docker, docker-compose, jq, yq
 
 **Output**:
@@ -617,7 +617,8 @@ See [Production Deployment Guide](./deployment/README.md) for:
 
 ### 5. Learn More
 
-- [Architecture Overview](./architecture.md)
+- [Gateway Documentation](../services/gateway/README.md)
+- [Router Documentation](../services/router/README.md)
 - [Configuration Reference](./configuration.md)
 - [API Documentation](./api.md)
 - [Security Guide](./SECURITY.md)

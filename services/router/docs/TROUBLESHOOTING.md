@@ -463,7 +463,7 @@ If issues persist:
    - Debug logs
    - Steps to reproduce
 
-3. **File issue**: https://github.com/anthropics/mcp/issues
+3. **File issue**: https://github.com/poiley/mcp-bridge/issues
 
 ## Common Error Reference
 

@@ -12,10 +12,10 @@ The Router provides comprehensive protocol support with intelligent routing:
 - **WebSocket**: Real-time bidirectional communication (ws/wss)
 - **HTTP**: RESTful API integration with any HTTP-based MCP server
 - **SSE**: Server-Sent Events for streaming protocols
-- **TCP Binary**: High-performance binary protocol communication
 
 **Gateway Integration:**
-- Connects to remote MCP servers via WebSocket or TCP with binary protocol
+- Connects to remote MCP servers via WebSocket or TCP Binary protocol
+- **Note**: TCP Binary protocol is currently only supported for gateway connections, not for direct MCP server connections
 - Handles automatic reconnection and connection management
 - **Queues requests when not connected** with configurable backpressure handling
 - Supports multiple authentication methods (Bearer token, mTLS, OAuth2)
@@ -23,22 +23,23 @@ The Router provides comprehensive protocol support with intelligent routing:
 - **Operates in passive mode** - does not auto-initialize, waits for client initialization
 
 **Intelligence Features:**
-- **Protocol Auto-Detection**: 98% accuracy in identifying server protocols
-- **Direct Connection Optimization**: 65% latency improvement by bypassing gateway
+- **Protocol Auto-Detection**: Automatic identification of MCP server protocols
+- **Direct Connection Optimization**: Reduced latency by bypassing gateway for local servers
 - **Connection Pooling**: Advanced resource management with health checks
 - **Performance Optimization**: Memory optimization and GC tuning
 
 ## Features
 
 ### Core Protocol Support
-- **Universal Protocol Support**: stdio, WebSocket, HTTP, SSE, TCP Binary - all protocols supported
-- **Direct Connections**: Connect directly to local servers without gateway (65% latency improvement)
-- **Protocol Auto-Detection**: 98% accuracy in automatically identifying server protocols
+- **Direct MCP Server Protocols**: stdio, WebSocket, HTTP, SSE
+- **Gateway Connection Protocols**: WebSocket, TCP Binary
+- **Direct Connections**: Connect directly to local servers without gateway (significant latency improvement)
+- **Protocol Auto-Detection**: Automatic identification of MCP server protocols
 - **Gateway Fallback**: Seamless fallback to gateway when direct connection unavailable
 
 ### Performance & Reliability
-- **Connection Pooling**: Advanced connection pooling with 5.8μs/op retrieval performance  
-- **Memory Optimization**: 40% reduction in memory usage through object pooling
+- **Connection Pooling**: Advanced connection pooling with fast connection retrieval
+- **Memory Optimization**: Reduced memory usage through object pooling
 - **Request Queueing**: Intelligent request buffering with configurable backpressure
 - **Timeout Tuning**: Profile-based timeout configurations for optimal performance
 - **Circuit Breaker**: Automatic failure detection and recovery with adaptive thresholds
@@ -74,7 +75,7 @@ mcp-router setup
 
 ```bash
 # Download the latest release
-curl -L https://github.com/anthropics/mcp/releases/latest/download/mcp-router-$(uname -s)-$(uname -m) -o mcp-router
+curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-$(uname -s)-$(uname -m) -o mcp-router
 
 # Make executable
 chmod +x mcp-router
@@ -87,7 +88,7 @@ sudo mv mcp-router /usr/local/bin/
 
 ```bash
 # Clone the repository
-git clone https://github.com/anthropics/mcp
+git clone https://github.com/poiley/mcp-bridge
 cd services/router
 
 # Build the binary
@@ -461,7 +462,7 @@ This design ensures that:
 
 ### Prerequisites
 
-- Go 1.21 or higher
+- Go 1.23.0 or higher (toolchain 1.24.5 recommended)
 - Make
 
 ### Building
@@ -643,6 +644,16 @@ mcp-router 2>&1 | jq -r .msg
 - **Memory Protection**: Credentials cleared from memory after use
 - **Audit Trail**: Security events logged for monitoring
 
+## Current Limitations
+
+The following limitations apply to the current implementation:
+
+- **TCP Binary Protocol**: Only supported for gateway connections, not for direct MCP server connections. Direct connections support stdio, WebSocket, HTTP, and SSE protocols
+- **OAuth2 Scope**: OAuth2 authentication is currently only available for gateway connections, not for direct server connections
+- **Protocol Detection**: While protocol auto-detection works well, detection accuracy depends on server behavior and network conditions. Manual protocol specification is recommended for production use
+
+These limitations do not affect the core functionality of routing MCP requests to servers via the gateway or through direct connections.
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -653,4 +664,6 @@ Contributions are welcome! Please read CONTRIBUTING.md for guidelines.
 
 ## Support
 
-For issues and feature requests, please use the GitHub issue tracker.
+For issues and feature requests, please visit:
+- **Issues**: https://github.com/poiley/mcp-bridge/issues
+- **Discussions**: https://github.com/poiley/mcp-bridge/discussions

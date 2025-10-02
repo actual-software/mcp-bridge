@@ -19,7 +19,7 @@ Thank you for your interest in contributing to MCP Bridge! This document provide
 
 ### Prerequisites
 
-- **Go 1.21+** - [Install Go](https://golang.org/dl/)
+- **Go 1.23.0+** (toolchain 1.24.5 recommended) - [Install Go](https://golang.org/dl/)
 - **Docker** - For running integration tests
 - **Make** - For build automation
 - **Git** - For version control

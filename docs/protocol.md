@@ -432,7 +432,8 @@ make test-protocol-load
 
 ## Related Documentation
 
-- [Architecture Overview](architecture.md)
+- [Gateway Documentation](../services/gateway/README.md)
+- [Router Documentation](../services/router/README.md)
 - [Error Handling](ERROR_HANDLING.md)
 - [Security Implementation](SECURITY.md)
 - [Performance Guide](performance.md)

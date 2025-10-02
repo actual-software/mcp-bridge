@@ -136,8 +136,8 @@ MCP_LOGGING_LEVEL=debug mcp-router
 
 ## Support Channels
 
-- **Issues**: [GitHub Issues](https://github.com/anthropics/mcp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/anthropics/mcp/discussions)
+- **Issues**: [GitHub Issues](https://github.com/poiley/mcp-bridge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/poiley/mcp-bridge/discussions)
 - **Security**: security@example.com
 
 ## Contributing

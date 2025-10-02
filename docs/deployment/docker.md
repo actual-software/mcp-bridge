@@ -125,7 +125,7 @@ ulimit -n 65536
 - Service Discovery: Kubernetes, Consul, or static configuration
 
 ### Build Requirements (optional)
-- Go 1.21+
+- Go 1.23.0+
 - Make
 - Docker (for gateway images)
 
@@ -354,7 +354,7 @@ volumes:
 ### Production Installation
 ```bash
 # Install local router with secure storage setup
-curl -sSL https://raw.githubusercontent.com/anthropics/mcp/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/router/install.sh | bash
 
 # Configure secure token storage
 mcp-router setup
@@ -369,7 +369,7 @@ kubectl apply -k mcp-k8s-manifests/
 
 ```bash
 # Install with automatic platform detection and secure storage setup
-curl -sSL https://raw.githubusercontent.com/anthropics/mcp/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/router/install.sh | bash
 
 # The installer will:
 # - Detect your platform (macOS/Windows/Linux)
@@ -384,16 +384,16 @@ curl -sSL https://raw.githubusercontent.com/anthropics/mcp/main/install.sh | bas
 #### Download Pre-built Binary
 ```bash
 # macOS (Intel)
-curl -L https://github.com/anthropics/mcp/releases/latest/download/mcp-router-darwin-amd64 -o mcp-router
+curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-darwin-amd64 -o mcp-router
 
-# macOS (Apple Silicon)  
-curl -L https://github.com/anthropics/mcp/releases/latest/download/mcp-router-darwin-arm64 -o mcp-router
+# macOS (Apple Silicon)
+curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-darwin-arm64 -o mcp-router
 
 # Linux (x86_64)
-curl -L https://github.com/anthropics/mcp/releases/latest/download/mcp-router-linux-amd64 -o mcp-router
+curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-linux-amd64 -o mcp-router
 
 # Windows
-curl -L https://github.com/anthropics/mcp/releases/latest/download/mcp-router-windows-amd64.exe -o mcp-router.exe
+curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-windows-amd64.exe -o mcp-router.exe
 
 # Make executable and install
 chmod +x mcp-router
@@ -637,7 +637,7 @@ data:
       port: 8443
       protocol: universal  # Supports all frontend protocols
       tcp_port: 8444
-      tcp_health_port: 8445
+      tcp_health_port: 9002
       stdio_socket: "/tmp/mcp-gateway.sock"
       http_port: 8443  # Shared with WebSocket
       max_connections: 10000
@@ -1642,7 +1642,7 @@ prometheus:
 server:
   protocol: universal  # Supports all protocols
   tcp_port: 8444
-  tcp_health_port: 8445
+  tcp_health_port: 9002
   stdio_socket: "/tmp/mcp-gateway.sock"
   
   # Protocol-specific health checks
@@ -1665,7 +1665,7 @@ server:
       timeout: "5s"
     tcp_binary:
       enabled: true
-      port: 8445
+      port: 9002
       timeout: "2s"
     cross_protocol_lb:
       enabled: true

@@ -32,7 +32,7 @@ advanced:
 server:
   protocol: both     # Enable both WebSocket and TCP
   tcp_port: 8444
-  tcp_health_port: 8445
+  tcp_health_port: 9002
   
   # TCP-specific settings
   tcp:
@@ -188,7 +188,7 @@ mcp_tcp_compression_time_seconds{operation="compress|decompress"}
 ### Health Checks
 ```bash
 # TCP health check endpoint
-nc -zv gateway.example.com 8445
+nc -zv gateway.example.com 9002
 
 # Detailed health check
 echo -ne "\x4D\x43\x50\x42\x01\x04\x00\x00\x00\x00\x00\x00" | \
@@ -215,9 +215,9 @@ spec:
     protocol: TCP
     targetPort: 8444
   - name: tcp-health
-    port: 8445
+    port: 9002
     protocol: TCP
-    targetPort: 8445
+    targetPort: 9002
   
   # Session affinity for connection pooling
   sessionAffinity: ClientIP
@@ -249,7 +249,7 @@ metadata:
 ```bash
 # Allow TCP traffic
 gcloud compute firewall-rules create mcp-tcp \
-  --allow tcp:8444,tcp:8445 \
+  --allow tcp:8444,tcp:9002 \
   --source-ranges 10.0.0.0/8 \
   --target-tags mcp-gateway
 ```

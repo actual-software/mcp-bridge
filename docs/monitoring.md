@@ -418,7 +418,7 @@ curl http://gateway:8080/health
 ```bash
 # Binary protocol health
 echo -ne "\x4D\x43\x50\x42\x01\x04\x00\x00\x00\x00\x00\x00" | \
-  nc gateway 8445 | hexdump -C
+  nc gateway 9002 | hexdump -C
 ```
 
 ## Performance Monitoring

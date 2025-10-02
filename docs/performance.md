@@ -671,7 +671,8 @@ performance:
 
 ## Related Documentation
 
-- [Architecture Overview](architecture.md)
+- [Gateway Documentation](../services/gateway/README.md)
+- [Router Documentation](../services/router/README.md)
 - [Monitoring Guide](monitoring.md)
 - [Configuration Reference](configuration.md)
 - [Troubleshooting Guide](troubleshooting.md)

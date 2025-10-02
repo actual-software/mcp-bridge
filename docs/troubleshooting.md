@@ -1275,7 +1275,7 @@ go tool pprof heap.prof
 ```bash
 # Reset keychain access
 security unlock-keychain
-security delete-generic-password -s com.anthropics.mcp-router
+security delete-generic-password -s com.poiley.mcp-router
 
 # Re-add token
 mcp-router token set --name gateway-token
@@ -1960,6 +1960,6 @@ mcp-router logs --level error --summary
 
 ### Community Support
 
-1. Check documentation: https://github.com/anthropics/mcp/docs
-2. Search issues: https://github.com/anthropics/mcp/issues
-3. Ask in discussions: https://github.com/anthropics/mcp/discussions
+1. Check documentation: https://github.com/poiley/mcp-bridge/tree/main/docs
+2. Search issues: https://github.com/poiley/mcp-bridge/issues
+3. Ask in discussions: https://github.com/poiley/mcp-bridge/discussions

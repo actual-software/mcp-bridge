@@ -32,7 +32,7 @@ We will use Go (Golang) as the primary implementation language for both the Gate
 
 ### Implementation Details
 
-- Use Go 1.21+ for latest language features and performance improvements
+- Use Go 1.23.0+ (toolchain 1.24.5 recommended) for latest language features and performance improvements
 - Leverage Go modules for dependency management
 - Use standard library where possible to minimize dependencies
 - Implement with goroutines for concurrent request handling

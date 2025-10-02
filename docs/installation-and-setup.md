@@ -30,7 +30,7 @@ This document covers comprehensive setup instructions for the MCP Bridge system 
 ### Software Prerequisites
 
 **Required for all environments:**
-- **Go**: 1.21+ (latest stable recommended)
+- **Go**: 1.23.0+ (toolchain 1.24.5 recommended)
 - **Make**: 3.81+ (GNU Make)
 - **Git**: 2.30+
 
@@ -52,7 +52,7 @@ The fastest way to set up a development environment:
 
 ```bash
 # Clone and auto-setup
-git clone https://github.com/your-org/mcp-bridge.git
+git clone https://github.com/poiley/mcp-bridge.git
 cd mcp-bridge
 ./quickstart.sh
 ```
@@ -75,7 +75,7 @@ For manual setup or customization:
 
 ```bash
 # Verify Go installation
-go version  # Should show 1.21+
+go version  # Should show 1.23.0+
 
 # Configure Go environment
 export GOPATH=$HOME/go
@@ -89,7 +89,7 @@ go env GOPATH
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/mcp-bridge.git
+git clone https://github.com/poiley/mcp-bridge.git
 cd mcp-bridge
 
 # Initialize Go modules
@@ -420,7 +420,7 @@ on:
     branches: [ main ]
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.23'
 
 jobs:
   test:
@@ -485,7 +485,7 @@ stages:
   - deploy
 
 variables:
-  GO_VERSION: "1.21"
+  GO_VERSION: "1.23"
   DOCKER_DRIVER: overlay2
 
 before_script:
@@ -530,7 +530,7 @@ pipeline {
     agent any
     
     environment {
-        GO_VERSION = '1.21'
+        GO_VERSION = '1.23'
         PATH = "${env.PATH}:/usr/local/go/bin:${env.WORKSPACE}/bin"
     }
     
@@ -591,7 +591,7 @@ pipeline {
 Create `Dockerfile` for CI:
 
 ```dockerfile
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Install system dependencies
 RUN apk add --no-cache git make gcc musl-dev
@@ -636,46 +636,237 @@ CMD ["./mcp-gateway"]
 
 ```bash
 # Verify all components build successfully
-make verify-build
+make build
 
 # Check binary functionality
 ./services/gateway/bin/mcp-gateway --version
 ./services/router/bin/mcp-router --version
+
+# Verify binaries exist
+make verify
 ```
 
 ### 2. Service Health Checks
 
 ```bash
-# Gateway health check
+# Gateway health check (if running)
 curl -f http://localhost:8080/health || echo "Gateway not responding"
 
-# Router health check  
-curl -f http://localhost:8090/health || echo "Router not responding"
+# Router metrics check (if running)
+curl -f http://localhost:9091/metrics || echo "Router metrics not available"
 
-# Metrics availability
-curl -f http://localhost:9090/metrics || echo "Metrics not available"
+# Gateway metrics availability
+curl -f http://localhost:9090/metrics || echo "Gateway metrics not available"
 ```
 
 ### 3. Integration Verification
 
 ```bash
-# Run production tests with Docker (recommended)
-make -f Makefile.test test-docker
+# Run unit tests
+make test-unit
 
-# Full integration test with real services
-make -f Makefile.test test-integration
+# Run integration tests
+make test-integration
 
-# Quick smoke tests
-make -f Makefile.test test-docker-quick
+# Run all tests
+make test
 
 # Performance baseline
 make benchmark
-
-# Load testing with real services
-make -f Makefile.test test-load
 ```
 
-See [Production Testing Guide](../test/PRODUCTION_TESTING.md) for comprehensive testing.
+See [Testing Guide](../TESTING.md) for comprehensive testing documentation.
+
+## Installation Validation
+
+After completing installation, verify your deployment is working correctly:
+
+### Binary Installation Validation
+
+```bash
+# Check Gateway version
+mcp-gateway version
+# Expected: Version information with build details
+
+# Check Router version
+mcp-router version
+# Expected: Version information with build details
+
+# Verify binaries are in PATH
+which mcp-gateway mcp-router
+# Expected: /usr/local/bin/mcp-gateway and /usr/local/bin/mcp-router
+```
+
+### Docker Deployment Validation
+
+```bash
+# Check container status
+docker-compose ps
+# Expected: All services "Up" and healthy
+
+# Check Gateway health
+curl -k https://localhost:8443/health
+# Expected: {"status":"healthy"}
+
+# Check Gateway metrics
+curl http://localhost:9090/metrics | grep mcp_gateway
+# Expected: Prometheus metrics output
+
+# Check Router metrics
+curl http://localhost:9091/metrics | grep mcp_router
+# Expected: Prometheus metrics output
+
+# View Gateway logs
+docker-compose logs gateway --tail=50
+# Expected: No error messages, successful startup
+
+# View Router logs
+docker-compose logs router --tail=50
+# Expected: No error messages, successful startup
+```
+
+### Kubernetes Deployment Validation
+
+```bash
+# Check pod status
+kubectl get pods -n mcp-system
+# Expected: All pods Running with READY 1/1
+
+# Check Gateway service
+kubectl get svc -n mcp-system mcp-gateway
+# Expected: LoadBalancer or ClusterIP service
+
+# Check Gateway health via port-forward
+kubectl port-forward -n mcp-system svc/mcp-gateway 8443:8443 &
+curl -k https://localhost:8443/health
+# Expected: {"status":"healthy"}
+
+# Check Gateway logs
+kubectl logs -n mcp-system deployment/mcp-gateway --tail=50
+# Expected: No error messages, successful startup
+
+# Check metrics
+kubectl exec -n mcp-system deployment/mcp-gateway -- wget -qO- http://localhost:9090/metrics | grep mcp_gateway
+# Expected: Prometheus metrics output
+```
+
+### Helm Deployment Validation
+
+```bash
+# Check Helm release status
+helm status mcp-bridge
+# Expected: STATUS: deployed
+
+# Run Helm tests
+helm test mcp-bridge
+# Expected: All tests passed
+
+# Check deployed resources
+kubectl get all -l app.kubernetes.io/instance=mcp-bridge
+# Expected: All resources healthy
+
+# Verify configuration
+helm get values mcp-bridge
+# Expected: Your configured values
+```
+
+### Systemd Service Validation (Linux)
+
+```bash
+# Check Gateway service status
+sudo systemctl status mcp-gateway
+# Expected: active (running)
+
+# Check Router service status
+sudo systemctl status mcp-router
+# Expected: active (running)
+
+# View Gateway logs
+sudo journalctl -u mcp-gateway --no-pager -n 50
+# Expected: No error messages
+
+# View Router logs
+sudo journalctl -u mcp-router --no-pager -n 50
+# Expected: No error messages
+
+# Check service is enabled (starts on boot)
+sudo systemctl is-enabled mcp-gateway mcp-router
+# Expected: enabled for both services
+```
+
+### End-to-End Validation
+
+```bash
+# Test complete request flow (requires configured MCP servers)
+# Using the router to connect to a local MCP server
+cat << EOF > test-request.json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list",
+  "params": {}
+}
+EOF
+
+# Send test request through router
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | mcp-router
+# Expected: JSON-RPC response with available tools
+
+# For Docker deployment with gateway
+curl -k -X POST https://localhost:8443/v1/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d @test-request.json
+# Expected: JSON-RPC response from MCP server
+```
+
+### Common Validation Issues
+
+**Binary not found:**
+```bash
+# Verify installation path
+sudo find /usr /opt -name "mcp-gateway" -o -name "mcp-router" 2>/dev/null
+
+# Re-run installation
+sudo ./scripts/install.sh --environment production
+```
+
+**Health check fails:**
+```bash
+# Check if service is running
+ps aux | grep mcp-
+
+# Check listening ports
+sudo lsof -i :8080 -i :8443 -i :9090 -i :9091
+
+# Review logs for errors
+tail -f /opt/mcp/logs/*.log
+```
+
+**Permission errors:**
+```bash
+# Fix binary permissions
+sudo chmod +x /opt/mcp/bin/mcp-*
+
+# Fix directory permissions
+sudo chown -R mcp-service:mcp-service /opt/mcp
+
+# Fix log permissions
+sudo chmod 755 /opt/mcp/logs
+```
+
+**Docker container issues:**
+```bash
+# Rebuild images
+docker-compose build --no-cache
+
+# Remove and recreate containers
+docker-compose down -v
+docker-compose up -d
+
+# Check Docker logs
+docker-compose logs -f
+```
 
 ## Troubleshooting
 

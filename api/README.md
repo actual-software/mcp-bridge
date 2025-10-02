@@ -412,7 +412,8 @@ openapi-generator generate -i api/openapi/gateway.yaml -g typescript-axios -o sd
 
 ## 📚 Additional Resources
 
-- [Architecture Overview](../docs/architecture.md)
+- [Gateway Documentation](../services/gateway/README.md)
+- [Router Documentation](../services/router/README.md)
 - [Authentication Guide](../docs/authentication.md)
 - [Security Best Practices](../docs/SECURITY.md)
 - [Troubleshooting Guide](../docs/troubleshooting.md)

@@ -42,14 +42,14 @@ gateway:
 ### macOS Keychain
 
 Tokens are stored in the user's login keychain with the following attributes:
-- **Service**: `com.anthropics.mcp-router`
+- **Service**: `com.poiley.mcp-router`
 - **Account**: Your token name
 - **Access Control**: Only accessible by mcp-router
 
 View stored tokens:
 ```bash
 # List tokens (requires authorization)
-security find-generic-password -s com.anthropics.mcp-router
+security find-generic-password -s com.poiley.mcp-router
 
 # View specific token
 mcp-router token get --name gateway-token
@@ -252,7 +252,7 @@ mcp-router token restore --input tokens.backup
 ### GitHub Actions
 ```yaml
 - name: Setup MCP Router
-  uses: anthropics/mcp-router-action@v1
+  uses: poiley/mcp-router-action@v1
   with:
     token-name: 'ci-token'
     token-value: ${{ secrets.MCP_AUTH_TOKEN }}
@@ -309,7 +309,7 @@ type TokenStore interface {
 
 ### Custom Implementation
 ```go
-import "github.com/anthropics/mcp-local-router/pkg/secure"
+import "github.com/poiley/mcp-bridge/pkg/secure"
 
 // Implement custom token storage
 type MyTokenStore struct{}

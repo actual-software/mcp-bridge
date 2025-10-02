@@ -329,6 +329,7 @@ The test-specific exclusions reflect industry best practices, recognizing that t
 ## Related Documentation
 
 - [Contributing Guide](../../CONTRIBUTING.md)
-- [Architecture Overview](../architecture.md)
+- [Gateway Documentation](../../services/gateway/README.md)
+- [Router Documentation](../../services/router/README.md)
 - [API Documentation](../api.md)
 - [Troubleshooting Guide](../troubleshooting.md)
