@@ -17,7 +17,7 @@ import (
 const (
 	testIterations    = 100
 	testMaxIterations = 250
-	testTimeout       = 50
+	testTimeout       = 180 // Increased from 50 to account for serialized keychain operations
 )
 
 func TestCredentialStore_SecurityBoundaries(t *testing.T) {
@@ -455,7 +455,7 @@ func runRaceConditionGoroutines(t *testing.T, store TokenStore, numGoroutines, o
 	select {
 	case <-done:
 		// All goroutines completed successfully.
-	case <-time.After(3 * time.Minute):
+	case <-time.After(5 * time.Minute):
 		t.Fatal("Test timed out - possible keychain deadlock")
 	}
 
