@@ -63,7 +63,7 @@ jobs:
     - name: Build Docker image
       uses: docker/build-push-action@v6
       with:
-        context: ./services/${{ matrix.component }}
+        context: .
         file: ./services/${{ matrix.component }}/Dockerfile
         push: false
         tags: ${{ steps.meta.outputs.tags }}
@@ -128,7 +128,7 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: docker/build-push-action@v6
       with:
-        context: ./services/${{ matrix.component }}
+        context: .
         file: ./services/${{ matrix.component }}/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
