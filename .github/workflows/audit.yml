@@ -11,10 +11,11 @@ env:
   GOLANGCI_LINT_VERSION: 'v2.4.0'
 
 jobs:
-  audit:
-    name: Run Code Audit
+  # Run linting in parallel
+  audit-lint:
+    name: Linting Analysis
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
 
     steps:
       - name: Checkout Repository
@@ -56,8 +57,154 @@ jobs:
       - name: Make audit scripts executable
         run: chmod +x ./scripts/audit-*.sh
 
-      - name: Run Audit
-        run: make audit
+      - name: Run Lint Audit
+        run: make audit-lint
+        continue-on-error: true
+
+      - name: Upload Lint Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-results
+          path: audit-results/lint-*
+          retention-days: 30
+
+  # Run tests in parallel
+  audit-test:
+    name: Test Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go dependencies
+        run: |
+          go mod download
+          if [ -f go.work ]; then
+            for dir in $(find . -name go.mod -exec dirname {} \;); do
+              echo "Downloading dependencies for $dir"
+              (cd "$dir" && go mod download) || true
+            done
+          fi
+
+      - name: Make audit scripts executable
+        run: chmod +x ./scripts/audit-*.sh
+
+      - name: Run Test Audit
+        run: make audit-test
+        continue-on-error: true
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: audit-results/test-*
+          retention-days: 30
+
+  # Run coverage in parallel
+  audit-coverage:
+    name: Coverage Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go dependencies
+        run: |
+          go mod download
+          if [ -f go.work ]; then
+            for dir in $(find . -name go.mod -exec dirname {} \;); do
+              echo "Downloading dependencies for $dir"
+              (cd "$dir" && go mod download) || true
+            done
+          fi
+
+      - name: Make audit scripts executable
+        run: chmod +x ./scripts/audit-*.sh
+
+      - name: Run Coverage Audit
+        run: make audit-coverage
+        continue-on-error: true
+
+      - name: Upload Coverage Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-results
+          path: audit-results/coverage-*
+          retention-days: 30
+
+  # Generate final summary after all audits complete
+  audit-summary:
+    name: Generate Audit Summary
+    runs-on: ubuntu-latest
+    needs: [audit-lint, audit-test, audit-coverage]
+    if: always()
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Lint Results
+        uses: actions/download-artifact@v4
+        with:
+          name: lint-results
+          path: audit-results/
+        continue-on-error: true
+
+      - name: Download Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: audit-results/
+        continue-on-error: true
+
+      - name: Download Coverage Results
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-results
+          path: audit-results/
         continue-on-error: true
 
       - name: Generate Summary
@@ -65,14 +212,14 @@ jobs:
         run: |
           echo "## 📊 Code Audit Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Check for audit results directory
           if [ -d "audit-results" ]; then
             # Find the most recent summary files
             LINT_SUMMARY=$(ls -t audit-results/lint-summary-*.txt 2>/dev/null | head -1)
             TEST_SUMMARY=$(ls -t audit-results/test-summary-*.txt 2>/dev/null | head -1)
             COVERAGE_SUMMARY=$(ls -t audit-results/coverage-summary-*.txt 2>/dev/null | head -1)
-            
+
             # Linting Summary
             if [ -f "$LINT_SUMMARY" ]; then
               echo "### 🔍 Linting Analysis" >> $GITHUB_STEP_SUMMARY
@@ -80,7 +227,7 @@ jobs:
               head -20 "$LINT_SUMMARY" >> $GITHUB_STEP_SUMMARY
               echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              
+
               # Extract key metrics
               TOTAL_ISSUES=$(grep "Total Issues:" "$LINT_SUMMARY" | awk '{print $3}')
               if [ -n "$TOTAL_ISSUES" ] && [ "$TOTAL_ISSUES" -gt 0 ]; then
@@ -90,7 +237,7 @@ jobs:
               fi
               echo "" >> $GITHUB_STEP_SUMMARY
             fi
-            
+
             # Test Summary
             if [ -f "$TEST_SUMMARY" ]; then
               echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
@@ -98,12 +245,12 @@ jobs:
               head -15 "$TEST_SUMMARY" >> $GITHUB_STEP_SUMMARY
               echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              
+
               # Extract test metrics
               TOTAL_TESTS=$(grep "Total Tests Executed:" "$TEST_SUMMARY" | awk '{print $4}')
               PASSED_TESTS=$(grep "Passed:" "$TEST_SUMMARY" | awk '{print $2}')
               FAILED_TESTS=$(grep "Failed:" "$TEST_SUMMARY" | awk '{print $2}')
-              
+
               if [ -n "$FAILED_TESTS" ] && [ "$FAILED_TESTS" -gt 0 ]; then
                 echo "❌ **$FAILED_TESTS tests failed**" >> $GITHUB_STEP_SUMMARY
               else
@@ -111,7 +258,7 @@ jobs:
               fi
               echo "" >> $GITHUB_STEP_SUMMARY
             fi
-            
+
             # Coverage Summary
             if [ -f "$COVERAGE_SUMMARY" ]; then
               echo "### 📈 Coverage Report" >> $GITHUB_STEP_SUMMARY
@@ -119,9 +266,9 @@ jobs:
               head -20 "$COVERAGE_SUMMARY" >> $GITHUB_STEP_SUMMARY
               echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              
+
               # Extract coverage percentage
-              COVERAGE=$(grep "Overall Coverage:" "$COVERAGE_SUMMARY" | awk '{print $3}' | sed 's/%//')
+              COVERAGE=$(grep "Total Coverage:" "$COVERAGE_SUMMARY" | awk '{print $3}' | sed 's/%//')
               if [ -n "$COVERAGE" ]; then
                 if (( $(echo "$COVERAGE >= 80" | bc -l) )); then
                   echo "✅ **Coverage: ${COVERAGE}% (meets threshold)**" >> $GITHUB_STEP_SUMMARY
@@ -130,7 +277,7 @@ jobs:
                 fi
               fi
             fi
-            
+
             # Overall Status
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "---" >> $GITHUB_STEP_SUMMARY
@@ -139,7 +286,7 @@ jobs:
             echo "⚠️ No audit results found. Check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Upload Audit Results
+      - name: Upload Combined Audit Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -154,17 +301,17 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            
+
             // Read summary files
             let comment = '## 📊 Code Audit Results\n\n';
-            
+
             try {
               // Find most recent summary files
               const files = fs.readdirSync('audit-results');
               const lintSummary = files.filter(f => f.startsWith('lint-summary-')).sort().pop();
               const testSummary = files.filter(f => f.startsWith('test-summary-')).sort().pop();
               const coverageSummary = files.filter(f => f.startsWith('coverage-summary-')).sort().pop();
-              
+
               if (lintSummary) {
                 const lintContent = fs.readFileSync(`audit-results/${lintSummary}`, 'utf8');
                 const totalIssues = lintContent.match(/Total Issues: (\d+)/)?.[1] || '0';
@@ -172,23 +319,23 @@ jobs:
                 comment += totalIssues === '0' ? '✅ No issues found\n' : `⚠️ ${totalIssues} issues found\n`;
                 comment += '\n';
               }
-              
+
               if (testSummary) {
                 const testContent = fs.readFileSync(`audit-results/${testSummary}`, 'utf8');
                 const status = testContent.match(/Status: (\w+)/)?.[1];
                 const total = testContent.match(/Total Tests Executed: (\d+)/)?.[1] || '0';
                 const passed = testContent.match(/Passed: (\d+)/)?.[1] || '0';
                 const failed = testContent.match(/Failed: (\d+)/)?.[1] || '0';
-                
+
                 comment += `### 🧪 Tests\n`;
                 comment += status === 'PASS' ? `✅ All tests passed (${passed}/${total})\n` : `❌ ${failed} tests failed (${passed}/${total} passed)\n`;
                 comment += '\n';
               }
-              
+
               if (coverageSummary) {
                 const coverageContent = fs.readFileSync(`audit-results/${coverageSummary}`, 'utf8');
-                const coverage = coverageContent.match(/Overall Coverage: ([\d.]+)%/)?.[1];
-                
+                const coverage = coverageContent.match(/Total Coverage: ([\d.]+)%/)?.[1];
+
                 comment += `### 📈 Coverage\n`;
                 if (coverage) {
                   const coverageNum = parseFloat(coverage);
@@ -197,14 +344,14 @@ jobs:
                   comment += '⚠️ Coverage data unavailable\n';
                 }
               }
-              
+
               comment += '\n---\n';
               comment += `📎 [View full audit results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-              
+
             } catch (error) {
               comment += '⚠️ Unable to generate summary. Check workflow logs for details.\n';
             }
-            
+
             // Post comment
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -218,12 +365,12 @@ jobs:
         run: |
           # Determine if the audit should fail the build
           FAIL_BUILD=false
-          
+
           if [ -d "audit-results" ]; then
             # Check for critical issues
             LINT_SUMMARY=$(ls -t audit-results/lint-summary-*.txt 2>/dev/null | head -1)
             TEST_SUMMARY=$(ls -t audit-results/test-summary-*.txt 2>/dev/null | head -1)
-            
+
             if [ -f "$TEST_SUMMARY" ]; then
               FAILED_TESTS=$(grep "Failed:" "$TEST_SUMMARY" | awk '{print $2}')
               if [ -n "$FAILED_TESTS" ] && [ "$FAILED_TESTS" -gt 0 ]; then
@@ -231,7 +378,7 @@ jobs:
                 FAIL_BUILD=true
               fi
             fi
-            
+
             # Optionally fail on too many lint issues (uncomment if desired)
             # if [ -f "$LINT_SUMMARY" ]; then
             #   TOTAL_ISSUES=$(grep "Total Issues:" "$LINT_SUMMARY" | awk '{print $3}')
@@ -241,7 +388,7 @@ jobs:
             #   fi
             # fi
           fi
-          
+
           if [ "$FAIL_BUILD" = true ]; then
             exit 1
           else
