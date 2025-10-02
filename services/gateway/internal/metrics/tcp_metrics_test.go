@@ -29,7 +29,7 @@ func TestTCPConnectionMetrics(t *testing.T) {
 	reg.DecrementTCPConnections()
 
 	activeConns = testutil.ToFloat64(reg.TCPConnectionsActive)
-	assert.InEpsilon(t, float64(0), activeConns, 0.01)
+	assert.InDelta(t, float64(0), activeConns, 0.01)
 
 	// Total should remain unchanged
 	totalConns = testutil.ToFloat64(reg.TCPConnectionsTotal)

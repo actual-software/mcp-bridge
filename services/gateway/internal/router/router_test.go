@@ -26,10 +26,7 @@ import (
 	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
 )
 
-type contextKey string
-
 const (
-	sessionContextKey = contextKey("session")
 	// Test constants.
 	testIterations    = 100
 	testMaxIterations = 1000
