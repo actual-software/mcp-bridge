@@ -79,3 +79,4 @@ target/
 go.work.sum.lock
 
 #
+coverage.out
