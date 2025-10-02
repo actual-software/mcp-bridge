@@ -30,7 +30,7 @@ This document covers comprehensive setup instructions for the MCP Bridge system 
 ### Software Prerequisites
 
 **Required for all environments:**
-- **Go**: 1.23.0+ (toolchain 1.24.5 recommended)
+- **Go**: 1.23.0+ (toolchain 1.25.0 recommended)
 - **Make**: 3.81+ (GNU Make)
 - **Git**: 2.30+
 

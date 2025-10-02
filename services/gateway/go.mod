@@ -1,6 +1,6 @@
 module github.com/actual-software/mcp-bridge/services/gateway
 
-go 1.25.0
+go 1.25
 
 require (
 	github.com/actual-software/mcp-bridge v0.0.0-00010101000000-000000000000

@@ -205,7 +205,7 @@ connection:
 ### Dependencies
 
 #### **Runtime Dependencies**
-- Go 1.23.0+ (toolchain 1.24.5 recommended) for building from source
+- Go 1.23.0+ (toolchain 1.25.0 recommended) for building from source
 - Redis 6.0+ for session storage (optional)
 - PostgreSQL 12+ for persistent storage (optional)
 
