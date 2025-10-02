@@ -22,8 +22,8 @@ import (
 type contextKey string
 
 const (
-	sessionContextKey       contextKey    = "session"
-	frontendShutdownTimeout               = 30 * time.Second
+	sessionContextKey       contextKey = "session"
+	frontendShutdownTimeout            = 30 * time.Second
 )
 
 // GatewayServer handles MCP client connections through pluggable frontends.
@@ -130,6 +130,7 @@ func (s *GatewayServer) initializeFrontends(
 				zap.String("name", frontendCfg.Name),
 				zap.String("protocol", frontendCfg.Protocol),
 				zap.Error(err))
+
 			continue
 		}
 

@@ -312,6 +312,7 @@ func (h *HealthHTTPServer) handleBackendHealth(w http.ResponseWriter, r *http.Re
 	for i := range backends {
 		if backends[i].Name == backendName {
 			found = &backends[i]
+
 			break
 		}
 	}

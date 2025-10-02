@@ -248,7 +248,7 @@ func connectToSSEStream(t *testing.T, url string) *http.Response {
 
 	t.Logf("Connecting to SSE stream at %s", url)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
@@ -355,7 +355,7 @@ func setupSSERequestTest(t *testing.T, requestChan chan bool) *testServer {
 func establishSSEStream(t *testing.T, url string, responseChan chan bool) *http.Response {
 	t.Helper()
 
-	streamReq, _ := http.NewRequest("GET", url, nil)
+	streamReq, _ := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 	streamClient := &http.Client{Timeout: 30 * time.Second}
 
 	streamResp, err := streamClient.Do(streamReq)
@@ -370,6 +370,8 @@ func establishSSEStream(t *testing.T, url string, responseChan chan bool) *http.
 }
 
 func readSSEStream(t *testing.T, resp *http.Response, responseChan chan bool) {
+	t.Helper()
+
 	reader := bufio.NewReader(resp.Body)
 
 	for {

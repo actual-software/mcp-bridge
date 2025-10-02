@@ -24,8 +24,8 @@ import (
 type contextKey string
 
 const (
-	contextKeySession     contextKey    = "session"
-	shutdownGracePeriod                 = 30 * time.Second
+	contextKeySession   contextKey = "session"
+	shutdownGracePeriod            = 30 * time.Second
 )
 
 // Wire message represents the wire protocol message format.

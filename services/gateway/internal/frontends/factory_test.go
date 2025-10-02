@@ -47,6 +47,7 @@ func (m *mockAuthProvider) Authenticate(r *http.Request) (*auth.Claims, error) {
 	if !m.shouldAuthenticate {
 		return nil, fmt.Errorf("authentication failed")
 	}
+
 	return &auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{Subject: "test-user"},
 	}, nil
@@ -77,6 +78,7 @@ func (m *mockSessionManager) CreateSession(claims *auth.Claims) (*session.Sessio
 		ExpiresAt: time.Now().Add(1 * time.Hour),
 	}
 	m.sessions[sess.ID] = sess
+
 	return sess, nil
 }
 
@@ -84,6 +86,7 @@ func (m *mockSessionManager) GetSession(id string) (*session.Session, error) {
 	if sess, ok := m.sessions[id]; ok {
 		return sess, nil
 	}
+
 	return nil, fmt.Errorf("session not found")
 }
 

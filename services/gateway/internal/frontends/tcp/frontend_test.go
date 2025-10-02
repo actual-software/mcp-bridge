@@ -257,7 +257,8 @@ func connectToTCPServer(t *testing.T, addr string) net.Conn {
 	t.Helper()
 
 	t.Logf("Connecting to %s", addr)
-	conn, err := net.Dial("tcp", addr)
+	dialer := &net.Dialer{}
+	conn, err := dialer.DialContext(context.Background(), "tcp", addr)
 	if err != nil {
 		t.Fatalf("Failed to connect to TCP server: %v", err)
 	}
@@ -358,7 +359,8 @@ func TestTCPConnectionLimit(t *testing.T) {
 	defer ts.cleanup()
 
 	// First connection should succeed
-	conn1, err := net.Dial("tcp", ts.addr)
+	dialer := &net.Dialer{}
+	conn1, err := dialer.DialContext(context.Background(), "tcp", ts.addr)
 	if err != nil {
 		t.Fatalf("First connection should succeed: %v", err)
 	}
@@ -374,7 +376,7 @@ func TestTCPConnectionLimit(t *testing.T) {
 	}
 
 	// Second connection should be accepted but handled with limit logic
-	conn2, err := net.Dial("tcp", ts.addr)
+	conn2, err := dialer.DialContext(context.Background(), "tcp", ts.addr)
 	if err != nil {
 		t.Fatalf("Failed to dial second connection: %v", err)
 	}
