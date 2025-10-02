@@ -13,6 +13,7 @@ WORKDIR /src/services/router
 
 # Download dependencies
 RUN go mod download
+RUN go mod tidy
 
 # Build arguments
 ARG VERSION=v1.0.0
