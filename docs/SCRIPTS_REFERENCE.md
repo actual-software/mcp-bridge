@@ -65,7 +65,7 @@ MCP Bridge includes several automation scripts to simplify common operations:
 - `.quickstart`: State file with last run info
 - `configs/*.yaml`: Generated configurations
 - `.env`: Environment variables
-- `docker-compose.yml`: Docker services definition
+- `deployment/local/docker-compose.yml`: Docker services definition
 
 **Example Usage**:
 ```bash

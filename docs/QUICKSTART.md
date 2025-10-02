@@ -95,7 +95,7 @@ mcp-bridge/
 ├── data/                 # Runtime data
 ├── backups/              # Backup directory
 ├── .env                  # Environment variables
-├── docker-compose.yml    # Docker services
+├── deployment/local/docker-compose.yml    # Docker services
 └── quickstart.log        # Setup log
 ```
 
@@ -426,7 +426,7 @@ PROTOCOL_CONVERSION_OPTIMIZATION=true
 
 ### Docker Services
 
-Optional `docker-compose.yml` includes:
+Optional `deployment/local/docker-compose.yml` includes:
 - **Redis**: Session storage and caching
 - **Prometheus**: Metrics collection
 - **Grafana**: Metrics visualization (admin/admin)

@@ -202,7 +202,7 @@ CERT_EOF
 generate_certificates
 
 print_step "Creating enhanced docker-compose configuration..."
-cat > docker-compose.yml <<EOF
+cat > deployment/local/docker-compose.yml <<EOF
 version: '3.8'
 
 services:

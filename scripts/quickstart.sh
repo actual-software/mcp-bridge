@@ -513,7 +513,7 @@ setup_docker() {
     fi
     
     # Create docker-compose.yml if it doesn't exist
-    if [[ ! -f "$PROJECT_ROOT/docker-compose.yml" ]]; then
+    if [[ ! -f "$PROJECT_ROOT/deployment/local/docker-compose.yml" ]]; then
         generate_docker_compose
         log "Generated docker-compose.yml"
     fi
@@ -531,7 +531,7 @@ setup_docker() {
 
 # Generate docker-compose.yml
 generate_docker_compose() {
-    cat > "$PROJECT_ROOT/docker-compose.yml" << 'EOF'
+    cat > "$PROJECT_ROOT/deployment/local/docker-compose.yml" << 'EOF'
 version: '3.8'
 
 services:
@@ -601,7 +601,7 @@ start_services() {
     echo -e "\n${BOLD}🚀 Starting Services${NC}\n"
     
     # Start Docker services if available
-    if [[ -f "$PROJECT_ROOT/docker-compose.yml" ]] && command -v docker-compose &> /dev/null; then
+    if [[ -f "$PROJECT_ROOT/deployment/local/docker-compose.yml" ]] && command -v docker-compose &> /dev/null; then
         info "Starting Docker services..."
         docker-compose up -d redis prometheus grafana &> /dev/null
         log "Docker services started"

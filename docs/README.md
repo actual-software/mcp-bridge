@@ -113,7 +113,7 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 ### **Configuration Files**
 - Gateway: `services/gateway/configs/gateway.yaml`
 - Router: `services/router/configs/router.yaml`
-- Docker Compose: `docker-compose.yml`
+- Docker Compose: `deployment/local/docker-compose.yml`
 - Helm Values: `helm/mcp-bridge/values.yaml`
 
 ### **Important URLs**

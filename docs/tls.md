@@ -183,7 +183,7 @@ data:
 #### Certificate Volume Mounting
 
 ```yaml
-# docker-compose.yml
+# deployment/local/docker-compose.yml
 version: '3.8'
 services:
   gateway:

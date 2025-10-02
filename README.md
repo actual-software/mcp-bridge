@@ -363,7 +363,7 @@ helm install mcp-bridge ./helm/mcp-bridge -f helm/mcp-bridge/values-production.y
 kubectl apply -k deployments/kubernetes/
 
 # Or with Docker Compose
-docker-compose -f docker-compose.yml up -d
+docker-compose -f deployment/local/docker-compose.yml up -d
 ```
 
 ### High Availability Setup

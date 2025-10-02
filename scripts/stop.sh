@@ -71,7 +71,7 @@ stop_systemd_service() {
 
 # Stop Docker services
 stop_docker_services() {
-    if [[ -f "$PROJECT_ROOT/docker-compose.yml" ]] && command -v docker-compose &>/dev/null; then
+    if [[ -f "$PROJECT_ROOT/deployment/local/docker-compose.yml" ]] && command -v docker-compose &>/dev/null; then
         if docker-compose ps -q | grep -q .; then
             info "Stopping Docker services..."
             docker-compose down

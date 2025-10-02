@@ -177,7 +177,7 @@ stop_services() {
     
     # Try docker-compose
     if command -v docker-compose &> /dev/null; then
-        if [[ -f "${PROJECT_ROOT}/docker-compose.yml" ]]; then
+        if [[ -f "${PROJECT_ROOT}/deployment/local/docker-compose.yml" ]]; then
             log "Stopping services via docker-compose"
             docker-compose down
         fi
@@ -336,7 +336,7 @@ start_services() {
     
     # Try docker-compose
     if command -v docker-compose &> /dev/null; then
-        if [[ -f "${PROJECT_ROOT}/docker-compose.yml" ]]; then
+        if [[ -f "${PROJECT_ROOT}/deployment/local/docker-compose.yml" ]]; then
             log "Starting services via docker-compose"
             docker-compose up -d
         fi
