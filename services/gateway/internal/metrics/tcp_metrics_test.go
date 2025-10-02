@@ -4,15 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTCPConnectionMetrics(t *testing.T) {
 	t.Parallel()
-	// Clear default registry to avoid conflicts
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
 	reg := InitializeMetricsRegistry()
 
@@ -38,8 +35,6 @@ func TestTCPConnectionMetrics(t *testing.T) {
 
 func TestTCPMessageMetrics(t *testing.T) {
 	t.Parallel()
-	// Clear default registry to avoid conflicts
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
 	reg := InitializeMetricsRegistry()
 
@@ -59,8 +54,6 @@ func TestTCPMessageMetrics(t *testing.T) {
 
 func TestTCPBytesMetrics(t *testing.T) {
 	t.Parallel()
-	// Clear default registry to avoid conflicts
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
 	reg := InitializeMetricsRegistry()
 
@@ -78,8 +71,6 @@ func TestTCPBytesMetrics(t *testing.T) {
 
 func TestTCPProtocolErrors(t *testing.T) {
 	t.Parallel()
-	// Clear default registry to avoid conflicts
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
 	reg := InitializeMetricsRegistry()
 
@@ -100,8 +91,6 @@ func TestTCPProtocolErrors(t *testing.T) {
 
 func TestTCPMessageDuration(t *testing.T) {
 	t.Parallel()
-	// Clear default registry to avoid conflicts
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
 	reg := InitializeMetricsRegistry()
 

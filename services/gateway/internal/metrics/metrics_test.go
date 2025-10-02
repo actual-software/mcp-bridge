@@ -18,8 +18,6 @@ const (
 
 func TestInitializeMetricsRegistry(t *testing.T) {
 	t.Parallel()
-	// Clear default registry to avoid conflicts
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
 	reg := InitializeMetricsRegistry()
 
@@ -62,7 +60,6 @@ func verifyMetricsInitialized(t *testing.T, reg *Registry) {
 func TestRegistry_ConnectionMetrics(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test IncrementConnections
@@ -119,7 +116,6 @@ func TestRegistry_ConnectionMetrics(t *testing.T) {
 func TestRegistry_RequestMetrics(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test IncrementRequests
@@ -178,7 +174,6 @@ func TestRegistry_RequestMetrics(t *testing.T) {
 func TestRegistry_AuthMetrics(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test different failure reasons
@@ -207,7 +202,6 @@ func TestRegistry_AuthMetrics(t *testing.T) {
 func TestRegistry_RoutingMetrics(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test routing errors
@@ -253,7 +247,6 @@ func TestRegistry_RoutingMetrics(t *testing.T) {
 func TestRegistry_CircuitBreakerMetrics(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test circuit breaker states
@@ -288,7 +281,6 @@ func TestRegistry_CircuitBreakerMetrics(t *testing.T) {
 func TestRegistry_WebSocketMetrics(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test message counting
@@ -334,7 +326,6 @@ func TestRegistry_WebSocketMetrics(t *testing.T) {
 func TestRegistry_MetricNames(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test that metrics have correct names
@@ -362,7 +353,6 @@ func TestRegistry_MetricNames(t *testing.T) {
 func TestRegistry_ConcurrentAccess(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Test concurrent increments
@@ -418,7 +408,6 @@ func TestRegistry_ConcurrentAccess(t *testing.T) {
 func TestRegistry_HistogramBuckets(t *testing.T) {
 	t.Parallel()
 
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	// Record various durations
@@ -443,7 +432,6 @@ func TestRegistry_HistogramBuckets(t *testing.T) {
 }
 
 func BenchmarkRegistry_IncrementConnections(b *testing.B) {
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	b.ResetTimer()
@@ -454,7 +442,6 @@ func BenchmarkRegistry_IncrementConnections(b *testing.B) {
 }
 
 func BenchmarkRegistry_IncrementRequests(b *testing.B) {
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	b.ResetTimer()
@@ -465,7 +452,6 @@ func BenchmarkRegistry_IncrementRequests(b *testing.B) {
 }
 
 func BenchmarkRegistry_RecordRequestDuration(b *testing.B) {
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	b.ResetTimer()
@@ -476,7 +462,6 @@ func BenchmarkRegistry_RecordRequestDuration(b *testing.B) {
 }
 
 func BenchmarkRegistry_ConcurrentMetrics(b *testing.B) {
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	reg := InitializeMetricsRegistry()
 
 	b.RunParallel(func(pb *testing.PB) {

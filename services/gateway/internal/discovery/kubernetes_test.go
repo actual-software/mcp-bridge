@@ -108,10 +108,13 @@ func testKubernetesDiscoveryIntegration(t *testing.T, client kubernetes.Interfac
 	t.Helper()
 
 	// Test KubernetesDiscovery integration with real cluster
-	var cfg config.ServiceDiscoveryConfig
-
-	cfg.Provider = providerKubernetes
-	cfg.Kubernetes.ConfigPath = kubeconfig
+	cfg := config.ServiceDiscoveryConfig{
+		Provider:          providerKubernetes,
+		NamespaceSelector: []string{"test-mcp-namespace"},
+		Kubernetes: config.KubernetesDiscoveryConfig{
+			ConfigPath: kubeconfig,
+		},
+	}
 
 	logger := testutil.NewTestLogger(t)
 
