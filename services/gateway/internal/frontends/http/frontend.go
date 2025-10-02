@@ -211,12 +211,16 @@ func (f *Frontend) GetProtocol() string {
 func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	f.metricsMu.RLock()
 	defer f.metricsMu.RUnlock()
+
 	return f.metrics
 }
 
 // handleRequest handles HTTP POST requests with JSON-RPC payloads.
 func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
-	r = r.WithContext(f.initializeRequestContext(r))
+	// Initialize request context with tracing
+	traceID := logging.GenerateTraceID()
+	requestID := logging.GenerateRequestID()
+	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
 
 	if !f.validateHTTPMethod(w, r.Method) {
 		return
@@ -224,32 +228,27 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 
 	r.Body = nethttp.MaxBytesReader(w, r.Body, f.config.MaxRequestSize)
 
-	authClaims, ok := f.authenticateRequest(w, r, r.Context())
+	authClaims, ok := f.authenticateRequest(w, r, ctx)
 	if !ok {
 		return
 	}
 
-	ctx := logging.ContextWithUserInfo(r.Context(), authClaims.Subject, "")
+	ctx = logging.ContextWithUserInfo(ctx, authClaims.Subject, "")
 	r = r.WithContext(ctx)
 
-	body, ok := f.readRequestBody(w, r, r.Context())
+	body, ok := f.readRequestBody(w, r, ctx)
 	if !ok {
 		return
 	}
 
-	resp, err := f.processRequest(r.Context(), body, authClaims)
+	resp, err := f.processRequest(ctx, body, authClaims)
 	if err != nil {
-		f.handleProcessingError(w, r.Context(), err, body)
+		f.handleProcessingError(w, ctx, err, body)
+
 		return
 	}
 
 	f.sendSuccessResponse(w, resp)
-}
-
-func (f *Frontend) initializeRequestContext(r *nethttp.Request) context.Context {
-	traceID := logging.GenerateTraceID()
-	requestID := logging.GenerateRequestID()
-	return logging.ContextWithTracing(r.Context(), traceID, requestID)
 }
 
 func (f *Frontend) validateHTTPMethod(w nethttp.ResponseWriter, method string) bool {
@@ -258,8 +257,10 @@ func (f *Frontend) validateHTTPMethod(w nethttp.ResponseWriter, method string) b
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return false
 	}
+
 	return true
 }
 
@@ -275,8 +276,10 @@ func (f *Frontend) authenticateRequest(
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return nil, false
 	}
+
 	return authClaims, true
 }
 

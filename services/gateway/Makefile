@@ -173,7 +173,7 @@ clean:
 lint:
 	@echo "Running linter..."
 	@if command -v $(GOLINT) >/dev/null; then \
-		$(GOLINT) run ./...; \
+		$(GOLINT) run --timeout=5m --config=../../.config/golangci.yml ./...; \
 	else \
 		echo "golangci-lint not installed. Install with: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
 		exit 1; \

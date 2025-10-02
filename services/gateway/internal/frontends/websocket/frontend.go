@@ -206,6 +206,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	f.mu.Lock()
 	if !f.running {
 		f.mu.Unlock()
+
 		return nil
 	}
 	f.running = false
@@ -269,6 +270,7 @@ func (f *Frontend) GetProtocol() string {
 func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	f.metricsMu.RLock()
 	defer f.metricsMu.RUnlock()
+
 	return f.metrics
 }
 
@@ -283,6 +285,7 @@ func (f *Frontend) handleWebSocketUpgrade(w http.ResponseWriter, r *http.Request
 	// Check connection limits
 	if err := f.checkConnectionLimits(clientIP); err != nil {
 		f.handleConnectionLimitError(ctx, w, err, clientIP)
+
 		return
 	}
 
@@ -469,6 +472,7 @@ func (f *Frontend) handleClientRead(client *ClientConnection, clientIP string) {
 
 	client.Conn.SetPongHandler(func(string) error {
 		client.logger.Debug("Received pong")
+
 		return nil
 	})
 
@@ -487,6 +491,7 @@ func (f *Frontend) handleClientRead(client *ClientConnection, clientIP string) {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 					client.logger.Error("WebSocket read error", zap.Error(err))
 				}
+
 				return
 			}
 
@@ -531,6 +536,7 @@ func (f *Frontend) handleClientWrite(client *ClientConnection) {
 
 			if err := client.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 				client.logger.Error("Write error", zap.Error(err))
+
 				return
 			}
 

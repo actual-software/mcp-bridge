@@ -70,6 +70,7 @@ func (s *StreamConnection) Close() error {
 	}
 
 	close(s.EventCh)
+
 	return nil
 }
 
@@ -206,6 +207,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	f.mu.Lock()
 	if !f.running {
 		f.mu.Unlock()
+
 		return nil
 	}
 	f.running = false
@@ -266,6 +268,7 @@ func (f *Frontend) GetProtocol() string {
 func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	f.metricsMu.RLock()
 	defer f.metricsMu.RUnlock()
+
 	return f.metrics
 }
 
@@ -275,7 +278,10 @@ func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request)
 		return
 	}
 
-	ctx := f.initializeStreamContext(r)
+	// Initialize stream context with tracing
+	traceID := logging.GenerateTraceID()
+	requestID := logging.GenerateRequestID()
+	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
 
 	flusher, ok := f.validateSSESupport(w)
 	if !ok {
@@ -311,23 +317,21 @@ func (f *Frontend) validateGetMethod(w nethttp.ResponseWriter, method string) bo
 		f.updateMetrics(func(m *types.FrontendMetrics) {
 			m.ErrorCount++
 		})
+
 		return false
 	}
-	return true
-}
 
-func (f *Frontend) initializeStreamContext(r *nethttp.Request) context.Context {
-	traceID := logging.GenerateTraceID()
-	requestID := logging.GenerateRequestID()
-	return logging.ContextWithTracing(r.Context(), traceID, requestID)
+	return true
 }
 
 func (f *Frontend) validateSSESupport(w nethttp.ResponseWriter) (nethttp.Flusher, bool) {
 	flusher, ok := w.(nethttp.Flusher)
 	if !ok {
 		nethttp.Error(w, "SSE not supported", nethttp.StatusInternalServerError)
+
 		return nil, false
 	}
+
 	return flusher, true
 }
 
@@ -451,7 +455,10 @@ func (f *Frontend) handleStreamLoop(stream *StreamConnection) {
 
 // handleRequest handles POST requests.
 func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
-	ctx := f.initializeRequestContext(r)
+	// Initialize request context with tracing
+	traceID := logging.GenerateTraceID()
+	requestID := logging.GenerateRequestID()
+	ctx := logging.ContextWithTracing(r.Context(), traceID, requestID)
 
 	if !f.validatePostMethod(w, r.Method) {
 		return
@@ -486,12 +493,6 @@ func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 	}
 
 	f.acknowledgeRequest(w)
-}
-
-func (f *Frontend) initializeRequestContext(r *nethttp.Request) context.Context {
-	traceID := logging.GenerateTraceID()
-	requestID := logging.GenerateRequestID()
-	return logging.ContextWithTracing(r.Context(), traceID, requestID)
 }
 
 func (f *Frontend) validatePostMethod(w nethttp.ResponseWriter, method string) bool {
