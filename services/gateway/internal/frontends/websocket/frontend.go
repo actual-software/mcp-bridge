@@ -52,6 +52,7 @@ type ClientConnection struct {
 	cancel   context.CancelFunc
 	created  time.Time
 	lastUsed time.Time
+	closed   bool
 	mu       sync.RWMutex
 	logger   *zap.Logger
 }
@@ -60,6 +61,11 @@ type ClientConnection struct {
 func (c *ClientConnection) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if c.closed {
+		return nil
+	}
+	c.closed = true
 
 	if c.cancel != nil {
 		c.cancel()

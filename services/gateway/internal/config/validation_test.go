@@ -1148,6 +1148,10 @@ func createValidMinimalConfig() *Config {
 		Auth: AuthConfig{
 			Provider: "none",
 		},
+		Logging: LoggingConfig{
+			Level:  "info",
+			Format: "json",
+		},
 	}
 }
 
