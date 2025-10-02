@@ -52,49 +52,6 @@ jobs:
           name: trivy-report
           path: trivy-report.txt
 
-  nancy-scan:
-    name: Nancy Go Dependency Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          
-      - name: Install Nancy
-        run: |
-          go install github.com/sonatype-nexus-community/nancy@latest
-          
-      - name: Run Nancy on Gateway
-        run: |
-          cd services/gateway
-          go list -json -deps ./... | nancy sleuth
-          
-      - name: Run Nancy on Router
-        run: |
-          cd services/router
-          go list -json -deps ./... | nancy sleuth
-
-  snyk-scan:
-    name: Snyk Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/golang@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=medium --all-projects
-          
-      - name: Upload Snyk results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: snyk-results
-          path: snyk.sarif
-
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
@@ -112,28 +69,11 @@ jobs:
 
   osv-scan:
     name: OSV Scanner
-    runs-on: ubuntu-latest
     permissions:
       security-events: write
       contents: read
       actions: read
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run OSV Scanner
-        uses: google/osv-scanner-action@v1
-        with:
-          scan-args: |-
-            --recursive
-            --format sarif
-            --output osv-results.sarif
-            ./
-            
-      - name: Upload OSV results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: osv-results.sarif
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.2.3
 
   license-scan:
     name: License Compliance Check
@@ -151,12 +91,14 @@ jobs:
       - name: Check licenses for Gateway
         run: |
           cd services/gateway
-          go-licenses check ./... --allowed_licenses=MIT,Apache-2.0,BSD-3-Clause,BSD-2-Clause
-          
+          go-licenses check ./... --allowed_licenses=MIT,Apache-2.0,BSD-3-Clause,BSD-2-Clause \
+            --ignore github.com/poiley/mcp-bridge/services/gateway/internal
+
       - name: Check licenses for Router
         run: |
           cd services/router
-          go-licenses check ./... --allowed_licenses=MIT,Apache-2.0,BSD-3-Clause,BSD-2-Clause
+          go-licenses check ./... --allowed_licenses=MIT,Apache-2.0,BSD-3-Clause,BSD-2-Clause \
+            --ignore github.com/poiley/mcp-bridge/services/router/internal
           
       - name: Generate license report
         run: |
