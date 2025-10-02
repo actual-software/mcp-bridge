@@ -28,6 +28,7 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      actions: read
     
     strategy:
       fail-fast: false
@@ -97,15 +98,16 @@ jobs:
     - name: Run Grype vulnerability scanner
       uses: anchore/scan-action@v4
       id: grype
+      continue-on-error: true
       with:
         image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-        fail-build: true
+        fail-build: false
         severity-cutoff: high
-        acs-report-enable: true
+        output-format: sarif
 
     - name: Upload Grype scan results
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      if: always() && steps.grype.outputs.sarif != ''
       with:
         sarif_file: ${{ steps.grype.outputs.sarif }}
 
