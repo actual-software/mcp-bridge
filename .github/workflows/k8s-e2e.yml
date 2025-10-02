@@ -8,16 +8,16 @@ on:
     branches: [ main, develop ]
     paths:
       - 'services/**'
-      - 'deployments/kubernetes/**'
-      - 'helm/**'
+      - 'deployment/kubernetes/**'
+      - 'deployment/helm/**'
       - 'test/e2e/k8s/**'
       - '.github/workflows/k8s-e2e.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'services/**'
-      - 'deployments/kubernetes/**'
-      - 'helm/**'
+      - 'deployment/kubernetes/**'
+      - 'deployment/helm/**'
       - 'test/e2e/k8s/**'
   schedule:
     # Run daily at 2 AM UTC
