@@ -23,10 +23,10 @@ git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 
 # Install with default values
-helm install mcp-bridge ./helm/mcp-bridge
+helm install mcp-bridge ./deployment/helm/mcp-bridge
 
 # Or install with custom release name
-helm install my-mcp-bridge ./helm/mcp-bridge
+helm install my-mcp-bridge ./deployment/helm/mcp-bridge
 ```
 
 ### **Verify Installation**
@@ -86,7 +86,7 @@ helm/mcp-bridge/
 
 ```bash
 # Install with custom values
-helm install mcp-bridge ./helm/mcp-bridge \
+helm install mcp-bridge ./deployment/helm/mcp-bridge \
   --set gateway.replicaCount=3 \
   --set router.resources.limits.memory=512Mi \
   --set redis.auth.password=mypassword
@@ -96,7 +96,7 @@ helm install mcp-bridge ./helm/mcp-bridge \
 
 ```bash
 # Install with production values
-helm install mcp-bridge ./helm/mcp-bridge \
+helm install mcp-bridge ./deployment/helm/mcp-bridge \
   -f helm/mcp-bridge/values-production.yaml \
   --set gateway.ingress.hosts[0].host=mcp.your-domain.com
 ```
@@ -105,7 +105,7 @@ helm install mcp-bridge ./helm/mcp-bridge \
 
 ```bash
 # Install with development values
-helm install mcp-bridge ./helm/mcp-bridge \
+helm install mcp-bridge ./deployment/helm/mcp-bridge \
   -f helm/mcp-bridge/values-development.yaml
 ```
 
@@ -144,7 +144,7 @@ redis:
 ```
 
 ```bash
-helm install mcp-bridge ./helm/mcp-bridge -f custom-values.yaml
+helm install mcp-bridge ./deployment/helm/mcp-bridge -f custom-values.yaml
 ```
 
 ## 🔧 **Key Configuration Parameters**
@@ -199,7 +199,7 @@ helm install mcp-bridge ./helm/mcp-bridge -f custom-values.yaml
 
 ```bash
 # Minimal resources, debug logging, no persistence
-helm install mcp-dev ./helm/mcp-bridge \
+helm install mcp-dev ./deployment/helm/mcp-bridge \
   -f helm/mcp-bridge/values-development.yaml \
   --namespace mcp-dev \
   --create-namespace
@@ -216,7 +216,7 @@ helm install mcp-dev ./helm/mcp-bridge \
 
 ```bash
 # Production-like with reduced resources
-helm install mcp-staging ./helm/mcp-bridge \
+helm install mcp-staging ./deployment/helm/mcp-bridge \
   --set gateway.replicaCount=2 \
   --set router.replicaCount=1 \
   --set redis.master.persistence.size=10Gi \
@@ -230,7 +230,7 @@ helm install mcp-staging ./helm/mcp-bridge \
 
 ```bash
 # High availability, monitoring, security
-helm install mcp-prod ./helm/mcp-bridge \
+helm install mcp-prod ./deployment/helm/mcp-bridge \
   -f helm/mcp-bridge/values-production.yaml \
   --set gateway.ingress.hosts[0].host=mcp.company.com \
   --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
@@ -244,7 +244,7 @@ helm install mcp-prod ./helm/mcp-bridge \
 ```bash
 # Deploy to multiple namespaces
 for env in dev staging prod; do
-  helm install mcp-$env ./helm/mcp-bridge \
+  helm install mcp-$env ./deployment/helm/mcp-bridge \
     -f helm/mcp-bridge/values-$env.yaml \
     --namespace mcp-$env \
     --create-namespace
@@ -257,10 +257,10 @@ done
 
 ```bash
 # Upgrade to new version
-helm upgrade mcp-bridge ./helm/mcp-bridge
+helm upgrade mcp-bridge ./deployment/helm/mcp-bridge
 
 # Upgrade with new values
-helm upgrade mcp-bridge ./helm/mcp-bridge \
+helm upgrade mcp-bridge ./deployment/helm/mcp-bridge \
   -f new-values.yaml
 
 # Rollback if needed
@@ -274,7 +274,7 @@ helm rollback mcp-bridge 1
 kubectl scale deployment mcp-bridge-gateway --replicas=5
 
 # Or update Helm values
-helm upgrade mcp-bridge ./helm/mcp-bridge \
+helm upgrade mcp-bridge ./deployment/helm/mcp-bridge \
   --set gateway.replicaCount=5
 ```
 
@@ -336,7 +336,7 @@ EOF
 
 ```bash
 # Use external secret management
-helm install mcp-bridge ./helm/mcp-bridge \
+helm install mcp-bridge ./deployment/helm/mcp-bridge \
   --set secrets.create=false \
   --set tls.create=false
 
@@ -354,7 +354,7 @@ kubectl create secret tls mcp-bridge-tls \
 
 ```bash
 # Enable network policies
-helm upgrade mcp-bridge ./helm/mcp-bridge \
+helm upgrade mcp-bridge ./deployment/helm/mcp-bridge \
   --set networkPolicy.enabled=true
 ```
 
@@ -373,7 +373,7 @@ kubectl create secret docker-registry regcred \
   --docker-username=your-username \
   --docker-password=your-token
 
-helm upgrade mcp-bridge ./helm/mcp-bridge \
+helm upgrade mcp-bridge ./deployment/helm/mcp-bridge \
   --set global.imagePullSecrets[0].name=regcred
 ```
 
@@ -404,7 +404,7 @@ wget -O- http://mcp-bridge-gateway:8443/health
 
 ```bash
 # Enable debug logging
-helm upgrade mcp-bridge ./helm/mcp-bridge \
+helm upgrade mcp-bridge ./deployment/helm/mcp-bridge \
   --set gateway.env.MCP_LOG_LEVEL=debug \
   --set router.env.MCP_LOG_LEVEL=debug
 ```
@@ -417,7 +417,7 @@ kubectl top pods -l app.kubernetes.io/name=mcp-bridge
 kubectl describe nodes
 
 # Adjust resource limits
-helm upgrade mcp-bridge ./helm/mcp-bridge \
+helm upgrade mcp-bridge ./deployment/helm/mcp-bridge \
   --set gateway.resources.limits.memory=1Gi \
   --set gateway.resources.limits.cpu=2000m
 ```
@@ -428,7 +428,7 @@ helm upgrade mcp-bridge ./helm/mcp-bridge \
 
 ```bash
 # Deploy with Prometheus
-helm install mcp-bridge ./helm/mcp-bridge \
+helm install mcp-bridge ./deployment/helm/mcp-bridge \
   --set prometheus.enabled=true \
   --set serviceMonitor.enabled=true
 ```
@@ -437,7 +437,7 @@ helm install mcp-bridge ./helm/mcp-bridge \
 
 ```bash
 # Deploy with Grafana
-helm install mcp-bridge ./helm/mcp-bridge \
+helm install mcp-bridge ./deployment/helm/mcp-bridge \
   --set grafana.enabled=true \
   --set grafana.adminPassword=admin123
 ```
@@ -496,7 +496,7 @@ spec:
 deploy:
   stage: deploy
   script:
-    - helm upgrade --install mcp-bridge ./helm/mcp-bridge
+    - helm upgrade --install mcp-bridge ./deployment/helm/mcp-bridge
         -f helm/mcp-bridge/values-production.yaml
         --namespace mcp-production
         --create-namespace
@@ -519,7 +519,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Deploy with Helm
       run: |
-        helm upgrade --install mcp-bridge ./helm/mcp-bridge \
+        helm upgrade --install mcp-bridge ./deployment/helm/mcp-bridge \
           -f helm/mcp-bridge/values-production.yaml \
           --namespace mcp-production \
           --create-namespace
@@ -532,9 +532,9 @@ jobs:
 ```bash
 # Chart management
 helm create my-chart
-helm lint ./helm/mcp-bridge
-helm template mcp-bridge ./helm/mcp-bridge
-helm package ./helm/mcp-bridge
+helm lint ./deployment/helm/mcp-bridge
+helm template mcp-bridge ./deployment/helm/mcp-bridge
+helm package ./deployment/helm/mcp-bridge
 
 # Release management
 helm list

@@ -544,7 +544,7 @@ groups:
 
 ## Grafana Dashboards
 
-Pre-built Grafana dashboards are available in `/deployments/kubernetes/monitoring/grafana/dashboards/`:
+Pre-built Grafana dashboards are available in `/deployment/monitoring/grafana/dashboards/`:
 
 - **Gateway Overview**: Connection count, request rate, latency, error rate
 - **Gateway Performance**: Detailed latency percentiles, throughput analysis
