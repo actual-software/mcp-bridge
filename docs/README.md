@@ -6,13 +6,20 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 
 ### **🚀 Getting Started**
 - [Quick Start Guide](../README.md#quick-start) - Get MCP Bridge running in minutes
-- [Installation Guide](../scripts/install.sh) - Production installation scripts
-- [Configuration Guide](configuration.md) - Complete configuration reference
+- [Quick Start Documentation](QUICKSTART.md) - Detailed quickstart guide with automated setup
+- [Installation & Setup Guide](installation-and-setup.md) - Complete installation documentation
+- [Usage Guide](USAGE.md) - How to use MCP Bridge effectively
+- [Configuration Reference](configuration.md) - Complete configuration reference
+
+### **📖 Integration Guides**
+- [Client Integration Guide](client-integration.md) - Build clients that connect to MCP Bridge
+- [Server Integration Guide](server-integration.md) - Add MCP servers to the gateway
+- [Tutorials](tutorials/) - Step-by-step walkthroughs
 
 ### **🏗️ Architecture & Design**
-<!-- TODO: Create architecture.md - System design and components documentation -->
 - [Security Architecture](SECURITY.md) - Security model and threat analysis
 - [Protocol Implementation](protocol.md) - MCP protocol details
+- [API Documentation](api.md) - Complete API reference
 - [OWASP Security](OWASP_SECURITY.md) - OWASP security scanning and compliance
 - [Threat Model](THREAT_MODEL.md) - STRIDE threat analysis
 - [Incident Response](SECURITY_INCIDENT_RESPONSE.md) - Security incident procedures
@@ -20,10 +27,9 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 ### **🚀 Deployment Guides**
 - [Docker Deployment](deployment/docker.md) - Container-based deployment with Docker Compose
 - [Helm Deployment](deployment/helm.md) - Kubernetes deployment with Helm charts
-- [Kubernetes Deployment](../deployment/kubernetes/README.md) - Native Kubernetes manifests
-<!-- TODO: Create this documentation
-- [Installation Validation](../test/installation/validation-summary.md) - Automated installation testing
--->
+- [Kubernetes Deployment](../deployment/kubernetes/README.md) - Native Kubernetes manifests with detailed examples
+- [Production Deployment](deployment/production.md) - Production deployment guide
+- [High Availability Setup](deployment/high-availability.md) - HA configuration
 
 ### **⚙️ Operations**
 - [Monitoring Guide](monitoring.md) - Prometheus, Grafana, and alerting

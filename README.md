@@ -231,8 +231,12 @@ docker-compose up -d
 
 ### **Core Documentation**
 - [**📖 Documentation Index**](docs/README.md) - Complete documentation navigation
+- [**📘 Usage Guide**](docs/USAGE.md) - How to use MCP Bridge
+- [**🔌 Client Integration**](docs/client-integration.md) - Build clients for MCP Bridge
+- [**🔧 Server Integration**](docs/server-integration.md) - Add MCP servers to the gateway
+- [**⚙️ Configuration Reference**](docs/configuration.md) - All configuration options
+- [**📚 Tutorials**](docs/tutorials/) - Step-by-step guides
 - [**🏗️ Service Documentation**](services/) - Gateway and Router architecture and design
-- [**🔒 Security Implementation**](docs/SECURITY_IMPLEMENTATION_SUMMARY.md) - Enterprise security overview
 - [**🧪 Testing Guide**](TESTING.md) - Comprehensive testing documentation
 - [**🚀 Production Readiness**](docs/PRODUCTION_READINESS.md) - Production deployment checklist
 
@@ -245,8 +249,8 @@ docker-compose up -d
 ### **Deployment Guides**
 - [**🐳 Docker Deployment**](docs/deployment/docker.md) - Container deployment with Docker Compose
 - [**⎈ Helm Deployment**](docs/deployment/helm.md) - Kubernetes deployment with Helm charts
-- [**☸️ Kubernetes Deployment**](deployments/kubernetes/README.md) - Native K8s manifests
-- [**✅ Installation Validation**](test/installation/validation-summary.md) - Automated testing
+- [**☸️ Kubernetes Deployment**](deployment/kubernetes/README.md) - Complete K8s guide with examples
+- [**🚀 Production Deployment**](docs/deployment/production.md) - Production-ready deployment
 
 ### **Operations & Monitoring**
 - [**📊 Configuration Reference**](docs/configuration.md) - All configuration options

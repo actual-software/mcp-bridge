@@ -26,11 +26,68 @@ The router looks for configuration in the following order:
 # Configuration version (required)
 version: 1
 
-# Gateway connection settings
+# Gateway Pool configuration (multi-gateway support)
+gateway_pool:
+  # List of gateway endpoints
+  endpoints:
+    - url: string              # Gateway URL (wss://, ws://, tcp://)
+      weight: integer         # Load balancing weight (default: 1)
+      priority: integer       # Priority for failover (default: 0)
+      tags: [string]         # Tags for namespace routing
+
+      # Per-endpoint authentication
+      auth:
+        type: string          # Options: bearer, oauth2, mtls
+        token_env: string     # Environment variable for bearer token
+        # ... (see auth section below)
+
+      # Per-endpoint connection settings
+      connection:
+        timeout_ms: integer
+        # ... (see connection section below)
+
+      # Per-endpoint TLS
+      tls:
+        # ... (see TLS section below)
+
+  # Load balancing configuration
+  load_balancer:
+    strategy: string          # Options: round_robin, least_connections, weighted, priority
+    health_check_path: string # Optional health check endpoint
+    failover_timeout: duration # Default: 30s
+    retry_count: integer      # Default: 3
+
+  # Service discovery for gateways
+  service_discovery:
+    enabled: boolean          # Default: false
+    refresh_interval: duration # Default: 30s
+    health_check_interval: duration # Default: 10s
+    unhealthy_threshold: integer # Default: 3
+    healthy_threshold: integer # Default: 2
+
+  # Circuit breaker for gateway connections
+  circuit_breaker:
+    enabled: boolean          # Default: false
+    failure_threshold: integer # Default: 5
+    recovery_timeout: duration # Default: 30s
+    success_threshold: integer # Default: 3
+    timeout_duration: duration # Default: 10s
+    monitoring_window: duration # Default: 60s
+
+  # Namespace-based routing
+  namespace_routing:
+    enabled: boolean          # Default: false
+    rules:
+      - pattern: string       # Regex pattern for method matching
+        tags: [string]       # Route to endpoints with these tags
+        priority: integer    # Rule priority (higher = first)
+        description: string
+
+# Legacy single gateway configuration (deprecated, use gateway_pool)
 gateway:
   # Gateway URL (required)
   url: string  # Format: wss://host:port, ws://host:port, tcp://host:port
-  
+
   # Authentication configuration
   auth:
     # Authentication type
@@ -87,13 +144,55 @@ gateway:
     min_version: string        # Options: "1.2", "1.3" (default: "1.3")
     cipher_suites: [string]    # Allowed cipher suites
 
+# Direct server connections (bypass gateway)
+direct:
+  # Auto-detection settings
+  auto_detection:
+    enabled: boolean           # Default: true
+    timeout: duration         # Default: 10s
+    cache_results: boolean    # Default: true
+    cache_ttl: duration      # Default: 5m
+    preferred_order: [string] # Default: ["http", "websocket", "stdio", "sse"]
+
+  # Global settings
+  default_timeout: duration    # Default: 30s
+  max_connections: integer    # Default: 100
+
+  # Health check configuration
+  health_check:
+    enabled: boolean          # Default: true
+    interval: duration       # Default: 30s
+    timeout: duration        # Default: 5s
+
+  # Protocol-specific settings
+  stdio:
+    process_timeout: duration     # Default: 30s
+    max_buffer_size: integer     # Default: 65536
+
+  websocket:
+    handshake_timeout: duration  # Default: 10s
+    ping_interval: duration     # Default: 30s
+    pong_timeout: duration      # Default: 10s
+    max_message_size: integer   # Default: 10485760
+
+  http:
+    request_timeout: duration    # Default: 30s
+    max_idle_conns: integer     # Default: 100
+    follow_redirects: boolean   # Default: true
+
+  sse:
+    request_timeout: duration    # Default: 30s
+    stream_timeout: duration    # Default: 300s
+    buffer_size: integer        # Default: 65536
+
 # Local router settings
 local:
   read_buffer_size: integer     # Default: 65536
   write_buffer_size: integer    # Default: 65536
   request_timeout_ms: integer   # Default: 30000
   max_concurrent_requests: integer # Default: 100
-  
+  max_queued_requests: integer  # Default: 1000
+
   # Rate limiting
   rate_limit:
     enabled: boolean           # Default: false
@@ -183,10 +282,11 @@ version: 1
 server:
   host: string                   # Default: "0.0.0.0"
   port: integer                  # Default: 8443
-  protocol: string               # Options: websocket, tcp, both
+  protocol: string               # Deprecated: use frontends. Options: websocket, tcp, both
   tcp_port: integer             # Default: 8444
   tcp_health_port: integer      # Default: 9002
   metrics_port: integer         # Default: 9090
+  health_port: integer          # HTTP health check port
   max_connections: integer      # Default: 10000
   max_connections_per_ip: integer # Default: 100
   connection_buffer_size: integer # Default: 65536
@@ -194,13 +294,45 @@ server:
   write_timeout: integer        # Seconds, default: 300
   idle_timeout: integer         # Seconds, default: 300
   allowed_origins: [string]     # CORS origins for WebSocket
-  
+
+  # Multi-frontend configuration (recommended)
+  frontends:
+    - name: string              # Frontend name
+      protocol: string          # Options: websocket, http, sse, tcp_binary, stdio
+      enabled: boolean          # Default: true
+      config:                   # Protocol-specific config (map)
+        # For WebSocket/HTTP/SSE:
+        host: string           # Listen host
+        port: integer          # Listen port
+        tls:
+          enabled: boolean
+          cert_file: string
+          key_file: string
+
+        # For stdio:
+        mode: string           # Options: unix_socket, stdin_stdout, named_pipes
+        socket_path: string    # For unix_socket mode
+        permissions: string    # Unix permissions (e.g., "0600")
+
+  # stdio frontend configuration (alternative to frontends)
+  stdio_frontend:
+    enabled: boolean
+    modes:
+      - type: string           # Options: unix_socket, stdin_stdout, named_pipes
+        path: string           # Socket path or pipe name
+        permissions: string    # Unix socket permissions
+        enabled: boolean
+    process_management:
+      max_concurrent_clients: integer
+      client_timeout: duration
+      auth_required: boolean
+
   # Security settings
   security:
     max_request_size: integer   # Max HTTP request size in bytes (default: 1MB)
     max_header_size: integer    # Max HTTP header size in bytes (default: 1MB)
     max_message_size: integer   # Max WebSocket message size (default: 10MB)
-  
+
   # TLS configuration
   tls:
     enabled: boolean            # Default: false
@@ -211,12 +343,46 @@ server:
     min_version: string        # Options: "1.2", "1.3". Default: "1.3" (recommended)
     cipher_suites: [string]    # Allowed cipher suites
 
+# Backend configuration (alternative to service_discovery)
+backends:
+  backends:
+    - name: string              # Backend name
+      protocol: string          # Options: stdio, websocket, http, sse
+      config:                   # Protocol-specific config (map)
+        # For stdio:
+        command: [string]      # Command and arguments
+        working_dir: string    # Working directory
+        env:                  # Environment variables
+          key: value
+        health_check:
+          enabled: boolean
+          interval: duration
+          timeout: duration
+
+        # For WebSocket:
+        endpoints: [string]    # WebSocket URLs
+        connection_pool:
+          max_size: integer
+          idle_timeout: duration
+        headers:
+          key: value
+
+        # For HTTP:
+        base_url: string       # Base URL
+        request_timeout: duration
+        max_retries: integer
+
+        # For SSE:
+        base_url: string
+        stream_endpoint: string
+        request_endpoint: string
+
 # Authentication configuration
 auth:
   type: string                  # Options: bearer, oauth2, jwt
   provider: string             # Alias for type
   per_message_auth: boolean    # Default: false
-  per_message_cache: integer   # Cache duration in seconds
+  per_message_auth_cache: integer   # Cache duration in seconds
   
   # JWT configuration (when type: jwt)
   jwt:
@@ -278,11 +444,14 @@ circuit_breaker:
   success_ratio: float       # Default: 0.6
 
 # Service discovery
-discovery:
-  provider: string            # Options: static, kubernetes, consul
+service_discovery:
+  provider: string            # Options: static, kubernetes, stdio, websocket, sse
   mode: string               # Alias for provider
   refresh_rate: duration     # Default: 30s
-  
+  namespace_selector: [string] # Filter by namespaces
+  label_selector:           # Filter by labels
+    key: value
+
   # Static discovery
   static:
     endpoints:
@@ -290,7 +459,7 @@ discovery:
         - url: string
           labels:
             key: value
-  
+
   # Kubernetes discovery
   kubernetes:
     in_cluster: boolean      # Default: true
@@ -298,13 +467,65 @@ discovery:
     namespace_pattern: string # Regex pattern
     service_labels:         # Required labels
       key: value
-  
-  # Consul discovery
-  consul:
-    address: string
-    token: string
-    datacenter: string
-    service_prefix: string
+
+  # stdio (subprocess) discovery
+  stdio:
+    services:
+      - name: string          # Service name
+        namespace: string     # Service namespace
+        command: [string]     # Command and arguments
+        working_dir: string   # Working directory
+        env:                 # Environment variables
+          key: value
+        weight: integer      # Load balancing weight
+        metadata:           # Custom metadata
+          key: value
+        health_check:
+          enabled: boolean   # Default: true
+          interval: duration # Default: 30s
+          timeout: duration  # Default: 5s
+
+  # WebSocket discovery
+  websocket:
+    services:
+      - name: string          # Service name
+        namespace: string     # Service namespace
+        endpoints: [string]   # WebSocket URLs
+        headers:             # Custom headers
+          key: value
+        weight: integer      # Load balancing weight
+        metadata:           # Custom metadata
+          key: value
+        health_check:
+          enabled: boolean   # Default: true
+          interval: duration # Default: 30s
+          timeout: duration  # Default: 5s
+        tls:
+          enabled: boolean
+          insecure_skip_verify: boolean
+          cert_file: string
+          key_file: string
+          ca_file: string
+        origin: string        # WebSocket origin header
+
+  # SSE (Server-Sent Events) discovery
+  sse:
+    services:
+      - name: string          # Service name
+        namespace: string     # Service namespace
+        base_url: string      # Base URL
+        stream_endpoint: string # SSE stream path
+        request_endpoint: string # Request path
+        headers:             # Custom headers
+          key: value
+        weight: integer      # Load balancing weight
+        metadata:           # Custom metadata
+          key: value
+        health_check:
+          enabled: boolean   # Default: true
+          interval: duration # Default: 30s
+          timeout: duration  # Default: 5s
+        timeout: duration     # Default: 300s
 
 # Routing configuration
 routing:
