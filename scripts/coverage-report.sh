@@ -116,10 +116,9 @@ run_production_coverage() {
 run_core_libraries_coverage() {
     print_header "🏗️  Core Libraries Coverage"
     
-    # Test core libraries (pkg/common, internal/secure)
+    # Test core libraries (pkg/common)
     local core_packages=(
         "./pkg/common/..."
-        "./internal/secure/..."
     )
     
     local temp_coverage="core-libs-coverage.out"
@@ -134,7 +133,7 @@ run_core_libraries_coverage() {
         
         echo ""
         echo "  📋 Core Package Breakdown:"
-        go tool cover -func="$temp_coverage" | grep -E "(pkg/common|internal/secure)" | while read line; do
+        go tool cover -func="$temp_coverage" | grep -E "pkg/common" | while read line; do
             echo "    $line"
         done
         

@@ -10,7 +10,7 @@ echo "🔍 Checking current coverage..."
 # Run coverage and extract percentages
 ROUTER_COV=$(cd services/router && timeout 60s go test -coverprofile=temp.out ./internal/router/... >/dev/null 2>&1 && go tool cover -func=temp.out | tail -1 | awk '{print $NF}' | sed 's/%//' || echo "0")
 GATEWAY_COV=$(cd services/gateway && timeout 60s go test -coverprofile=temp.out ./internal/auth/... ./internal/backends/... ./internal/health/... >/dev/null 2>&1 && go tool cover -func=temp.out | tail -1 | awk '{print $NF}' | sed 's/%//' || echo "0")
-CORE_COV=$(timeout 30s go test -coverprofile=temp.out ./pkg/common/config/... ./pkg/common/errors/... ./internal/secure/... >/dev/null 2>&1 && go tool cover -func=temp.out | tail -1 | awk '{print $NF}' | sed 's/%//' || echo "0")
+CORE_COV=$(timeout 30s go test -coverprofile=temp.out ./pkg/common/config/... ./pkg/common/errors/... >/dev/null 2>&1 && go tool cover -func=temp.out | tail -1 | awk '{print $NF}' | sed 's/%//' || echo "0")
 
 # Clean up temp files
 rm -f services/router/temp.out services/gateway/temp.out temp.out

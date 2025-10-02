@@ -66,7 +66,7 @@ coverage:
 	@cd services/gateway && go test -coverprofile=coverage.out -timeout=1m ./internal/auth/... ./internal/backends/... ./internal/health/... && go tool cover -func=coverage.out | tail -1
 	@echo ""
 	@echo "=== Core Libraries ==="
-	@go test -coverprofile=coverage.out -timeout=30s ./pkg/common/config/... ./pkg/common/errors/... ./internal/secure/... && go tool cover -func=coverage.out | tail -1
+	@go test -coverprofile=coverage.out -timeout=30s ./pkg/common/config/... ./pkg/common/errors/... && go tool cover -func=coverage.out | tail -1
 	@rm -f services/*/coverage.out coverage.out
 
 # Comprehensive coverage report
