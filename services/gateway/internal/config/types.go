@@ -23,24 +23,24 @@ type Config struct {
 
 // ServerConfig represents the HTTP server configuration.
 type ServerConfig struct {
-	Host                 string                `mapstructure:"host"`
-	Port                 int                   `mapstructure:"port"`
-	TCPPort              int                   `mapstructure:"tcp_port"`
-	TCPHealthPort        int                   `mapstructure:"tcp_health_port"`
-	MetricsPort          int                   `mapstructure:"metrics_port"`
-	HealthPort           int                   `mapstructure:"health_port"`
-	MaxConnections       int                   `mapstructure:"max_connections"`
-	MaxConnectionsPerIP  int                   `mapstructure:"max_connections_per_ip"`
-	ConnectionBufferSize int                   `mapstructure:"connection_buffer_size"`
-	ReadTimeout          int                   `mapstructure:"read_timeout"`
-	WriteTimeout         int                   `mapstructure:"write_timeout"`
-	IdleTimeout          int                   `mapstructure:"idle_timeout"`
+	Host                 string `mapstructure:"host"`
+	Port                 int    `mapstructure:"port"`
+	TCPPort              int    `mapstructure:"tcp_port"`
+	TCPHealthPort        int    `mapstructure:"tcp_health_port"`
+	MetricsPort          int    `mapstructure:"metrics_port"`
+	HealthPort           int    `mapstructure:"health_port"`
+	MaxConnections       int    `mapstructure:"max_connections"`
+	MaxConnectionsPerIP  int    `mapstructure:"max_connections_per_ip"`
+	ConnectionBufferSize int    `mapstructure:"connection_buffer_size"`
+	ReadTimeout          int    `mapstructure:"read_timeout"`
+	WriteTimeout         int    `mapstructure:"write_timeout"`
+	IdleTimeout          int    `mapstructure:"idle_timeout"`
 	// Protocol specifies legacy protocol config (deprecated, use Frontends)
-	Protocol string `mapstructure:"protocol"`
-	AllowedOrigins       []string              `mapstructure:"allowed_origins"`
-	TLS                  TLSConfig             `mapstructure:"tls"`
-	StdioFrontend        StdioFrontendConfig   `mapstructure:"stdio_frontend"`
-	Frontends            []FrontendConfigEntry `mapstructure:"frontends"`
+	Protocol       string                `mapstructure:"protocol"`
+	AllowedOrigins []string              `mapstructure:"allowed_origins"`
+	TLS            TLSConfig             `mapstructure:"tls"`
+	StdioFrontend  StdioFrontendConfig   `mapstructure:"stdio_frontend"`
+	Frontends      []FrontendConfigEntry `mapstructure:"frontends"`
 }
 
 // FrontendConfigEntry represents a single frontend configuration entry.

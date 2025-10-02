@@ -17,7 +17,7 @@ services:
   # Gateway service
   gateway:
     build:
-      context: .
+      context: ..
       dockerfile: services/gateway/Dockerfile
     ports:
       - "18080:8080"
@@ -38,14 +38,14 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./configs/test/gateway.yaml:/etc/mcp-gateway/gateway.yaml:ro
+      - ../configs/test/gateway.yaml:/etc/mcp-gateway/gateway.yaml:ro
     networks:
       - test-network
 
   # Router service
   router:
     build:
-      context: .
+      context: ..
       dockerfile: services/router/Dockerfile
     ports:
       - "18081:8081"
@@ -64,14 +64,14 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./configs/test/router.yaml:/etc/mcp-router/router.yaml:ro
+      - ../configs/test/router.yaml:/etc/mcp-router/router.yaml:ro
     networks:
       - test-network
 
   # Test runner container
   test-runner:
     build:
-      context: .
+      context: ..
       dockerfile: test/Dockerfile
     environment:
       - MCP_BASE_URL=http://gateway:8080
@@ -87,8 +87,8 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./test:/test
-      - ./reports:/reports
+      - .:/test
+      - ../reports:/reports
     networks:
       - test-network
     command: ["/test/run-tests.sh", "-l", "${TEST_LEVEL:-standard}", "-t", "${TEST_TYPE:-all}"]

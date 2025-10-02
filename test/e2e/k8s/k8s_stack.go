@@ -554,7 +554,7 @@ func (ks *KubernetesStack) verifyKubernetesContext(ctx context.Context) error {
 		// No current context is fine - we'll create our own
 		ks.logger.Info("No current kubectl context set, safe to proceed")
 
-		return err
+		return nil
 	}
 
 	contextStr := strings.TrimSpace(string(currentContext))
