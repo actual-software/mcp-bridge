@@ -72,7 +72,6 @@ jobs:
       with:
         go-version: ${{ env.GO_VERSION }}
         cache: true
-        cache-dependency-path: test/e2e/k8s/go.sum
 
     - name: Cache Docker layers
       uses: actions/cache@v4
