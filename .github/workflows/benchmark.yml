@@ -89,7 +89,8 @@ jobs:
         tool: 'go'
         output-file-path: new-benchmarks.txt
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        auto-push: true
+        auto-push: false
+        save-data-file: true
         
     - name: Comment PR with results
       if: github.event_name == 'pull_request'
