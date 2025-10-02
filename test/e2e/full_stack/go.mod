@@ -1,8 +1,8 @@
 module e2e-test
 
-go 1.23.0
+go 1.24
 
-toolchain go1.24.5
+toolchain go1.24.6
 
 require (
 	github.com/go-redis/redis/v8 v8.11.5

@@ -1,8 +1,8 @@
 module k8s-e2e-test
 
-go 1.23.0
+go 1.24
 
-toolchain go1.24.5
+toolchain go1.24.6
 
 require (
 	github.com/actual-software/mcp-bridge v0.0.0
