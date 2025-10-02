@@ -219,7 +219,7 @@ func TestWebSocketConnection(t *testing.T) {
 	defer ts.cleanup()
 
 	ws := connectToWebSocket(t, ts.url)
-	defer ws.Close()
+	defer func() { _ = ws.Close() }()
 
 	sendWebSocketRequest(t, ws)
 	response := receiveWebSocketResponse(t, ws, &requestReceived)
@@ -274,7 +274,7 @@ func connectToWebSocket(t *testing.T, url string) *websocket.Conn {
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	t.Log("Connected successfully")

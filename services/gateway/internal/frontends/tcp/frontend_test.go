@@ -219,7 +219,7 @@ func TestTCPConnection(t *testing.T) {
 	defer ts.cleanup()
 
 	conn := connectToTCPServer(t, ts.addr)
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	sendTCPRequest(t, conn)
 	resp := receiveTCPResponse(t, conn, &requestReceived)

@@ -213,7 +213,7 @@ func TestSSEStreamConnection(t *testing.T) {
 	defer ts.cleanup()
 
 	resp := connectToSSEStream(t, ts.url+"/events")
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	verifySSEStreamHeaders(t, resp)
 	verifySSEStreamData(t, resp)
@@ -317,7 +317,7 @@ func TestSSERequestEndpoint(t *testing.T) {
 	defer ts.cleanup()
 
 	streamResp := establishSSEStream(t, ts.url+"/events", responseChan)
-	defer streamResp.Body.Close()
+	defer func() { _ = streamResp.Body.Close() }()
 
 	sendSSERequest(t, ts.url+"/api/v1/request")
 	verifySSERequestReceived(t, requestChan, responseChan)
@@ -423,7 +423,7 @@ func sendSSERequest(t *testing.T, url string) {
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusAccepted {
 		body, _ := io.ReadAll(resp.Body)

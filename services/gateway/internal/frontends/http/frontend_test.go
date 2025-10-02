@@ -209,13 +209,13 @@ func TestHTTPRequest(t *testing.T) {
 
 	body := createTestWireMessage(t)
 	resp := sendHTTPRequest(t, ts.url+"/api/v1/mcp", body)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	verifyHTTPResponse(t, resp, &requestReceived)
 	verifyHTTPMetrics(t, ts.frontend)
 }
 
-func setupHTTPTestWithMocks(t *testing.T, requestReceived *bool) *httpTestServer {
+func setupHTTPTestWithMocks(t *testing.T, requestReceived *bool) *testServer {
 	t.Helper()
 
 	router := &mockRouter{
