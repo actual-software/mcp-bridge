@@ -81,16 +81,17 @@ jobs:
           comparison.txt
           cpu.prof
           
-    - name: Store benchmark result
-      if: github.ref == 'refs/heads/main'
-      uses: benchmark-action/github-action-benchmark@v1
-      with:
-        name: MCP Bridge Benchmarks
-        tool: 'go'
-        output-file-path: new-benchmarks.txt
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        auto-push: false
-        save-data-file: true
+    # Benchmark storage disabled - enable when gh-pages branch is ready
+    # - name: Store benchmark result
+    #   if: github.ref == 'refs/heads/main'
+    #   uses: benchmark-action/github-action-benchmark@v1
+    #   with:
+    #     name: MCP Bridge Benchmarks
+    #     tool: 'go'
+    #     output-file-path: new-benchmarks.txt
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     auto-push: false
+    #     save-data-file: true
         
     - name: Comment PR with results
       if: github.event_name == 'pull_request'
