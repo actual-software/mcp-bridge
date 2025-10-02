@@ -11,7 +11,6 @@ on:
   workflow_dispatch:
 
 env:
-  GO_VERSION: "1.25"
   SECURITY_REPORT_PATH: security-reports
 
 permissions:
@@ -20,6 +19,9 @@ permissions:
   actions: read
 
 jobs:
+  go-version:
+    uses: ./.github/workflows/_go-version.yml
+
   prepare:
     name: Prepare Security Scan
     runs-on: ubuntu-latest
@@ -44,12 +46,12 @@ jobs:
   sast-scan:
     name: Static Application Security Testing
     runs-on: ubuntu-latest
-    needs: prepare
+    needs: [go-version, prepare]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ needs.go-version.outputs.go-version }}
 
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
@@ -236,12 +238,12 @@ jobs:
   supply-chain-scan:
     name: Supply Chain Security
     runs-on: ubuntu-latest
-    needs: prepare
+    needs: [go-version, prepare]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ needs.go-version.outputs.go-version }}
           
       - name: Generate and scan SBOM
         run: |
