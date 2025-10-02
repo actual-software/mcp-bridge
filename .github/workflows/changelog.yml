@@ -31,7 +31,7 @@ jobs:
       - name: Validate commits
         uses: wagoid/commitlint-github-action@v5
         with:
-          configFile: .commitlintrc.json
+          configFile: .config/commitlintrc.json
           
       - name: Check for breaking changes
         run: |

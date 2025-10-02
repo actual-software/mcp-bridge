@@ -39,6 +39,9 @@
       "@commitlint/config-conventional"
     ]
   },
+  "config": {
+    "commitlint": ".config/commitlintrc.json"
+  },
   "standard-version": {
     "types": [
       {
