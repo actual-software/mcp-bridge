@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	testIterations        = 100
-	testMaxIterations     = 250
-	stressTestNumTokens   = 50  // Number of tokens for stress test
-	stressTestMaxTokens   = 100 // Maximum tokens for extended stress testing
+	testIterations      = 100
+	testMaxIterations   = 250
+	stressTestNumTokens = 50  // Number of tokens for stress test
+	stressTestMaxTokens = 100 // Maximum tokens for extended stress testing
 )
 
 func TestCredentialStore_SecurityBoundaries(t *testing.T) {
