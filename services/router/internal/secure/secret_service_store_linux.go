@@ -97,7 +97,7 @@ func (s *secretServiceStore) List() ([]string, error) {
 	serviceName := s.serviceName()
 
 	// #nosec G204 -- secret-tool is a system command, service name is from controlled source
-	cmd := exec.Command("secret-tool", "search",
+	cmd := exec.CommandContext(context.Background(), "secret-tool", "search",
 		"service", serviceName)
 
 	output, err := cmd.Output()
