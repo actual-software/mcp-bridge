@@ -214,11 +214,26 @@ func TestTCPFrontendStartStop(t *testing.T) {
 }
 
 func TestTCPConnection(t *testing.T) {
-	requestReceived := false
+	var requestReceived bool
+	ts := setupTCPTestWithMocks(t, &requestReceived)
+	defer ts.cleanup()
+
+	conn := connectToTCPServer(t, ts.addr)
+	defer conn.Close()
+
+	sendTCPRequest(t, conn)
+	resp := receiveTCPResponse(t, conn, &requestReceived)
+	verifyTCPResponse(t, resp)
+	verifyTCPMetrics(t, ts.frontend)
+}
+
+func setupTCPTestWithMocks(t *testing.T, requestReceived *bool) *testServer {
+	t.Helper()
+
 	router := &mockRouter{
 		requestHandler: func(ctx context.Context, req *mcp.Request, namespace string) (*mcp.Response, error) {
 			t.Logf("Router received request: method=%s, id=%v", req.Method, req.ID)
-			requestReceived = true
+			*requestReceived = true
 			return &mcp.Response{
 				JSONRPC: "2.0",
 				ID:      req.ID,
@@ -226,8 +241,6 @@ func TestTCPConnection(t *testing.T) {
 			}, nil
 		},
 	}
-	auth := &mockAuth{}
-	sessions := newMockSessionManager()
 
 	config := Config{
 		Host:           "127.0.0.1",
@@ -237,22 +250,27 @@ func TestTCPConnection(t *testing.T) {
 		WriteTimeout:   30 * time.Second,
 	}
 
-	ts := setupTestServer(t, config, router, auth, sessions)
-	defer ts.cleanup()
+	return setupTestServer(t, config, router, &mockAuth{}, newMockSessionManager())
+}
 
-	t.Logf("Connecting to %s", ts.addr)
-	conn, err := net.Dial("tcp", ts.addr)
+func connectToTCPServer(t *testing.T, addr string) net.Conn {
+	t.Helper()
+
+	t.Logf("Connecting to %s", addr)
+	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		t.Fatalf("Failed to connect to TCP server: %v", err)
 	}
-	defer func() { _ = conn.Close() }()
 
 	t.Log("Connected successfully")
+	return conn
+}
 
-	// Create wire transport
+func sendTCPRequest(t *testing.T, conn net.Conn) {
+	t.Helper()
+
 	transport := wire.NewTransport(conn)
 
-	// Send a wire request
 	req := &mcp.Request{
 		JSONRPC: "2.0",
 		ID:      1,
@@ -264,12 +282,17 @@ func TestTCPConnection(t *testing.T) {
 	if err := transport.SendRequest(req); err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
+}
 
-	// Read response with timeout
+func receiveTCPResponse(t *testing.T, conn net.Conn, requestReceived *bool) *mcp.Response {
+	t.Helper()
+
+	transport := wire.NewTransport(conn)
+
 	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	msgType, payload, err := transport.ReceiveMessage()
 	if err != nil {
-		t.Logf("Request was received by router: %v", requestReceived)
+		t.Logf("Request was received by router: %v", *requestReceived)
 		t.Fatalf("Failed to read response: %v", err)
 	}
 
@@ -285,8 +308,12 @@ func TestTCPConnection(t *testing.T) {
 	}
 
 	t.Logf("Received response: %+v", resp)
+	return resp
+}
 
-	// Verify response
+func verifyTCPResponse(t *testing.T, resp *mcp.Response) {
+	t.Helper()
+
 	if resp.JSONRPC != "2.0" {
 		t.Errorf("Expected jsonrpc 2.0, got %v", resp.JSONRPC)
 	}
@@ -298,12 +325,14 @@ func TestTCPConnection(t *testing.T) {
 	} else {
 		t.Error("Response missing result field")
 	}
+}
 
-	// Give metrics time to update
+func verifyTCPMetrics(t *testing.T, frontend *Frontend) {
+	t.Helper()
+
 	time.Sleep(100 * time.Millisecond)
 
-	// Verify metrics
-	metrics := ts.frontend.GetMetrics()
+	metrics := frontend.GetMetrics()
 	if metrics.TotalConnections == 0 {
 		t.Error("TotalConnections should be > 0")
 	}

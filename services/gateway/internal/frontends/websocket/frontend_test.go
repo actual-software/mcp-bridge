@@ -214,11 +214,26 @@ func TestWebSocketFrontendStartStop(t *testing.T) {
 }
 
 func TestWebSocketConnection(t *testing.T) {
-	requestReceived := false
+	var requestReceived bool
+	ts := setupWebSocketTestWithMocks(t, &requestReceived)
+	defer ts.cleanup()
+
+	ws := connectToWebSocket(t, ts.url)
+	defer ws.Close()
+
+	sendWebSocketRequest(t, ws)
+	response := receiveWebSocketResponse(t, ws, &requestReceived)
+	verifyWebSocketResponse(t, response)
+	verifyWebSocketMetrics(t, ts.frontend)
+}
+
+func setupWebSocketTestWithMocks(t *testing.T, requestReceived *bool) *testServer {
+	t.Helper()
+
 	router := &mockRouter{
 		requestHandler: func(ctx context.Context, req *mcp.Request, namespace string) (*mcp.Response, error) {
 			t.Logf("Router received request: method=%s, id=%v", req.Method, req.ID)
-			requestReceived = true
+			*requestReceived = true
 			return &mcp.Response{
 				JSONRPC: "2.0",
 				ID:      req.ID,
@@ -226,13 +241,13 @@ func TestWebSocketConnection(t *testing.T) {
 			}, nil
 		},
 	}
+
 	auth := &mockAuth{
 		authenticateHandler: func(r *http.Request) (*auth.Claims, error) {
 			t.Logf("Auth called for %s", r.RemoteAddr)
 			return &auth.Claims{}, nil
 		},
 	}
-	sessions := newMockSessionManager()
 
 	config := Config{
 		Host:           "127.0.0.1",
@@ -241,14 +256,17 @@ func TestWebSocketConnection(t *testing.T) {
 		ReadTimeout:    30 * time.Second,
 		WriteTimeout:   30 * time.Second,
 		AllowedOrigins: []string{"*"},
-		PingInterval:   10 * time.Second, // Long interval for testing
+		PingInterval:   10 * time.Second,
 	}
 
-	ts := setupTestServer(t, config, router, auth, sessions)
-	defer ts.cleanup()
+	return setupTestServer(t, config, router, auth, newMockSessionManager())
+}
 
-	t.Logf("Connecting to %s", ts.url)
-	ws, resp, err := websocket.DefaultDialer.Dial(ts.url, nil)
+func connectToWebSocket(t *testing.T, url string) *websocket.Conn {
+	t.Helper()
+
+	t.Logf("Connecting to %s", url)
+	ws, resp, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		if resp != nil {
 			t.Logf("HTTP response: %d %s", resp.StatusCode, resp.Status)
@@ -256,13 +274,16 @@ func TestWebSocketConnection(t *testing.T) {
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
 	if resp != nil && resp.Body != nil {
-		defer func() { _ = resp.Body.Close() }()
+		defer resp.Body.Close()
 	}
-	defer func() { _ = ws.Close() }()
 
 	t.Log("Connected successfully")
+	return ws
+}
 
-	// Send a wire message
+func sendWebSocketRequest(t *testing.T, ws *websocket.Conn) {
+	t.Helper()
+
 	wireMsg := map[string]interface{}{
 		"id":        "test-1",
 		"timestamp": time.Now().Format(time.RFC3339),
@@ -279,19 +300,27 @@ func TestWebSocketConnection(t *testing.T) {
 	if err := ws.WriteJSON(wireMsg); err != nil {
 		t.Fatalf("Failed to send message: %v", err)
 	}
+}
 
-	// Read response with timeout
+func receiveWebSocketResponse(t *testing.T, ws *websocket.Conn, requestReceived *bool) map[string]interface{} {
+	t.Helper()
+
 	_ = ws.SetReadDeadline(time.Now().Add(5 * time.Second))
 	var response map[string]interface{}
+
 	t.Log("Waiting for response...")
 	if err := ws.ReadJSON(&response); err != nil {
-		t.Logf("Request was received by router: %v", requestReceived)
+		t.Logf("Request was received by router: %v", *requestReceived)
 		t.Fatalf("Failed to read response: %v", err)
 	}
 
 	t.Logf("Received response: %+v", response)
+	return response
+}
 
-	// Verify response
+func verifyWebSocketResponse(t *testing.T, response map[string]interface{}) {
+	t.Helper()
+
 	if response["jsonrpc"] != "2.0" {
 		t.Errorf("Expected jsonrpc 2.0, got %v", response["jsonrpc"])
 	}
@@ -303,12 +332,14 @@ func TestWebSocketConnection(t *testing.T) {
 	} else {
 		t.Error("Response missing result field")
 	}
+}
 
-	// Give metrics time to update
+func verifyWebSocketMetrics(t *testing.T, frontend *Frontend) {
+	t.Helper()
+
 	time.Sleep(100 * time.Millisecond)
 
-	// Verify metrics
-	metrics := ts.frontend.GetMetrics()
+	metrics := frontend.GetMetrics()
 	if metrics.TotalConnections == 0 {
 		t.Error("TotalConnections should be > 0")
 	}

@@ -209,7 +209,20 @@ func TestSSEFrontendStartStop(t *testing.T) {
 }
 
 func TestSSEStreamConnection(t *testing.T) {
-	router := &mockRouter{}
+	ts := setupSSEStreamTest(t)
+	defer ts.cleanup()
+
+	resp := connectToSSEStream(t, ts.url+"/events")
+	defer resp.Body.Close()
+
+	verifySSEStreamHeaders(t, resp)
+	verifySSEStreamData(t, resp)
+	verifySSEMetrics(t, ts.frontend)
+}
+
+func setupSSEStreamTest(t *testing.T) *testServer {
+	t.Helper()
+
 	auth := &mockAuth{
 		authenticateHandler: func(r *http.Request) (*auth.Claims, error) {
 			t.Logf("Auth called for %s", r.RemoteAddr)
@@ -218,20 +231,21 @@ func TestSSEStreamConnection(t *testing.T) {
 			}, nil
 		},
 	}
-	sessions := newMockSessionManager()
 
 	config := Config{
 		Host:            "127.0.0.1",
 		Port:            0,
 		StreamEndpoint:  "/events",
 		RequestEndpoint: "/api/v1/request",
-		KeepAlive:       1 * time.Second, // Short keepalive for testing
+		KeepAlive:       1 * time.Second,
 	}
 
-	ts := setupTestServer(t, config, router, auth, sessions)
-	defer ts.cleanup()
+	return setupTestServer(t, config, &mockRouter{}, auth, newMockSessionManager())
+}
 
-	url := ts.url + config.StreamEndpoint
+func connectToSSEStream(t *testing.T, url string) *http.Response {
+	t.Helper()
+
 	t.Logf("Connecting to SSE stream at %s", url)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -244,7 +258,12 @@ func TestSSEStreamConnection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to SSE stream: %v", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+
+	return resp
+}
+
+func verifySSEStreamHeaders(t *testing.T, resp *http.Response) {
+	t.Helper()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)
@@ -253,10 +272,14 @@ func TestSSEStreamConnection(t *testing.T) {
 	if resp.Header.Get("Content-Type") != "text/event-stream" {
 		t.Errorf("Expected Content-Type 'text/event-stream', got '%s'", resp.Header.Get("Content-Type"))
 	}
+}
 
-	// Read a few lines to verify stream is working
+func verifySSEStreamData(t *testing.T, resp *http.Response) {
+	t.Helper()
+
 	reader := bufio.NewReader(resp.Body)
 	linesRead := 0
+
 	for linesRead < 3 {
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -265,6 +288,7 @@ func TestSSEStreamConnection(t *testing.T) {
 			}
 			t.Fatalf("Error reading from stream: %v", err)
 		}
+
 		t.Logf("Received: %s", strings.TrimSpace(line))
 		linesRead++
 	}
@@ -272,23 +296,42 @@ func TestSSEStreamConnection(t *testing.T) {
 	if linesRead == 0 {
 		t.Error("No data received from SSE stream")
 	}
+}
 
-	// Verify metrics
+func verifySSEMetrics(t *testing.T, frontend *Frontend) {
+	t.Helper()
+
 	time.Sleep(100 * time.Millisecond)
-	metrics := ts.frontend.GetMetrics()
+
+	metrics := frontend.GetMetrics()
 	if metrics.TotalConnections == 0 {
 		t.Error("TotalConnections should be > 0")
 	}
 }
 
 func TestSSERequestEndpoint(t *testing.T) {
-	requestReceivedChan := make(chan bool, 1)
-	responseReceivedChan := make(chan bool, 1)
+	requestChan := make(chan bool, 1)
+	responseChan := make(chan bool, 1)
+
+	ts := setupSSERequestTest(t, requestChan)
+	defer ts.cleanup()
+
+	streamResp := establishSSEStream(t, ts.url+"/events", responseChan)
+	defer streamResp.Body.Close()
+
+	sendSSERequest(t, ts.url+"/api/v1/request")
+	verifySSERequestReceived(t, requestChan, responseChan)
+	verifySSERequestMetrics(t, ts.frontend)
+}
+
+func setupSSERequestTest(t *testing.T, requestChan chan bool) *testServer {
+	t.Helper()
+
 	router := &mockRouter{
 		requestHandler: func(ctx context.Context, req *mcp.Request, namespace string) (*mcp.Response, error) {
 			t.Logf("Router received request: method=%s, id=%v", req.Method, req.ID)
 			select {
-			case requestReceivedChan <- true:
+			case requestChan <- true:
 			default:
 			}
 			return &mcp.Response{
@@ -298,8 +341,6 @@ func TestSSERequestEndpoint(t *testing.T) {
 			}, nil
 		},
 	}
-	auth := &mockAuth{}
-	sessions := newMockSessionManager()
 
 	config := Config{
 		Host:            "127.0.0.1",
@@ -308,43 +349,49 @@ func TestSSERequestEndpoint(t *testing.T) {
 		RequestEndpoint: "/api/v1/request",
 	}
 
-	ts := setupTestServer(t, config, router, auth, sessions)
-	defer ts.cleanup()
+	return setupTestServer(t, config, router, &mockAuth{}, newMockSessionManager())
+}
 
-	// First establish SSE stream
-	streamURL := ts.url + config.StreamEndpoint
-	streamReq, _ := http.NewRequest("GET", streamURL, nil)
+func establishSSEStream(t *testing.T, url string, responseChan chan bool) *http.Response {
+	t.Helper()
+
+	streamReq, _ := http.NewRequest("GET", url, nil)
 	streamClient := &http.Client{Timeout: 30 * time.Second}
+
 	streamResp, err := streamClient.Do(streamReq)
 	if err != nil {
 		t.Fatalf("Failed to establish stream: %v", err)
 	}
-	if streamResp != nil && streamResp.Body != nil {
-		defer func() { _ = streamResp.Body.Close() }()
-	}
 
-	// Start reading from stream in background
-	go func() {
-		reader := bufio.NewReader(streamResp.Body)
-		for {
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				return
-			}
-			t.Logf("Stream received: %s", strings.TrimSpace(line))
-			if strings.Contains(line, "echo") {
-				select {
-				case responseReceivedChan <- true:
-				default:
-				}
-			}
-		}
-	}()
-
-	// Give stream time to establish
+	go readSSEStream(t, streamResp, responseChan)
 	time.Sleep(200 * time.Millisecond)
 
-	// Now send request
+	return streamResp
+}
+
+func readSSEStream(t *testing.T, resp *http.Response, responseChan chan bool) {
+	reader := bufio.NewReader(resp.Body)
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			return
+		}
+
+		t.Logf("Stream received: %s", strings.TrimSpace(line))
+
+		if strings.Contains(line, "echo") {
+			select {
+			case responseChan <- true:
+			default:
+			}
+		}
+	}
+}
+
+func sendSSERequest(t *testing.T, url string) {
+	t.Helper()
+
 	wireMsg := map[string]interface{}{
 		"id":        "test-1",
 		"timestamp": time.Now().Format(time.RFC3339),
@@ -362,7 +409,6 @@ func TestSSERequestEndpoint(t *testing.T) {
 		t.Fatalf("Failed to marshal request: %v", err)
 	}
 
-	url := ts.url + config.RequestEndpoint
 	t.Logf("Sending request to %s", url)
 
 	client := &http.Client{Timeout: 5 * time.Second}
@@ -370,37 +416,41 @@ func TestSSERequestEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
+
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusAccepted {
 		body, _ := io.ReadAll(resp.Body)
 		t.Errorf("Expected status 202, got %d, body: %s", resp.StatusCode, string(body))
 	}
+}
 
-	// Wait for request to be received
+func verifySSERequestReceived(t *testing.T, requestChan, responseChan chan bool) {
+	t.Helper()
+
 	select {
-	case <-requestReceivedChan:
-		// Request received
+	case <-requestChan:
 	case <-time.After(1 * time.Second):
 		t.Error("Router did not receive the request")
 	}
 
-	// Wait for response on stream
 	select {
-	case <-responseReceivedChan:
-		// Response received
+	case <-responseChan:
 	case <-time.After(1 * time.Second):
 		t.Error("Response not received on stream")
 	}
+}
 
-	// Verify metrics
-	metrics := ts.frontend.GetMetrics()
+func verifySSERequestMetrics(t *testing.T, frontend *Frontend) {
+	t.Helper()
+
+	metrics := frontend.GetMetrics()
 	if metrics.RequestCount == 0 {
 		t.Error("RequestCount should be > 0")
 	}
