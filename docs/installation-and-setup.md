@@ -54,7 +54,7 @@ The fastest way to set up a development environment:
 # Clone and auto-setup
 git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
-./quickstart.sh
+./scripts/quickstart.sh
 ```
 
 This automated script will:

@@ -17,7 +17,7 @@ MCP Bridge includes several automation scripts to simplify common operations:
 
 | Script | Location | Purpose | Privileges |
 |--------|----------|---------|------------|
-| `quickstart.sh` | `/` | Developer quick setup | User |
+| `scripts/quickstart.sh` | `/` | Developer quick setup | User |
 | `install.sh` | `/scripts/` | System installation | Root (production) |
 | `stop.sh` | `/scripts/` | Service shutdown | User/Root |
 | `migrate.sh` | `/scripts/` | Version upgrades | User/Root |
@@ -26,13 +26,13 @@ MCP Bridge includes several automation scripts to simplify common operations:
 
 ## Core Scripts
 
-### quickstart.sh
+### scripts/quickstart.sh
 
 **Purpose**: Rapid development environment setup with interactive wizard
 
 **Synopsis**:
 ```bash
-./quickstart.sh [OPTIONS]
+./scripts/quickstart.sh [OPTIONS]
 ```
 
 **Options**:
@@ -70,16 +70,16 @@ MCP Bridge includes several automation scripts to simplify common operations:
 **Example Usage**:
 ```bash
 # Basic setup
-./quickstart.sh
+./scripts/quickstart.sh
 
 # Setup with demo
-./quickstart.sh --demo
+./scripts/quickstart.sh --demo
 
 # Setup without Docker
-./quickstart.sh --skip-docker
+./scripts/quickstart.sh --skip-docker
 
 # Verbose debugging
-./quickstart.sh --verbose
+./scripts/quickstart.sh --verbose
 ```
 
 ### scripts/install.sh
@@ -420,10 +420,10 @@ Enable debug output:
 ```bash
 # Set environment variable
 export VERBOSE=true
-./quickstart.sh
+./scripts/quickstart.sh
 
 # Or use flag
-./quickstart.sh --verbose
+./scripts/quickstart.sh --verbose
 ```
 
 ### Log Locations

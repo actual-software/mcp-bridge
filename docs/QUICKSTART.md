@@ -32,16 +32,16 @@ The quickstart script provides the fastest way to get MCP Bridge running:
 
 ```bash
 # Basic quick start
-./quickstart.sh
+./scripts/quickstart.sh
 
 # Quick start with demo
-./quickstart.sh --demo
+./scripts/quickstart.sh --demo
 
 # Verbose mode for debugging
-./quickstart.sh --verbose
+./scripts/quickstart.sh --verbose
 
 # Skip Docker setup (if not needed)
-./quickstart.sh --skip-docker
+./scripts/quickstart.sh --skip-docker
 ```
 
 ### What It Does
@@ -58,7 +58,7 @@ The quickstart script provides the fastest way to get MCP Bridge running:
 ### Command-Line Options
 
 ```bash
-Usage: ./quickstart.sh [OPTIONS]
+Usage: ./scripts/quickstart.sh [OPTIONS]
 
 Options:
     -v, --verbose       Enable verbose output
@@ -107,7 +107,7 @@ For local development with hot-reload and debugging:
 
 ```bash
 # Using quickstart (recommended)
-./quickstart.sh
+./scripts/quickstart.sh
 
 # Or using Makefile
 make quickstart
@@ -490,7 +490,7 @@ Enable verbose logging:
 
 ```bash
 # In quickstart
-./quickstart.sh --verbose
+./scripts/quickstart.sh --verbose
 
 # In configuration
 # Edit examples/configs/gateway.yaml and examples/configs/router.yaml
@@ -666,5 +666,5 @@ The scripts are designed to be idempotent and safe to run multiple times:
 For script updates:
 ```bash
 git pull origin main
-./quickstart.sh  # Safe to re-run
+./scripts/quickstart.sh  # Safe to re-run
 ```

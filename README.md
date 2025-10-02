@@ -15,7 +15,7 @@ A production-ready bridge system for the [Model Context Protocol (MCP)](https://
 ```bash
 git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
-./quickstart.sh        # Automated setup with interactive wizard
+./scripts/quickstart.sh        # Automated setup with interactive wizard
 ```
 
 The quickstart script will:

@@ -12,7 +12,7 @@ Thank you for your interest in contributing to MCP Bridge! This document provide
    ```
 3. **Set up development environment**:
    ```bash
-   ./quickstart.sh
+   ./scripts/quickstart.sh
    ```
 
 ## 🔧 Development Setup

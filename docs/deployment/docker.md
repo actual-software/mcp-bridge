@@ -348,7 +348,7 @@ volumes:
 ### Development Environment
 ```bash
 # One-click setup for development
-./quickstart.sh
+./scripts/quickstart.sh
 ```
 
 ### Production Installation
