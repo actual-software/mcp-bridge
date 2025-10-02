@@ -558,7 +558,7 @@ Import these dashboards using the Grafana UI or the provisioning system.
 
 - [Monitoring Guide](../monitoring.md) - Complete monitoring setup
 - [Troubleshooting Guide](../troubleshooting.md) - Using metrics for troubleshooting
-- [Production Readiness](../../PRODUCTION_READINESS.md) - Production checklist
+- [Production Readiness](../../docs/PRODUCTION_READINESS.md) - Production checklist
 - [SLI/SLO Monitoring](../SLI_SLO_MONITORING.md) - Service level objectives
 
 ---

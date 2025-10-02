@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Test Coverage](https://img.shields.io/badge/coverage-80.3%25-brightgreen.svg)](COVERAGE.md)
 [![Security](https://img.shields.io/badge/security-OWASP%20compliant-green.svg)](docs/OWASP_SECURITY.md)
-[![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](PRODUCTION_READINESS.md)
+[![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](docs/PRODUCTION_READINESS.md)
 [![Go Report Card](https://goreportcard.com/badge/github.com/actual-software/mcp-bridge)](https://goreportcard.com/report/github.com/actual-software/mcp-bridge)
 
 A production-ready bridge system for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), enabling secure remote access to MCP servers through a scalable gateway architecture.
@@ -234,7 +234,7 @@ docker-compose up -d
 - [**🏗️ Service Documentation**](services/) - Gateway and Router architecture and design
 - [**🔒 Security Implementation**](docs/SECURITY_IMPLEMENTATION_SUMMARY.md) - Enterprise security overview
 - [**🧪 Testing Guide**](TESTING.md) - Comprehensive testing documentation
-- [**🚀 Production Readiness**](PRODUCTION_READINESS.md) - Production deployment checklist
+- [**🚀 Production Readiness**](docs/PRODUCTION_READINESS.md) - Production deployment checklist
 
 ### **Security Documentation**
 - [**🛡️ OWASP Security**](docs/OWASP_SECURITY.md) - Comprehensive security scanning

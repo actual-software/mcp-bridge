@@ -45,7 +45,7 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 <!-- TODO: Create this documentation
 - [Testing Strategy](../TESTING.md) - Comprehensive testing documentation
 - [Code Quality Report](../CODE_QUALITY_IMPROVEMENTS_SUMMARY.md) - Quality metrics and improvements
-- [Production Readiness](../PRODUCTION_READINESS.md) - Production deployment checklist
+- [Production Readiness](../docs/PRODUCTION_READINESS.md) - Production deployment checklist
 - [Final Audit](../FINAL_AUDIT.md) - Complete production readiness assessment
 -->
 
@@ -102,7 +102,7 @@ Welcome to the comprehensive documentation for MCP Bridge - the enterprise-grade
 
 ### **For Operations Teams**
 <!-- TODO: Create this documentation
-1. Review [Production Readiness](../PRODUCTION_READINESS.md)
+1. Review [Production Readiness](../docs/PRODUCTION_READINESS.md)
 -->
 2. Set up [Monitoring](monitoring.md)
 3. Create [Troubleshooting Runbooks](troubleshooting.md)

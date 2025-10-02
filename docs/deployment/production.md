@@ -1,6 +1,6 @@
 # MCP Bridge: Consolidated Production Readiness Assessment
 
-This consolidated document combines analysis from PRE_PUBLISH_CHECKLIST.md and PRODUCTION_READINESS.md to provide a unified production readiness evaluation and improvement roadmap.
+This consolidated document combines analysis from PRE_PUBLISH_CHECKLIST.md and docs/PRODUCTION_READINESS.md to provide a unified production readiness evaluation and improvement roadmap.
 
 ## Current Production Readiness Status: **99.5% Complete**
 
