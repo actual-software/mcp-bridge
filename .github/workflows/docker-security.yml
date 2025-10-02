@@ -4,14 +4,14 @@ on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'Dockerfile.*'
-      - 'services/**'
+      - 'services/**/Dockerfile'
+      - 'services/**/*.go'
       - '.github/workflows/docker-security.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'Dockerfile.*'
-      - 'services/**'
+      - 'services/**/Dockerfile'
+      - 'services/**/*.go'
   schedule:
     # Run weekly security scans
     - cron: '0 2 * * 1'
@@ -63,8 +63,8 @@ jobs:
     - name: Build Docker image
       uses: docker/build-push-action@v6
       with:
-        context: .
-        file: ./Dockerfile.${{ matrix.component }}
+        context: ./services/${{ matrix.component }}
+        file: ./services/${{ matrix.component }}/Dockerfile
         push: false
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -128,8 +128,8 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: docker/build-push-action@v6
       with:
-        context: .
-        file: ./Dockerfile.${{ matrix.component }}
+        context: ./services/${{ matrix.component }}
+        file: ./services/${{ matrix.component }}/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
