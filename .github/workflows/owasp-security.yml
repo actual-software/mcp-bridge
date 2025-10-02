@@ -61,7 +61,7 @@ jobs:
           --enableRetired
           --enableExperimental
           --failOnCVSS 7
-          --suppression .github/config/owasp-suppressions.xml
+          --suppression .config/owasp-suppressions.xml
         
     - name: Upload OWASP Dependency Check results
       uses: github/codeql-action/upload-sarif@v3

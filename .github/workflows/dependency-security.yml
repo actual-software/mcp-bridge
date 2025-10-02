@@ -80,7 +80,7 @@ jobs:
     with:
       scan-args: |-
         -r
-        --config=.github/config/osv-scanner.toml
+        --config=.config/osv-scanner.toml
         ./
 
   license-scan:
