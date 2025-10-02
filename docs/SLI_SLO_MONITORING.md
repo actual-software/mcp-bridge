@@ -148,7 +148,7 @@ sli:
 ### Prometheus Recording Rules
 
 ```yaml
-# /deployments/monitoring/prometheus-rules.yaml
+# /deployment/monitoring/prometheus-rules.yaml
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -276,7 +276,7 @@ spec:
 ### Alerting Rules
 
 ```yaml
-# /deployments/monitoring/alerting-rules.yaml
+# /deployment/monitoring/alerting-rules.yaml
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:

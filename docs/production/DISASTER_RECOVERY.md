@@ -185,7 +185,7 @@ curl -f http://router:9091/health || alert
    kubectl apply -f deployments/kubernetes/
    
    # Or use Helm
-   helm install mcp-bridge ./helm/mcp-bridge \
+   helm install mcp-bridge ./deployment/helm/mcp-bridge \
      -f helm/values-disaster-recovery.yaml
    ```
 
@@ -455,7 +455,7 @@ case "$TEST_TYPE" in
         kubectl create namespace mcp-dr-test
         
         # Deploy to test namespace
-        helm install mcp-dr-test ./helm/mcp-bridge \
+        helm install mcp-dr-test ./deployment/helm/mcp-bridge \
           --namespace mcp-dr-test \
           -f helm/values-dr-test.yaml
         
