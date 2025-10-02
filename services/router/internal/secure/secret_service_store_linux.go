@@ -3,6 +3,7 @@
 package secure
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -32,7 +33,7 @@ func (s *secretServiceStore) Store(key, token string) error {
 	serviceName := s.serviceName()
 
 	// #nosec G204 -- secret-tool is a system command, service name and key are from controlled sources
-	cmd := exec.Command("secret-tool", "store",
+	cmd := exec.CommandContext(context.Background(), "secret-tool", "store",
 		"--label", fmt.Sprintf("MCP Router Token (%s)", key),
 		"service", serviceName,
 		"account", key)
@@ -51,7 +52,7 @@ func (s *secretServiceStore) Retrieve(key string) (string, error) {
 	serviceName := s.serviceName()
 
 	// #nosec G204 -- secret-tool is a system command, service name and key are from controlled sources
-	cmd := exec.Command("secret-tool", "lookup",
+	cmd := exec.CommandContext(context.Background(), "secret-tool", "lookup",
 		"service", serviceName,
 		"account", key)
 
@@ -75,7 +76,7 @@ func (s *secretServiceStore) Delete(key string) error {
 	serviceName := s.serviceName()
 
 	// #nosec G204 -- secret-tool is a system command, service name and key are from controlled sources
-	cmd := exec.Command("secret-tool", "clear",
+	cmd := exec.CommandContext(context.Background(), "secret-tool", "clear",
 		"service", serviceName,
 		"account", key)
 
@@ -119,7 +120,7 @@ func (s *secretServiceStore) List() ([]string, error) {
 	return keys, nil
 }
 
-// serviceName returns the secret service name for this app
+// serviceName returns the secret service name for this app.
 func (s *secretServiceStore) serviceName() string {
 	return fmt.Sprintf("mcp-router-%s", s.appName)
 }

@@ -341,7 +341,8 @@ func checkForUpdates() {
 		// Ignoring error: writing to stderr in error path.
 		_, _ = fmt.Fprintf(
 			os.Stderr,
-			"   Run 'curl -sSL https://raw.githubusercontent.com/actual-software/mcp-bridge/main/install.sh | bash' to update\n\n",
+			"   Run 'curl -sSL https://raw.githubusercontent.com/actual-software/mcp-bridge/"+
+				"main/install.sh | bash' to update\n\n",
 		)
 	}
 }
