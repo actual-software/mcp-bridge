@@ -351,8 +351,8 @@ func TestWebSocketConnectionLimit(t *testing.T) {
 		_ = resp2.Body.Close()
 	}
 
-	if resp != nil && resp.StatusCode != http.StatusServiceUnavailable {
-		t.Errorf("Expected status 503, got %d", resp.StatusCode)
+	if resp2 != nil && resp2.StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("Expected status 503, got %d", resp2.StatusCode)
 	}
 }
 
