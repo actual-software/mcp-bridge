@@ -385,7 +385,7 @@ Available at `http://localhost:9091/metrics` (configurable):
 #### Quick Installation
 ```bash
 # One-command install
-curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/router/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/actual-software/mcp-bridge/main/services/router/install.sh | bash
 
 # Interactive setup
 mcp-router setup

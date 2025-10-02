@@ -456,7 +456,7 @@ build_project() {
     if [[ ! -f "$PROJECT_ROOT/go.mod" ]]; then
         warn "Go modules not initialized. Initializing..."
         cd "$PROJECT_ROOT"
-        go mod init github.com/poiley/mcp-bridge
+        go mod init github.com/actual-software/mcp-bridge
         go mod tidy
     fi
     

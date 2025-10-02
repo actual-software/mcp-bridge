@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // testingT provides common interface for *testing.T and *testing.B.

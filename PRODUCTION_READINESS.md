@@ -285,7 +285,7 @@ Configure alerts for:
 ## 📞 Support
 
 - **Documentation**: [Complete docs](docs/README.md)
-- **Issues**: [GitHub Issues](https://github.com/poiley/mcp-bridge/issues)
+- **Issues**: [GitHub Issues](https://github.com/actual-software/mcp-bridge/issues)
 - **Security**: Report security issues per [security.txt](/.well-known/security.txt)
 
 ---

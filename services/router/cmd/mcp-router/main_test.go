@@ -18,9 +18,9 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
 )
 
 // Test variables.
@@ -315,14 +315,14 @@ func verifySetupSuccess(t *testing.T, err error, tempDir, envToken string) {
 func TestUpdateCheckCommand(t *testing.T) {
 	// Create mock GitHub API server.
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/repos/poiley/mcp-bridge/releases/latest" {
+		if r.URL.Path == "/repos/actual-software/mcp-bridge/releases/latest" {
 			w.Header().Set("Content-Type", "application/json")
 
 			_, _ = w.Write([]byte(`{
 				"tag_name": "v2.0.0",
 				"name": "Version 2.0.0",
 				"published_at": "2024-01-15T10:00:00Z",
-				"html_url": "https://github.com/poiley/mcp-bridge/releases/tag/v2.0.0"
+				"html_url": "https://github.com/actual-software/mcp-bridge/releases/tag/v2.0.0"
 			}`)) // Ignore write error in test server
 		}
 	}))

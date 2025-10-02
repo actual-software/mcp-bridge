@@ -691,11 +691,11 @@ services/gateway/test/testutil/testutil.go:233:9: elseif: can replace 'else {if 
 services/gateway/internal/frontends/stdio/frontend_comprehensive_test.go:75:1: Comment should end in a period (godot)
 // blockingReader provides data once and then blocks until done channel is closed
 ^
-services/gateway/go.mod:36:1: local replacement are not allowed: github.com/poiley/mcp-bridge (gomoddirectives)
-replace github.com/poiley/mcp-bridge => ../..
+services/gateway/go.mod:36:1: local replacement are not allowed: github.com/actual-software/mcp-bridge (gomoddirectives)
+replace github.com/actual-software/mcp-bridge => ../..
 ^
-services/gateway/go.mod:126:1: local replacement are not allowed: github.com/poiley/mcp-bridge/services/router (gomoddirectives)
-replace github.com/poiley/mcp-bridge/services/router => ../router
+services/gateway/go.mod:126:1: local replacement are not allowed: github.com/actual-software/mcp-bridge/services/router (gomoddirectives)
+replace github.com/actual-software/mcp-bridge/services/router => ../router
 ^
 services/gateway/cmd/mcp-gateway/main.go:177:20: G112: Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server (gosec)
 	metricsServer := &http.Server{
@@ -1014,31 +1014,31 @@ services/gateway/test/testutil/testutil_test.go:528:2: for loop can be changed t
 services/gateway/test/testutil/testutil_test.go:540:2: for loop can be changed to use an integer range (Go 1.22+) (intrange)
 	for i := 0; i < b.N; i++ {
 	^
-services/gateway/internal/backends/factory.go:80:1: CreateBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+services/gateway/internal/backends/factory.go:80:1: CreateBackend returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
 func (f *DefaultFactory) CreateBackend(config BackendConfig) (Backend, error) {
 ^
-services/gateway/internal/backends/factory.go:99:1: createStdioBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+services/gateway/internal/backends/factory.go:99:1: createStdioBackend returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
 func (f *DefaultFactory) createStdioBackend(config BackendConfig) (Backend, error) {
 ^
-services/gateway/internal/backends/factory.go:171:1: createWebSocketBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+services/gateway/internal/backends/factory.go:171:1: createWebSocketBackend returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
 func (f *DefaultFactory) createWebSocketBackend(config BackendConfig) (Backend, error) {
 ^
-services/gateway/internal/backends/factory.go:259:1: createSSEBackend returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
+services/gateway/internal/backends/factory.go:259:1: createSSEBackend returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/backends.Backend) (ireturn)
 func (f *DefaultFactory) createSSEBackend(config BackendConfig) (Backend, error) {
 ^
-services/gateway/internal/discovery/factory.go:13:1: NewServiceDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+services/gateway/internal/discovery/factory.go:13:1: NewServiceDiscovery returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
 func NewServiceDiscovery(cfg config.ServiceDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
 ^
-services/gateway/internal/discovery/sse_discovery.go:26:1: NewSSEDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+services/gateway/internal/discovery/sse_discovery.go:26:1: NewSSEDiscovery returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
 func NewSSEDiscovery(cfg config.SSEDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
 ^
-services/gateway/internal/discovery/stdio_discovery.go:24:1: NewStdioDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+services/gateway/internal/discovery/stdio_discovery.go:24:1: NewStdioDiscovery returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
 func NewStdioDiscovery(cfg config.StdioDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
 ^
-services/gateway/internal/discovery/websocket_discovery.go:26:1: NewWebSocketDiscovery returns interface (github.com/poiley/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
+services/gateway/internal/discovery/websocket_discovery.go:26:1: NewWebSocketDiscovery returns interface (github.com/actual-software/mcp-bridge/services/gateway/internal/discovery.ServiceDiscovery) (ireturn)
 func NewWebSocketDiscovery(cfg config.WebSocketDiscoveryConfig, logger *zap.Logger) (ServiceDiscovery, error) {
 ^
-services/gateway/internal/router/router.go:404:1: getLoadBalancer returns interface (github.com/poiley/mcp-bridge/services/gateway/pkg/loadbalancer.LoadBalancer) (ireturn)
+services/gateway/internal/router/router.go:404:1: getLoadBalancer returns interface (github.com/actual-software/mcp-bridge/services/gateway/pkg/loadbalancer.LoadBalancer) (ireturn)
 func (r *Router) getLoadBalancer(namespace string) loadbalancer.LoadBalancer {
 ^
 services/gateway/internal/auth/message_auth.go:1:1: The line is 128 characters long, which exceeds the maximum of 120 characters. (lll)

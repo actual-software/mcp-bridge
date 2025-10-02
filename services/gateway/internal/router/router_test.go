@@ -17,13 +17,13 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/session"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/circuit"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/loadbalancer"
-	"github.com/poiley/mcp-bridge/services/gateway/test/testutil"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/circuit"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/loadbalancer"
+	"github.com/actual-software/mcp-bridge/services/gateway/test/testutil"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 const (

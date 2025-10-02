@@ -19,7 +19,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/pkg/common/config"
 )
 
 const (

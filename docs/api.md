@@ -594,7 +594,7 @@ GET /api/docs/
 
 ### Official SDKs
 
-- **Go**: `github.com/poiley/mcp-bridge-go`
+- **Go**: `github.com/actual-software/mcp-bridge-go`
 - **Python**: `pip install mcp-bridge-client`
 - **Node.js**: `npm install @mcp-bridge/client`
 - **Java**: Maven coordinates in documentation
@@ -604,7 +604,7 @@ GET /api/docs/
 #### Go Client
 
 ```go
-import "github.com/poiley/mcp-bridge-go/client"
+import "github.com/actual-software/mcp-bridge-go/client"
 
 client := client.New("wss://gateway.example.com", 
     client.WithBearerAuth("token"))

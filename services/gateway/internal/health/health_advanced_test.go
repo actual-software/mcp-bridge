@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
 )
 
 // MockServiceDiscovery provides a mock service discovery for testing.

@@ -52,7 +52,7 @@ The fastest way to set up a development environment:
 
 ```bash
 # Clone and auto-setup
-git clone https://github.com/poiley/mcp-bridge.git
+git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 ./quickstart.sh
 ```
@@ -89,7 +89,7 @@ go env GOPATH
 
 ```bash
 # Clone the repository
-git clone https://github.com/poiley/mcp-bridge.git
+git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 
 # Initialize Go modules

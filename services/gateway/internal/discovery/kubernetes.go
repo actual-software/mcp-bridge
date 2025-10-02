@@ -15,8 +15,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 )
 
 // KubernetesDiscovery implements service discovery using Kubernetes API.

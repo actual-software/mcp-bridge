@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
 )
 
 func TestHybridLoadBalancer_NewHybridLoadBalancer(t *testing.T) {

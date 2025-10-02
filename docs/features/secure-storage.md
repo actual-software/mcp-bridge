@@ -309,7 +309,7 @@ type TokenStore interface {
 
 ### Custom Implementation
 ```go
-import "github.com/poiley/mcp-bridge/pkg/secure"
+import "github.com/actual-software/mcp-bridge/pkg/secure"
 
 // Implement custom token storage
 type MyTokenStore struct{}

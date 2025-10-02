@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/health"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/health"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
 )
 
 // TestSecurityHeadersMiddleware tests the security headers middleware.

@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/test/testutil"
+	"github.com/actual-software/mcp-bridge/test/testutil"
 )
 
 const (

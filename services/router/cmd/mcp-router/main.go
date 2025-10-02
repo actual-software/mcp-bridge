@@ -17,9 +17,9 @@ import (
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/yaml.v3"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 )
 
 var (
@@ -312,7 +312,7 @@ func checkForUpdates() {
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		"https://api.github.com/repos/poiley/mcp-bridge/releases/latest",
+		"https://api.github.com/repos/actual-software/mcp-bridge/releases/latest",
 		nil,
 	)
 	if err != nil {
@@ -341,7 +341,7 @@ func checkForUpdates() {
 		// Ignoring error: writing to stderr in error path.
 		_, _ = fmt.Fprintf(
 			os.Stderr,
-			"   Run 'curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/install.sh | bash' to update\n\n",
+			"   Run 'curl -sSL https://raw.githubusercontent.com/actual-software/mcp-bridge/main/install.sh | bash' to update\n\n",
 		)
 	}
 }
@@ -356,7 +356,7 @@ func checkForUpdatesVerbose() error {
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		"https://api.github.com/repos/poiley/mcp-bridge/releases/latest",
+		"https://api.github.com/repos/actual-software/mcp-bridge/releases/latest",
 		nil,
 	)
 	if err != nil {
@@ -393,7 +393,7 @@ func checkForUpdatesVerbose() error {
 		fmt.Printf("Details: %s\n", release.HTMLURL)
 		fmt.Println()
 		fmt.Println("To update, run:")
-		fmt.Println("  curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/install.sh | bash")
+		fmt.Println("  curl -sSL https://raw.githubusercontent.com/actual-software/mcp-bridge/main/install.sh | bash")
 	} else {
 		fmt.Println("✓ You are running the latest version")
 	}

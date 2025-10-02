@@ -14,9 +14,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
 )
 
 func TestOAuth2Token_IsExpired(t *testing.T) {

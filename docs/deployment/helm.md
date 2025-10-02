@@ -19,7 +19,7 @@ This guide provides comprehensive instructions for deploying MCP Bridge using He
 # helm repo update
 
 # For now, clone the repository
-git clone https://github.com/poiley/mcp-bridge.git
+git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 
 # Install with default values
@@ -155,7 +155,7 @@ helm install mcp-bridge ./helm/mcp-bridge -f custom-values.yaml
 |-----------|-------------|---------|
 | `gateway.enabled` | Enable Gateway deployment | `true` |
 | `gateway.replicaCount` | Number of Gateway replicas | `2` |
-| `gateway.image.repository` | Gateway image repository | `ghcr.io/poiley/mcp-bridge/gateway` |
+| `gateway.image.repository` | Gateway image repository | `ghcr.io/actual-software/mcp-bridge/gateway` |
 | `gateway.resources.limits.cpu` | Gateway CPU limit | `1000m` |
 | `gateway.resources.limits.memory` | Gateway memory limit | `512Mi` |
 | `gateway.autoscaling.enabled` | Enable HPA | `true` |
@@ -170,7 +170,7 @@ helm install mcp-bridge ./helm/mcp-bridge -f custom-values.yaml
 |-----------|-------------|---------|
 | `router.enabled` | Enable Router deployment | `true` |
 | `router.replicaCount` | Number of Router replicas | `1` |
-| `router.image.repository` | Router image repository | `ghcr.io/poiley/mcp-bridge/router` |
+| `router.image.repository` | Router image repository | `ghcr.io/actual-software/mcp-bridge/router` |
 | `router.resources.limits.cpu` | Router CPU limit | `500m` |
 | `router.resources.limits.memory` | Router memory limit | `256Mi` |
 
@@ -474,7 +474,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/poiley/mcp-bridge
+    repoURL: https://github.com/actual-software/mcp-bridge
     targetRevision: HEAD
     path: helm/mcp-bridge
     helm:
@@ -558,9 +558,9 @@ helm search repo mcp-bridge
 
 ### **Support**
 
-- [GitHub Issues](https://github.com/poiley/mcp-bridge/issues)
-- [Discussions](https://github.com/poiley/mcp-bridge/discussions)
-- [Documentation](https://github.com/poiley/mcp-bridge/tree/main/docs)
+- [GitHub Issues](https://github.com/actual-software/mcp-bridge/issues)
+- [Discussions](https://github.com/actual-software/mcp-bridge/discussions)
+- [Documentation](https://github.com/actual-software/mcp-bridge/tree/main/docs)
 
 ---
 

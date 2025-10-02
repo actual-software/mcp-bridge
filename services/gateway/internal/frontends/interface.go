@@ -3,7 +3,7 @@ package frontends
 import (
 	"context"
 
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // Frontend represents a frontend protocol handler for accepting MCP client connections.

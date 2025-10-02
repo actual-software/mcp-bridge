@@ -11,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/cobra"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
 )
 
 const (

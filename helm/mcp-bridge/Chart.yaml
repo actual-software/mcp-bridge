@@ -9,9 +9,9 @@ keywords:
   - gateway
   - router
   - api
-home: https://github.com/poiley/mcp-bridge
+home: https://github.com/actual-software/mcp-bridge
 sources:
-  - https://github.com/poiley/mcp-bridge
+  - https://github.com/actual-software/mcp-bridge
 icon: https://raw.githubusercontent.com/poiley/mcp-bridge/main/docs/assets/logo.png
 maintainers:
   - name: MCP Bridge Contributors

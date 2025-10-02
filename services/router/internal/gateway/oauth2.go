@@ -10,7 +10,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
 )
 
 // OAuth2Token represents an OAuth2 access token.

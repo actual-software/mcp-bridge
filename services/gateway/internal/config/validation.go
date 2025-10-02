@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 )
 
 const (

@@ -1,4 +1,4 @@
-module github.com/poiley/mcp-bridge/services/gateway
+module github.com/actual-software/mcp-bridge/services/gateway
 
 go 1.23.0
 
@@ -13,8 +13,8 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/consul/api v1.25.1
 	github.com/opentracing/opentracing-go v1.2.0
-	github.com/poiley/mcp-bridge v0.0.0-00010101000000-000000000000
-	github.com/poiley/mcp-bridge/services/router v0.0.0-00010101000000-000000000000
+	github.com/actual-software/mcp-bridge v0.0.0-00010101000000-000000000000
+	github.com/actual-software/mcp-bridge/services/router v0.0.0-00010101000000-000000000000
 	github.com/prometheus/client_golang v1.23.0
 	github.com/prometheus/client_model v0.6.2
 	github.com/spf13/cobra v1.8.0
@@ -33,7 +33,7 @@ require (
 	k8s.io/client-go v0.29.0
 )
 
-replace github.com/poiley/mcp-bridge => ../.. //nolint:gomoddirectives // Required for monorepo structure
+replace github.com/actual-software/mcp-bridge => ../.. //nolint:gomoddirectives // Required for monorepo structure
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
@@ -124,4 +124,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/poiley/mcp-bridge/services/router => ../router //nolint:gomoddirectives // Required for monorepo structure
+replace github.com/actual-software/mcp-bridge/services/router => ../router //nolint:gomoddirectives // Required for monorepo structure

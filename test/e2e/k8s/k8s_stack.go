@@ -672,19 +672,19 @@ func (ks *KubernetesStack) getProjectRoot() (string, error) {
 		return "", fmt.Errorf("failed to get current directory: %w", err)
 	}
 
-	// Look for the root go.mod that contains "module github.com/poiley/mcp-bridge"
+	// Look for the root go.mod that contains "module github.com/actual-software/mcp-bridge"
 	for {
 		goModPath := filepath.Join(dir, "go.mod")
 		// #nosec G304 - reading go.mod with controlled path in test context
 		if content, err := os.ReadFile(goModPath); err == nil {
-			if strings.Contains(string(content), "module github.com/poiley/mcp-bridge") {
+			if strings.Contains(string(content), "module github.com/actual-software/mcp-bridge") {
 				return dir, nil
 			}
 		}
 
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", errors.New("could not find project root (no go.mod with module github.com/poiley/mcp-bridge found)")
+			return "", errors.New("could not find project root (no go.mod with module github.com/actual-software/mcp-bridge found)")
 		}
 
 		dir = parent

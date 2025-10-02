@@ -220,10 +220,10 @@ connection:
 #### **Binary Installation**
 ```bash
 # Quick install
-curl -sSL https://github.com/poiley/mcp-bridge/releases/latest/download/install.sh | bash
+curl -sSL https://github.com/actual-software/mcp-bridge/releases/latest/download/install.sh | bash
 
 # Development setup
-git clone https://github.com/poiley/mcp-bridge.git
+git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 ./scripts/install.sh
 ```
@@ -270,9 +270,9 @@ Special thanks to all contributors who made this release possible:
 - **Supported Platforms**: Linux, macOS, Windows (amd64, arm64)
 
 For support and questions, please visit:
-- **Documentation**: https://github.com/poiley/mcp-bridge/tree/main/docs
-- **Issues**: https://github.com/poiley/mcp-bridge/issues
-- **Discussions**: https://github.com/poiley/mcp-bridge/discussions
+- **Documentation**: https://github.com/actual-software/mcp-bridge/tree/main/docs
+- **Issues**: https://github.com/actual-software/mcp-bridge/issues
+- **Discussions**: https://github.com/actual-software/mcp-bridge/discussions
 
 ---
 

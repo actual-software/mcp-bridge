@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
 )
 
 func TestSetupInteractive(t *testing.T) {

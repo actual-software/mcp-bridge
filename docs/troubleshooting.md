@@ -1960,6 +1960,6 @@ mcp-router logs --level error --summary
 
 ### Community Support
 
-1. Check documentation: https://github.com/poiley/mcp-bridge/tree/main/docs
-2. Search issues: https://github.com/poiley/mcp-bridge/issues
-3. Ask in discussions: https://github.com/poiley/mcp-bridge/discussions
+1. Check documentation: https://github.com/actual-software/mcp-bridge/tree/main/docs
+2. Search issues: https://github.com/actual-software/mcp-bridge/issues
+3. Ask in discussions: https://github.com/actual-software/mcp-bridge/discussions

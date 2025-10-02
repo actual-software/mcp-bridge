@@ -5,7 +5,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
 )
 
 // createTestConnectionMetrics creates test connection metrics.

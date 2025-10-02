@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # MCP Local Router Uninstallation Script
-# https://github.com/poiley/mcp-bridge
+# https://github.com/actual-software/mcp-bridge
 
 # Configuration
 INSTALL_DIR="/usr/local/bin"

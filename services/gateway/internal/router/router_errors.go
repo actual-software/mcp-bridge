@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/errors"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // RouterError extends the base GatewayError with router-specific functionality.

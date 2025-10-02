@@ -24,7 +24,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/poiley/mcp-bridge/test/testutil/e2e"
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
 // FixedIntegrationTestSuite runs proper integration tests using existing infrastructure.

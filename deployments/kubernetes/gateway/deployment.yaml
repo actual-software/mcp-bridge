@@ -42,7 +42,7 @@ spec:
             topologyKey: kubernetes.io/hostname
       containers:
       - name: gateway
-        image: ghcr.io/poiley/mcp-bridge-gateway:v1.0.0
+        image: ghcr.io/actual-software/mcp-bridge-gateway:v1.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8443

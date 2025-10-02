@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
 )
 
 // TestConsulDiscovery_Start_Advanced tests the Start method functionality.

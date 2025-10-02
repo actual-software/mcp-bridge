@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
 )
 
 const (

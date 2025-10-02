@@ -127,7 +127,7 @@ Error codes follow a structured format: `<SERVICE>_<CATEGORY>_<NUMBER>`
 package main
 
 import (
-    "github.com/poiley/mcp-bridge/pkg/common/errors"
+    "github.com/actual-software/mcp-bridge/pkg/common/errors"
 )
 
 func handleRequest() error {
@@ -151,7 +151,7 @@ package main
 import (
     "net/http"
     "go.uber.org/zap"
-    "github.com/poiley/mcp-bridge/pkg/common/errors"
+    "github.com/actual-software/mcp-bridge/pkg/common/errors"
 )
 
 func setupErrorHandling() {
@@ -211,7 +211,7 @@ import (
     "context"
     "time"
     "go.uber.org/zap"
-    "github.com/poiley/mcp-bridge/pkg/common/errors"
+    "github.com/actual-software/mcp-bridge/pkg/common/errors"
 )
 
 func withRetry() error {

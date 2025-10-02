@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
 )
 
 // RateLimiter defines the rate limiting interface.

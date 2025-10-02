@@ -440,7 +440,7 @@ install_systemd() {
     cat > "$SYSTEMD_DIR/mcp-gateway.service" << EOF
 [Unit]
 Description=MCP Bridge Gateway Service
-Documentation=https://github.com/poiley/mcp-bridge
+Documentation=https://github.com/actual-software/mcp-bridge
 After=network-online.target
 Wants=network-online.target
 
@@ -471,7 +471,7 @@ EOF
     cat > "$SYSTEMD_DIR/mcp-router.service" << EOF
 [Unit]
 Description=MCP Bridge Router Service
-Documentation=https://github.com/poiley/mcp-bridge
+Documentation=https://github.com/actual-software/mcp-bridge
 After=network-online.target mcp-gateway.service
 Wants=network-online.target
 

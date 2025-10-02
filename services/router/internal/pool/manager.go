@@ -9,8 +9,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // PooledGatewayClient wraps a connection pool and implements the GatewayClient interface.

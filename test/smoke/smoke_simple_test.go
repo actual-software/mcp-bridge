@@ -17,7 +17,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/poiley/mcp-bridge/test/testutil"
+	"github.com/actual-software/mcp-bridge/test/testutil"
 )
 
 // TestBasicSmoke runs basic smoke tests that should pass.

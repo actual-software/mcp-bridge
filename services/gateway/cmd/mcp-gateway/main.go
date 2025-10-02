@@ -15,15 +15,15 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/auth"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/health"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/ratelimit"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/router"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/server"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/session"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/health"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/ratelimit"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/router"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/server"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
 )
 
 const (

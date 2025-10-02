@@ -11,10 +11,10 @@ import (
 
 	"go.uber.org/zap"
 
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/health"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/wire"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/health"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/wire"
 )
 
 // TCPHealthServer handles TCP health check requests.

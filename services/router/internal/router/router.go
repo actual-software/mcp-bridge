@@ -38,11 +38,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/direct"
-	"github.com/poiley/mcp-bridge/services/router/internal/gateway"
-	"github.com/poiley/mcp-bridge/services/router/internal/ratelimit"
-	"github.com/poiley/mcp-bridge/services/router/internal/stdio"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/direct"
+	"github.com/actual-software/mcp-bridge/services/router/internal/gateway"
+	"github.com/actual-software/mcp-bridge/services/router/internal/ratelimit"
+	"github.com/actual-software/mcp-bridge/services/router/internal/stdio"
 )
 
 // Error definitions for proper error handling instead of string comparison.

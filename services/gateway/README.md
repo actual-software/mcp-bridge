@@ -119,7 +119,7 @@ For more control, clone the repo and customize:
 
 ```bash
 # Clone repository
-git clone https://github.com/poiley/mcp-bridge
+git clone https://github.com/actual-software/mcp-bridge
 cd mcp-bridge/services/gateway
 
 # Edit configuration

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // Backend represents a backend MCP server connection.

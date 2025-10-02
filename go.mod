@@ -1,4 +1,4 @@
-module github.com/poiley/mcp-bridge
+module github.com/actual-software/mcp-bridge
 
 go 1.23.0
 

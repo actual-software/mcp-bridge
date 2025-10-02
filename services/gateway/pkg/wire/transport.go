@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // Transport provides framed message transport over a connection.

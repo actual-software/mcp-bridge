@@ -46,7 +46,7 @@ helm delete my-mcp-bridge
 
 | Name                | Description                      | Value                          |
 | ------------------- | -------------------------------- | ------------------------------ |
-| `image.repository`  | Image repository                 | `ghcr.io/poiley/mcp-bridge`   |
+| `image.repository`  | Image repository                 | `ghcr.io/actual-software/mcp-bridge`   |
 | `image.pullPolicy`  | Image pull policy                | `IfNotPresent`                 |
 | `image.tag`         | Image tag                        | `1.0.0-rc1`                    |
 
@@ -64,7 +64,7 @@ helm delete my-mcp-bridge
 | ------------------------------------ | ----------------------------------------- | ----------------- |
 | `gateway.enabled`                    | Enable Gateway deployment                 | `true`            |
 | `gateway.replicaCount`               | Number of Gateway replicas                | `2`               |
-| `gateway.image.repository`           | Gateway image repository                  | `ghcr.io/poiley/mcp-bridge/gateway` |
+| `gateway.image.repository`           | Gateway image repository                  | `ghcr.io/actual-software/mcp-bridge/gateway` |
 | `gateway.image.tag`                  | Gateway image tag                         | `1.0.0-rc1`       |
 | `gateway.service.type`               | Gateway service type                      | `ClusterIP`       |
 | `gateway.service.port`               | Gateway WebSocket service port            | `8443`            |
@@ -86,7 +86,7 @@ helm delete my-mcp-bridge
 | ------------------------------------ | ----------------------------------------- | ----------------- |
 | `router.enabled`                     | Enable Router deployment                  | `true`            |
 | `router.replicaCount`                | Number of Router replicas                 | `1`               |
-| `router.image.repository`            | Router image repository                   | `ghcr.io/poiley/mcp-bridge/router` |
+| `router.image.repository`            | Router image repository                   | `ghcr.io/actual-software/mcp-bridge/router` |
 | `router.image.tag`                   | Router image tag                          | `1.0.0-rc1`       |
 | `router.service.type`                | Router service type                       | `ClusterIP`       |
 | `router.service.port`                | Router service port                       | `9091`            |

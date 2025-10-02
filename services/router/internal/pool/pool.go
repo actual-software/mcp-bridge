@@ -116,7 +116,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 )
 
 // Constants removed - will add as needed

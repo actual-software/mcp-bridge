@@ -153,9 +153,9 @@ We welcome documentation improvements! See our [Contributing Guide](../CONTRIBUT
 ## 📞 **Getting Help**
 
 ### **Community Support**
-- [GitHub Issues](https://github.com/poiley/mcp-bridge/issues) - Bug reports and feature requests
-- [GitHub Discussions](https://github.com/poiley/mcp-bridge/discussions) - Community Q&A
-- [Documentation](https://github.com/poiley/mcp-bridge/tree/main/docs) - This documentation
+- [GitHub Issues](https://github.com/actual-software/mcp-bridge/issues) - Bug reports and feature requests
+- [GitHub Discussions](https://github.com/actual-software/mcp-bridge/discussions) - Community Q&A
+- [Documentation](https://github.com/actual-software/mcp-bridge/tree/main/docs) - This documentation
 
 ### **Enterprise Support**
 - Priority support for enterprise customers
@@ -165,4 +165,4 @@ We welcome documentation improvements! See our [Contributing Guide](../CONTRIBUT
 
 ---
 
-**📝 Note**: This documentation is actively maintained and updated with each release. If you find any issues or have suggestions for improvement, please [open an issue](https://github.com/poiley/mcp-bridge/issues) or [start a discussion](https://github.com/poiley/mcp-bridge/discussions).
+**📝 Note**: This documentation is actively maintained and updated with each release. If you find any issues or have suggestions for improvement, please [open an issue](https://github.com/actual-software/mcp-bridge/issues) or [start a discussion](https://github.com/actual-software/mcp-bridge/discussions).

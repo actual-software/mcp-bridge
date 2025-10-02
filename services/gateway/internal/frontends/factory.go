@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/frontends/stdio"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/stdio"
 )
 
 // Wrapper types to implement the Frontend interface

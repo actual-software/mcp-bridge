@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
 )
 
 // TestConfigurationEnvironment provides comprehensive test configuration setup.

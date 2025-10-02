@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/poiley/mcp-bridge/test/testutil/e2e"
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
 // This ensures that the complete protocol handshake works correctly and that

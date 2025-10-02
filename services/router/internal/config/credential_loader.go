@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/secure"
+	"github.com/actual-software/mcp-bridge/services/router/internal/secure"
 )
 
 // CredentialResolver handles credential loading from various sources with proper fallback.

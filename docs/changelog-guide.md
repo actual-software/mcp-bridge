@@ -422,7 +422,7 @@ This release includes WebSocket compression support, improved rate limiting, and
 - @user1
 - @user2
 
-**Full Changelog**: https://github.com/poiley/mcp-bridge/compare/v1.1.0...v1.2.0
+**Full Changelog**: https://github.com/actual-software/mcp-bridge/compare/v1.1.0...v1.2.0
 ```
 
 ## Integration with CI/CD

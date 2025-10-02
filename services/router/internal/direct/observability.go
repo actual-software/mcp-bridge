@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 	"go.uber.org/zap"
 )
 

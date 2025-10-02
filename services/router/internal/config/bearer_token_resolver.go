@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/secure"
+	"github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/secure"
 )
 
 // BearerTokenResolver handles bearer token resolution from various sources.

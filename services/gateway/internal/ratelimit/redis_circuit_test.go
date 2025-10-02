@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/auth"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/circuit"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/circuit"
 )
 
 func TestRedisRateLimiterWithCircuitBreaker_CircuitOpen(t *testing.T) {

@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // RouterInterface defines the router interface for testing.

@@ -400,7 +400,7 @@ type Frontend struct {
 package tcp
 
 import (
-    "github.com/poiley/mcp-bridge/services/gateway/pkg/wire"
+    "github.com/actual-software/mcp-bridge/services/gateway/pkg/wire"
 )
 
 type Config struct {
@@ -505,11 +505,11 @@ type Frontend struct {
 package frontends
 
 import (
-    "github.com/poiley/mcp-bridge/services/gateway/internal/frontends/stdio"
-    "github.com/poiley/mcp-bridge/services/gateway/internal/frontends/websocket"
-    "github.com/poiley/mcp-bridge/services/gateway/internal/frontends/http"
-    "github.com/poiley/mcp-bridge/services/gateway/internal/frontends/sse"
-    "github.com/poiley/mcp-bridge/services/gateway/internal/frontends/tcp"
+    "github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/stdio"
+    "github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/websocket"
+    "github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/http"
+    "github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/sse"
+    "github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/tcp"
 )
 
 type DefaultFactory struct {

@@ -19,15 +19,15 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/errors"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/session"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/tracing"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/circuit"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/loadbalancer"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/tracing"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/circuit"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/loadbalancer"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // contextKey is a custom type for context keys to avoid collisions.

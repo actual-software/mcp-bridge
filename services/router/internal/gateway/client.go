@@ -33,8 +33,8 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 const (

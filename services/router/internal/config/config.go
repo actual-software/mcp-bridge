@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/viper"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
-	"github.com/poiley/mcp-bridge/services/router/internal/direct"
-	"github.com/poiley/mcp-bridge/services/router/internal/secure"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/direct"
+	"github.com/actual-software/mcp-bridge/services/router/internal/secure"
 )
 
 const (

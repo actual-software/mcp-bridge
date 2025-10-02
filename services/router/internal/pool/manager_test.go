@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 func TestNewPooledGatewayClient(t *testing.T) {

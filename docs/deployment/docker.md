@@ -204,7 +204,7 @@ version: '3.8'
 services:
   # MCP Gateway with Universal Protocol Support
   mcp-gateway:
-    image: ghcr.io/poiley/mcp-bridge-gateway:latest
+    image: ghcr.io/actual-software/mcp-bridge-gateway:latest
     ports:
       - "8443:8443"    # WebSocket/HTTP frontend
       - "8444:8444"    # TCP Binary frontend
@@ -251,7 +251,7 @@ services:
 
   # MCP Router with Direct Protocol Support  
   mcp-router:
-    image: ghcr.io/poiley/mcp-bridge-router:latest
+    image: ghcr.io/actual-software/mcp-bridge-router:latest
     ports:
       - "9091:9091"    # Metrics and management
     volumes:
@@ -354,7 +354,7 @@ volumes:
 ### Production Installation
 ```bash
 # Install local router with secure storage setup
-curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/router/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/actual-software/mcp-bridge/main/services/router/install.sh | bash
 
 # Configure secure token storage
 mcp-router setup
@@ -369,7 +369,7 @@ kubectl apply -k mcp-k8s-manifests/
 
 ```bash
 # Install with automatic platform detection and secure storage setup
-curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/router/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/actual-software/mcp-bridge/main/services/router/install.sh | bash
 
 # The installer will:
 # - Detect your platform (macOS/Windows/Linux)
@@ -384,16 +384,16 @@ curl -sSL https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/rout
 #### Download Pre-built Binary
 ```bash
 # macOS (Intel)
-curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-darwin-amd64 -o mcp-router
+curl -L https://github.com/actual-software/mcp-bridge/releases/latest/download/mcp-router-darwin-amd64 -o mcp-router
 
 # macOS (Apple Silicon)
-curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-darwin-arm64 -o mcp-router
+curl -L https://github.com/actual-software/mcp-bridge/releases/latest/download/mcp-router-darwin-arm64 -o mcp-router
 
 # Linux (x86_64)
-curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-linux-amd64 -o mcp-router
+curl -L https://github.com/actual-software/mcp-bridge/releases/latest/download/mcp-router-linux-amd64 -o mcp-router
 
 # Windows
-curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-windows-amd64.exe -o mcp-router.exe
+curl -L https://github.com/actual-software/mcp-bridge/releases/latest/download/mcp-router-windows-amd64.exe -o mcp-router.exe
 
 # Make executable and install
 chmod +x mcp-router
@@ -1084,7 +1084,7 @@ volumeMounts:
 1. **Image Scanning**
 ```bash
 # Scan gateway image for vulnerabilities
-trivy image ghcr.io/poiley/mcp-bridge-gateway:latest
+trivy image ghcr.io/actual-software/mcp-bridge-gateway:latest
 ```
 
 2. **Runtime Security**
@@ -1501,7 +1501,7 @@ Enhanced Prometheus alerts configured in `monitoring/service-monitor.yaml`:
 ```bash
 # Update gateway image with universal protocol support
 kubectl set image deployment/mcp-gateway \
-  gateway=ghcr.io/poiley/mcp-bridge-gateway:v1.1.0 -n mcp-system
+  gateway=ghcr.io/actual-software/mcp-bridge-gateway:v1.1.0 -n mcp-system
 
 # Monitor rollout with protocol health checks
 kubectl rollout status deployment/mcp-gateway -n mcp-system
@@ -1511,7 +1511,7 @@ curl https://mcp-gateway.your-domain.com/health/protocols
 
 # Update router image with direct protocol clients
 kubectl set image deployment/mcp-router \
-  router=ghcr.io/poiley/mcp-bridge-router:v1.1.0 -n mcp-system
+  router=ghcr.io/actual-software/mcp-bridge-router:v1.1.0 -n mcp-system
 ```
 
 ### Protocol-Safe Upgrade Process
@@ -1808,7 +1808,7 @@ For protocol-specific emergencies:
 
 ### Community and Documentation
 
-- **GitHub Repository**: [mcp-bridge](https://github.com/poiley/mcp-bridge)
+- **GitHub Repository**: [mcp-bridge](https://github.com/actual-software/mcp-bridge)
 - **Protocol Documentation**: [docs/protocols/](../protocols/)
 - **Performance Guides**: [docs/performance/](../performance/)  
 - **Community Discussions**: GitHub Discussions for protocol optimization tips

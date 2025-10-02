@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/tracing"
+	"github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/tracing"
 )
 
 func TestInitOTelTracer(t *testing.T) {

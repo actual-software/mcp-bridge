@@ -11,13 +11,13 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/auth"
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/session"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/validation"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/wire"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/validation"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/wire"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 const (

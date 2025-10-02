@@ -14,14 +14,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // testingLogger interface allows using both *testing.T and *testing.B.

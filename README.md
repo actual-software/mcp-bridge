@@ -5,7 +5,7 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-80.3%25-brightgreen.svg)](COVERAGE.md)
 [![Security](https://img.shields.io/badge/security-OWASP%20compliant-green.svg)](docs/OWASP_SECURITY.md)
 [![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](PRODUCTION_READINESS.md)
-[![Go Report Card](https://goreportcard.com/badge/github.com/poiley/mcp-bridge)](https://goreportcard.com/report/github.com/poiley/mcp-bridge)
+[![Go Report Card](https://goreportcard.com/badge/github.com/actual-software/mcp-bridge)](https://goreportcard.com/report/github.com/actual-software/mcp-bridge)
 
 A production-ready bridge system for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), enabling secure remote access to MCP servers through a scalable gateway architecture.
 
@@ -13,7 +13,7 @@ A production-ready bridge system for the [Model Context Protocol (MCP)](https://
 
 ### Development Setup (< 5 minutes)
 ```bash
-git clone https://github.com/poiley/mcp-bridge.git
+git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 ./quickstart.sh        # Automated setup with interactive wizard
 ```
@@ -160,15 +160,15 @@ The server-side component that provides universal protocol routing to any backen
 #### Option 1: Download Pre-built Binaries
 ```bash
 # Download latest release
-curl -sSL https://github.com/poiley/mcp-bridge/releases/latest/download/install.sh | bash
+curl -sSL https://github.com/actual-software/mcp-bridge/releases/latest/download/install.sh | bash
 
 # Or install specific version
-VERSION=v1.0.0 curl -sSL https://github.com/poiley/mcp-bridge/releases/download/${VERSION}/install.sh | bash
+VERSION=v1.0.0 curl -sSL https://github.com/actual-software/mcp-bridge/releases/download/${VERSION}/install.sh | bash
 ```
 
 #### Option 2: Build from Source
 ```bash
-git clone https://github.com/poiley/mcp-bridge.git
+git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 
 # Build router
@@ -183,13 +183,13 @@ make build
 #### Option 3: Docker
 ```bash
 # Run with Docker Compose (Recommended)
-git clone https://github.com/poiley/mcp-bridge.git
+git clone https://github.com/actual-software/mcp-bridge.git
 cd mcp-bridge
 docker-compose up -d
 
 # Or run individual containers
-docker run -p 8443:8443 ghcr.io/poiley/mcp-bridge/gateway:latest
-docker run -v ~/.config:/root/.config ghcr.io/poiley/mcp-bridge/router:latest
+docker run -p 8443:8443 ghcr.io/actual-software/mcp-bridge/gateway:latest
+docker run -v ~/.config:/root/.config ghcr.io/actual-software/mcp-bridge/router:latest
 ```
 
 ### Configuration
@@ -420,8 +420,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - **Documentation**: Check our [docs](docs/) directory
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/poiley/mcp-bridge/issues)
-- **Discussions**: Join our [GitHub Discussions](https://github.com/poiley/mcp-bridge/discussions)
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/actual-software/mcp-bridge/issues)
+- **Discussions**: Join our [GitHub Discussions](https://github.com/actual-software/mcp-bridge/discussions)
 - **Security**: Report security issues to [security@example.com](mailto:security@example.com)
 
 ---

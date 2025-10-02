@@ -18,13 +18,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
-	"github.com/poiley/mcp-bridge/services/router/internal/direct"
-	"github.com/poiley/mcp-bridge/services/router/internal/gateway"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
-	"github.com/poiley/mcp-bridge/test/testutil"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/direct"
+	"github.com/actual-software/mcp-bridge/services/router/internal/gateway"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/test/testutil"
 )
 
 const (

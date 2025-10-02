@@ -23,8 +23,8 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
-	"github.com/poiley/mcp-bridge/services/gateway/test/testutil"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
+	"github.com/actual-software/mcp-bridge/services/gateway/test/testutil"
 )
 
 const providerKubernetes = "kubernetes"

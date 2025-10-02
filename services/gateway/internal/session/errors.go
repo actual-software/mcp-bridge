@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 )
 
 // sessionContextKey is a type for session context keys.

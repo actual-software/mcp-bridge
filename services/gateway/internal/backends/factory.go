@@ -6,11 +6,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/backends/sse"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/backends/stdio"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/backends/websocket"
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/backends/sse"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/backends/stdio"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/backends/websocket"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
 )
 
 // Wrapper types to implement the Backend interface

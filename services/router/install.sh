@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # MCP Local Router Installation Script
-# https://github.com/poiley/mcp-bridge
+# https://github.com/actual-software/mcp-bridge
 
 # Configuration
-GITHUB_REPO="poiley/mcp-bridge"
+GITHUB_REPO="actual-software/mcp-bridge"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="mcp-router"
 CONFIG_DIR="$HOME/.config/claude-cli"

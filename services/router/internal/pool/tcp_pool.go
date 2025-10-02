@@ -3,8 +3,8 @@ package pool
 import (
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/gateway"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/gateway"
 )
 
 // createTCPClient is the client creator function for TCP connections.

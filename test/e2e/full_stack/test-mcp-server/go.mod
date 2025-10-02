@@ -1,4 +1,4 @@
-module github.com/poiley/mcp-bridge/test/e2e/full_stack/test-mcp-server
+module github.com/actual-software/mcp-bridge/test/e2e/full_stack/test-mcp-server
 
 go 1.21
 

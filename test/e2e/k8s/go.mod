@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.5
 
 require (
-	github.com/poiley/mcp-bridge v0.0.0
+	github.com/actual-software/mcp-bridge v0.0.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
 )
@@ -21,4 +21,4 @@ require (
 
 // Use local development version of the parent module
 //nolint:gomoddirectives
-replace github.com/poiley/mcp-bridge => ../../..
+replace github.com/actual-software/mcp-bridge => ../../..

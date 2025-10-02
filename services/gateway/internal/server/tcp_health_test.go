@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/health"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/wire"
-	"github.com/poiley/mcp-bridge/services/gateway/test/testutil"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/health"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/wire"
+	"github.com/actual-software/mcp-bridge/services/gateway/test/testutil"
 )
 
 // mockDiscovery implements discovery.ServiceDiscovery for testing.

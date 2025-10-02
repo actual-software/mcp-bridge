@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 
-	"github.com/poiley/mcp-bridge/test/testutil/e2e"
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
 // Helper functions for TestFullStackEndToEnd

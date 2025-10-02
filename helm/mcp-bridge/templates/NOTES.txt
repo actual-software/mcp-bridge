@@ -58,4 +58,4 @@ Update configuration:
   kubectl rollout restart deployment/{{ include "mcp-bridge.fullname" . }}-gateway
   kubectl rollout restart deployment/{{ include "mcp-bridge.fullname" . }}-router
 
-For more information, visit: https://github.com/poiley/mcp-bridge
+For more information, visit: https://github.com/actual-software/mcp-bridge

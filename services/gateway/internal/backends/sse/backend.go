@@ -14,9 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 
 	"go.uber.org/zap"
 )

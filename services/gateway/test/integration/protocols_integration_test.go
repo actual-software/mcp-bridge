@@ -17,9 +17,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/backends/stdio"
-	wsBackend "github.com/poiley/mcp-bridge/services/gateway/internal/backends/websocket"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/backends/stdio"
+	wsBackend "github.com/actual-software/mcp-bridge/services/gateway/internal/backends/websocket"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 const (

@@ -4,7 +4,7 @@ package wire
 import (
 	"encoding/json"
 
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 // AuthMessage wraps an MCP message with authentication token.

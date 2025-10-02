@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap/zaptest"
 	"go.uber.org/zap/zaptest/observer"
 
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 )
 
 func TestWithError(t *testing.T) {

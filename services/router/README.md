@@ -75,7 +75,7 @@ mcp-router setup
 
 ```bash
 # Download the latest release
-curl -L https://github.com/poiley/mcp-bridge/releases/latest/download/mcp-router-$(uname -s)-$(uname -m) -o mcp-router
+curl -L https://github.com/actual-software/mcp-bridge/releases/latest/download/mcp-router-$(uname -s)-$(uname -m) -o mcp-router
 
 # Make executable
 chmod +x mcp-router
@@ -88,7 +88,7 @@ sudo mv mcp-router /usr/local/bin/
 
 ```bash
 # Clone the repository
-git clone https://github.com/poiley/mcp-bridge
+git clone https://github.com/actual-software/mcp-bridge
 cd services/router
 
 # Build the binary
@@ -665,5 +665,5 @@ Contributions are welcome! Please read CONTRIBUTING.md for guidelines.
 ## Support
 
 For issues and feature requests, please visit:
-- **Issues**: https://github.com/poiley/mcp-bridge/issues
-- **Discussions**: https://github.com/poiley/mcp-bridge/discussions
+- **Issues**: https://github.com/actual-software/mcp-bridge/issues
+- **Discussions**: https://github.com/actual-software/mcp-bridge/discussions

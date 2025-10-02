@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
 )
 
 func TestNewRoundRobin(t *testing.T) {

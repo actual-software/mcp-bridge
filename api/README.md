@@ -328,7 +328,7 @@ Official SDKs provide idiomatic interfaces for each language:
 
 ### Go
 ```go
-import "github.com/poiley/mcp-bridge/sdk/go"
+import "github.com/actual-software/mcp-bridge/sdk/go"
 
 client := mcp.NewClient("https://gateway.mcp-bridge.io", "YOUR_TOKEN")
 response, err := client.Execute(ctx, &mcp.Request{
@@ -421,6 +421,6 @@ openapi-generator generate -i api/openapi/gateway.yaml -g typescript-axios -o sd
 
 ## 🤝 Support
 
-- **Issues**: [GitHub Issues](https://github.com/poiley/mcp-bridge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/poiley/mcp-bridge/discussions)
+- **Issues**: [GitHub Issues](https://github.com/actual-software/mcp-bridge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/actual-software/mcp-bridge/discussions)
 - **Security**: Report security issues to security@mcp-bridge.io

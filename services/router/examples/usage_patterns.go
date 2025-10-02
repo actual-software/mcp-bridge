@@ -15,11 +15,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
-	"github.com/poiley/mcp-bridge/services/router/internal/gateway"
-	"github.com/poiley/mcp-bridge/services/router/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/router/internal/pool"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/gateway"
+	"github.com/actual-software/mcp-bridge/services/router/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/router/internal/pool"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 	"go.uber.org/zap"
 )
 

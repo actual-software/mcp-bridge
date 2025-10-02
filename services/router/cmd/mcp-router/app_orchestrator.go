@@ -8,10 +8,10 @@ import (
 	"sync"
 	"syscall"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/router/internal/router"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/router/internal/router"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

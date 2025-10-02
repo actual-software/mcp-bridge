@@ -9,10 +9,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 	"go.uber.org/zap"
 )
 

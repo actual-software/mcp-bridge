@@ -144,7 +144,7 @@ kubectl scale deployment mcp-gateway mcp-router --replicas=0 -n mcp-system
 
 ```bash
 # Download new version
-wget https://github.com/poiley/mcp-bridge/releases/download/v1.1.0/mcp-bridge-v1.1.0.tar.gz
+wget https://github.com/actual-software/mcp-bridge/releases/download/v1.1.0/mcp-bridge-v1.1.0.tar.gz
 tar -xzf mcp-bridge-v1.1.0.tar.gz
 
 # Replace binaries
@@ -509,7 +509,7 @@ jobs:
 ## Support
 
 For upgrade assistance:
-- GitHub Issues: https://github.com/poiley/mcp-bridge/issues
+- GitHub Issues: https://github.com/actual-software/mcp-bridge/issues
 - Documentation: https://docs.mcp-bridge.io/upgrade
 - Community Forum: https://forum.mcp-bridge.io
 

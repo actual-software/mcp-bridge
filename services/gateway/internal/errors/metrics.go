@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
 )
 
 const (

@@ -9,8 +9,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/config"
-	customerrors "github.com/poiley/mcp-bridge/services/gateway/internal/errors"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
+	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 )
 
 // StaticDiscovery implements service discovery using static configuration.

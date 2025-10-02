@@ -12,8 +12,8 @@
     {"type": "build", "section": "🛠 Build System", "hidden": false},
     {"type": "ci", "section": "⚙️ Continuous Integration", "hidden": false}
   ],
-  "commitUrlFormat": "https://github.com/poiley/mcp-bridge/commit/{{hash}}",
-  "compareUrlFormat": "https://github.com/poiley/mcp-bridge/compare/{{previousTag}}...{{currentTag}}",
+  "commitUrlFormat": "https://github.com/actual-software/mcp-bridge/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/actual-software/mcp-bridge/compare/{{previousTag}}...{{currentTag}}",
   "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
   "skip": {
     "bump": false,

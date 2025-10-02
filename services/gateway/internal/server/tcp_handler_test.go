@@ -13,12 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/auth"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/metrics"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/session"
-	"github.com/poiley/mcp-bridge/services/gateway/pkg/wire"
-	"github.com/poiley/mcp-bridge/services/gateway/test/testutil"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/metrics"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
+	"github.com/actual-software/mcp-bridge/services/gateway/pkg/wire"
+	"github.com/actual-software/mcp-bridge/services/gateway/test/testutil"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
 const testUserConst = "test-user"

@@ -90,7 +90,7 @@ main() {
     # Test 4: GitHub repository references
     log "Checking GitHub repository references..."
     
-    local expected_repo="poiley/mcp-bridge"
+    local expected_repo="actual-software/mcp-bridge"
     
     for script in "${scripts[@]}"; do
         if [[ -f "$script" ]]; then

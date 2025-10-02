@@ -12,7 +12,7 @@ fullnameOverride: ""
 
 # Container images
 image:
-  repository: ghcr.io/poiley/mcp-bridge
+  repository: ghcr.io/actual-software/mcp-bridge
   pullPolicy: IfNotPresent
   tag: "1.0.0-rc1"
 
@@ -47,7 +47,7 @@ gateway:
   name: gateway
   
   image:
-    repository: ghcr.io/poiley/mcp-bridge/gateway
+    repository: ghcr.io/actual-software/mcp-bridge/gateway
     tag: "1.0.0-rc1"
   
   replicaCount: 2
@@ -150,7 +150,7 @@ router:
   name: router
   
   image:
-    repository: ghcr.io/poiley/mcp-bridge/router
+    repository: ghcr.io/actual-software/mcp-bridge/router
     tag: "1.0.0-rc1"
   
   replicaCount: 1

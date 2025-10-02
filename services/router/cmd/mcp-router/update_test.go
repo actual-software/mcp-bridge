@@ -113,7 +113,7 @@ func createMockUpdateServer(t *testing.T, latestVersion string) *httptest.Server
 	t.Helper()
 
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/repos/poiley/mcp-bridge/releases/latest", r.URL.Path)
+		assert.Equal(t, "/repos/actual-software/mcp-bridge/releases/latest", r.URL.Path)
 
 		release := mockRelease{
 			TagName: latestVersion,
@@ -200,7 +200,7 @@ func createUpdateVerboseTests() []struct {
 				TagName:     "v2.0.0",
 				Name:        "Version 2.0.0",
 				PublishedAt: time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC),
-				HTMLURL:     "https://github.com/poiley/mcp-bridge/releases/tag/v2.0.0",
+				HTMLURL:     "https://github.com/actual-software/mcp-bridge/releases/tag/v2.0.0",
 			},
 			expectUpdate: true,
 		},
@@ -403,7 +403,7 @@ func setupMockRelease() mockRelease {
 		TagName:     "v3.0.0",
 		Name:        "Version 3.0.0 - Major Update",
 		PublishedAt: time.Date(2024, 2, 1, 15, 30, 0, 0, time.UTC),
-		HTMLURL:     "https://github.com/poiley/mcp-bridge/releases/tag/v3.0.0",
+		HTMLURL:     "https://github.com/actual-software/mcp-bridge/releases/tag/v3.0.0",
 	}
 }
 

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
-	"github.com/poiley/mcp-bridge/services/gateway/test/testutil"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/test/testutil"
 	"go.uber.org/zap"
 )
 

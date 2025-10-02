@@ -13,16 +13,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
 
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap/zaptest"
 
-	common "github.com/poiley/mcp-bridge/pkg/common/config"
-	gatewayTestutil "github.com/poiley/mcp-bridge/services/gateway/test/testutil"
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
-	"github.com/poiley/mcp-bridge/test/testutil"
+	common "github.com/actual-software/mcp-bridge/pkg/common/config"
+	gatewayTestutil "github.com/actual-software/mcp-bridge/services/gateway/test/testutil"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/test/testutil"
 )
 
 func TestNewClient(t *testing.T) {

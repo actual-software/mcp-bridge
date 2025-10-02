@@ -10,8 +10,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/poiley/mcp-bridge/services/gateway/internal/common"
-	"github.com/poiley/mcp-bridge/services/gateway/internal/discovery"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/common"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
 )
 
 const (

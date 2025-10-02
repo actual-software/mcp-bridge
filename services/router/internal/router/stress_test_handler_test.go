@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/poiley/mcp-bridge/services/router/internal/config"
-	"github.com/poiley/mcp-bridge/services/router/internal/constants"
-	"github.com/poiley/mcp-bridge/services/router/internal/direct"
-	"github.com/poiley/mcp-bridge/services/router/internal/ratelimit"
-	"github.com/poiley/mcp-bridge/services/router/pkg/mcp"
+	"github.com/actual-software/mcp-bridge/services/router/internal/config"
+	"github.com/actual-software/mcp-bridge/services/router/internal/constants"
+	"github.com/actual-software/mcp-bridge/services/router/internal/direct"
+	"github.com/actual-software/mcp-bridge/services/router/internal/ratelimit"
+	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 	"go.uber.org/zap/zaptest"
 )
 

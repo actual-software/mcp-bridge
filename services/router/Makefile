@@ -42,7 +42,7 @@ test:
 # Run tests with coverage report
 test-coverage: test
 	@echo "Generating coverage report..."
-	@$(GOCMD) tool cover -func=coverage.out | grep -E "^total:|^github.com/poiley/mcp-bridge/services/router/" | sort
+	@$(GOCMD) tool cover -func=coverage.out | grep -E "^total:|^github.com/actual-software/mcp-bridge/services/router/" | sort
 	@echo ""
 	@echo "Overall coverage: $$($(GOCMD) tool cover -func=coverage.out | grep total | awk '{print $$3}')"
 

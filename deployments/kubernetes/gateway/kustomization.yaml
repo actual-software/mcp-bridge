@@ -19,7 +19,7 @@ labels:
       app.kubernetes.io/managed-by: kustomize
 
 images:
-  - name: ghcr.io/poiley/mcp-bridge-gateway
+  - name: ghcr.io/actual-software/mcp-bridge-gateway
     newTag: v1.0.0
 
 replicas:

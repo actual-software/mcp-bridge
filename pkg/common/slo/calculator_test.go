@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/poiley/mcp-bridge/pkg/common/slo"
+	"github.com/actual-software/mcp-bridge/pkg/common/slo"
 )
 
 func TestNewCalculator(t *testing.T) {
