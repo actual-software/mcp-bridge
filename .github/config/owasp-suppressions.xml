@@ -12,14 +12,35 @@
     Documentation: https://jeremylong.github.io/DependencyCheck/general/suppression.html
     -->
 
-    <!-- Example suppression (remove or modify as needed):
+    <!-- CVE-2024-52308: False Positive - Wrong Package Match -->
     <suppress>
         <notes><![CDATA[
-        Example: Suppress a specific CVE for a specific dependency
+        CVE-2024-52308 is a vulnerability in GitHub's official CLI (cli/cli), not mitchellh/cli.
+        OWASP Dependency Check is incorrectly matching the package name.
+
+        The actual CVE affects github.com/cli/cli (GitHub's official CLI tool) with a remote
+        code execution vulnerability when connecting to malicious SSH servers in Codespaces.
+
+        Our codebase uses github.com/mitchellh/cli, which is an unrelated CLI framework library
+        by Mitchell Hashimoto. This is pulled in as a transitive dependency through:
+        hashicorp/consul/api -> hashicorp/serf -> mitchellh/cli
+
+        Reference: https://github.com/advisories/GHSA-p2h2-3vg9-4p87
         ]]></notes>
-        <packageUrl regex="true">^pkg:golang/github\.com/example/.*$</packageUrl>
-        <cve>CVE-2024-XXXXX</cve>
+        <packageUrl regex="true">^pkg:golang/github\.com/mitchellh/cli@.*$</packageUrl>
+        <cve>CVE-2024-52308</cve>
     </suppress>
-    -->
+
+    <!-- CVE-2013-10005: False Positive - Incorrect Package Match -->
+    <suppress>
+        <notes><![CDATA[
+        CVE-2013-10005 is a vulnerability in the JavaScript json-pointer package, not Go's
+        github.com/armon/go-socks5. OWASP is incorrectly matching based on package naming.
+
+        This is a transitive dependency through hashicorp/consul/api.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:golang/github\.com/armon/go-socks5@.*$</packageUrl>
+        <cve>CVE-2013-10005</cve>
+    </suppress>
 
 </suppressions>
