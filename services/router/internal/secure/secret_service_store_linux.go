@@ -8,12 +8,14 @@ import (
 	"strings"
 )
 
-// secretServiceStore implements TokenStore using Linux Secret Service (libsecret/secret-tool)
+// secretServiceStore implements TokenStore using Linux Secret Service (libsecret/secret-tool).
 type secretServiceStore struct {
 	appName string
 }
 
-// newSecretServiceStore creates a new Linux Secret Service-based token store
+// newSecretServiceStore creates a new Linux Secret Service-based token store.
+//
+//nolint:ireturn // This is a factory function that returns an interface by design.
 func newSecretServiceStore(appName string) (TokenStore, error) {
 	// Check if secret-tool is available.
 	if _, err := exec.LookPath("secret-tool"); err != nil {
@@ -29,6 +31,7 @@ func newSecretServiceStore(appName string) (TokenStore, error) {
 func (s *secretServiceStore) Store(key, token string) error {
 	serviceName := s.serviceName()
 
+	// #nosec G204 -- secret-tool is a system command, service name and key are from controlled sources
 	cmd := exec.Command("secret-tool", "store",
 		"--label", fmt.Sprintf("MCP Router Token (%s)", key),
 		"service", serviceName,
@@ -47,6 +50,7 @@ func (s *secretServiceStore) Store(key, token string) error {
 func (s *secretServiceStore) Retrieve(key string) (string, error) {
 	serviceName := s.serviceName()
 
+	// #nosec G204 -- secret-tool is a system command, service name and key are from controlled sources
 	cmd := exec.Command("secret-tool", "lookup",
 		"service", serviceName,
 		"account", key)
@@ -56,11 +60,13 @@ func (s *secretServiceStore) Retrieve(key string) (string, error) {
 		if cmd.ProcessState.ExitCode() == 1 {
 			return "", ErrTokenNotFound
 		}
+
 		return "", fmt.Errorf("failed to retrieve token from secret service: %w", err)
 	}
 
 	// Remove trailing newline.
 	token := strings.TrimSpace(string(output))
+
 	return token, nil
 }
 
@@ -68,6 +74,7 @@ func (s *secretServiceStore) Retrieve(key string) (string, error) {
 func (s *secretServiceStore) Delete(key string) error {
 	serviceName := s.serviceName()
 
+	// #nosec G204 -- secret-tool is a system command, service name and key are from controlled sources
 	cmd := exec.Command("secret-tool", "clear",
 		"service", serviceName,
 		"account", key)
@@ -77,6 +84,7 @@ func (s *secretServiceStore) Delete(key string) error {
 		if cmd.ProcessState.ExitCode() == 1 {
 			return nil
 		}
+
 		return fmt.Errorf("failed to delete token from secret service: %w", err)
 	}
 
@@ -87,6 +95,7 @@ func (s *secretServiceStore) Delete(key string) error {
 func (s *secretServiceStore) List() ([]string, error) {
 	serviceName := s.serviceName()
 
+	// #nosec G204 -- secret-tool is a system command, service name is from controlled source
 	cmd := exec.Command("secret-tool", "search",
 		"service", serviceName)
 

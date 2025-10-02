@@ -4,10 +4,12 @@ package secure
 
 import "fmt"
 
-// keychainStore stub for non-macOS platforms
+// keychainStore stub for non-macOS platforms.
 type keychainStore struct{}
 
-// newKeychainStore returns an error on non-macOS platforms
+// newKeychainStore returns an error on non-macOS platforms.
+//
+//nolint:ireturn // This is a factory function that returns an interface by design.
 func newKeychainStore(appName string) (TokenStore, error) {
 	return nil, fmt.Errorf("keychain store not available on this platform")
 }
