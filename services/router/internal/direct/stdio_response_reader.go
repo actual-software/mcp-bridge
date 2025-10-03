@@ -69,15 +69,22 @@ func (r *StdioResponseReader) readSingleResponse() {
 }
 
 func (r *StdioResponseReader) setReadTimeout() {
-	if deadliner, ok := r.client.stdout.(interface{ SetReadDeadline(time.Time) error }); ok {
+	r.client.mu.RLock()
+	stdout := r.client.stdout
+	r.client.mu.RUnlock()
+
+	if deadliner, ok := stdout.(interface{ SetReadDeadline(time.Time) error }); ok {
 		_ = deadliner.SetReadDeadline(time.Now().Add(time.Second))
 	}
 }
 
 func (r *StdioResponseReader) decodeResponse() (*mcp.Response, error) {
-	var response mcp.Response
+	r.client.mu.RLock()
+	decoder := r.client.stdoutDecoder
+	r.client.mu.RUnlock()
 
-	err := r.client.stdoutDecoder.Decode(&response)
+	var response mcp.Response
+	err := decoder.Decode(&response)
 
 	return &response, err
 }
@@ -122,10 +129,14 @@ func (r *StdioResponseReader) handleEOF() {
 }
 
 func (r *StdioResponseReader) logDecodeError(err error) {
+	r.client.mu.RLock()
+	startTime := r.client.startTime
+	r.client.mu.RUnlock()
+
 	r.client.logger.Error("failed to decode response",
 		zap.Error(err),
 		zap.String("client_name", r.client.name),
-		zap.Duration("uptime", time.Since(r.client.startTime)))
+		zap.Duration("uptime", time.Since(startTime)))
 
 	r.client.updateMetrics(func(m *ClientMetrics) {
 		m.ErrorCount++
