@@ -65,11 +65,11 @@ RUN mkdir -p /etc/mcp-gateway /etc/tls && \
 USER appuser
 
 # Expose ports
-EXPOSE 8443 9090
+EXPOSE 8080 9090 9091
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:9090/healthz || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:9091/healthz || exit 1
 
 # Set entrypoint
 ENTRYPOINT ["/app/mcp-gateway"]
