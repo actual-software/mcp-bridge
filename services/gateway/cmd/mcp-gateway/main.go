@@ -297,7 +297,9 @@ func startServers(cfg *config.Config, components *Components, logger *zap.Logger
 			zap.Int("max_connections", cfg.Server.MaxConnections),
 		)
 
-		serverErrChan <- gatewayServer.Start()
+		if err := gatewayServer.Start(); err != nil {
+			serverErrChan <- err
+		}
 	}()
 
 	return &Servers{
