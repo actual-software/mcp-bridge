@@ -13,6 +13,8 @@
 **/test/e2e/
 **/test/integration/
 **/*_test.go
+!test/performance/*_test.go
+!test/smoke/*_test.go
 # Exclude testdata except for test/performance and test/smoke
 **/testdata/
 !test/performance/testdata/
