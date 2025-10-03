@@ -17,11 +17,11 @@ RUN go mod download
 # Copy test source code
 COPY test/ ./test/
 COPY pkg/ ./pkg/
-COPY internal/ ./internal/
 
 # Build test binaries if needed
 RUN go test -c ./test/smoke -o /bin/smoke.test
-RUN go test -c ./test/contract -o /bin/contract.test
+# Contract tests directory is empty, skip building
+# RUN go test -c ./test/contract -o /bin/contract.test
 RUN go test -c ./test/performance -o /bin/performance.test
 
 # Runtime stage
