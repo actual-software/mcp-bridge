@@ -38,7 +38,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ../configs/test/gateway.yaml:/etc/mcp-gateway/gateway.yaml:ro
+      - ../examples/configs/test/gateway.yaml:/etc/mcp-gateway/gateway.yaml:ro
     networks:
       - test-network
 
@@ -64,7 +64,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ../configs/test/router.yaml:/etc/mcp-router/router.yaml:ro
+      - ../examples/configs/test/router.yaml:/etc/mcp-router/router.yaml:ro
     networks:
       - test-network
 
