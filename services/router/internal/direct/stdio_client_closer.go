@@ -74,8 +74,12 @@ func (c *StdioClientCloser) signalShutdown() {
 
 // closeStdin closes the stdin writer.
 func (c *StdioClientCloser) closeStdin() {
-	if c.client.stdin != nil {
-		_ = c.client.stdin.Close()
+	c.client.mu.RLock()
+	stdin := c.client.stdin
+	c.client.mu.RUnlock()
+
+	if stdin != nil {
+		_ = stdin.Close()
 	}
 }
 

@@ -122,12 +122,14 @@ func (b *StdioProcessBuilder) createPipes() (*ProcessPipes, error) {
 }
 
 func (b *StdioProcessBuilder) configurePipes(pipes *ProcessPipes) error {
+	// Configure buffering first
+	b.configureStdinBuffering(pipes.stdin)
+	b.configureStdoutBuffering(pipes.stdout)
+
+	// Assign pipes (caller must hold lock)
 	b.client.stdin = pipes.stdin
 	b.client.stdout = pipes.stdout
 	b.client.stderr = pipes.stderr
-
-	b.configureStdinBuffering(pipes.stdin)
-	b.configureStdoutBuffering(pipes.stdout)
 
 	return nil
 }

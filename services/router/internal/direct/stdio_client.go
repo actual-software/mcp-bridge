@@ -203,7 +203,15 @@ func (c *StdioClient) readResponses() {
 func (c *StdioClient) monitorStderr() {
 	defer c.wg.Done()
 
-	scanner := bufio.NewScanner(c.stderr)
+	c.mu.RLock()
+	stderr := c.stderr
+	c.mu.RUnlock()
+
+	if stderr == nil {
+		return
+	}
+
+	scanner := bufio.NewScanner(stderr)
 
 	for {
 		select {
@@ -213,7 +221,7 @@ func (c *StdioClient) monitorStderr() {
 		}
 
 		// Set read timeout on stderr to avoid blocking indefinitely.
-		if deadliner, ok := c.stderr.(interface{ SetReadDeadline(time.Time) error }); ok {
+		if deadliner, ok := stderr.(interface{ SetReadDeadline(time.Time) error }); ok {
 			_ = deadliner.SetReadDeadline(time.Now().Add(time.Second))
 		}
 
