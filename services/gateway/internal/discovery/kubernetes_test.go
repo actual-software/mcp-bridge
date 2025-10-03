@@ -127,11 +127,41 @@ func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, n
 	createServiceEndpoints(t, client, namespace, "test-service")
 }
 
+func waitForEndpointDeletion(t *testing.T, client kubernetes.Interface, namespace, serviceName string) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			// Timeout - endpoint still exists, but we'll try to continue anyway
+			t.Logf("Warning: Endpoint %s/%s may still exist after deletion timeout", namespace, serviceName)
+
+			return
+		case <-ticker.C:
+			_, err := client.CoreV1().Endpoints(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
+			if err != nil {
+				// Endpoint is gone (likely 404 error)
+				return
+			}
+			// Endpoint still exists, keep waiting
+		}
+	}
+}
+
 func createServiceEndpoints(t *testing.T, client kubernetes.Interface, namespace, serviceName string) {
 	t.Helper()
 
 	// Delete existing endpoints if they exist (cleanup from previous failed test runs)
 	_ = client.CoreV1().Endpoints(namespace).Delete(context.Background(), serviceName, metav1.DeleteOptions{})
+
+	// Wait for deletion to complete (Kubernetes deletions are asynchronous)
+	waitForEndpointDeletion(t, client, namespace, serviceName)
 
 	endpoints := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{

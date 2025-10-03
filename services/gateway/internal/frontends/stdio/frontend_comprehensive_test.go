@@ -620,6 +620,25 @@ func TestStdioFrontend_HandleConnectionWithAuth(t *testing.T) {
 	testFailedAuth(t, config, mockRouter, mockSessions, logger)
 }
 
+func waitForResponseWritten(t *testing.T, writer *syncBuffer, timeout time.Duration) {
+	t.Helper()
+
+	timeoutChan := time.After(timeout)
+	ticker := time.NewTicker(50 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeoutChan:
+			t.Fatal("Timeout waiting for auth response to be written")
+		case <-ticker.C:
+			if writer.Len() > 0 {
+				return
+			}
+		}
+	}
+}
+
 func testSuccessfulAuth(
 	t *testing.T, config Config, mockRouter *MockRequestRouter,
 	mockAuth *MockAuthProviderWithError, mockSessions *MockSessionManager, logger *zap.Logger,
@@ -671,7 +690,8 @@ func testSuccessfulAuth(
 		frontend.handleConnection(context.Background(), testConn1)
 	}()
 
-	time.Sleep(responseProcessingTimeout)
+	waitForResponseWritten(t, writer1, 2*time.Second)
+
 	close(reader1.done)
 	time.Sleep(connectionCleanupTimeout)
 
