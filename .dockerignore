@@ -13,7 +13,10 @@
 **/test/e2e/
 **/test/integration/
 **/*_test.go
+# Exclude testdata except for test/performance and test/smoke
 **/testdata/
+!test/performance/testdata/
+!test/smoke/testdata/
 
 # Build artifacts and binaries
 **/bin/

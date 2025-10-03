@@ -6,23 +6,30 @@ RUN apk add --no-cache git make gcc musl-dev bash curl redis
 # Set working directory
 WORKDIR /app
 
-# Copy go mod files
+# Copy go mod files and all source first
 COPY go.mod go.sum ./
+COPY go.work ./
 COPY services/gateway/go.mod services/gateway/go.sum ./services/gateway/
 COPY services/router/go.mod services/router/go.sum ./services/router/
 
 # Download dependencies
 RUN go mod download
 
-# Copy test source code
+# Copy all source code needed for tests
 COPY test/ ./test/
 COPY pkg/ ./pkg/
+COPY services/ ./services/
 
-# Build test binaries if needed
-RUN go test -c ./test/smoke -o /bin/smoke.test
-# Contract tests directory is empty, skip building
-# RUN go test -c ./test/contract -o /bin/contract.test
-RUN go test -c ./test/performance -o /bin/performance.test
+# Build test binaries using full module paths
+# Use GOWORK=off to avoid workspace mode, and build from test directories directly
+WORKDIR /app/test/smoke
+RUN go test -c -o /bin/smoke.test .
+
+WORKDIR /app/test/performance
+RUN go test -c -o /bin/performance.test .
+
+# Reset workdir for final stage
+WORKDIR /app
 
 # Runtime stage
 FROM alpine:latest
