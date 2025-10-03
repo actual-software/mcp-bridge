@@ -100,6 +100,7 @@ func TestEncryptedFileStore_MaliciousInputResistance(t *testing.T) {
 	}
 }
 
+//nolint:ireturn // Test helper returns concrete type for test isolation
 func setupMaliciousInputTestStore(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
@@ -256,6 +257,7 @@ func TestEncryptedFileStore_FileSystemSecurity(t *testing.T) {
 	testDirectoryTraversalProtection(t, tempDir, fileStore, fileStore)
 }
 
+//nolint:ireturn // Test helper returns concrete type for test isolation
 func setupFileSystemSecurityTest(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
@@ -406,6 +408,8 @@ func TestTokenStore_RaceConditions(t *testing.T) {
 
 // setupRaceConditionTest creates and configures a token store for race condition testing.
 // Uses encrypted file store directly for consistent behavior across platforms.
+//
+//nolint:ireturn // Test helper returns concrete type for test isolation
 func setupRaceConditionTest(t *testing.T) *encryptedFileStore {
 	t.Helper()
 

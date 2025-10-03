@@ -23,14 +23,14 @@ jobs:
       - name: Run golangci-lint for Gateway
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.4.0
+          version: latest
           working-directory: services/gateway
           args: --timeout=5m --config=../../.config/golangci.yml
 
       - name: Run golangci-lint for Router
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.4.0
+          version: latest
           working-directory: services/router
           args: --timeout=5m --config=../../.config/golangci.yml
 
