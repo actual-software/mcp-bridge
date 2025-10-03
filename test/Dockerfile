@@ -8,12 +8,11 @@ WORKDIR /app
 
 # Copy go mod files and all source first
 COPY go.mod go.sum ./
-COPY go.work ./
 COPY services/gateway/go.mod services/gateway/go.sum ./services/gateway/
 COPY services/router/go.mod services/router/go.sum ./services/router/
 
-# Download dependencies
-RUN go mod download
+# Download dependencies (disable workspace mode since e2e modules aren't copied)
+RUN GOWORK=off go mod download
 
 # Copy all source code needed for tests
 COPY test/ ./test/
@@ -23,10 +22,10 @@ COPY services/ ./services/
 # Build test binaries using full module paths
 # Use GOWORK=off to avoid workspace mode, and build from test directories directly
 WORKDIR /app/test/smoke
-RUN go test -c -o /bin/smoke.test .
+RUN GOWORK=off go test -c -o /bin/smoke.test .
 
 WORKDIR /app/test/performance
-RUN go test -c -o /bin/performance.test .
+RUN GOWORK=off go test -c -o /bin/performance.test .
 
 # Reset workdir for final stage
 WORKDIR /app

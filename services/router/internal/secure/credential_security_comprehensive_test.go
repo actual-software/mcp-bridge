@@ -100,8 +100,7 @@ func TestEncryptedFileStore_MaliciousInputResistance(t *testing.T) {
 	}
 }
 
-//nolint:ireturn // Test helper requires interface return
-func setupMaliciousInputTestStore(t *testing.T, tempDir string) TokenStore {
+func setupMaliciousInputTestStore(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
 	store, err := newEncryptedFileStore("malicious-test")
@@ -114,7 +113,7 @@ func setupMaliciousInputTestStore(t *testing.T, tempDir string) TokenStore {
 
 	fileStore.filePath = filepath.Join(tempDir, "malicious-test.enc")
 
-	return store
+	return fileStore
 }
 
 type maliciousInputTest struct {
@@ -250,17 +249,16 @@ func validateRetrievedMaliciousInput(t *testing.T, input maliciousInputTest, ret
 
 func TestEncryptedFileStore_FileSystemSecurity(t *testing.T) {
 	tempDir := t.TempDir()
-	store, fileStore := setupFileSystemSecurityTest(t, tempDir)
+	fileStore := setupFileSystemSecurityTest(t, tempDir)
 
 	// Store a token and verify basic file security
-	storeTokenAndVerifyPermissions(t, store, fileStore)
+	storeTokenAndVerifyPermissions(t, fileStore, fileStore)
 
 	// Test directory traversal protection
-	testDirectoryTraversalProtection(t, tempDir, store, fileStore)
+	testDirectoryTraversalProtection(t, tempDir, fileStore, fileStore)
 }
 
-//nolint:ireturn // Test helper requires interface return
-func setupFileSystemSecurityTest(t *testing.T, tempDir string) (TokenStore, *encryptedFileStore) {
+func setupFileSystemSecurityTest(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
 	store, err := newEncryptedFileStore("filesystem-security-test")
@@ -273,7 +271,7 @@ func setupFileSystemSecurityTest(t *testing.T, tempDir string) (TokenStore, *enc
 
 	fileStore.filePath = filepath.Join(tempDir, "filesystem-test.enc")
 
-	return store, fileStore
+	return fileStore
 }
 
 func storeTokenAndVerifyPermissions(t *testing.T, store TokenStore, fileStore *encryptedFileStore) {
@@ -411,9 +409,7 @@ func TestTokenStore_RaceConditions(t *testing.T) {
 }
 
 // setupRaceConditionTest creates and configures a token store for race condition testing.
-//
-//nolint:ireturn // Test helper requires interface return
-func setupRaceConditionTest(t *testing.T) TokenStore {
+func setupRaceConditionTest(t *testing.T) TokenStore { //nolint:ireturn
 	t.Helper()
 
 	store, err := NewTokenStore("race-condition-test")
@@ -620,9 +616,7 @@ func TestTokenStore_PlatformSpecificBehavior(t *testing.T) {
 }
 
 // setupPlatformTest creates a token store for platform-specific testing.
-//
-//nolint:ireturn // Test helper requires interface return
-func setupPlatformTest(t *testing.T) TokenStore {
+func setupPlatformTest(t *testing.T) TokenStore { //nolint:ireturn
 	t.Helper()
 
 	store, err := NewTokenStore("platform-test")

@@ -1,378 +1,386 @@
-# CI Workflow Fixes Plan
+# CI Failure Analysis and Fix Plan
 
-## Progress Summary
-**Last Updated**: 2025-10-02
-
-| Fix | Workflow | Status | Commit |
-|-----|----------|--------|--------|
-| #1 | Code Quality | ✅ COMPLETE | 1dcc035 |
-| #2 | Code Audit | ✅ COMPLETE | 25f4009 |
-| #3 | Security Pipeline | ✅ COMPLETE | (pre-existing) |
-| #4 | CI (Data Races) | ✅ COMPLETE | 25f4009 (same as #2) |
-| #5 | K8s E2E Tests | ✅ COMPLETE | (same as #3) |
-| #6 | OWASP Security | ⏳ PENDING | - |
-
-**Current Status**: 5 of 6 fixes complete. Only OWASP security scanning remains.
+**Analysis Date**: October 3, 2025
+**Commit**: 8d817d9 (fix: Resolve linter violations in router service)
+**Failing Workflows**: 3 out of 3 checked workflows
 
 ---
 
-## Overview
-This document outlines the complete plan to fix all 6 failing CI workflows. Each fix must be implemented thoroughly with no shortcuts or corners cut.
+## Executive Summary
 
-**CRITICAL**: Commit changes after each fix, but DO NOT PUSH until ALL 6 fixes are verified and complete.
+Three major CI workflows are failing with a total of 5 distinct root causes:
+
+1. **Comprehensive Security Pipeline** - 3 failures (Docker build, SARIF format, Checkov violations)
+2. **Kubernetes E2E Tests** - 1 failure (Gateway CrashLoopBackOff)
+3. **Code Audit** - 1 failure (8 test failures - unable to determine exact tests)
 
 ---
 
-## Fix #1: Code Quality - noctx Linter Violation
+## 1. Comprehensive Security Pipeline Failures
 
-### Issue
-- **Workflow**: Code Quality
-- **File**: `services/router/internal/secure/secret_service_store_linux.go:100`
-- **Error**: `os/exec.Command must not be called. use os/exec.CommandContext (noctx)`
+### 1.1 Runtime Security Analysis - Docker Build Failure
+
+**Status**: ❌ FAILED
+**Workflow Step**: Runtime Security Analysis → Setup test environment
+**Error**: `process "/bin/sh -c go test -c ./test/performance -o /bin/performance.test" did not complete successfully: exit code: 1`
+
+#### Root Cause
+In `test/Dockerfile`:
+- Line 7: `WORKDIR /test` sets working directory to `/test`
+- Line 18: `COPY test/ ./` copies test directory contents to `/test/`, creating `/test/test/` instead of the intended structure
+- Lines 22-25: Build commands reference `./smoke` and `./performance` but actual paths are `./test/smoke` and `./test/performance`
+
+#### Evidence
+```
+0.441 no Go files in /test/test/performance
+0.442 FAIL ./test/performance [setup failed]
+```
+
+#### Fix
+Update `test/Dockerfile` line 18 to copy contents correctly:
+```dockerfile
+# Before:
+COPY test/ ./
+
+# After:
+COPY test/ ./test/
+```
+
+Or alternatively, adjust build paths on lines 22-25:
+```dockerfile
+RUN go test -c ./test/smoke -o /bin/smoke.test
+RUN go test -c ./test/performance -o /bin/performance.test
+```
+
+#### Verification
+```bash
+cd /Users/poile/repos/mcp
+docker build -f test/Dockerfile -t test-runner:local .
+```
+
+---
+
+### 1.2 Static Application Security Testing - Invalid SARIF
+
+**Status**: ❌ FAILED
+**Workflow Step**: Static Application Security Testing → Upload Staticcheck results
+**Error**: `Invalid SARIF. Missing 'results' array in run.`
+
+#### Root Cause
+The staticcheck or golangci-lint SARIF output is malformed or empty, missing required `results` array.
+
+#### Likely Causes
+1. Staticcheck not finding any issues (generates minimal SARIF without results array)
+2. SARIF output format incompatible with GitHub's expectations
+3. Tool version mismatch
+
+#### Fix Options
+
+**Option 1**: Update SARIF generation to ensure valid format even with zero findings
+```yaml
+# In .github/workflows/security.yml
+- name: Run Staticcheck
+  run: |
+    staticcheck -f sarif ./... > staticcheck.sarif || true
+    # Ensure valid SARIF with results array
+    if ! jq '.runs[0].results' staticcheck.sarif > /dev/null 2>&1; then
+      echo '{"$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","version":"2.1.0","runs":[{"tool":{"driver":{"name":"staticcheck"}},"results":[]}]}' > staticcheck.sarif
+    fi
+```
+
+**Option 2**: Skip upload if SARIF is invalid (less preferred)
+```yaml
+- name: Upload Staticcheck results
+  if: always()
+  uses: github/codeql-action/upload-sarif@v2
+  with:
+    sarif_file: staticcheck.sarif
+  continue-on-error: true
+```
+
+#### Verification
+```bash
+staticcheck -f sarif ./... > staticcheck.sarif
+jq . staticcheck.sarif  # Validate JSON
+jq '.runs[0].results' staticcheck.sarif  # Check for results array
+```
+
+---
+
+### 1.3 Infrastructure Security Scan - Checkov Violations
+
+**Status**: ❌ FAILED (warnings, not blocking)
+**Workflow Step**: Infrastructure Security Scan → Run Checkov
+**Error**: Multiple Checkov policy violations in `services/gateway/deploy/install.yaml:162-227`
+
+#### Root Cause
+Kubernetes deployment manifest has 8 security policy violations detected by Checkov at lines 162-227.
+
+#### Common Checkov Violations in K8s Manifests
+- Missing resource limits/requests
+- Running as root (no securityContext)
+- Privileged containers
+- hostNetwork/hostPID enabled
+- No readOnlyRootFilesystem
+- Missing liveness/readiness probes
+- Containers running as UID 0
+
+#### Fix
+Need to inspect `services/gateway/deploy/install.yaml:162-227` and add appropriate security controls:
+
+```yaml
+# Example security hardening
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: gateway
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+```
+
+#### Verification
+```bash
+checkov -f services/gateway/deploy/install.yaml
+```
+
+---
+
+## 2. Kubernetes E2E Test Failures
+
+**Status**: ❌ FAILED (all 3 test scenarios)
+**Failing Tests**:
+- TestKubernetesEndToEnd (Basic E2E) - 344.29s
+- TestKubernetesFailover (Failover) - 277.74s
+- TestKubernetesPerformance (Performance) - 258.24s
 
 ### Root Cause
-The code uses `exec.Command` which doesn't support cancellation. The linter requires context-aware command execution.
+Gateway pod in CrashLoopBackOff state, preventing all E2E tests from running.
 
-### Fix Steps
-1. Read the file to understand the current implementation
-2. Add context parameter to the function if not present
-3. Replace `exec.Command` with `exec.CommandContext`
-4. Ensure context is properly propagated from caller
-5. Update any tests that call this function
-6. Run linter locally to verify fix: `cd services/router && golangci-lint run --config=../../.config/golangci.yml`
-7. Commit changes with message: "fix: Use CommandContext for secret-tool in Linux secret store"
+#### Evidence
+```
+Current pod status:
+NAME                               READY   STATUS             RESTARTS      AGE
+mcp-gateway-7d7f9747b4-m6pgm       0/1     CrashLoopBackOff   3 (30s ago)   72s
+redis-8646f4655d-8xmnd             1/1     Running            0             73s
+test-mcp-server-6c699df5bc-2xm7l   1/1     Running            0             73s
+test-mcp-server-6c699df5bc-zdjj6   1/1     Running            0             73s
 
-### Implementation ✅ COMPLETE
-**Date**: 2025-10-02
-**Commit**: `1dcc035`
+Error: HTTP endpoint https://localhost:30443/healthz did not become ready
+Test: TestKubernetesEndToEnd
+Messages: Gateway HTTPS health check failed
+```
 
-**Changes Made**:
-- Replaced `exec.Command` with `exec.CommandContext(context.Background(), ...)` on line 100
-- No function signature changes needed (context.Background() used)
-- No caller updates needed
+### Investigation Required
+The gateway pod is crashing on startup. Need to:
 
-**Testing**:
-- Ran linter: `golangci-lint run --config=../../.config/golangci.yml`
-- Result: 0 issues
+1. Check gateway Docker image build in K8s E2E workflow
+2. Review gateway startup logs (available in test artifacts: `gateway-logs.txt`)
+3. Check pod describe output (available in test artifacts: `describe-mcp-gateway-*.txt`)
+
+### Likely Causes
+1. **Missing configuration**: Gateway config missing required fields
+2. **Port binding issue**: Port 8443 or 8080 not available/misconfigured
+3. **Dependencies**: Redis or router not connecting properly
+4. **Image build issue**: Recent code changes broke gateway Docker build
+5. **Environment variables**: Missing required env vars in K8s manifest
+
+### Fix Strategy
+
+**Step 1**: Download and review test artifacts
+```bash
+# Check latest K8s E2E run artifacts
+gh run list --workflow "Kubernetes E2E Tests" --limit 1
+gh run view <run-id> --log | grep -A 50 "gateway.*error\|gateway.*fatal\|gateway.*panic"
+```
+
+**Step 2**: Review gateway logs locally
+```bash
+# Run gateway locally to reproduce
+cd services/gateway
+go run cmd/gateway/main.go
+```
+
+**Step 3**: Test Docker image build
+```bash
+# Build gateway image as K8s E2E does
+docker build -t mcp-gateway:test -f services/gateway/Dockerfile .
+docker run --rm mcp-gateway:test
+```
+
+**Step 4**: Review K8s deployment manifest
+```bash
+# Check services/gateway/deploy/install.yaml for issues
+kubectl apply --dry-run=client -f services/gateway/deploy/install.yaml
+```
 
 ### Verification
-- [x] Linter passes locally
-- [x] No new linter violations introduced
-- [x] Function signature updated if needed (N/A - no changes needed)
-- [x] All callers updated (N/A - no changes needed)
-- [x] Tests pass
+```bash
+# After fix, run K8s E2E locally
+cd test/e2e/k8s
+go test -v -run TestKubernetesEndToEnd -timeout 20m
+```
 
 ---
 
-## Fix #2: Code Audit - 9 Failed Tests (Data Races)
+## 3. Code Audit Test Failures
+
+**Status**: ❌ FAILED
+**Error**: `make: *** [Makefile:184: audit-test] Error 8`
+**Details**: 8 tests failed out of 2896 total tests
+
+### Summary
+- Total Tests: 2896
+- Passed: 2879
+- **Failed: 8**
+- Skipped: 9
+- Duration: Unknown
 
 ### Issue
-- **Workflow**: Code Audit
-- **Error**: "❌ Audit failed: 9 tests failed"
+Test summary shows "No failed tests details found" and "No failed packages found", suggesting:
+1. Race detector failures (not parsed as normal test failures)
+2. Test summary script parsing issue
+3. Timeout failures
 
-### Root Cause **IDENTIFIED**
-The 9 failed tests were caused by **data race conditions** in `services/router/internal/direct/stdio_response_reader.go`. These races occurred when:
-1. `healthCheckLoop` triggered process restart (modifying stdio pipes/decoders)
-2. `readResponses` goroutine concurrently accessed same fields without synchronization
+### Investigation Required
+Unable to determine exact failing tests from CI logs or test summary artifact. Need to:
 
-**Three specific race conditions**:
-1. **Race #1**: `logDecodeError()` accessed `client.startTime` without locks
-2. **Race #2**: `setReadTimeout()` accessed `client.stdout` without locks
-3. **Race #3**: `decodeResponse()` accessed `client.stdoutDecoder` without locks
+1. Run audit-test locally: `make audit-test`
+2. Check for race detector output: `grep "WARNING: DATA RACE" audit-results/*`
+3. Review test output files: `ls -la audit-results/`
 
-### Fix Steps Taken
-1. ✅ Ran tests with `-race` flag to identify race conditions
-2. ✅ Analyzed CI logs showing data races in stdio client
-3. ✅ Added `RLock/RUnlock` synchronization in three methods:
-   - `setReadTimeout()` - lines 72-74
-   - `decodeResponse()` - lines 82-84
-   - `logDecodeError()` - lines 132-134
-4. ✅ Verified all tests pass with and without `-race` flag
-5. ✅ No test skipping - fixed root causes
+### Likely Causes
+1. **Race conditions**: Remaining data races in stdio client or other components
+2. **Flaky tests**: Timing-sensitive tests failing intermittently
+3. **New test failures**: Recent changes broke existing tests
+4. **Test infrastructure**: Test harness or audit script issues
 
-### Implementation ✅ COMPLETE
-**Date**: 2025-10-02
-**Commit**: `25f4009`
+### Fix Strategy
 
-**Changes Made**:
-File: `services/router/internal/direct/stdio_response_reader.go`
-- Added mutex locks when accessing shared stdio client fields
-- Prevents concurrent access during process restarts
-- All three race conditions resolved
+**Step 1**: Run locally to identify failures
+```bash
+cd /Users/poile/repos/mcp
+make audit-test
+cat audit-results/test-summary-*.txt
+```
 
-**Testing**:
-- All direct package tests pass: `go test ./internal/direct/` (93s)
-- Race detector clean: `go test -race ./internal/direct/` (specific failing tests)
-- Originally failing tests now pass
+**Step 2**: Check for race detector output
+```bash
+grep -r "WARNING: DATA RACE" audit-results/
+grep -r "race detected during execution" audit-results/
+```
 
-### Verification
-- [x] All 9 tests identified (data race related)
-- [x] Root cause understood (concurrent access without synchronization)
-- [x] Fixes implemented (proper mutex usage, no test skipping)
-- [x] Full test suite passes
-- [x] No regressions introduced
+**Step 3**: Review individual module test outputs
+```bash
+find audit-results/ -name "*-test-*.txt" -exec grep -l "FAIL" {} \;
+```
 
----
-
-## Fix #3: Comprehensive Security Pipeline - Missing /internal Directory
-
-### Issue
-- **Workflow**: Comprehensive Security Pipeline
-- **File**: `test/docker-compose.test.yml` (test-runner Dockerfile)
-- **Error**: `COPY internal/ ./internal/` - "/internal": not found
-
-### Root Cause
-The test Dockerfile tries to copy `/internal` directory from project root, but it doesn't exist. The `internal` directories are service-specific (e.g., `services/router/internal`, `services/gateway/internal`).
-
-### Fix Steps
-1. Read `test/docker-compose.test.yml` to understand the build context
-2. Read the test-runner Dockerfile to understand what's needed
-3. Determine if `/internal` is actually needed for tests:
-   - If YES: Identify which service's internal code is needed
-   - If NO: Remove the COPY command
-4. Update Dockerfile appropriately:
-   - Option A: Remove unnecessary COPY
-   - Option B: Copy correct service-specific internal directories
-   - Option C: Restructure if project needs shared internal code
-5. Test Docker build locally: `docker compose -f test/docker-compose.test.yml build test-runner`
-6. Ensure tests can still run in container
-7. Commit changes with message: "fix: Correct internal directory paths in test Dockerfile"
+**Step 4**: Fix identified issues
+- If race conditions: Add proper mutex synchronization
+- If flaky tests: Increase timeouts or fix timing assumptions
+- If test failures: Fix broken code or update tests
 
 ### Verification
-- [x] Docker build succeeds locally
-- [x] Tests run successfully in container
-- [x] No unnecessary files copied
-- [x] Build context optimized
+```bash
+make audit-test
+# Ensure exit code 0 and "Failed: 0" in summary
+```
 
 ---
 
-## Fix #4: CI Workflow - Data Races in Router Tests
+## Fix Priority and Order
 
-### ⚠️ NOTE: Fixed by Same Changes as Fix #2 ✅
+### Priority 1: Critical Blockers (Must Fix)
+1. **test/Dockerfile path fix** (Comprehensive Security Pipeline)
+   - Impact: Blocks Runtime Security Analysis
+   - Effort: 5 minutes
+   - Risk: Low
 
-This issue was caused by the **same data races** as Fix #2. The Code Audit workflow and CI workflow both detected the same underlying race conditions in the stdio client.
+2. **Gateway CrashLoopBackOff** (K8s E2E Tests)
+   - Impact: Blocks all E2E tests
+   - Effort: 1-4 hours (investigation + fix)
+   - Risk: Medium
 
-### Issue
-- **Workflow**: CI
-- **Error**: Multiple data races detected by Go race detector
+3. **Code Audit test failures** (8 tests)
+   - Impact: Blocks test audit
+   - Effort: 1-3 hours (investigation + fix)
+   - Risk: Medium
 
-### Root Cause
-Three distinct race conditions:
-1. Race between test completion and logger writes (goroutine 1256 vs 1232)
-2. Race in pipe access during process restart (healthCheckLoop vs readResponses)
-3. Race in buffer access during process restart (healthCheckLoop vs readResponses)
+### Priority 2: Quality/Security (Should Fix)
+4. **SARIF format issue** (Security Pipeline)
+   - Impact: Blocks static analysis upload
+   - Effort: 30 minutes
+   - Risk: Low
 
-**These are the SAME races fixed in Fix #2** - see commit `25f4009`
-
-### Fix Steps
-
-#### Race #1: Logger and Test Completion
-1. Read `services/router/internal/direct/stdio_response_reader.go:125` (logDecodeError)
-2. Read `services/router/internal/direct/manager_test.go:1282`
-3. Ensure test waits for all goroutines before completion
-4. Add proper cleanup/synchronization
-
-#### Race #2: Pipe Access
-1. Read `services/router/internal/direct/stdio_process_builder.go:126` (configurePipes)
-2. Read `services/router/internal/direct/stdio_response_reader.go:72` (setReadTimeout)
-3. Add mutex protection for pipe access
-4. Ensure atomic updates during restart
-
-#### Race #3: Buffer Access
-1. Read `services/router/internal/direct/stdio_process_builder.go:166` (configureStdoutBuffering)
-2. Read `services/router/internal/direct/stdio_response_reader.go:80` (decodeResponse)
-3. Add mutex protection for buffer access
-4. Coordinate access between health check and reader
-
-#### General Steps
-5. Review all shared resources in stdio client
-6. Add appropriate mutex locks
-7. Ensure proper synchronization primitives
-8. Run tests with race detector: `cd services/router && go test -race ./...`
-9. Verify NO races detected
-10. Commit changes with message: "fix: Resolve data races in stdio client tests"
-
-### Verification
-- [ ] All 3 races identified and understood
-- [ ] Mutex protection added where needed
-- [ ] No races detected with `-race` flag
-- [ ] Tests still pass (not just race-free)
-- [ ] No deadlocks introduced
+5. **Checkov violations** (Security Pipeline)
+   - Impact: Security best practices
+   - Effort: 1-2 hours
+   - Risk: Low (security hardening)
 
 ---
 
-## Fix #5: Kubernetes E2E Tests - Docker Build Failure
+## Implementation Plan
 
-### Issue
-- **Workflow**: Kubernetes E2E Tests
-- **Error**: Same as Fix #3 - missing `/internal` directory
+### Phase 1: Quick Wins (30 minutes)
+1. Fix test/Dockerfile path issue
+2. Fix SARIF generation/validation
+3. Commit and push
 
-### Root Cause
-Same as Fix #3 - incorrect COPY path in Dockerfile
+### Phase 2: Investigation (1-2 hours)
+1. Run `make audit-test` locally to identify 8 failing tests
+2. Build and test gateway Docker image locally
+3. Review gateway startup logs from K8s E2E artifacts
+4. Document findings
 
-### Fix Steps
-This should be resolved by Fix #3, but verify:
-1. Confirm fix from #3 applies to K8s E2E workflow
-2. If different Dockerfile is used, apply same fix
-3. Test K8s E2E build locally if possible
-4. If already fixed by #3, no separate commit needed
+### Phase 3: Fixes (2-4 hours)
+1. Fix identified test failures
+2. Fix gateway startup issue
+3. Add Checkov suppressions or fix security violations
+4. Test all fixes locally
 
-### Verification
-- [x] Build succeeds in K8s E2E context
-- [x] Same fix as #3 or separate fix applied
-- [x] E2E tests can run
+### Phase 4: Verification (30 minutes)
+1. Run `make audit-test` - ensure 0 failures
+2. Run `docker build -f test/Dockerfile .` - ensure success
+3. Run K8s E2E locally if possible
+4. Commit all fixes with detailed messages
 
----
-
-## Fix #6: OWASP Security Scanning - High Severity CVEs
-
-### Issue
-- **Workflow**: OWASP Security Scanning
-- **Error**: Multiple dependencies with CVSS ≥ 7.0
-
-### Vulnerabilities Found
-
-#### 1. github.com/go-openapi/jsonpointer@0.21.0
-- **CVE**: CVE-2022-4742
-- **CVSS**: 9.8 (Critical)
-- **Impact**: 7 instances across go.mod files
-
-#### 2. github.com/hashicorp/consul/sdk@0.16.3
-- **CVEs**: CVE-2022-29153 (7.5), CVE-2020-7219 (7.5), CVE-2021-37219 (8.8), CVE-2021-3121 (8.6)
-- **Impact**: 7 instances
-
-#### 3. github.com/matttproud/golang_protobuf_extensions@1.0.1
-- **CVE**: CVE-2021-3121
-- **CVSS**: 8.6 (High)
-- **Impact**: 7 instances
-
-#### 4. github.com/sourcegraph/conc@0.3.0
-- **CVEs**: CVE-2022-41943 (7.2), CVE-2022-29171 (7.2), CVE-2022-41942 (7.8), CVE-2022-23642 (8.8)
-- **Impact**: 7 instances
-
-#### 5. go.etcd.io/etcd/client/v2@2.305.10
-- **CVE**: CVE-2020-15113
-- **CVSS**: 7.1 (High)
-- **Impact**: 7 instances
-
-### Fix Steps
-
-#### Step 1: Research Each CVE
-For each vulnerability:
-1. Read CVE details and understand the actual risk
-2. Check if vulnerability applies to our usage
-3. Determine if it's a false positive
-4. Find patched version if real vulnerability
-
-#### Step 2: Update Dependencies (Real Vulnerabilities)
-1. Update each vulnerable dependency to latest patched version
-2. Test that update doesn't break functionality
-3. Run `go mod tidy` for each affected go.mod
-4. Verify builds and tests still pass
-
-#### Step 3: Add Suppressions (False Positives Only)
-1. For confirmed false positives, add to `.config/owasp-suppressions.xml`
-2. Document WHY it's a false positive
-3. Include justification in suppression
-4. Never suppress real vulnerabilities
-
-#### Step 4: Verify Fix
-1. Run OWASP check locally if possible
-2. Ensure CVSS score threshold met
-3. Document any remaining accepted risks
-4. Commit changes with message: "fix: Update vulnerable dependencies and add OWASP suppressions"
-
-### Verification
-- [ ] All CVEs researched and understood
-- [ ] Real vulnerabilities patched via updates
-- [ ] False positives properly suppressed with documentation
-- [ ] OWASP scan passes
-- [ ] No functionality broken by updates
-- [ ] All tests pass after updates
-
----
-
-## Final Verification Checklist
-
-Before pushing, ensure ALL items are checked:
-
-### Code Quality
-- [x] Fix #1 complete and verified
-- [x] Linter passes locally
-- [x] Changes committed (commit 1dcc035)
-
-### Tests
-- [x] Fix #2 complete and verified
-- [x] All 9 tests passing (data races resolved)
-- [x] Changes committed (commit 25f4009)
-
-### Docker Builds
-- [x] Fix #3 complete and verified
-- [x] Fix #5 complete and verified
-- [x] Docker builds succeed
-- [x] Changes committed
-
-### Race Conditions
-- [x] Fix #4 complete and verified (same fix as #2)
-- [x] No races with `-race` flag (verified on specific tests)
-- [x] All tests pass
-- [x] Changes committed (same commit as #2: 25f4009)
-
-### Security
-- [ ] Fix #6 complete and verified
-- [ ] All high CVEs addressed
-- [ ] OWASP scan passes
-- [ ] Changes committed
-
-### Integration
-- [ ] All commits made locally
-- [ ] Full test suite passes
-- [ ] Linters pass
-- [ ] Docker builds work
-- [ ] No regressions
-
-### Final Steps
-- [ ] Review all commits for quality
-- [ ] Squash commits if needed for clean history
-- [ ] Write comprehensive commit message if squashing
-- [ ] Push all changes: `git push`
-- [ ] Monitor CI workflows
-- [ ] Verify all 6 workflows pass
-
----
-
-## Notes
-
-### DO NOT:
-- ❌ Skip or disable failing tests
-- ❌ Suppress real vulnerabilities
-- ❌ Comment out linter rules
-- ❌ Push before all fixes complete
-- ❌ Cut any corners or take shortcuts
-- ❌ Leave TODO comments for later
-- ❌ Ignore race conditions
-- ❌ Accept "good enough"
-
-### DO:
-- ✅ Fix root causes, not symptoms
-- ✅ Test thoroughly at each step
-- ✅ Commit after each fix
-- ✅ Document decisions
-- ✅ Verify all changes
-- ✅ Run full test suite
-- ✅ Check for regressions
-- ✅ Be thorough and complete
+### Phase 5: CI Validation (wait for CI)
+1. Push all changes
+2. Monitor all 3 workflows
+3. Review any new failures
+4. Iterate if needed
 
 ---
 
 ## Success Criteria
 
-All 6 workflows must show ✅ (green/passing) after push:
-1. ✅ Code Quality
-2. ✅ Code Audit
-3. ✅ Comprehensive Security Pipeline
-4. ✅ CI
-5. ✅ Kubernetes E2E Tests
-6. ✅ OWASP Security Scanning
+All three workflows must pass:
+- ✅ Code Audit: 0 test failures, 0 linting issues
+- ✅ Comprehensive Security Pipeline: All security scans pass
+- ✅ Kubernetes E2E Tests: All 3 test scenarios pass
 
-**Only then is this task complete.**
+---
+
+## Notes
+
+- **No cutting corners**: Every issue must be properly root-caused and fixed
+- **Test locally first**: Verify all fixes work before pushing
+- **Document everything**: Commit messages must explain what was fixed and why
+- **One fix at a time**: Don't mix multiple unrelated fixes in one commit
