@@ -896,13 +896,13 @@ spec:
       - name: gateway
         image: mcp-gateway:test
         imagePullPolicy: Never
+        command: ["/app/mcp-gateway"]
+        args: ["--config", "/etc/mcp-gateway/gateway.yaml", "--log-level", "debug"]
         ports:
         - containerPort: 8443
         - containerPort: 8080
         - containerPort: 9091
         env:
-        - name: MCP_CONFIG_PATH
-          value: "/etc/mcp-gateway/gateway.yaml"
         - name: JWT_SECRET_KEY
           value: "test-secret-key-for-e2e-testing"
         volumeMounts:

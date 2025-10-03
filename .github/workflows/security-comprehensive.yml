@@ -75,6 +75,43 @@ jobs:
           go install honnef.co/go/tools/cmd/staticcheck@latest
           staticcheck -f sarif ./... > staticcheck.sarif || true
 
+      - name: Ensure valid SARIF format
+        if: always() && hashFiles('staticcheck.sarif') != ''
+        run: |
+          # Validate and fix SARIF format if needed
+          python3 << 'EOF'
+          import json
+          import sys
+
+          try:
+              with open('staticcheck.sarif', 'r') as f:
+                  data = json.load(f)
+
+              # Ensure runs array exists and has results array
+              if 'runs' in data:
+                  for run in data['runs']:
+                      if 'results' not in run:
+                          run['results'] = []
+              else:
+                  # Create minimal valid SARIF structure
+                  data = {
+                      "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+                      "version": "2.1.0",
+                      "runs": [{
+                          "tool": {"driver": {"name": "staticcheck"}},
+                          "results": []
+                      }]
+                  }
+
+              with open('staticcheck.sarif', 'w') as f:
+                  json.dump(data, f, indent=2)
+
+              print('✅ SARIF format validated and fixed if needed')
+          except Exception as e:
+              print(f'Error processing SARIF: {e}', file=sys.stderr)
+              sys.exit(1)
+          EOF
+
       - name: Upload Staticcheck results
         uses: github/codeql-action/upload-sarif@v3
         if: always() && hashFiles('staticcheck.sarif') != ''
