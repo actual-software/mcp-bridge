@@ -43,4 +43,103 @@
         <cve>CVE-2013-10005</cve>
     </suppress>
 
+    <!-- CVE-2022-4742: False Positive - Wrong Language/Package -->
+    <suppress>
+        <notes><![CDATA[
+        CVE-2022-4742 is a vulnerability in the JavaScript "json-pointer" package (npm), not the
+        Go package github.com/go-openapi/jsonpointer. OWASP is incorrectly matching based on
+        similar package names.
+
+        The CVE affects json-pointer.js with prototype pollution attacks. The Go implementation
+        is completely different and does not have this vulnerability.
+
+        Verified with govulncheck: No vulnerabilities found in this package.
+        Reference: https://nvd.nist.gov/vuln/detail/CVE-2022-4742
+        ]]></notes>
+        <packageUrl regex="true">^pkg:golang/github\.com/go-openapi/jsonpointer@.*$</packageUrl>
+        <cve>CVE-2022-4742</cve>
+    </suppress>
+
+    <!-- Consul SDK CVEs: False Positives - Wrong Component -->
+    <suppress>
+        <notes><![CDATA[
+        CVE-2022-29153, CVE-2020-7219, CVE-2021-37219, and CVE-2021-3121 affect the HashiCorp
+        Consul server/agent, not the Consul SDK (github.com/hashicorp/consul/sdk).
+
+        The SDK is a client library for interacting with Consul. These CVEs are specific to:
+        - CVE-2022-29153: Consul HTTP health check endpoints (server-side)
+        - CVE-2020-7219: Consul RPC services unbounded resource usage (server-side)
+        - CVE-2021-37219: Consul Raft RPC layer privilege escalation (server-side)
+        - CVE-2021-3121: GoGo Protobuf (not used by Consul SDK)
+
+        Our usage is SDK-only for service discovery, not running Consul servers.
+        Verified with govulncheck: No vulnerabilities found in this package.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:golang/github\.com/hashicorp/consul/sdk@.*$</packageUrl>
+        <cve>CVE-2022-29153</cve>
+        <cve>CVE-2020-7219</cve>
+        <cve>CVE-2021-37219</cve>
+        <cve>CVE-2021-3121</cve>
+    </suppress>
+
+    <!-- CVE-2021-3121: False Positive - Wrong Package -->
+    <suppress>
+        <notes><![CDATA[
+        CVE-2021-3121 affects github.com/gogo/protobuf (GoGo Protobuf), not
+        github.com/matttproud/golang_protobuf_extensions.
+
+        This package is a metrics library extension for Prometheus, using standard Go protobuf,
+        not GoGo Protobuf. OWASP is incorrectly matching based on "protobuf" in the name.
+
+        Verified with govulncheck: No vulnerabilities found in this package.
+        Reference: https://nvd.nist.gov/vuln/detail/CVE-2021-3121
+        ]]></notes>
+        <packageUrl regex="true">^pkg:golang/github\.com/matttproud/golang_protobuf_extensions@.*$</packageUrl>
+        <cve>CVE-2021-3121</cve>
+    </suppress>
+
+    <!-- Sourcegraph Conc CVEs: False Positives - Wrong Product -->
+    <suppress>
+        <notes><![CDATA[
+        CVE-2022-41943, CVE-2022-29171, CVE-2022-41942, and CVE-2022-23642 affect Sourcegraph's
+        code search product (gitserver component), not the github.com/sourcegraph/conc library.
+
+        github.com/sourcegraph/conc is a concurrency utilities library, completely unrelated to
+        Sourcegraph's main product. OWASP is incorrectly matching based on the "sourcegraph"
+        organization name.
+
+        These CVEs are specific to:
+        - CVE-2022-41943: Sourcegraph gitserver RCE
+        - CVE-2022-29171: Sourcegraph gitserver arbitrary code execution
+        - CVE-2022-41942: Sourcegraph gitserver incorrect permissions
+        - CVE-2022-23642: Sourcegraph gitserver RCE via Gitolite
+
+        Verified with govulncheck: No vulnerabilities found in this package.
+        Reference: https://github.com/sourcegraph/conc
+        ]]></notes>
+        <packageUrl regex="true">^pkg:golang/github\.com/sourcegraph/conc@.*$</packageUrl>
+        <cve>CVE-2022-41943</cve>
+        <cve>CVE-2022-29171</cve>
+        <cve>CVE-2022-41942</cve>
+        <cve>CVE-2022-23642</cve>
+    </suppress>
+
+    <!-- CVE-2020-15113: False Positive - Client Library vs Server -->
+    <suppress>
+        <notes><![CDATA[
+        CVE-2020-15113 affects the etcd server's directory permission handling, not the etcd
+        client library (go.etcd.io/etcd/client/v2).
+
+        This vulnerability is in etcd server's fileutil package where it creates directories
+        without proper permission checks. The client library only communicates with etcd servers
+        via HTTP/gRPC and does not create any directories.
+
+        Our usage is client-only for service discovery, not running etcd servers.
+        Verified with govulncheck: No vulnerabilities found in this package.
+        Reference: https://nvd.nist.gov/vuln/detail/CVE-2020-15113
+        ]]></notes>
+        <packageUrl regex="true">^pkg:golang/go\.etcd\.io/etcd/client/v2@.*$</packageUrl>
+        <cve>CVE-2020-15113</cve>
+    </suppress>
+
 </suppressions>
