@@ -103,15 +103,13 @@ func TestEncryptedFileStore_MaliciousInputResistance(t *testing.T) {
 func setupMaliciousInputTestStore(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
-	store, err := newEncryptedFileStore("malicious-test")
-	if err != nil {
-		t.Fatalf("Failed to create store: %v", err)
+	// Directly construct file store to avoid ireturn violation from factory function
+	key := generateKey("malicious-test")
+	fileStore := &encryptedFileStore{
+		appName:  "malicious-test",
+		filePath: filepath.Join(tempDir, "malicious-test.enc"),
+		key:      key,
 	}
-
-	fileStore, ok := store.(*encryptedFileStore)
-	require.True(t, ok, "type assertion failed")
-
-	fileStore.filePath = filepath.Join(tempDir, "malicious-test.enc")
 
 	return fileStore
 }
@@ -261,15 +259,13 @@ func TestEncryptedFileStore_FileSystemSecurity(t *testing.T) {
 func setupFileSystemSecurityTest(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
-	store, err := newEncryptedFileStore("filesystem-security-test")
-	if err != nil {
-		t.Fatalf("Failed to create store: %v", err)
+	// Directly construct file store to avoid ireturn violation from factory function
+	key := generateKey("filesystem-security-test")
+	fileStore := &encryptedFileStore{
+		appName:  "filesystem-security-test",
+		filePath: filepath.Join(tempDir, "filesystem-test.enc"),
+		key:      key,
 	}
-
-	fileStore, ok := store.(*encryptedFileStore)
-	require.True(t, ok, "Expected *encryptedFileStore type")
-
-	fileStore.filePath = filepath.Join(tempDir, "filesystem-test.enc")
 
 	return fileStore
 }
@@ -409,25 +405,33 @@ func TestTokenStore_RaceConditions(t *testing.T) {
 }
 
 // setupRaceConditionTest creates and configures a token store for race condition testing.
-// Returns concrete type to satisfy ireturn linter, but uses platform factory.
+// Uses encrypted file store directly for consistent behavior across platforms.
 func setupRaceConditionTest(t *testing.T) *encryptedFileStore {
 	t.Helper()
 
-	// Force encrypted file store for consistent race condition testing across platforms
-	store, err := newEncryptedFileStore("race-condition-test")
+	// Get config directory for file store
+	configDir, err := os.UserConfigDir()
 	if err != nil {
-		t.Fatalf("Failed to create store: %v", err)
+		homeDir, homeErr := os.UserHomeDir()
+		require.NoError(t, homeErr, "Failed to get home directory")
+		configDir = filepath.Join(homeDir, ".config")
+	}
+	appDir := filepath.Join(configDir, "mcp-router")
+	require.NoError(t, os.MkdirAll(appDir, DirectoryPermissions), "Failed to create app directory")
+
+	// Directly construct file store to avoid ireturn violation from factory function
+	key := generateKey("race-condition-test")
+	fileStore := &encryptedFileStore{
+		appName:  "race-condition-test",
+		filePath: filepath.Join(appDir, "tokens.enc"),
+		key:      key,
 	}
 
-	fileStore, ok := store.(*encryptedFileStore)
-	require.True(t, ok, "Expected *encryptedFileStore type")
-
 	// Clean up any leftover items from previous test runs
-	// Try to delete potential keys that might exist
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 5; j++ {
-			key := fmt.Sprintf("race-key-%d-%d", i, j)
-			_ = fileStore.Delete(key) // Ignore errors - item might not exist
+			deleteKey := fmt.Sprintf("race-key-%d-%d", i, j)
+			_ = fileStore.Delete(deleteKey) // Ignore errors - item might not exist
 		}
 	}
 
