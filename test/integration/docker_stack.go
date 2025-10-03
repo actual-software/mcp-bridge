@@ -33,11 +33,30 @@ type DockerStack struct {
 	logger      *zap.Logger
 	composeDir  string
 	composeFile string
+	composeCmd  []string // docker compose command (either "docker compose" or "docker-compose")
 	services    map[string]string
 	cleanup     []func()
 }
 
 // NewDockerStack creates a new Docker stack manager for integration tests.
+// getDockerComposeCommand returns the appropriate docker-compose command.
+// Tries "docker compose" (v2) first, then falls back to "docker-compose" (v1).
+func getDockerComposeCommand() ([]string, error) {
+	// Try docker compose (v2) first
+	cmd := exec.Command("docker", "compose", "version")
+	if err := cmd.Run(); err == nil {
+		return []string{"docker", "compose"}, nil
+	}
+
+	// Fall back to docker-compose (v1)
+	cmd = exec.Command("docker-compose", "version")
+	if err := cmd.Run(); err == nil {
+		return []string{"docker-compose"}, nil
+	}
+
+	return nil, fmt.Errorf("neither 'docker compose' nor 'docker-compose' found in PATH")
+}
+
 func NewDockerStack(t *testing.T) *DockerStack {
 	t.Helper()
 
@@ -46,11 +65,17 @@ func NewDockerStack(t *testing.T) *DockerStack {
 		t.Fatalf("Failed to create logger: %v", err)
 	}
 
+	composeCmd, err := getDockerComposeCommand()
+	if err != nil {
+		t.Fatalf("Failed to find docker compose command: %v", err)
+	}
+
 	return &DockerStack{
 		t:           t,
 		logger:      logger,
 		composeDir:  ".",
 		composeFile: "docker-compose.test.yml",
+		composeCmd:  composeCmd,
 		services:    make(map[string]string),
 		cleanup:     make([]func(), 0),
 	}
@@ -72,8 +97,9 @@ func (ds *DockerStack) StartServices() error {
 		zap.String("compose_file", ds.composeFile),
 		zap.String("compose_dir", ds.composeDir))
 
+	args := append(ds.composeCmd, "-f", ds.composeFile, "up", "-d")
 	//nolint:gosec // Test environment
-	cmd := exec.CommandContext(context.Background(), "docker-compose", "-f", ds.composeFile, "up", "-d")
+	cmd := exec.CommandContext(context.Background(), args[0], args[1:]...)
 	cmd.Dir = ds.composeDir
 
 	output, err := cmd.CombinedOutput()
@@ -97,8 +123,9 @@ func (ds *DockerStack) StartServices() error {
 
 // StopServices stops all running services.
 func (ds *DockerStack) StopServices() error {
+	args := append(ds.composeCmd, "-f", ds.composeFile, "down", "-v")
 	//nolint:gosec // Test environment
-	cmd := exec.CommandContext(context.Background(), "docker-compose", "-f", ds.composeFile, "down", "-v")
+	cmd := exec.CommandContext(context.Background(), args[0], args[1:]...)
 	cmd.Dir = ds.composeDir
 
 	output, err := cmd.CombinedOutput()
@@ -159,8 +186,10 @@ func (ds *DockerStack) AddService(name, url string) {
 
 // RunCommand executes a command in a service container.
 func (ds *DockerStack) RunCommand(serviceName string, command ...string) ([]byte, error) {
-	args := append([]string{"exec", "-T", serviceName}, command...)
-	cmd := exec.CommandContext(context.Background(), "docker-compose", args...) //nolint:gosec // Test environment
+	args := append(ds.composeCmd, "exec", "-T", serviceName)
+	args = append(args, command...)
+	//nolint:gosec // Test environment
+	cmd := exec.CommandContext(context.Background(), args[0], args[1:]...)
 	cmd.Dir = ds.composeDir
 
 	output, err := cmd.CombinedOutput()
@@ -179,8 +208,9 @@ func (ds *DockerStack) RunCommand(serviceName string, command ...string) ([]byte
 
 // GetContainerLogs retrieves logs from a container.
 func (ds *DockerStack) GetContainerLogs(serviceName string) ([]byte, error) {
+	args := append(ds.composeCmd, "-f", ds.composeFile, "logs", serviceName)
 	//nolint:gosec // Test environment
-	cmd := exec.CommandContext(context.Background(), "docker-compose", "-f", ds.composeFile, "logs", serviceName)
+	cmd := exec.CommandContext(context.Background(), args[0], args[1:]...)
 	cmd.Dir = ds.composeDir
 
 	return cmd.CombinedOutput()
@@ -188,8 +218,9 @@ func (ds *DockerStack) GetContainerLogs(serviceName string) ([]byte, error) {
 
 // RestartService restarts a specific service.
 func (ds *DockerStack) RestartService(serviceName string) error {
+	args := append(ds.composeCmd, "-f", ds.composeFile, "restart", serviceName)
 	//nolint:gosec // Test environment
-	cmd := exec.CommandContext(context.Background(), "docker-compose", "-f", ds.composeFile, "restart", serviceName)
+	cmd := exec.CommandContext(context.Background(), args[0], args[1:]...)
 	cmd.Dir = ds.composeDir
 
 	output, err := cmd.CombinedOutput()
@@ -209,9 +240,10 @@ func (ds *DockerStack) RestartService(serviceName string) error {
 
 // ScaleService scales a service to the specified number of replicas.
 func (ds *DockerStack) ScaleService(serviceName string, replicas int) error {
-	//nolint:gosec // Test environment
-	cmd := exec.CommandContext(context.Background(), "docker-compose", "-f", ds.composeFile, "up", "-d", "--scale",
+	args := append(ds.composeCmd, "-f", ds.composeFile, "up", "-d", "--scale",
 		fmt.Sprintf("%s=%d", serviceName, replicas), serviceName)
+	//nolint:gosec // Test environment
+	cmd := exec.CommandContext(context.Background(), args[0], args[1:]...)
 	cmd.Dir = ds.composeDir
 
 	output, err := cmd.CombinedOutput()

@@ -130,6 +130,9 @@ func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, n
 func createServiceEndpoints(t *testing.T, client kubernetes.Interface, namespace, serviceName string) {
 	t.Helper()
 
+	// Delete existing endpoints if they exist (cleanup from previous failed test runs)
+	_ = client.CoreV1().Endpoints(namespace).Delete(context.Background(), serviceName, metav1.DeleteOptions{})
+
 	endpoints := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,

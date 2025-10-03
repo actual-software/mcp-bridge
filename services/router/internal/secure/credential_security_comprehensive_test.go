@@ -41,6 +41,16 @@ func TestCredentialStore_SecurityBoundaries(t *testing.T) {
 	token1 := "secret-token-for-app1"
 	token2 := "secret-token-for-app2"
 
+	// Clean up any existing test data from previous failed runs
+	_ = store1.Delete(testKey)
+	_ = store2.Delete(testKey)
+
+	// Ensure cleanup happens even if test fails
+	t.Cleanup(func() {
+		_ = store1.Delete(testKey)
+		_ = store2.Delete(testKey)
+	})
+
 	err = store1.Store(testKey, token1)
 	if err != nil {
 		t.Fatalf("Failed to store in store1: %v", err)
@@ -74,10 +84,6 @@ func TestCredentialStore_SecurityBoundaries(t *testing.T) {
 	if retrieved1 == retrieved2 {
 		t.Error("Stores should be isolated but returned same token")
 	}
-
-	// Cleanup.
-	_ = store1.Delete(testKey)
-	_ = store2.Delete(testKey)
 }
 
 func TestEncryptedFileStore_MaliciousInputResistance(t *testing.T) {
