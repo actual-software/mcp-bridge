@@ -15,14 +15,14 @@ COPY services/router/go.mod services/router/go.sum ./services/router/
 RUN go mod download
 
 # Copy test source code
-COPY test/ ./test/
+COPY test/ ./
 COPY pkg/ ./pkg/
 
 # Build test binaries if needed
-RUN go test -c ./test/smoke -o /bin/smoke.test
+RUN go test -c ./smoke -o /bin/smoke.test
 # Contract tests directory is empty, skip building
-# RUN go test -c ./test/contract -o /bin/contract.test
-RUN go test -c ./test/performance -o /bin/performance.test
+# RUN go test -c ./contract -o /bin/contract.test
+RUN go test -c ./performance -o /bin/performance.test
 
 # Runtime stage
 FROM alpine:latest
@@ -33,8 +33,8 @@ WORKDIR /test
 
 # Copy test binaries
 COPY --from=builder /bin/*.test /bin/
-COPY test/run-tests.sh ./
-COPY test/Makefile ./
+COPY --from=builder /test/run-tests.sh ./
+COPY --from=builder /test/Makefile ./
 
 # Make scripts executable
 RUN chmod +x run-tests.sh
