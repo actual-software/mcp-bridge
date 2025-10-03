@@ -409,24 +409,27 @@ func TestTokenStore_RaceConditions(t *testing.T) {
 }
 
 // setupRaceConditionTest creates and configures a token store for race condition testing.
-func setupRaceConditionTest(t *testing.T) TokenStore { //nolint:ireturn
+func setupRaceConditionTest(t *testing.T) *encryptedFileStore {
 	t.Helper()
 
-	store, err := NewTokenStore("race-condition-test")
+	store, err := newEncryptedFileStore("race-condition-test")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
 	}
+
+	fileStore, ok := store.(*encryptedFileStore)
+	require.True(t, ok, "Expected *encryptedFileStore type")
 
 	// Clean up any leftover items from previous test runs
 	// Try to delete potential keys that might exist
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 5; j++ {
 			key := fmt.Sprintf("race-key-%d-%d", i, j)
-			_ = store.Delete(key) // Ignore errors - item might not exist
+			_ = fileStore.Delete(key) // Ignore errors - item might not exist
 		}
 	}
 
-	return store
+	return fileStore
 }
 
 // runRaceConditionGoroutines executes concurrent token store operations.
@@ -616,15 +619,18 @@ func TestTokenStore_PlatformSpecificBehavior(t *testing.T) {
 }
 
 // setupPlatformTest creates a token store for platform-specific testing.
-func setupPlatformTest(t *testing.T) TokenStore { //nolint:ireturn
+func setupPlatformTest(t *testing.T) *encryptedFileStore {
 	t.Helper()
 
-	store, err := NewTokenStore("platform-test")
+	store, err := newEncryptedFileStore("platform-test")
 	if err != nil {
 		t.Fatalf("Failed to create store: %v", err)
 	}
 
-	return store
+	fileStore, ok := store.(*encryptedFileStore)
+	require.True(t, ok, "Expected *encryptedFileStore type")
+
+	return fileStore
 }
 
 // testPlatformBasicOperations tests that basic store operations work on all platforms.
