@@ -334,8 +334,21 @@ jobs:
 
       - name: Setup test environment
         run: |
-          docker compose -f test/docker-compose.test.yml up -d
+          docker compose -f test/docker-compose.test.yml up -d || {
+            echo "Docker compose failed to start. Showing logs:"
+            docker compose -f test/docker-compose.test.yml logs
+            docker compose -f test/docker-compose.test.yml down -v
+            exit 1
+          }
           sleep 10
+
+          # Verify containers are running
+          if ! docker compose -f test/docker-compose.test.yml ps | grep -q "Up"; then
+            echo "Containers are not running. Showing logs:"
+            docker compose -f test/docker-compose.test.yml logs
+            docker compose -f test/docker-compose.test.yml down -v
+            exit 1
+          fi
 
       - name: Run dynamic analysis
         run: |
