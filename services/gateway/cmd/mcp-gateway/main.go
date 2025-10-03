@@ -153,7 +153,12 @@ func setupLogger(cmd *cobra.Command) (*zap.Logger, error) {
 
 func syncLogger(logger *zap.Logger) {
 	if syncErr := logger.Sync(); syncErr != nil {
-		fmt.Fprintf(os.Stderr, "Failed to sync logger: %v\n", syncErr)
+		// Ignore "sync /dev/stderr: invalid argument" error in containers
+		// This is a known issue with zap logger
+		if syncErr.Error() != "sync /dev/stderr: invalid argument" &&
+			syncErr.Error() != "sync /dev/stdout: invalid argument" {
+			fmt.Fprintf(os.Stderr, "Failed to sync logger: %v\n", syncErr)
+		}
 	}
 }
 

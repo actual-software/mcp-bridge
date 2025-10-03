@@ -8,6 +8,21 @@ server:
   idle_timeout: 120
   tls:
     enabled: false
+  frontends:
+    - name: websocket-main
+      protocol: websocket
+      enabled: true
+      config:
+        host: 0.0.0.0
+        port: 8080
+        max_connections: 1000
+        read_timeout: 30s
+        write_timeout: 30s
+        ping_interval: 30s
+        pong_timeout: 10s
+        max_message_size: 1048576
+        tls:
+          enabled: false
 
 logging:
   level: debug
