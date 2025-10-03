@@ -184,6 +184,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [go-version, changes]
     if: needs.changes.outputs.gateway == 'true' || needs.changes.outputs.router == 'true' || needs.changes.outputs.common == 'true'
+    permissions:
+      security-events: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
