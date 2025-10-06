@@ -611,7 +611,7 @@ func TestStdioFrontend_HandleConnectionWithAuth(t *testing.T) {
 		Enabled: true,
 		Process: ProcessManagementConfig{
 			MaxConcurrentClients: 2,
-			ClientTimeout:        1 * time.Second,
+			ClientTimeout:        5 * time.Second,
 			AuthRequired:         true,
 		},
 	}
@@ -665,12 +665,10 @@ func testSuccessfulAuth(
 	}
 
 	frontend.wg.Add(1)
-
 	go func() {
 		frontend.handleConnection(context.Background(), testConn1)
 	}()
 
-	// Give time for request to be processed and response written
 	time.Sleep(responseProcessingTimeout)
 	close(reader1.done)
 	time.Sleep(connectionCleanupTimeout)

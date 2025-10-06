@@ -176,16 +176,16 @@ func testStdioDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	done := make(chan struct{})
-
-	go func() {
-		defer close(done)
-
-		_, _ = stdioBridge.Watch(ctx)
-	}()
+	// Start watching
+	ch, err := stdioBridge.Watch(ctx)
+	require.NoError(t, err)
 
 	cancel() // Cancel immediately to exit the watch
-	<-done   // Wait for watch to exit
+
+	// Drain the channel and wait for the watch goroutine to exit
+	for range ch {
+		// Drain any endpoints sent before cancellation
+	}
 }
 
 func testWebSocketDiscoveryWatch(t *testing.T, logger *zap.Logger) {
