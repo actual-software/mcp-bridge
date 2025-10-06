@@ -210,16 +210,17 @@ func testWebSocketDiscoveryWatch(t *testing.T, logger *zap.Logger) {
 	require.True(t, ok, "Expected WebSocketDiscovery type")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
 
-	go func() {
-		defer close(done)
-
-		_, _ = wsBridge.Watch(ctx)
-	}()
+	// Start watching
+	ch, err := wsBridge.Watch(ctx)
+	require.NoError(t, err)
 
 	cancel() // Cancel immediately to exit the watch
-	<-done   // Wait for watch to exit
+
+	// Drain the channel and wait for the watch goroutine to exit
+	for range ch {
+		// Drain any endpoints sent before cancellation
+	}
 }
 
 // TestHealthCheckMethodsCoverage tests HealthCheck methods to improve coverage.

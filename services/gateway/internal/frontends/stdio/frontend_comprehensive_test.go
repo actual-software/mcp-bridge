@@ -135,17 +135,11 @@ func (sb *syncBuffer) Reset() {
 }
 
 func (r *blockingReader) Read(p []byte) (n int, err error) {
+	// Return data on first read, then block until done channel is closed
 	if r.read {
 		// Wait for done signal or return EOF
-		select {
-		case <-r.done:
-			return 0, io.EOF
-		default:
-			// Block indefinitely until done is closed
-			<-r.done
-
-			return 0, io.EOF
-		}
+		<-r.done
+		return 0, io.EOF
 	}
 
 	r.read = true
@@ -669,8 +663,8 @@ func testSuccessfulAuth(
 		frontend.handleConnection(context.Background(), testConn1)
 	}()
 
-	// Wait longer for async routing and response write to complete before closing connection
-	time.Sleep(1 * time.Second)
+	// Wait for async routing and response write to complete, then close the connection
+	time.Sleep(responseProcessingTimeout)
 	close(reader1.done)
 	time.Sleep(connectionCleanupTimeout)
 
