@@ -686,13 +686,15 @@ func testSuccessfulAuth(
 
 	frontend.wg.Add(1)
 
+	// Ensure reader is closed even if test fails
+	defer close(reader1.done)
+
 	go func() {
 		frontend.handleConnection(context.Background(), testConn1)
 	}()
 
 	waitForResponseWritten(t, writer1, 2*time.Second)
 
-	close(reader1.done)
 	time.Sleep(connectionCleanupTimeout)
 
 	assert.Positive(t, writer1.Len(), "Expected successful auth response")

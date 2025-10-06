@@ -130,7 +130,7 @@ func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, n
 func waitForEndpointDeletion(t *testing.T, client kubernetes.Interface, namespace, serviceName string) {
 	t.Helper()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -139,10 +139,8 @@ func waitForEndpointDeletion(t *testing.T, client kubernetes.Interface, namespac
 	for {
 		select {
 		case <-ctx.Done():
-			// Timeout - endpoint still exists, but we'll try to continue anyway
-			t.Logf("Warning: Endpoint %s/%s may still exist after deletion timeout", namespace, serviceName)
-
-			return
+			// Timeout - endpoint still exists, fail the test
+			t.Fatalf("Endpoint %s/%s still exists after 90s deletion timeout", namespace, serviceName)
 		case <-ticker.C:
 			_, err := client.CoreV1().Endpoints(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 			if err != nil {
@@ -158,7 +156,11 @@ func createServiceEndpoints(t *testing.T, client kubernetes.Interface, namespace
 	t.Helper()
 
 	// Delete existing endpoints if they exist (cleanup from previous failed test runs)
-	_ = client.CoreV1().Endpoints(namespace).Delete(context.Background(), serviceName, metav1.DeleteOptions{})
+	// Use zero grace period to force immediate deletion
+	gracePeriod := int64(0)
+	_ = client.CoreV1().Endpoints(namespace).Delete(context.Background(), serviceName, metav1.DeleteOptions{
+		GracePeriodSeconds: &gracePeriod,
+	})
 
 	// Wait for deletion to complete (Kubernetes deletions are asynchronous)
 	waitForEndpointDeletion(t, client, namespace, serviceName)
