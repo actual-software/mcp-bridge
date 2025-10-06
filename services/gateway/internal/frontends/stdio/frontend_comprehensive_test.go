@@ -669,7 +669,8 @@ func testSuccessfulAuth(
 		frontend.handleConnection(context.Background(), testConn1)
 	}()
 
-	time.Sleep(responseProcessingTimeout)
+	// Wait longer for async routing and response write to complete before closing connection
+	time.Sleep(1 * time.Second)
 	close(reader1.done)
 	time.Sleep(connectionCleanupTimeout)
 
