@@ -115,7 +115,8 @@ func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, n
 			Ports: []v1.ServicePort{
 				{Name: "http", Port: 8080, Protocol: v1.ProtocolTCP},
 			},
-			Selector: map[string]string{"app": "test"},
+			// No selector - we'll manually manage the Endpoints
+			// This prevents K8s from automatically managing/deleting the Endpoints
 		},
 	}
 
