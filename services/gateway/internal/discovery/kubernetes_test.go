@@ -127,10 +127,8 @@ func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, n
 	createServiceEndpoints(t, client, namespace, "test-service")
 }
 
-func waitForEndpointDeletion(t *testing.T, client kubernetes.Interface, namespace, serviceName string) {
-	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+func waitForEndpointDeletion(client kubernetes.Interface, namespace, serviceName string, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -139,13 +137,13 @@ func waitForEndpointDeletion(t *testing.T, client kubernetes.Interface, namespac
 	for {
 		select {
 		case <-ctx.Done():
-			// Timeout - endpoint still exists, fail the test
-			t.Fatalf("Endpoint %s/%s still exists after 90s deletion timeout", namespace, serviceName)
+			// Timeout - endpoint still exists
+			return fmt.Errorf("endpoint %s/%s still exists after %v deletion timeout", namespace, serviceName, timeout)
 		case <-ticker.C:
 			_, err := client.CoreV1().Endpoints(namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
 			if err != nil {
 				// Endpoint is gone (likely 404 error)
-				return
+				return nil
 			}
 			// Endpoint still exists, keep waiting
 		}
@@ -163,7 +161,9 @@ func createServiceEndpoints(t *testing.T, client kubernetes.Interface, namespace
 	})
 
 	// Wait for deletion to complete (Kubernetes deletions are asynchronous)
-	waitForEndpointDeletion(t, client, namespace, serviceName)
+	if err := waitForEndpointDeletion(client, namespace, serviceName, 90*time.Second); err != nil {
+		t.Fatalf("Failed to wait for endpoint deletion: %v", err)
+	}
 
 	endpoints := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{

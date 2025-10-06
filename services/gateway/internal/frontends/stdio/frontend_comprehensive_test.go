@@ -620,25 +620,6 @@ func TestStdioFrontend_HandleConnectionWithAuth(t *testing.T) {
 	testFailedAuth(t, config, mockRouter, mockSessions, logger)
 }
 
-func waitForResponseWritten(t *testing.T, writer *syncBuffer, timeout time.Duration) {
-	t.Helper()
-
-	timeoutChan := time.After(timeout)
-	ticker := time.NewTicker(50 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-timeoutChan:
-			t.Fatal("Timeout waiting for auth response to be written")
-		case <-ticker.C:
-			if writer.Len() > 0 {
-				return
-			}
-		}
-	}
-}
-
 func testSuccessfulAuth(
 	t *testing.T, config Config, mockRouter *MockRequestRouter,
 	mockAuth *MockAuthProviderWithError, mockSessions *MockSessionManager, logger *zap.Logger,
@@ -669,7 +650,6 @@ func testSuccessfulAuth(
 	}
 
 	requestData1, err := json.Marshal(request1)
-
 	require.NoError(t, err)
 
 	reader1 := &blockingReader{
@@ -686,15 +666,13 @@ func testSuccessfulAuth(
 
 	frontend.wg.Add(1)
 
-	// Ensure reader is closed even if test fails
-	defer close(reader1.done)
-
 	go func() {
 		frontend.handleConnection(context.Background(), testConn1)
 	}()
 
-	waitForResponseWritten(t, writer1, 2*time.Second)
-
+	// Give time for request to be processed and response written
+	time.Sleep(responseProcessingTimeout)
+	close(reader1.done)
 	time.Sleep(connectionCleanupTimeout)
 
 	assert.Positive(t, writer1.Len(), "Expected successful auth response")
