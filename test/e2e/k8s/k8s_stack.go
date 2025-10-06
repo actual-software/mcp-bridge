@@ -837,6 +837,31 @@ data:
         cert_file: "/etc/tls/tls.crt"
         key_file: "/etc/tls/tls.key"
         min_version: "1.2"
+      frontends:
+        - name: "websocket"
+          protocol: "websocket"
+          enabled: true
+          config:
+            port: 8443
+            bind_addr: "0.0.0.0:8443"
+            path: "/ws"
+            tls:
+              enabled: true
+              cert_file: "/etc/tls/tls.crt"
+              key_file: "/etc/tls/tls.key"
+              min_version: "1.2"
+        - name: "http"
+          protocol: "http"
+          enabled: true
+          config:
+            port: 8443
+            bind_addr: "0.0.0.0:8443"
+            path: "/mcp"
+            tls:
+              enabled: true
+              cert_file: "/etc/tls/tls.crt"
+              key_file: "/etc/tls/tls.key"
+              min_version: "1.2"
     sessions:
       provider: redis
       redis:
