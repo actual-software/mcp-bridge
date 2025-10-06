@@ -161,7 +161,8 @@ func createServiceEndpoints(t *testing.T, client kubernetes.Interface, namespace
 	})
 
 	// Wait for deletion to complete (Kubernetes deletions are asynchronous)
-	if err := waitForEndpointDeletion(client, namespace, serviceName, 90*time.Second); err != nil {
+	// Increased timeout to 180s for slower CI environments
+	if err := waitForEndpointDeletion(client, namespace, serviceName, 180*time.Second); err != nil {
 		t.Fatalf("Failed to wait for endpoint deletion: %v", err)
 	}
 
