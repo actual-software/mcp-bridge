@@ -21,7 +21,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
 	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
@@ -41,14 +40,12 @@ const (
 func generateTestJWT(t *testing.T) string {
 	t.Helper()
 
-	claims := &auth.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   "e2e-test-user",
-			Issuer:    jwtIssuer,
-			Audience:  jwt.ClaimStrings{jwtAudience},
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-		},
-		Scopes: []string{"mcp:*"},
+	claims := jwt.MapClaims{
+		"sub":    "e2e-test-user",
+		"iss":    jwtIssuer,
+		"aud":    jwtAudience,
+		"exp":    time.Now().Add(time.Hour).Unix(),
+		"scopes": []string{"mcp:*"},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
