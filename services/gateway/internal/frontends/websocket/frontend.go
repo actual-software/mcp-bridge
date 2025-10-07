@@ -604,7 +604,15 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 
 // sendResponse sends a response to the client.
 func (f *Frontend) sendResponse(client *ClientConnection, resp *mcp.Response) error {
-	data, err := json.Marshal(resp)
+	// Wrap response in WireMessage format for router compatibility
+	wireMsg := WireMessage{
+		ID:         resp.ID,
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Source:     "gateway",
+		MCPPayload: resp,
+	}
+
+	data, err := json.Marshal(wireMsg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal response: %w", err)
 	}
