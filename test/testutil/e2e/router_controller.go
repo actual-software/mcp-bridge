@@ -630,13 +630,24 @@ func FindProjectRoot() (string, error) {
 	}
 
 	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+		// Check for go.work (workspace) first - this indicates the main project root
+		if _, err := os.Stat(filepath.Join(dir, "go.work")); err == nil {
 			return dir, nil
+		}
+
+		// Check for go.mod AND services directory to ensure we're at the project root, not a test subdirectory
+		goModPath := filepath.Join(dir, "go.mod")
+		servicesPath := filepath.Join(dir, "services")
+
+		if _, err := os.Stat(goModPath); err == nil {
+			if _, err := os.Stat(servicesPath); err == nil {
+				return dir, nil
+			}
 		}
 
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", errors.New("could not find project root (no go.mod found)")
+			return "", errors.New("could not find project root (no go.mod with services/ found)")
 		}
 
 		dir = parent
