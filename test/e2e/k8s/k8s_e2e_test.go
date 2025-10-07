@@ -85,8 +85,9 @@ func TestKubernetesEndToEnd(t *testing.T) {
 	defer cancel()
 
 	// Setup Kubernetes infrastructure
-	stack, client := setupKubernetesInfrastructure(t, ctx, logger)
+	stack, client, testSuite := setupKubernetesInfrastructure(t, ctx, logger)
 	defer stack.Cleanup()
+	defer testSuite.Teardown()
 
 	// Run comprehensive test scenarios
 	runKubernetesTestScenarios(t, client, stack)
@@ -94,7 +95,7 @@ func TestKubernetesEndToEnd(t *testing.T) {
 
 func setupKubernetesInfrastructure(
 	t *testing.T, ctx context.Context, logger *zap.Logger,
-) (*KubernetesStack, *e2e.MCPClient) {
+) (*KubernetesStack, *e2e.MCPClient, *e2e.TestSuite) {
 	t.Helper()
 
 	// Phase 1: Kubernetes Infrastructure Setup
@@ -122,7 +123,6 @@ func setupKubernetesInfrastructure(
 	}
 
 	testSuite := e2e.NewTestSuite(t, config)
-	defer testSuite.Teardown()
 
 	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
@@ -136,7 +136,7 @@ func setupKubernetesInfrastructure(
 	require.True(t, client.IsInitialized(), "Client should be initialized")
 	logger.Info("MCP client initialized successfully")
 
-	return stack, client
+	return stack, client, testSuite
 }
 
 func runKubernetesTestScenarios(t *testing.T, client *e2e.MCPClient, stack *KubernetesStack) {
@@ -459,8 +459,9 @@ func TestKubernetesPerformance(t *testing.T) {
 	defer cancel()
 
 	// Setup and validate cluster for performance testing
-	stack, client, clusterConfig := setupPerformanceTestCluster(t, ctx, logger)
+	stack, client, clusterConfig, testSuite := setupPerformanceTestCluster(t, ctx, logger)
 	defer stack.Cleanup()
+	defer testSuite.Teardown()
 
 	// Run adaptive performance test scenarios
 	runPerformanceTestScenarios(t, client, stack, clusterConfig, logger)
@@ -468,7 +469,7 @@ func TestKubernetesPerformance(t *testing.T) {
 
 func setupPerformanceTestCluster(
 	t *testing.T, ctx context.Context, logger *zap.Logger,
-) (*KubernetesStack, *e2e.MCPClient, *ClusterConfig) {
+) (*KubernetesStack, *e2e.MCPClient, *ClusterConfig, *e2e.TestSuite) {
 	t.Helper()
 
 	logger.Info("Starting Kubernetes stack for performance testing")
@@ -502,7 +503,6 @@ func setupPerformanceTestCluster(
 	}
 
 	testSuite := e2e.NewTestSuite(t, config)
-	defer testSuite.Teardown()
 
 	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
@@ -513,7 +513,7 @@ func setupPerformanceTestCluster(
 	require.NotNil(t, initResp, "Initialize response is nil")
 	require.True(t, client.IsInitialized(), "Client should be initialized")
 
-	return stack, client, clusterConfig
+	return stack, client, clusterConfig, testSuite
 }
 
 func runPerformanceTestScenarios(
@@ -567,8 +567,9 @@ func TestKubernetesFailover(t *testing.T) {
 	defer cancel()
 
 	// Setup and validate cluster for failover testing
-	stack, client, clusterConfig := setupFailoverTestCluster(t, ctx, logger)
+	stack, client, clusterConfig, testSuite := setupFailoverTestCluster(t, ctx, logger)
 	defer stack.Cleanup()
+	defer testSuite.Teardown()
 
 	// Run adaptive failover test scenarios
 	runFailoverTestScenarios(t, client, stack, clusterConfig, logger)
@@ -576,7 +577,7 @@ func TestKubernetesFailover(t *testing.T) {
 
 func setupFailoverTestCluster(
 	t *testing.T, ctx context.Context, logger *zap.Logger,
-) (*KubernetesStack, *e2e.MCPClient, *ClusterConfig) {
+) (*KubernetesStack, *e2e.MCPClient, *ClusterConfig, *e2e.TestSuite) {
 	t.Helper()
 
 	logger.Info("Starting Kubernetes stack for failover testing")
@@ -610,7 +611,6 @@ func setupFailoverTestCluster(
 	}
 
 	testSuite := e2e.NewTestSuite(t, config)
-	defer testSuite.Teardown()
 
 	err = testSuite.SetupWithContext(ctx)
 	require.NoError(t, err, "Failed to setup test suite")
@@ -621,7 +621,7 @@ func setupFailoverTestCluster(
 	require.NotNil(t, initResp, "Initialize response is nil")
 	require.True(t, client.IsInitialized(), "Client should be initialized")
 
-	return stack, client, clusterConfig
+	return stack, client, clusterConfig, testSuite
 }
 
 func runFailoverTestScenarios(
