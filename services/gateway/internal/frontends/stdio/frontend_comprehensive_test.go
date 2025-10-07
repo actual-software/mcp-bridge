@@ -30,7 +30,7 @@ const (
 	testMaxIterations = 1000
 
 	// Test timing constants - tuned for reliability vs speed.
-	// Increased for CI environments which are slower than local
+	// Increased for CI environments which are slower than local.
 	connectionSetupTimeout    = 100 * time.Millisecond
 	responseProcessingTimeout = 1 * time.Second
 	connectionCleanupTimeout  = 50 * time.Millisecond
@@ -140,6 +140,7 @@ func (r *blockingReader) Read(p []byte) (n int, err error) {
 	if r.read {
 		// Wait for done signal or return EOF
 		<-r.done
+
 		return 0, io.EOF
 	}
 
