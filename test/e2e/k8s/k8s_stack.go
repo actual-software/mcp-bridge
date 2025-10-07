@@ -854,8 +854,8 @@ data:
           protocol: "http"
           enabled: true
           config:
-            port: 8443
-            bind_addr: "0.0.0.0:8443"
+            port: 8444
+            bind_addr: "0.0.0.0:8444"
             path: "/mcp"
             tls:
               enabled: true
@@ -969,6 +969,10 @@ spec:
     port: 8443
     targetPort: 8443
     nodePort: 30443
+  - name: http
+    port: 8444
+    targetPort: 8444
+    nodePort: 30444
   - name: health
     port: 8080
     targetPort: 8080

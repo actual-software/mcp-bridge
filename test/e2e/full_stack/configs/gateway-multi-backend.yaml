@@ -27,8 +27,8 @@ server:
       protocol: "http"
       enabled: true
       config:
-        port: 8443
-        bind_addr: "0.0.0.0:8443"
+        port: 8444
+        bind_addr: "0.0.0.0:8444"
         path: "/mcp"
         tls:
           enabled: true
