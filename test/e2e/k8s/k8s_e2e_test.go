@@ -17,9 +17,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
 	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
@@ -28,7 +30,33 @@ const (
 	podDisruptionMethod = "pod-disruption"
 	networkPolicyMethod = "networkpolicy"
 	resilienceMethod    = "resilience"
+
+	// JWT configuration constants matching the gateway configuration
+	jwtSecret   = "test-secret-key-for-e2e-testing"
+	jwtIssuer   = "mcp-gateway-e2e"
+	jwtAudience = "mcp-clients"
 )
+
+// generateTestJWT creates a JWT token for E2E testing
+func generateTestJWT(t *testing.T) string {
+	t.Helper()
+
+	claims := &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "e2e-test-user",
+			Issuer:    jwtIssuer,
+			Audience:  jwt.ClaimStrings{jwtAudience},
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
+		Scopes: []string{"mcp:*"},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(jwtSecret))
+	require.NoError(t, err, "Failed to generate JWT token")
+
+	return tokenString
+}
 
 // TestKubernetesEndToEnd validates the complete MCP protocol flow in Kubernetes
 // This test follows the same pattern as the Docker Compose E2E tests but deploys
@@ -92,6 +120,7 @@ func setupKubernetesInfrastructure(
 
 	config := &e2e.TestConfig{
 		GatewayURL:  stack.GetGatewayURL(),
+		AuthToken:   generateTestJWT(t),
 		TestTimeout: 30 * time.Second,
 	}
 
@@ -471,6 +500,7 @@ func setupPerformanceTestCluster(
 	// Setup and initialize test client
 	config := &e2e.TestConfig{
 		GatewayURL:  stack.GetGatewayURL(),
+		AuthToken:   generateTestJWT(t),
 		TestTimeout: 30 * time.Second,
 	}
 
@@ -578,6 +608,7 @@ func setupFailoverTestCluster(
 	// Setup and initialize test client
 	config := &e2e.TestConfig{
 		GatewayURL:  stack.GetGatewayURL(),
+		AuthToken:   generateTestJWT(t),
 		TestTimeout: 30 * time.Second,
 	}
 
