@@ -82,10 +82,10 @@ func setupKubernetesInfrastructure(
 
 	// Phase 2: Service Readiness Verification
 	logger.Info("Waiting for services to be ready")
-	logger.Info("Checking HTTPS health endpoint")
+	logger.Info("Checking health endpoint")
 
-	err = stack.WaitForHTTPEndpoint(ctx, stack.GetGatewayHTTPURL()+"/healthz")
-	require.NoError(t, err, "Gateway HTTPS health check failed")
+	err = stack.WaitForHTTPEndpoint(ctx, stack.GetGatewayHealthURL())
+	require.NoError(t, err, "Gateway health check failed")
 
 	// Phase 3: Router Setup and Authentication
 	logger.Info("Setting up test suite with shared infrastructure")
@@ -465,8 +465,8 @@ func setupPerformanceTestCluster(
 	readinessCtx, readinessCancel := context.WithTimeout(ctx, clusterConfig.TestTimeout)
 	defer readinessCancel()
 
-	err = stack.WaitForHTTPEndpoint(readinessCtx, stack.GetGatewayHTTPURL()+"/healthz")
-	require.NoError(t, err, "Gateway HTTPS health check failed")
+	err = stack.WaitForHTTPEndpoint(readinessCtx, stack.GetGatewayHealthURL())
+	require.NoError(t, err, "Gateway health check failed")
 
 	// Setup and initialize test client
 	config := &e2e.TestConfig{
@@ -572,8 +572,8 @@ func setupFailoverTestCluster(
 	readinessCtx, readinessCancel := context.WithTimeout(ctx, clusterConfig.TestTimeout)
 	defer readinessCancel()
 
-	err = stack.WaitForHTTPEndpoint(readinessCtx, stack.GetGatewayHTTPURL()+"/healthz")
-	require.NoError(t, err, "Gateway HTTPS health check failed")
+	err = stack.WaitForHTTPEndpoint(readinessCtx, stack.GetGatewayHealthURL())
+	require.NoError(t, err, "Gateway health check failed")
 
 	// Setup and initialize test client
 	config := &e2e.TestConfig{
