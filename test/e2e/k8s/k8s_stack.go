@@ -871,21 +871,21 @@ data:
       static:
         endpoints:
           default:
-            - url: "http://test-mcp-server:3000"
+            - url: "http://test-mcp-server:3000/mcp"
               labels:
                 namespace: "mcp-e2e"
           system:
-            - url: "http://test-mcp-server:3000"
+            - url: "http://test-mcp-server:3000/mcp"
               labels:
                 namespace: "mcp-e2e"
           test-mcp-server:
-            - url: "http://test-mcp-server:3000"
+            - url: "http://test-mcp-server:3000/mcp"
               labels:
                 namespace: "mcp-e2e"
     routing:
       backends:
         - name: "test-mcp-server"
-          endpoint: "http://test-mcp-server:3000"
+          endpoint: "http://test-mcp-server:3000/mcp"
           weight: 100
           health_check:
             enabled: true
