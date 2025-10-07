@@ -43,7 +43,7 @@ func generateTestJWT(t *testing.T) string {
 	claims := jwt.MapClaims{
 		"sub":    "e2e-test-user",
 		"iss":    jwtIssuer,
-		"aud":    jwtAudience,
+		"aud":    []string{jwtAudience},
 		"exp":    time.Now().Add(time.Hour).Unix(),
 		"scopes": []string{"mcp:*"},
 	}
