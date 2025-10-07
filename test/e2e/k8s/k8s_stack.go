@@ -870,6 +870,10 @@ data:
       provider: static
       static:
         endpoints:
+          default:
+            - url: "http://test-mcp-server:3000"
+              labels:
+                namespace: "mcp-e2e"
           system:
             - url: "http://test-mcp-server:3000"
               labels:
