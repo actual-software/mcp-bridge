@@ -276,11 +276,14 @@ func (s *TestMCPServer) handleEcho(response *MCPResponse, arguments map[string]i
 		return
 	}
 
+	// Include backend ID for load balancing verification
+	echoMessage := fmt.Sprintf("Echo from %s: %s", s.backendID, message)
+
 	response.Result = map[string]interface{}{
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": message,
+				"text": echoMessage,
 			},
 		},
 	}
@@ -338,7 +341,8 @@ func (s *TestMCPServer) handleMultiply(response *MCPResponse, arguments map[stri
 
 // handleError handles the error tool call for testing error scenarios.
 func (s *TestMCPServer) handleError(response *MCPResponse, arguments map[string]interface{}) {
-	code, _ := arguments["code"].(float64)
+	// Read error_code parameter (matches what tests send)
+	code, _ := arguments["error_code"].(float64)
 	message, _ := arguments["message"].(string)
 
 	if message == "" {

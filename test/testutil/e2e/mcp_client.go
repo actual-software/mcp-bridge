@@ -328,16 +328,22 @@ func validateToolCallResponse(resp *MCPResponse) error {
 }
 
 func getResultArray(resp *MCPResponse) ([]interface{}, error) {
-	resultArray, ok := resp.Result.([]interface{})
+	// MCP tool responses have format: {"result": {"content": [...]}}
+	resultMap, ok := resp.Result.(map[string]interface{})
 	if !ok {
-		return nil, errors.New("tool call result must be an array")
+		return nil, errors.New("tool call result must be a map")
 	}
 
-	if len(resultArray) == 0 {
-		return nil, errors.New("tool call result array is empty")
+	contentArray, ok := resultMap["content"].([]interface{})
+	if !ok {
+		return nil, errors.New("tool call result must have a 'content' array")
 	}
 
-	return resultArray, nil
+	if len(contentArray) == 0 {
+		return nil, errors.New("tool call result content array is empty")
+	}
+
+	return contentArray, nil
 }
 
 func validateContentBlocks(resultArray []interface{}) error {
