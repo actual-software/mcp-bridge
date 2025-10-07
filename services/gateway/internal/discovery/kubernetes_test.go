@@ -117,7 +117,7 @@ func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, n
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{Name: "http", Port: 8080, Protocol: v1.ProtocolTCP},
+				{Name: "mcp", Port: 8080, Protocol: v1.ProtocolTCP},
 			},
 			// No selector - we'll manually manage the Endpoints
 			// This prevents K8s from automatically managing/deleting the Endpoints
@@ -179,7 +179,7 @@ func createServiceEndpoints(t *testing.T, client kubernetes.Interface, namespace
 		Subsets: []v1.EndpointSubset{
 			{
 				Addresses: []v1.EndpointAddress{{IP: "10.0.0.1"}},
-				Ports:     []v1.EndpointPort{{Name: "http", Port: 8080, Protocol: v1.ProtocolTCP}},
+				Ports:     []v1.EndpointPort{{Name: "mcp", Port: 8080, Protocol: v1.ProtocolTCP}},
 			},
 		},
 	}
