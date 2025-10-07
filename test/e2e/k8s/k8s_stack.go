@@ -111,7 +111,7 @@ func (ks *KubernetesStack) Start(ctx context.Context) error {
 
 	// Set service URLs
 	ks.services["gateway"] = "https://localhost:30443"
-	ks.services["gateway-ws"] = "wss://localhost:30443/mcp"
+	ks.services["gateway-ws"] = "wss://localhost:30443/ws"
 	ks.services["gateway-health"] = "http://localhost:30080/healthz"
 	ks.services["metrics"] = "http://localhost:30090/metrics"
 
