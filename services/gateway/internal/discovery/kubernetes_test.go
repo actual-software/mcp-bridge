@@ -110,6 +110,10 @@ func createTestServiceWithEndpoints(t *testing.T, client kubernetes.Interface, n
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-service",
 			Namespace: namespace,
+			Annotations: map[string]string{
+				"mcp.bridge/enabled":   "true",
+				"mcp.bridge/namespace": namespace,
+			},
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
