@@ -896,7 +896,7 @@ func (mr *MessageRouter) tryExtractURL(params map[string]interface{}, key string
 // getFallbackServerURL returns the default fallback URL.
 func (mr *MessageRouter) getFallbackServerURL(requestID interface{}) string {
 	// Ultimate fallback to a default local URL.
-	defaultURL := "http://localhost:defaultHTTPPort/mcp"
+	defaultURL := "http://localhost:8080/mcp"
 	mr.logger.Debug("Using fallback server URL",
 		zap.Any("request_id", requestID),
 		zap.String("server_url", defaultURL))
