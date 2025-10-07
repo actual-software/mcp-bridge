@@ -9,6 +9,7 @@ import (
 const (
 	defaultHost            = "0.0.0.0"
 	defaultPort            = 8443
+	defaultPath            = "/"
 	defaultMaxConnections  = 10000
 	defaultReadTimeout     = 60 * time.Second
 	defaultWriteTimeout    = 60 * time.Second
@@ -26,6 +27,7 @@ const (
 type Config struct {
 	Host           string           `mapstructure:"host"`
 	Port           int              `mapstructure:"port"`
+	Path           string           `mapstructure:"path"`
 	TLS            config.TLSConfig `mapstructure:"tls"`
 	MaxConnections int              `mapstructure:"max_connections"`
 	ReadTimeout    time.Duration    `mapstructure:"read_timeout"`
@@ -43,6 +45,9 @@ func (c *Config) ApplyDefaults() {
 	}
 	if c.Port == 0 {
 		c.Port = defaultPort
+	}
+	if c.Path == "" {
+		c.Path = defaultPath
 	}
 	if c.MaxConnections == 0 {
 		c.MaxConnections = defaultMaxConnections

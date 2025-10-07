@@ -156,7 +156,7 @@ func (f *Frontend) Start(ctx context.Context) error {
 
 	// Create HTTP server for WebSocket upgrade
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", f.handleWebSocketUpgrade)
+	mux.HandleFunc(f.config.Path, f.handleWebSocketUpgrade)
 
 	addr := fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
 
@@ -176,11 +176,13 @@ func (f *Frontend) Start(ctx context.Context) error {
 		var err error
 		if f.config.TLS.Enabled {
 			f.logger.Info("starting WebSocket frontend with TLS",
-				zap.String("address", addr))
+				zap.String("address", addr),
+				zap.String("path", f.config.Path))
 			err = f.server.ListenAndServeTLS(f.config.TLS.CertFile, f.config.TLS.KeyFile)
 		} else {
 			f.logger.Info("starting WebSocket frontend",
-				zap.String("address", addr))
+				zap.String("address", addr),
+				zap.String("path", f.config.Path))
 			err = f.server.ListenAndServe()
 		}
 
@@ -196,6 +198,7 @@ func (f *Frontend) Start(ctx context.Context) error {
 
 	f.logger.Info("websocket frontend started",
 		zap.String("address", addr),
+		zap.String("path", f.config.Path),
 		zap.Bool("tls", f.config.TLS.Enabled))
 
 	return nil

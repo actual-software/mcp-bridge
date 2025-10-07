@@ -282,6 +282,9 @@ func (f *DefaultFactory) createWebSocketFrontend(
 	if port, ok := config.Config["port"].(int); ok {
 		wsConfig.Port = port
 	}
+	if path, ok := config.Config["path"].(string); ok {
+		wsConfig.Path = path
+	}
 	if maxConn, ok := config.Config["max_connections"].(int); ok {
 		wsConfig.MaxConnections = maxConn
 	}
