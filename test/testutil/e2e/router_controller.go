@@ -344,7 +344,7 @@ func (rc *RouterController) processJSONRPCResponse(resp map[string]interface{}, 
 func (rc *RouterController) generateAuthToken() {
 	// Generate JWT token for authentication
 	// This uses the same secret as the test gateway configuration
-	secretKey := "test-jwt-secret-for-e2e-testing-only"
+	secretKey := "test-secret-key-for-e2e-testing"
 
 	// Create JWT payload
 	now := time.Now()
