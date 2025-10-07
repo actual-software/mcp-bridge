@@ -411,6 +411,10 @@ gateway_pool:
         timeout_ms: 10000
         recovery_interval_ms: 30000
 
+# Explicitly disable direct mode - all requests go through gateway
+direct:
+  max_connections: 0
+
 local:
   request_timeout_ms: 30000
   rate_limit:
