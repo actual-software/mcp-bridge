@@ -73,10 +73,7 @@ type TestEnvironment struct {
 func NewTestEnvironment(t *testing.T, config *TestConfig) *TestEnvironment {
 	t.Helper()
 
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		t.Fatalf("Failed to create logger: %v", err)
-	}
+	logger := NewTestLogger()
 
 	tempDir, err := os.MkdirTemp("", "mcp-e2e-*")
 	if err != nil {

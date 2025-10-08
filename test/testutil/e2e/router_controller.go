@@ -75,10 +75,7 @@ type RouterController struct {
 func NewRouterController(t *testing.T, gatewayURL string) *RouterController {
 	t.Helper()
 
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		logger = zap.NewNop() // Fallback to no-op logger
-	}
+	logger := NewTestLogger()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -159,7 +156,7 @@ func (rc *RouterController) Start() error {
 
 	// Start the router process
 	rc.cmd = exec.CommandContext(rc.ctx, rc.binaryPath, //nolint:gosec // Test router startup
-		"--config", rc.configPath, "--log-level", "debug")
+		"--config", rc.configPath, "--log-level", "info")
 
 	// Set environment variable for auth token
 	rc.cmd.Env = append(os.Environ(), "MCP_AUTH_TOKEN="+rc.authToken)
