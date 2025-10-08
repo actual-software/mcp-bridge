@@ -876,11 +876,12 @@ data:
         url: "redis://redis:6379/0"
     service_discovery:
       provider: kubernetes
+      namespace_selector:
+        - ` + ks.namespace + `
+      label_selector:
+        app: test-mcp-server
       kubernetes:
         in_cluster: true
-        namespace_pattern: ` + ks.namespace + `
-        service_labels:
-          app: test-mcp-server
     routing:
       strategy: round_robin
     auth:
