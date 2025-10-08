@@ -824,7 +824,8 @@ spec:
   selector:
     app: test-mcp-server
   ports:
-  - port: 3000
+  - name: mcp
+    port: 3000
     targetPort: 3000
 `
 }
