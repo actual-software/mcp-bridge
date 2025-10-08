@@ -795,54 +795,75 @@ func (mr *MessageRouter) processGatewayRequest(
 	// Track gateway request.
 	mr.metricsCol.IncrementGatewayRequests()
 
-	// Forward to gateway.
-	if err := mr.gwClient.SendRequest(ctx, req); err != nil {
-		cleanup() // Clean up on send error
-		mr.metricsCol.IncrementErrors()
-		mr.logger.Error("Failed to send request to gateway",
-			zap.Any("request_id", req.ID),
-			zap.String("method", req.Method),
-			zap.Error(err),
-		)
-
-		return fmt.Errorf("failed to send request: %w", err)
-	}
-
-	// Wait for response with timeout.
-	timeout := mr.config.GetRequestTimeout()
-
-	var resp *mcp.Response
-
-	select {
-	case resp = <-respChan:
-		// Response received - channel will be cleaned up by routeResponse.
-		// Record request duration.
-		duration := time.Since(startTime)
-		mr.metricsCol.RecordRequestDuration(req.Method, duration)
-
-		// Send response and record metrics.
-		if err := mr.sendResponse(resp); err != nil {
+	// Launch goroutine to handle send + wait for response asynchronously.
+	// This allows multiple concurrent in-flight requests to the gateway.
+	go func() {
+		// Forward to gateway.
+		if err := mr.gwClient.SendRequest(ctx, req); err != nil {
+			cleanup() // Clean up on send error
 			mr.metricsCol.IncrementErrors()
+			mr.logger.Error("Failed to send request to gateway",
+				zap.Any("request_id", req.ID),
+				zap.String("method", req.Method),
+				zap.Error(err),
+			)
 
-			return err
+			// Send error response to stdout
+			mr.sendErrorResponse(req.ID, err)
+
+			return
 		}
 
-		mr.metricsCol.IncrementResponses()
+		// Wait for response with timeout.
+		timeout := mr.config.GetRequestTimeout()
 
-		return nil
+		var resp *mcp.Response
 
-	case <-time.After(timeout):
-		cleanup() // Clean up on timeout
-		mr.metricsCol.IncrementErrors()
+		select {
+		case resp = <-respChan:
+			// Response received - channel will be cleaned up by routeResponse.
+			// Record request duration.
+			duration := time.Since(startTime)
+			mr.metricsCol.RecordRequestDuration(req.Method, duration)
 
-		return fmt.Errorf("request timeout after %v", timeout)
+			// Send response and record metrics.
+			if err := mr.sendResponse(resp); err != nil {
+				mr.metricsCol.IncrementErrors()
+				mr.logger.Error("Failed to send response",
+					zap.Any("request_id", req.ID),
+					zap.Error(err),
+				)
 
-	case <-mr.ctx.Done():
-		cleanup() // Clean up on context cancellation
-		mr.metricsCol.IncrementErrors()
+				return
+			}
 
-		return errors.New("context canceled")
-	}
+			mr.metricsCol.IncrementResponses()
+
+		case <-time.After(timeout):
+			cleanup() // Clean up on timeout
+			mr.metricsCol.IncrementErrors()
+			mr.logger.Error("Request timeout",
+				zap.Any("request_id", req.ID),
+				zap.String("method", req.Method),
+				zap.Duration("timeout", timeout),
+			)
+
+			mr.sendErrorResponse(req.ID, fmt.Errorf("request timeout after %v", timeout))
+
+		case <-mr.ctx.Done():
+			cleanup() // Clean up on context cancellation
+			mr.metricsCol.IncrementErrors()
+			mr.logger.Error("Context canceled during request",
+				zap.Any("request_id", req.ID),
+				zap.String("method", req.Method),
+			)
+
+			mr.sendErrorResponse(req.ID, errors.New("context canceled"))
+		}
+	}()
+
+	// Return immediately to allow processing next request.
+	return nil
 }
 
 // extractServerURL extracts server URL from request parameters or uses configuration defaults.
