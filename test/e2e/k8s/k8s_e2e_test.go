@@ -188,12 +188,18 @@ func extractBackendIDFromResponse(response *e2e.MCPResponse) string {
 		return ""
 	}
 
-	resultArray, ok := response.Result.([]interface{})
-	if !ok || len(resultArray) == 0 {
+	// MCP tool responses have format: {"result": {"content": [...]}}
+	resultMap, ok := response.Result.(map[string]interface{})
+	if !ok {
 		return ""
 	}
 
-	return extractBackendFromTextBlock(resultArray[0])
+	contentArray, ok := resultMap["content"].([]interface{})
+	if !ok || len(contentArray) == 0 {
+		return ""
+	}
+
+	return extractBackendFromTextBlock(contentArray[0])
 }
 
 // extractBackendFromTextBlock extracts backend ID from a text content block.
