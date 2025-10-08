@@ -3310,11 +3310,33 @@ func testKubernetesNetworkPartitionAdaptive(
 	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes network partition handling (adaptive)")
 
-	// Test baseline connectivity
-	response, err := client.CallTool("echo", map[string]interface{}{
-		"message": "baseline connectivity test",
-	})
-	require.NoError(t, err, "Baseline connectivity should work")
+	// Allow system to stabilize after previous tests (especially in CI)
+	if clusterConfig.ResourceConstraints || clusterConfig.IsCI {
+		logger.Info("Allowing system to stabilize before network partition test")
+		time.Sleep(5 * time.Second)
+	}
+
+	// Test baseline connectivity with retries
+	// After running previous tests for 15+ minutes, the connection may need time to recover
+	var response *e2e.MCPResponse
+	var err error
+	maxRetries := 3
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		response, err = client.CallTool("echo", map[string]interface{}{
+			"message": "baseline connectivity test",
+		})
+		if err == nil {
+			break
+		}
+		if attempt < maxRetries {
+			logger.Warn("Baseline connectivity check failed, retrying",
+				zap.Int("attempt", attempt),
+				zap.Int("max_retries", maxRetries),
+				zap.Error(err))
+			time.Sleep(2 * time.Second)
+		}
+	}
+	require.NoError(t, err, "Baseline connectivity should work after retries")
 	require.NotNil(t, response, "Baseline response should not be nil")
 
 	// Check adaptations to determine which tests to run
