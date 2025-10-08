@@ -111,8 +111,8 @@ func testMultiplyTool(t *testing.T, client *e2e.MCPClient) {
 	)
 
 	multiplyResp, err := client.CallTool("multiply", map[string]interface{}{
-		"x": multiplyX,
-		"y": multiplyY,
+		"a": multiplyX,
+		"b": multiplyY,
 	})
 	require.NoError(t, err, "Multiply tool call failed")
 
