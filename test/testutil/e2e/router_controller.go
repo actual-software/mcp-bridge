@@ -316,21 +316,18 @@ func (rc *RouterController) processJSONRPCResponse(resp map[string]interface{}, 
 		return
 	}
 
-	rc.pendingMu.Lock()
+	rc.pendingMu.RLock()
 	respChan, exists := rc.pending[id]
+	rc.pendingMu.RUnlock()
 
 	if !exists {
-		rc.logger.Warn("No pending request found for response",
-			zap.String("id", id),
-			zap.Any("pending_keys", rc.getPendingKeys()))
-		rc.pendingMu.Unlock()
+		// Response arrived after timeout or request was cancelled
+		// This is expected and not an error - just log at debug level
+		rc.logger.Debug("Response arrived after request timeout/cancellation",
+			zap.String("id", id))
 
 		return
 	}
-
-	// Delete the pending request now that we found it
-	delete(rc.pending, id)
-	rc.pendingMu.Unlock()
 
 	rc.logger.Debug("Found pending request for response", zap.String("id", id))
 
@@ -338,8 +335,8 @@ func (rc *RouterController) processJSONRPCResponse(resp map[string]interface{}, 
 	case respChan <- line:
 		// Response delivered successfully
 	default:
-		// Channel full or closed - this can happen if the request already timed out
-		rc.logger.Debug("Response channel closed or full - request may have timed out", zap.String("id", id))
+		// Channel full or closed - request already timed out
+		rc.logger.Debug("Response channel closed - request timed out", zap.String("id", id))
 	}
 }
 
