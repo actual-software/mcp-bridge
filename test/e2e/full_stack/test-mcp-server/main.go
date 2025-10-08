@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -372,16 +374,126 @@ func (s *TestMCPServer) handleCalculate(response *MCPResponse, arguments map[str
 		return
 	}
 
-	// Simple calculator implementation (for testing)
-	// In a real implementation, this would evaluate the expression
+	// Simple calculator for test expressions like "2 + 2 * 20"
+	// This is a very basic evaluator - not production-ready
+	result, err := evaluateSimpleExpression(expression)
+	if err != nil {
+		response.Error = &MCPError{
+			Code:    -32603,
+			Message: fmt.Sprintf("Calculation error: %v", err),
+		}
+
+		return
+	}
+
 	response.Result = map[string]interface{}{
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": "Result of " + expression,
+				"text": fmt.Sprintf("%.2f", result),
 			},
 		},
 	}
+}
+
+// evaluateSimpleExpression evaluates basic arithmetic expressions
+// This is a simple implementation for testing - handles +, -, *, / with precedence
+func evaluateSimpleExpression(expr string) (float64, error) {
+	// Remove spaces
+	expr = strings.ReplaceAll(expr, " ", "")
+
+	// Parse tokens
+	tokens := tokenizeExpression(expr)
+	if len(tokens) == 0 {
+		return 0, fmt.Errorf("empty expression")
+	}
+
+	// Handle multiplication and division first (precedence)
+	for i := 1; i < len(tokens)-1; i += 2 {
+		op := tokens[i]
+		if op == "*" || op == "/" {
+			left, err1 := parseFloat(tokens[i-1])
+			right, err2 := parseFloat(tokens[i+1])
+
+			if err1 != nil || err2 != nil {
+				return 0, fmt.Errorf("invalid number")
+			}
+
+			var result float64
+			if op == "*" {
+				result = left * right
+			} else {
+				result = left / right
+			}
+
+			// Replace the three tokens with the result
+			tokens = append(tokens[:i-1], append([]string{fmt.Sprintf("%f", result)}, tokens[i+2:]...)...)
+			i -= 2 // Adjust index
+		}
+	}
+
+	// Handle addition and subtraction
+	result, err := parseFloat(tokens[0])
+	if err != nil {
+		return 0, err
+	}
+
+	for i := 1; i < len(tokens); i += 2 {
+		if i+1 >= len(tokens) {
+			break
+		}
+
+		op := tokens[i]
+		right, err := parseFloat(tokens[i+1])
+
+		if err != nil {
+			return 0, err
+		}
+
+		switch op {
+		case "+":
+			result += right
+		case "-":
+			result -= right
+		default:
+			return 0, fmt.Errorf("unknown operator: %s", op)
+		}
+	}
+
+	return result, nil
+}
+
+func tokenizeExpression(expr string) []string {
+	var tokens []string
+	current := ""
+
+	for _, ch := range expr {
+		if ch == '+' || ch == '-' || ch == '*' || ch == '/' {
+			if current != "" {
+				tokens = append(tokens, current)
+				current = ""
+			}
+
+			tokens = append(tokens, string(ch))
+		} else {
+			current += string(ch)
+		}
+	}
+
+	if current != "" {
+		tokens = append(tokens, current)
+	}
+
+	return tokens
+}
+
+func parseFloat(s string) (float64, error) {
+	result, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid number: %s", s)
+	}
+
+	return result, nil
 }
 
 // handleSum handles the sum tool call.
