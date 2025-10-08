@@ -816,7 +816,7 @@ metadata:
     app: test-mcp-server
   annotations:
     mcp.bridge/enabled: "true"
-    mcp.bridge/namespace: "test"
+    mcp.bridge/namespace: "system"
     mcp.bridge/protocol: "http"
     mcp.bridge/port: "3000"
     mcp.bridge/path: "/mcp"
