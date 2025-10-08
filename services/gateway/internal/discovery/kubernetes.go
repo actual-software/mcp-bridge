@@ -236,6 +236,8 @@ func (d *KubernetesDiscovery) isValidMCPService(svc *v1.Service) bool {
 // mcpServiceConfig holds MCP configuration for a service.
 type mcpServiceConfig struct {
 	namespace string
+	scheme    string
+	path      string
 	tools     []ToolInfo
 	weight    int
 }
@@ -254,7 +256,19 @@ func (d *KubernetesDiscovery) extractMCPConfig(svc *v1.Service, k8sNamespace str
 
 	config := &mcpServiceConfig{
 		namespace: mcpNamespace,
-		weight:    DefaultWeight, // Default weight
+		scheme:    svc.Annotations["mcp.bridge/protocol"], // http, https, ws, wss
+		path:      svc.Annotations["mcp.bridge/path"],     // e.g., /mcp
+		weight:    DefaultWeight,                          // Default weight
+	}
+
+	// Default to http if no protocol specified
+	if config.scheme == "" {
+		config.scheme = "http"
+	}
+
+	// Default to / if no path specified
+	if config.path == "" {
+		config.path = "/"
 	}
 
 	// Parse tools
@@ -360,6 +374,8 @@ func (d *KubernetesDiscovery) createEndpoint(
 		Namespace: config.namespace,
 		Address:   ip,
 		Port:      port,
+		Scheme:    config.scheme,
+		Path:      config.path,
 		Weight:    config.weight,
 		Metadata: map[string]string{
 			"k8s_namespace": namespace,
