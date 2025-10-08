@@ -2223,25 +2223,39 @@ func validateClusterReadiness(
 }
 
 func validateNodeReadiness(ctx context.Context, config *ClusterConfig, logger *zap.Logger) error {
-	// Check that all nodes are ready
+	// Check that all nodes are ready - use simpler JSONPath that's more reliable
 	// #nosec G204 - command with controlled test inputs
 	readyNodesCmd := exec.CommandContext(
-		ctx, "kubectl", "get", "nodes", "-o",
-		"jsonpath={.items[?(@.status.conditions[?(@.type==\\\"Ready\\\")].status==\\\"True\\\")].metadata.name}",
+		ctx, "kubectl", "get", "nodes",
+		"-o", "jsonpath={range .items[*]}{.metadata.name}{'\\t'}{.status.conditions[?(@.type==\"Ready\")].status}{'\\n'}{end}",
 	)
 
-	output, err := readyNodesCmd.Output()
+	output, err := readyNodesCmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to check node readiness: %w", err)
+		return fmt.Errorf("failed to check node readiness: %w (output: %s)", err, string(output))
 	}
 
-	readyNodes := strings.Fields(strings.TrimSpace(string(output)))
-	if len(readyNodes) < config.NodeCount {
-		return fmt.Errorf("only %d/%d nodes are ready", len(readyNodes), config.NodeCount)
+	// Parse output: each line is "node-name\tTrue" or "node-name\tFalse"
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	readyCount := 0
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		parts := strings.Fields(line)
+		if len(parts) >= 2 && parts[1] == "True" {
+			readyCount++
+		}
+	}
+
+	if readyCount < config.NodeCount {
+		return fmt.Errorf("only %d/%d nodes are ready (output: %s)", readyCount, config.NodeCount, string(output))
 	}
 
 	logger.Info("Node readiness validated",
-		zap.Int("ready_nodes", len(readyNodes)),
+		zap.Int("ready_nodes", readyCount),
 		zap.Int("total_nodes", config.NodeCount),
 	)
 
