@@ -815,9 +815,11 @@ metadata:
   labels:
     app: test-mcp-server
   annotations:
-    mcp.discovery/protocol: "http"
-    mcp.discovery/port: "3000"
-    mcp.discovery/path: "/mcp"
+    mcp.bridge/enabled: "true"
+    mcp.bridge/namespace: "test"
+    mcp.bridge/protocol: "http"
+    mcp.bridge/port: "3000"
+    mcp.bridge/path: "/mcp"
 spec:
   selector:
     app: test-mcp-server
