@@ -12,8 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
-
-	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
+	"go.uber.org/zap/zapcore"
 )
 
 // Constants for magic numbers.
@@ -155,7 +154,12 @@ func createAllTools() []Tool {
 }
 
 func NewTestMCPServer() *TestMCPServer {
-	logger := e2e.NewTestLogger()
+	// Create INFO-level logger (no DEBUG logs)
+	config := zap.NewProductionConfig()
+	config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	config.EncoderConfig.TimeKey = "time"
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	logger, _ := config.Build()
 
 	// Get backend ID from environment variable
 	backendID := os.Getenv("BACKEND_ID")
