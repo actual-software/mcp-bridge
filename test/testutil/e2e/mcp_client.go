@@ -424,12 +424,18 @@ func ExtractTextFromToolResponse(resp *MCPResponse) (string, error) {
 		return "", errors.New("cannot extract text from error response")
 	}
 
-	resultArray, ok := resp.Result.([]interface{})
+	// MCP tool responses have format: {"result": {"content": [...]}}
+	resultMap, ok := resp.Result.(map[string]interface{})
 	if !ok {
-		return "", errors.New("result is not an array")
+		return "", errors.New("result is not a map")
 	}
 
-	textParts := extractTextParts(resultArray)
+	contentArray, ok := resultMap["content"].([]interface{})
+	if !ok {
+		return "", errors.New("result must have a 'content' array")
+	}
+
+	textParts := extractTextParts(contentArray)
 
 	if len(textParts) == 0 {
 		return "", errors.New("no text content found in response")
