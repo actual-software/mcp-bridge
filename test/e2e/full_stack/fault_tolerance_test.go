@@ -15,7 +15,7 @@ import (
 func setupFaultToleranceTest(t *testing.T) (*DockerStackWithMultipleBackends, *RouterController, *MCPClient) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	ctx := context.Background()
 
 	logger.Info("Starting Docker Compose stack for fault tolerance tests")

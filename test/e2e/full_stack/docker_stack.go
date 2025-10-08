@@ -17,6 +17,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
 const (
@@ -48,7 +50,7 @@ type DockerStack struct {
 func NewDockerStack(t *testing.T) *DockerStack {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	// Get the directory containing the docker-compose file
 	wd, err := os.Getwd()

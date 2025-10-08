@@ -20,7 +20,7 @@ func TestProtocolVariations(t *testing.T) {
 		t.Skip("Skipping E2E tests (SKIP_E2E_TESTS=true)")
 	}
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	ctx := context.Background()
 
 	// Start Docker services

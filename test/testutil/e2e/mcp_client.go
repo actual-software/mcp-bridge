@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -16,6 +17,17 @@ const (
 	// DefaultRequestTimeout is the default timeout for request/response operations.
 	DefaultRequestTimeout = 10 * time.Second
 )
+
+// NewTestLogger creates a logger for E2E tests with INFO level (no DEBUG logs).
+func NewTestLogger() *zap.Logger {
+	config := zap.NewProductionConfig()
+	config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	config.EncoderConfig.TimeKey = "time"
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+
+	logger, _ := config.Build()
+	return logger
+}
 
 // MCP protocol types and helpers
 

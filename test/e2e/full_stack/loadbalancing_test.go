@@ -17,7 +17,7 @@ import (
 func setupLoadBalancingTest(t *testing.T, ctx context.Context) (*DockerStackWithMultipleBackends, *MCPClient) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Starting Docker Compose stack for load balancing tests")
 
 	stack := NewDockerStackWithMultipleBackends(t)

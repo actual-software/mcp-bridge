@@ -20,7 +20,7 @@ import (
 // TestComprehensiveClaudeCodeE2E validates the complete MCP protocol implementation
 // Refactored to reduce cyclomatic complexity from 21 to 3.
 func TestComprehensiveClaudeCodeE2E(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("🚀 Starting Comprehensive Claude Code E2E Test Suite")
 
 	// Initialize Docker stack
@@ -66,7 +66,7 @@ func TestComprehensiveClaudeCodeE2E_Original(t *testing.T) {
 		t.Skip("Skipping original complex version in short mode")
 	}
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("🚀 Starting Comprehensive Claude Code E2E Test Suite (Original)")
 
 	// Initialize Docker stack

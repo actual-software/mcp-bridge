@@ -29,7 +29,7 @@ type ClaudeCodeRealController struct {
 func NewClaudeCodeRealController(t *testing.T, containerName string) *ClaudeCodeRealController {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &ClaudeCodeRealController{
@@ -195,7 +195,7 @@ type ClaudeCodeRealDockerStack struct {
 func NewClaudeCodeRealDockerStack(t *testing.T, composeFile string) *ClaudeCodeRealDockerStack {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &ClaudeCodeRealDockerStack{
@@ -340,7 +340,7 @@ func (stack *ClaudeCodeRealDockerStack) Cleanup() {
 
 // TestClaudeCodeRealE2E is the main e2e test function.
 func TestClaudeCodeRealE2E(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("🚀 Starting Claude Code Real E2E Test")
 
 	// Initialize Docker stack

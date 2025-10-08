@@ -25,7 +25,7 @@ func TestPerformanceAndScale(t *testing.T) {
 		t.Skip("Skipping performance tests in short mode")
 	}
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	ctx := context.Background()
 
 	// Start Docker services

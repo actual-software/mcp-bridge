@@ -53,7 +53,7 @@ type DockerStackInterface interface {
 func setupFullStackTest(t *testing.T, ctx context.Context) (*DockerStack, *e2e.MCPClient) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	// Phase 1: Infrastructure Setup
 	logger.Info("Starting Docker Compose stack")

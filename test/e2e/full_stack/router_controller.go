@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
 const (
@@ -78,7 +80,7 @@ type RouterController struct {
 func NewRouterController(t *testing.T, gatewayURL string) *RouterController {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	// Build the router binary path
 	binaryPath := filepath.Join("..", "..", "..", "services", "router", "bin", "mcp-router")

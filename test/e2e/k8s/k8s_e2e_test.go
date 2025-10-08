@@ -78,7 +78,7 @@ func TestKubernetesEndToEnd(t *testing.T) {
 		t.Skip("Skipping Kubernetes E2E test in short mode")
 	}
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 
@@ -249,7 +249,7 @@ func validateLoadBalancingResults(t *testing.T, backendHits map[string]int) {
 func testKubernetesLoadBalancing(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes load balancing")
 
 	// Make multiple requests to verify load balancing
@@ -272,7 +272,7 @@ func testKubernetesLoadBalancing(t *testing.T, client *e2e.MCPClient) {
 func testKubernetesFeatures(t *testing.T, stack *KubernetesStack) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes-specific features")
 
 	// Test metrics endpoint accessibility
@@ -301,7 +301,7 @@ func testKubernetesFeatures(t *testing.T, stack *KubernetesStack) {
 func testKubernetesNetworkPerformance(t *testing.T, client *e2e.MCPClient) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes network performance")
 
 	perfConfig := NewPerformanceConfig(t)
@@ -458,7 +458,7 @@ func TestKubernetesPerformance(t *testing.T) {
 		t.Skip("Skipping Kubernetes performance test in short mode")
 	}
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 
@@ -567,7 +567,7 @@ func TestKubernetesFailover(t *testing.T) {
 		t.Skip("Skipping Kubernetes failover test in short mode")
 	}
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 
 	defer cancel()
@@ -675,7 +675,7 @@ func TestMain(m *testing.M) {
 
 // saveKubernetesLogs saves Kubernetes logs for debugging purposes.
 func saveKubernetesLogs(stack *KubernetesStack) {
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Attempting to save Kubernetes logs for debugging")
 
 	// Create logs directory if it doesn't exist
@@ -2346,7 +2346,7 @@ func testKubernetesHighThroughputAdaptive(
 ) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes high throughput performance (adaptive)")
 
 	perfConfig := configureAdaptivePerformanceTest(t, clusterConfig, adaptations, logger)
@@ -2553,7 +2553,7 @@ func testKubernetesResourceMonitoringAdaptive(
 ) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes resource utilization monitoring (adaptive)")
 
 	// Test metrics endpoint accessibility
@@ -2606,7 +2606,7 @@ func testKubernetesScalingAdaptive(
 	t.Helper()
 
 	ctx := context.Background()
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes scaling behavior (adaptive)")
 
 	scalingConfig := configureAdaptiveScalingTest(clusterConfig, adaptations, logger)
@@ -2817,7 +2817,7 @@ func testKubernetesPodFailoverAdaptive(
 ) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	logger.Info("Testing Kubernetes pod failure and recovery (adaptive)")
 
@@ -2996,7 +2996,7 @@ func testKubernetesServiceEndpointsAdaptive(
 	t.Helper()
 
 	ctx := context.Background()
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes service endpoint updates (adaptive)")
 
 	// Get initial state
@@ -3021,7 +3021,7 @@ func getEndpointsBeforeRestart(t *testing.T, ctx context.Context, stack *Kuberne
 	beforeOutput, err := endpointsCmd.Output()
 	require.NoError(t, err, "Should be able to get endpoints before restart")
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Endpoints before restart", zap.String("endpoints", string(beforeOutput)))
 
 	return beforeOutput
@@ -3073,7 +3073,7 @@ func getEndpointsAfterRestart(t *testing.T, ctx context.Context, stack *Kubernet
 	afterOutput, err := endpointsCmd.Output()
 	require.NoError(t, err, "Should be able to get endpoints after restart")
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Endpoints after restart", zap.String("endpoints", string(afterOutput)))
 
 	return afterOutput
@@ -3126,7 +3126,7 @@ func testKubernetesRollingUpdateAdaptive(
 	t.Helper()
 
 	ctx := context.Background()
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes rolling update (adaptive)")
 
 	currentImage := getCurrentDeploymentImage(t, ctx, stack, logger)
@@ -3277,7 +3277,7 @@ func testKubernetesNetworkPartitionAdaptive(
 ) {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 	logger.Info("Testing Kubernetes network partition handling (adaptive)")
 
 	// Test baseline connectivity

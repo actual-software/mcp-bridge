@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
 // Constants for configuration values.
@@ -40,7 +42,7 @@ type KubernetesStack struct {
 func NewKubernetesStack(t *testing.T) *KubernetesStack {
 	t.Helper()
 
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	return &KubernetesStack{
 		t:           t,

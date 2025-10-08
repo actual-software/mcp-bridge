@@ -12,6 +12,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 )
 
 // Constants for magic numbers.
@@ -153,7 +155,7 @@ func createAllTools() []Tool {
 }
 
 func NewTestMCPServer() *TestMCPServer {
-	logger, _ := zap.NewDevelopment()
+	logger := e2e.NewTestLogger()
 
 	// Get backend ID from environment variable
 	backendID := os.Getenv("BACKEND_ID")
