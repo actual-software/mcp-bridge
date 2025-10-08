@@ -885,6 +885,7 @@ data:
               labels:
                 namespace: "mcp-e2e"
     routing:
+      health_check_interval: "1s"
       backends:
         - name: "test-mcp-server"
           endpoint: "http://test-mcp-server:3000/mcp"
