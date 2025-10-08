@@ -1940,6 +1940,7 @@ func detectClusterConfiguration(
 		ReplicaCount:          2,
 		TestTimeout:           5 * time.Minute,
 		ScaleTimeout:          60 * time.Second,
+		RecoveryTimeout:       60 * time.Second,
 	}
 
 	// Detect CI environment
