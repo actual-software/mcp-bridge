@@ -812,6 +812,12 @@ kind: Service
 metadata:
   name: test-mcp-server
   namespace: ` + ks.namespace + `
+  labels:
+    app: test-mcp-server
+  annotations:
+    mcp.discovery/protocol: "http"
+    mcp.discovery/port: "3000"
+    mcp.discovery/path: "/mcp"
 spec:
   selector:
     app: test-mcp-server
@@ -869,31 +875,14 @@ data:
       redis:
         url: "redis://redis:6379/0"
     service_discovery:
-      provider: static
-      static:
-        endpoints:
-          default:
-            - url: "http://test-mcp-server:3000/mcp"
-              labels:
-                namespace: "mcp-e2e"
-          system:
-            - url: "http://test-mcp-server:3000/mcp"
-              labels:
-                namespace: "mcp-e2e"
-          test-mcp-server:
-            - url: "http://test-mcp-server:3000/mcp"
-              labels:
-                namespace: "mcp-e2e"
+      provider: kubernetes
+      kubernetes:
+        in_cluster: true
+        namespace_pattern: ` + ks.namespace + `
+        service_labels:
+          app: test-mcp-server
     routing:
-      backends:
-        - name: "test-mcp-server"
-          endpoint: "http://test-mcp-server:3000/mcp"
-          weight: 100
-          health_check:
-            enabled: true
-            path: "/health"
-            interval: "10s"
-            timeout: "5s"
+      strategy: round_robin
     auth:
       provider: jwt
       jwt:
