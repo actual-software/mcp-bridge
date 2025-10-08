@@ -848,7 +848,8 @@ func (mr *MessageRouter) processGatewayRequest(
 			mr.metricsCol.RecordRequestDuration(req.Method, duration)
 
 			// Send response and record metrics.
-			if err := mr.sendResponse(resp); err != nil {
+			// Use a timeout to avoid blocking forever if stdout channel is full.
+			if err := mr.sendResponseWithTimeout(resp, 5*time.Second); err != nil {
 				mr.metricsCol.IncrementErrors()
 				mr.logger.Error("Failed to send response",
 					zap.Any("request_id", req.ID),
@@ -967,6 +968,26 @@ func (mr *MessageRouter) sendResponse(resp *mcp.Response) error {
 	select {
 	case mr.stdoutChan <- data:
 		return nil
+	case <-mr.ctx.Done():
+		return errors.New("context canceled")
+	}
+}
+
+// sendResponseWithTimeout sends a response with a timeout to prevent blocking forever.
+func (mr *MessageRouter) sendResponseWithTimeout(resp *mcp.Response, timeout time.Duration) error {
+	data, err := json.Marshal(resp)
+	if err != nil {
+		return fmt.Errorf("failed to marshal response: %w", err)
+	}
+
+	// Record response size.
+	mr.metricsCol.RecordResponseSize(len(data))
+
+	select {
+	case mr.stdoutChan <- data:
+		return nil
+	case <-time.After(timeout):
+		return fmt.Errorf("timeout sending response to stdout after %v", timeout)
 	case <-mr.ctx.Done():
 		return errors.New("context canceled")
 	}
