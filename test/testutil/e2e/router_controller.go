@@ -255,10 +255,13 @@ func (rc *RouterController) SendRequestAndWait(req MCPRequest, timeout time.Dura
 	rc.pending[req.ID] = respChan
 	rc.pendingMu.Unlock()
 
-	// Clean up on exit
+	// Clean up on exit - remove from pending if still there and close channel
 	defer func() {
 		rc.pendingMu.Lock()
-		delete(rc.pending, req.ID)
+		_, exists := rc.pending[req.ID]
+		if exists {
+			delete(rc.pending, req.ID)
+		}
 		rc.pendingMu.Unlock()
 		close(respChan)
 	}()
@@ -313,29 +316,31 @@ func (rc *RouterController) processJSONRPCResponse(resp map[string]interface{}, 
 		return
 	}
 
-	rc.pendingMu.RLock()
+	rc.pendingMu.Lock()
 	respChan, exists := rc.pending[id]
 
 	if !exists {
 		rc.logger.Warn("No pending request found for response",
 			zap.String("id", id),
 			zap.Any("pending_keys", rc.getPendingKeys()))
-		rc.pendingMu.RUnlock()
+		rc.pendingMu.Unlock()
 
 		return
 	}
+
+	// Delete the pending request now that we found it
+	delete(rc.pending, id)
+	rc.pendingMu.Unlock()
 
 	rc.logger.Debug("Found pending request for response", zap.String("id", id))
 
 	select {
 	case respChan <- line:
-		// Response delivered
+		// Response delivered successfully
 	default:
-		// Channel full or closed
-		rc.logger.Warn("Failed to deliver response - channel full or closed", zap.String("id", id))
+		// Channel full or closed - this can happen if the request already timed out
+		rc.logger.Debug("Response channel closed or full - request may have timed out", zap.String("id", id))
 	}
-
-	rc.pendingMu.RUnlock()
 }
 
 func (rc *RouterController) generateAuthToken() {
