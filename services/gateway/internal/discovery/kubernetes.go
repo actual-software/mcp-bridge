@@ -506,39 +506,88 @@ func (d *KubernetesDiscovery) handleEndpointEvents(namespace string, events <-ch
 			switch event.Type {
 			case watch.Added, watch.Modified, watch.Deleted:
 				d.logger.Info("Endpoint event detected",
-					zap.String("namespace", namespace),
+					zap.String("k8s_namespace", namespace),
 					zap.String("type", string(event.Type)))
 
 				// Refresh endpoints for this namespace
 				endpoints, err := d.discoverNamespaceServices(namespace)
 				if err != nil {
 					d.logger.Error("Failed to refresh endpoints after event",
-						zap.String("namespace", namespace),
+						zap.String("k8s_namespace", namespace),
 						zap.Error(err))
 
 					continue
 				}
 
-				// Update internal state
+				// Track which MCP namespaces were affected
+				affectedMCPNamespaces := make(map[string]bool)
+
+				// Collect MCP namespaces before update
+				d.mu.RLock()
+				for mcpNs, eps := range d.endpoints {
+					for _, ep := range eps {
+						if k8sNs, ok := ep.Metadata["k8s_namespace"]; ok && k8sNs == namespace {
+							affectedMCPNamespaces[mcpNs] = true
+						}
+					}
+				}
+				d.mu.RUnlock()
+
+				// Collect MCP namespaces after update
+				for _, ep := range endpoints {
+					affectedMCPNamespaces[ep.Namespace] = true
+				}
+
+				// Update internal state - reorganize all endpoints by MCP namespace
 				d.mu.Lock()
-				if len(endpoints) > 0 {
-					d.endpoints[namespace] = endpoints
-				} else {
-					delete(d.endpoints, namespace)
+				// First remove old endpoints from this K8s namespace
+				for mcpNs := range d.endpoints {
+					filtered := make([]Endpoint, 0)
+					for _, ep := range d.endpoints[mcpNs] {
+						if k8sNs, ok := ep.Metadata["k8s_namespace"]; !ok || k8sNs != namespace {
+							filtered = append(filtered, ep)
+						}
+					}
+					if len(filtered) > 0 {
+						d.endpoints[mcpNs] = filtered
+					} else {
+						delete(d.endpoints, mcpNs)
+					}
+				}
+
+				// Then add new endpoints grouped by MCP namespace
+				for _, ep := range endpoints {
+					d.endpoints[ep.Namespace] = append(d.endpoints[ep.Namespace], ep)
 				}
 				d.mu.Unlock()
 
-				// Notify callback of endpoint change
+				d.logger.Info("Endpoints refreshed after K8s event",
+					zap.String("k8s_namespace", namespace),
+					zap.Strings("affected_mcp_namespaces", getMCPNamespacesList(affectedMCPNamespaces)),
+					zap.Int("total_endpoints", len(endpoints)))
+
+				// Notify callback for each affected MCP namespace
 				d.callbackMu.RLock()
 				callback := d.endpointChangeCallback
 				d.callbackMu.RUnlock()
 
 				if callback != nil {
-					callback(namespace)
+					for mcpNs := range affectedMCPNamespaces {
+						callback(mcpNs)
+					}
 				}
 			}
 		}
 	}
+}
+
+// getMCPNamespacesList converts a map of MCP namespaces to a sorted slice.
+func getMCPNamespacesList(namespaces map[string]bool) []string {
+	result := make([]string, 0, len(namespaces))
+	for ns := range namespaces {
+		result = append(result, ns)
+	}
+	return result
 }
 
 // periodicResync performs periodic full resync.
