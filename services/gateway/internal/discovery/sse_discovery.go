@@ -436,3 +436,8 @@ func (s *SSEDiscovery) ListNamespaces() []string {
 
 	return result
 }
+
+// RegisterEndpointChangeCallback is a no-op for SSE discovery.
+func (s *SSEDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// SSE discovery doesn't support dynamic endpoint change notifications yet
+}

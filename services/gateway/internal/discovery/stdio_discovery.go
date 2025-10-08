@@ -283,3 +283,8 @@ func (s *StdioDiscovery) ListNamespaces() []string {
 
 	return result
 }
+
+// RegisterEndpointChangeCallback is a no-op for Stdio discovery.
+func (s *StdioDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// Stdio discovery doesn't support dynamic endpoint change notifications yet
+}

@@ -10,6 +10,8 @@ type ServiceDiscovery interface {
 	GetEndpoints(namespace string) []Endpoint
 	GetAllEndpoints() map[string][]Endpoint
 	ListNamespaces() []string
+	// RegisterEndpointChangeCallback registers a callback to be invoked when endpoints change
+	RegisterEndpointChangeCallback(callback func(namespace string))
 }
 
 // Endpoint represents an MCP server endpoint.

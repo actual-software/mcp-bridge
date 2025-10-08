@@ -115,6 +115,11 @@ func InitializeRequestRouter(
 		},
 	}
 
+	// Register callback to invalidate load balancer cache when endpoints change
+	discovery.RegisterEndpointChangeCallback(func(namespace string) {
+		r.invalidateLoadBalancer(namespace)
+	})
+
 	// Start health check routine
 	go r.runHealthChecks(ctx)
 
@@ -796,6 +801,15 @@ func (r *Router) updateLoadBalancers() {
 
 	// Clear and recreate load balancers
 	r.balancers = make(map[string]loadbalancer.LoadBalancer)
+}
+
+// invalidateLoadBalancer invalidates the load balancer cache for a specific namespace.
+func (r *Router) invalidateLoadBalancer(namespace string) {
+	r.balancerMu.Lock()
+	defer r.balancerMu.Unlock()
+
+	delete(r.balancers, namespace)
+	r.logger.Info("Load balancer invalidated due to endpoint change", zap.String("namespace", namespace))
 }
 
 // GetRequestCount returns the total request count.

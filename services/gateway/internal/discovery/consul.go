@@ -546,3 +546,8 @@ func (d *ConsulDiscovery) ListNamespaces() []string {
 
 	return namespaces
 }
+
+// RegisterEndpointChangeCallback is a no-op for Consul discovery.
+func (d *ConsulDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// Consul discovery doesn't support dynamic endpoint change notifications yet
+}

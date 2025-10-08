@@ -383,3 +383,8 @@ func (w *WebSocketDiscovery) ListNamespaces() []string {
 
 	return result
 }
+
+// RegisterEndpointChangeCallback is a no-op for WebSocket discovery.
+func (w *WebSocketDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// WebSocket discovery doesn't support dynamic endpoint change notifications yet
+}

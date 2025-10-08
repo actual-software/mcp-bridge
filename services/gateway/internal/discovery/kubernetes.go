@@ -34,6 +34,10 @@ type KubernetesDiscovery struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
 	wg       sync.WaitGroup
+
+	// Endpoint change notification
+	endpointChangeCallback func(namespace string)
+	callbackMu             sync.RWMutex
 }
 
 // InitializeKubernetesServiceDiscovery creates and configures Kubernetes-based service discovery.
@@ -470,38 +474,52 @@ func (d *KubernetesDiscovery) handleServiceEvents(namespace string, events <-cha
 
 // handleEndpointEvents handles endpoint watch events.
 func (d *KubernetesDiscovery) handleEndpointEvents(namespace string, events <-chan watch.Event) {
+	defer d.wg.Done()
+
 	for {
 		select {
 		case <-d.ctx.Done():
 			return
 		case event, ok := <-events:
 			if !ok {
-				d.logger.Warn("Endpoint watch channel closed", zap.String("namespace", namespace))
+				d.logger.Info("Endpoint watch closed", zap.String("namespace", namespace))
 
 				return
 			}
 
-			// For endpoint changes, resync the namespace
-			if event.Type == watch.Added || event.Type == watch.Modified || event.Type == watch.Deleted {
+			switch event.Type {
+			case watch.Added, watch.Modified, watch.Deleted:
+				d.logger.Info("Endpoint event detected",
+					zap.String("namespace", namespace),
+					zap.String("type", string(event.Type)))
+
+				// Refresh endpoints for this namespace
 				endpoints, err := d.discoverNamespaceServices(namespace)
 				if err != nil {
-					d.logger.Error("Failed to resync namespace after endpoint change",
+					d.logger.Error("Failed to refresh endpoints after event",
 						zap.String("namespace", namespace),
-						zap.Error(err),
-					)
+						zap.Error(err))
 
 					continue
 				}
 
+				// Update internal state
 				d.mu.Lock()
-
 				if len(endpoints) > 0 {
 					d.endpoints[namespace] = endpoints
 				} else {
 					delete(d.endpoints, namespace)
 				}
-
 				d.mu.Unlock()
+
+				// Notify callback of endpoint change
+				d.callbackMu.RLock()
+				callback := d.endpointChangeCallback
+				d.callbackMu.RUnlock()
+
+				if callback != nil {
+					callback(namespace)
+				}
 			}
 		}
 	}
@@ -592,4 +610,11 @@ func (d *KubernetesDiscovery) ListNamespaces() []string {
 	}
 
 	return namespaces
+}
+
+// RegisterEndpointChangeCallback registers a callback to be invoked when endpoints change.
+func (d *KubernetesDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	d.callbackMu.Lock()
+	defer d.callbackMu.Unlock()
+	d.endpointChangeCallback = callback
 }

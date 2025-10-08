@@ -176,3 +176,8 @@ func (sd *StaticDiscovery) ListNamespaces() []string {
 
 	return namespaces
 }
+
+// RegisterEndpointChangeCallback is a no-op for static discovery since endpoints don't change.
+func (sd *StaticDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// Static endpoints never change, so no callback is needed
+}

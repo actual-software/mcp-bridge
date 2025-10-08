@@ -1201,6 +1201,11 @@ func (m *MockServiceDiscovery) ListNamespaces() []string {
 	return namespaces
 }
 
+// RegisterEndpointChangeCallback is a no-op for mock discovery.
+func (m *MockServiceDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// Mock doesn't trigger endpoint changes
+}
+
 func (m *MockServiceDiscovery) AddEndpoint(namespace string, endpoint Endpoint) {
 	m.mu.Lock()
 
