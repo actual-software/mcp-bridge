@@ -309,7 +309,7 @@ func (s *TestMCPServer) handleAdd(response *MCPResponse, arguments map[string]in
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("%v", result),
+				"text": fmt.Sprintf("%.2f", result),
 			},
 		},
 	}
@@ -334,7 +334,7 @@ func (s *TestMCPServer) handleMultiply(response *MCPResponse, arguments map[stri
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("%v", result),
+				"text": fmt.Sprintf("%.2f", result),
 			},
 		},
 	}
@@ -407,7 +407,7 @@ func (s *TestMCPServer) handleSum(response *MCPResponse, arguments map[string]in
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("%v", sum),
+				"text": fmt.Sprintf("%.2f", sum),
 			},
 		},
 	}
