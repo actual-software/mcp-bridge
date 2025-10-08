@@ -158,6 +158,8 @@ func (c *Client) getOAuth2Token(ctx context.Context) (string, error) {
 // Thread Safety: Safe for concurrent use. Multiple goroutines can call this
 // method simultaneously without risk of deadlock or data races.
 func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
+	startTime := time.Now()
+
 	// Check connection state with minimal lock time.
 	c.connMu.Lock()
 	conn := c.conn
@@ -167,8 +169,16 @@ func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 		return errors.New("not connected")
 	}
 
+	c.logger.Debug("Attempting to acquire write mutex",
+		zap.Any("request_id", req.ID),
+		zap.String("method", req.Method))
+
 	// Hold write mutex for the actual write operation.
 	c.writeMu.Lock()
+	mutexAcquiredAt := time.Now()
+	c.logger.Debug("Write mutex acquired",
+		zap.Any("request_id", req.ID),
+		zap.Duration("wait_time", mutexAcquiredAt.Sub(startTime)))
 	defer c.writeMu.Unlock()
 
 	// Double-check connection hasn't changed during mutex acquisition.
@@ -197,7 +207,7 @@ func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 		msg.AuthToken = c.config.Auth.Token
 	}
 
-	c.logger.Debug("Sending request",
+	c.logger.Debug("Sending request to WebSocket",
 		zap.Any("id", req.ID),
 		zap.String("method", req.Method),
 	)
@@ -208,8 +218,24 @@ func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 		c.logger.Debug("Failed to set write deadline", zap.Error(err))
 	}
 
+	beforeWrite := time.Now()
 	// Send as JSON.
-	return currentConn.WriteJSON(msg)
+	err := currentConn.WriteJSON(msg)
+	writeComplete := time.Now()
+
+	if err != nil {
+		c.logger.Error("WebSocket write failed",
+			zap.Any("request_id", req.ID),
+			zap.Duration("write_duration", writeComplete.Sub(beforeWrite)),
+			zap.Error(err))
+	} else {
+		c.logger.Debug("WebSocket write completed",
+			zap.Any("request_id", req.ID),
+			zap.Duration("write_duration", writeComplete.Sub(beforeWrite)),
+			zap.Duration("total_send_duration", writeComplete.Sub(startTime)))
+	}
+
+	return err
 }
 
 // ReceiveResponse receives an MCP response from the gateway with proper concurrency control.
