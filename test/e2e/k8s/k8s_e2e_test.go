@@ -3062,6 +3062,21 @@ func performServiceRestart(t *testing.T, ctx context.Context, stack *KubernetesS
 	)
 	err = rolloutCmd.Run()
 	require.NoError(t, err, "Deployment rollout should complete successfully")
+
+	// Wait for pods to be fully ready after rollout completes
+	// kubectl rollout status returns when deployment is updated, but pods may still be starting
+	time.Sleep(5 * time.Second)
+
+	// Verify all pods are actually ready
+	// #nosec G204 - command with controlled test inputs
+	readyCmd := exec.CommandContext(
+		ctx, "kubectl", "wait", "--for=condition=ready", "pod",
+		"-l", "app=test-mcp-server",
+		"-n", stack.namespace,
+		"--timeout=30s",
+	)
+	err = readyCmd.Run()
+	require.NoError(t, err, "All pods should be ready after restart")
 }
 
 func getEndpointsAfterRestart(t *testing.T, ctx context.Context, stack *KubernetesStack) []byte {
