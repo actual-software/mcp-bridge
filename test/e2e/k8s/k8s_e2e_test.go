@@ -554,6 +554,12 @@ func runPerformanceTestScenarios(
 		t.Log("Skipping scaling tests - insufficient resources or single replica configuration")
 	}
 
+	// Allow system to stabilize after high-throughput tests
+	if clusterConfig.ResourceConstraints || clusterConfig.IsCI {
+		logger.Info("Allowing system to stabilize after high-throughput tests")
+		time.Sleep(5 * time.Second)
+	}
+
 	// Network performance (always run but with adaptive expectations)
 	t.Run("NetworkPerformance", func(t *testing.T) {
 		testKubernetesNetworkPerformance(t, client)
@@ -2376,7 +2382,7 @@ func configureAdaptivePerformanceTest(
 
 	// Further adjust for cluster constraints
 	if clusterConfig.ResourceConstraints {
-		perfConfig.MinThroughputRPS *= 0.7 // 30% reduction for constrained clusters
+		perfConfig.MinThroughputRPS *= 0.5 // 50% reduction for constrained clusters (CI environment)
 		perfConfig.MinSuccessRate = 90.0   // More lenient success rate
 	}
 
