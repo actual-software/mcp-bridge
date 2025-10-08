@@ -795,9 +795,19 @@ func (mr *MessageRouter) processGatewayRequest(
 	// Track gateway request.
 	mr.metricsCol.IncrementGatewayRequests()
 
+	mr.logger.Debug("Launching async goroutine for request",
+		zap.Any("request_id", req.ID),
+		zap.String("method", req.Method),
+	)
+
 	// Launch goroutine to handle send + wait for response asynchronously.
 	// This allows multiple concurrent in-flight requests to the gateway.
 	go func() {
+		mr.logger.Debug("Goroutine started, sending request to gateway",
+			zap.Any("request_id", req.ID),
+			zap.String("method", req.Method),
+		)
+
 		// Forward to gateway.
 		if err := mr.gwClient.SendRequest(ctx, req); err != nil {
 			cleanup() // Clean up on send error
@@ -817,11 +827,22 @@ func (mr *MessageRouter) processGatewayRequest(
 		// Wait for response with timeout.
 		timeout := mr.config.GetRequestTimeout()
 
+		mr.logger.Debug("Waiting for response",
+			zap.Any("request_id", req.ID),
+			zap.String("method", req.Method),
+			zap.Duration("timeout", timeout),
+		)
+
 		var resp *mcp.Response
 
 		select {
 		case resp = <-respChan:
 			// Response received - channel will be cleaned up by routeResponse.
+			mr.logger.Debug("Response received in goroutine",
+				zap.Any("request_id", req.ID),
+				zap.String("method", req.Method),
+			)
+
 			// Record request duration.
 			duration := time.Since(startTime)
 			mr.metricsCol.RecordRequestDuration(req.Method, duration)
@@ -838,11 +859,15 @@ func (mr *MessageRouter) processGatewayRequest(
 			}
 
 			mr.metricsCol.IncrementResponses()
+			mr.logger.Debug("Goroutine completed successfully",
+				zap.Any("request_id", req.ID),
+				zap.String("method", req.Method),
+			)
 
 		case <-time.After(timeout):
 			cleanup() // Clean up on timeout
 			mr.metricsCol.IncrementErrors()
-			mr.logger.Error("Request timeout",
+			mr.logger.Error("Request timeout in goroutine",
 				zap.Any("request_id", req.ID),
 				zap.String("method", req.Method),
 				zap.Duration("timeout", timeout),
@@ -853,13 +878,18 @@ func (mr *MessageRouter) processGatewayRequest(
 		case <-mr.ctx.Done():
 			cleanup() // Clean up on context cancellation
 			mr.metricsCol.IncrementErrors()
-			mr.logger.Error("Context canceled during request",
+			mr.logger.Error("Context canceled during request in goroutine",
 				zap.Any("request_id", req.ID),
 				zap.String("method", req.Method),
 			)
 
 			mr.sendErrorResponse(req.ID, errors.New("context canceled"))
 		}
+
+		mr.logger.Debug("Goroutine exiting",
+			zap.Any("request_id", req.ID),
+			zap.String("method", req.Method),
+		)
 	}()
 
 	// Return immediately to allow processing next request.
