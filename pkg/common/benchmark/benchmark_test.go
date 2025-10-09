@@ -67,6 +67,8 @@ func TestNewRunner(t *testing.T) {
 
 	if runner == nil {
 		t.Fatal("NewRunner returned nil")
+
+		return
 	}
 
 	if runner.config.Name != config.Name {

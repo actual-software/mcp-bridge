@@ -599,6 +599,7 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 			zap.String("method", req.Method),
 			zap.Any("id", req.ID),
 			zap.Error(err))
+
 		return err
 	}
 
@@ -607,6 +608,7 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 		client.logger.Error("Failed to send response to WriteCh",
 			zap.Any("response_id", resp.ID),
 			zap.Error(err))
+
 		return err
 	}
 

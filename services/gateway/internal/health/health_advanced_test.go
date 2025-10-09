@@ -50,6 +50,11 @@ func (m *MockServiceDiscovery) Start(ctx context.Context) error {
 
 func (m *MockServiceDiscovery) Stop() {}
 
+// RegisterEndpointChangeCallback is a no-op for mock discovery.
+func (m *MockServiceDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// Mock doesn't trigger endpoint changes
+}
+
 // TestChecker_UpdateSubsystem_Advanced tests the UpdateSubsystem method.
 func TestChecker_UpdateSubsystem_Advanced(t *testing.T) {
 	logger := zaptest.NewLogger(t)

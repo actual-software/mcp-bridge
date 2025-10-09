@@ -43,6 +43,8 @@ func TestNewCircuitBreaker(t *testing.T) {
 
 	if cb == nil {
 		t.Fatal("Expected circuit breaker to be created")
+
+		return
 	}
 
 	if cb.maxFailures != 3 {

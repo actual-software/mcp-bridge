@@ -59,6 +59,8 @@ func TestInitializeRequestRouter(t *testing.T) {
 
 	if router == nil {
 		t.Fatal("Expected router to be created")
+
+		return
 	}
 
 	if router.config.Strategy != "round_robin" {
@@ -1016,6 +1018,11 @@ func (m *mockServiceDiscovery) Start(_ context.Context) error {
 
 func (m *mockServiceDiscovery) Stop() {
 	// No-op
+}
+
+// RegisterEndpointChangeCallback is a no-op for mock discovery.
+func (m *mockServiceDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// Mock doesn't trigger endpoint changes
 }
 
 func BenchmarkRouter_RouteRequest(b *testing.B) {

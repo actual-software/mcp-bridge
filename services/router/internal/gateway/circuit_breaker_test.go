@@ -96,6 +96,8 @@ func TestNewCircuitBreaker(t *testing.T) {
 
 	if cb == nil {
 		t.Fatal("Expected non-nil circuit breaker")
+
+		return
 	}
 
 	if cb.state != CircuitClosed {

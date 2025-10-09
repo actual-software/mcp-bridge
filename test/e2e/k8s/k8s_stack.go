@@ -566,9 +566,10 @@ func (ks *KubernetesStack) verifyKubernetesContext(ctx context.Context) error {
 	currentContext, err := currentContextCmd.Output()
 	if err != nil {
 		// No current context is fine - we'll create our own
-		ks.logger.Info("No current kubectl context set, safe to proceed")
+		ks.logger.Info("No current kubectl context set, safe to proceed", zap.Error(err))
 
-		return nil
+		// Explicitly ignore error as no context is acceptable
+		return nil //nolint:nilerr // No current context is an acceptable state
 	}
 
 	contextStr := strings.TrimSpace(string(currentContext))
@@ -698,7 +699,9 @@ func (ks *KubernetesStack) getProjectRoot() (string, error) {
 
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", errors.New("could not find project root (no go.mod with module github.com/actual-software/mcp-bridge found)")
+			return "", errors.New(
+				"could not find project root (no go.mod with module github.com/actual-software/mcp-bridge found)",
+			)
 		}
 
 		dir = parent
@@ -843,6 +846,11 @@ spec:
 }
 
 func (ks *KubernetesStack) generateGatewayConfigMap() string {
+	serverConfig := ks.generateServerConfig()
+	sessionConfig := ks.generateSessionConfig()
+	discoveryConfig := ks.generateDiscoveryConfig()
+	authConfig := ks.generateAuthConfig()
+
 	return `apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -850,7 +858,16 @@ metadata:
   namespace: ` + ks.namespace + `
 data:
   gateway.yaml: |
-    server:
+` + serverConfig + sessionConfig + discoveryConfig + authConfig + `    routing:
+      strategy: round_robin
+    logging:
+      level: "debug"
+      format: "json"
+`
+}
+
+func (ks *KubernetesStack) generateServerConfig() string {
+	return `    server:
       host: "0.0.0.0"
       port: 8443
       health_port: 8080
@@ -885,11 +902,19 @@ data:
               cert_file: "/etc/tls/tls.crt"
               key_file: "/etc/tls/tls.key"
               min_version: "1.2"
-    sessions:
+`
+}
+
+func (ks *KubernetesStack) generateSessionConfig() string {
+	return `    sessions:
       provider: redis
       redis:
         url: "redis://redis:6379/0"
-    service_discovery:
+`
+}
+
+func (ks *KubernetesStack) generateDiscoveryConfig() string {
+	return `    service_discovery:
       provider: kubernetes
       namespace_selector:
         - ` + ks.namespace + `
@@ -897,17 +922,16 @@ data:
         app: test-mcp-server
       kubernetes:
         in_cluster: true
-    routing:
-      strategy: round_robin
-    auth:
+`
+}
+
+func (ks *KubernetesStack) generateAuthConfig() string {
+	return `    auth:
       provider: jwt
       jwt:
         secret_key_env: "JWT_SECRET_KEY"
         issuer: "mcp-gateway-e2e"
         audience: "mcp-clients"
-    logging:
-      level: "debug"
-      format: "json"
 `
 }
 

@@ -18,6 +18,10 @@ import (
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
+const (
+	responseTimeout = 5 * time.Second
+)
+
 // MessageRouter handles request/response correlation and routing between stdin/stdout and WebSocket.
 type MessageRouter struct {
 	config        *config.Config
@@ -823,7 +827,7 @@ func (mr *MessageRouter) processGatewayRequest(
 
 			// Send response and record metrics.
 			// Use a timeout to avoid blocking forever if stdout channel is full.
-			if err := mr.sendResponseWithTimeout(resp, 5*time.Second); err != nil {
+			if err := mr.sendResponseWithTimeout(resp, responseTimeout); err != nil {
 				// CRITICAL: cleanup and send error if we can't deliver the response
 				cleanup()
 				mr.metricsCol.IncrementErrors()
@@ -990,6 +994,7 @@ func (mr *MessageRouter) routeResponse(resp *mcp.Response) {
 			mr.logger.Error("Pending request channel has wrong type",
 				zap.Any("request_id", resp.ID),
 			)
+
 			return
 		}
 

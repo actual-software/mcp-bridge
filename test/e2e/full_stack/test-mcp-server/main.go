@@ -226,6 +226,7 @@ func (s *TestMCPServer) handleMCP(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		s.logger.Error("Failed to encode response", zap.Error(err))
+
 		return
 	}
 
@@ -408,7 +409,7 @@ func (s *TestMCPServer) handleCalculate(response *MCPResponse, arguments map[str
 }
 
 // evaluateSimpleExpression evaluates basic arithmetic expressions
-// This is a simple implementation for testing - handles +, -, *, / with precedence
+// This is a simple implementation for testing - handles +, -, *, / with precedence.
 func evaluateSimpleExpression(expr string) (float64, error) {
 	// Remove spaces
 	expr = strings.ReplaceAll(expr, " ", "")

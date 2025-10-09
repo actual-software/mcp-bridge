@@ -37,6 +37,8 @@ func TestNewHandler(t *testing.T) {
 
 	if handler == nil {
 		t.Fatal("Expected handler to be created")
+
+		return
 	}
 
 	if handler.logger != logger {

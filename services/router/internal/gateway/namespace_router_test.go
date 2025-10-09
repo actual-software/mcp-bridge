@@ -30,6 +30,8 @@ func TestNewNamespaceRouter(t *testing.T) {
 
 	if router == nil {
 		t.Fatal("Expected non-nil namespace router")
+
+		return
 	}
 
 	if !router.config.Enabled {

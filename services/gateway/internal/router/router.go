@@ -46,11 +46,12 @@ const (
 )
 
 const (
-	defaultMaxConnections = 5
-	defaultMaxRetries     = 100
-	defaultRetryCount     = 10
-	defaultBufferSize     = 1024
-	defaultTimeoutSeconds = 30
+	defaultMaxConnections    = 5
+	defaultMaxRetries        = 100
+	defaultRetryCount        = 10
+	defaultBufferSize        = 1024
+	defaultTimeoutSeconds    = 30
+	defaultMaxIdleConnsPerHost = 5
 
 	// Timeout constants.
 	defaultDialTimeout           = 2 * time.Second
@@ -817,6 +818,7 @@ func (r *Router) getOrCreateHTTPClient(endpoint *discovery.Endpoint) *http.Clien
 	r.endpointClientMu.RLock()
 	if client, exists := r.endpointClients[key]; exists {
 		r.endpointClientMu.RUnlock()
+
 		return client
 	}
 	r.endpointClientMu.RUnlock()
@@ -835,10 +837,11 @@ func (r *Router) getOrCreateHTTPClient(endpoint *discovery.Endpoint) *http.Clien
 		Timeout: defaultMaxConnections * time.Second,
 		Transport: &http.Transport{
 			MaxIdleConns:        defaultMaxRetries,
-			MaxIdleConnsPerHost: 5, // Reduced from 10 for better scaling with many endpoints
+			MaxIdleConnsPerHost: defaultMaxIdleConnsPerHost, // Reduced from 10 for better scaling with many endpoints
 			IdleConnTimeout:     defaultTimeoutSeconds * time.Second,
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				d := &net.Dialer{Timeout: defaultDialTimeout}
+
 				return d.DialContext(ctx, network, addr)
 			},
 			TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,

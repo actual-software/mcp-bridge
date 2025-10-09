@@ -303,6 +303,7 @@ func (rc *RouterController) SendRequestAndWait(req MCPRequest, timeout time.Dura
 			zap.String("method", req.Method),
 			zap.Duration("timeout", timeout),
 			zap.String("router_process", processState))
+
 		return nil, fmt.Errorf("timeout waiting for response (router process: %s)", processState)
 	case <-rc.ctx.Done():
 		return nil, errors.New("router controller stopped")
@@ -555,19 +556,6 @@ func (rc *RouterController) isContextCanceled() bool {
 	default:
 		return false
 	}
-}
-
-func (rc *RouterController) getPendingKeys() []string {
-	rc.pendingMu.RLock()
-	keys := make([]string, 0, len(rc.pending))
-
-	for k := range rc.pending {
-		keys = append(keys, k)
-	}
-
-	rc.pendingMu.RUnlock()
-
-	return keys
 }
 
 func (rc *RouterController) cleanup() {

@@ -48,6 +48,8 @@ func TestNewCompositeHealthChecker(t *testing.T) {
 
 	if checker == nil {
 		t.Fatal("Expected non-nil composite health checker")
+
+		return
 	}
 
 	if len(checker.checkers) != 0 {

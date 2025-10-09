@@ -26,6 +26,7 @@ func NewTestLogger() *zap.Logger {
 	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	logger, _ := config.Build()
+
 	return logger
 }
 

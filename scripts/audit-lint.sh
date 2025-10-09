@@ -51,15 +51,33 @@ run_linting_analysis() {
             # Change to module directory and run linting
             local current_dir=$(pwd)
             if cd "${module_dir}"; then
+                # Determine the correct config path based on module depth
+                local config_arg=""
+                if [[ "${module_dir}" == "." ]]; then
+                    # Root module
+                    config_arg="--config=./.config/golangci.yml"
+                else
+                    # Calculate relative path based on directory depth
+                    local depth=$(echo "${module_dir}" | tr -cd '/' | wc -c)
+                    local back_path=""
+                    for ((i=0; i<depth; i++)); do
+                        back_path="../${back_path}"
+                    done
+                    config_arg="--config=${back_path}.config/golangci.yml"
+                fi
+
                 # Run golangci-lint for this module
                 local module_issues=0
-                if ~/go/bin/golangci-lint run ./... --timeout="${TIMEOUT}" --max-issues-per-linter=1000 --max-same-issues=1000 2>&1; then
+                local module_output_temp=$(mktemp)
+                if ~/go/bin/golangci-lint run ./... --timeout="${TIMEOUT}" ${config_arg} --max-issues-per-linter=1000 --max-same-issues=1000 > "${module_output_temp}" 2>&1; then
                     echo "Module ${module_name}: 0 issues"
+                    rm -f "${module_output_temp}"
                 else
-                    # Count issues in the output
-                    local module_output_temp=$(mktemp)
-                    ~/go/bin/golangci-lint run ./... --timeout="${TIMEOUT}" --max-issues-per-linter=1000 --max-same-issues=1000 > "${module_output_temp}" 2>&1 || true
-                    module_issues=$(grep -c "^[^[:space:]].*:[0-9]*:[0-9]*:" "${module_output_temp}" 2>/dev/null || echo "0")
+                    # Count issues in the output (skip error messages)
+                    module_issues=$(grep -c "^[^[:space:]].*:[0-9]*:[0-9]*:" "${module_output_temp}" 2>/dev/null || true)
+                    if [[ -z "${module_issues}" ]] || [[ "${module_issues}" == "0" ]]; then
+                        module_issues=0
+                    fi
 
                     if [[ ${module_issues} -gt 0 ]]; then
                         echo "Module ${module_name}: ${module_issues} issues found"

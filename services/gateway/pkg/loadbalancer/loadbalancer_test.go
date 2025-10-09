@@ -18,6 +18,8 @@ func TestNewRoundRobin(t *testing.T) {
 
 	if rr == nil {
 		t.Fatal("Expected round robin load balancer to be created")
+
+		return
 	}
 
 	if len(rr.endpoints) != 2 {
@@ -167,6 +169,8 @@ func TestNewLeastConnections(t *testing.T) {
 
 	if lc == nil {
 		t.Fatal("Expected least connections load balancer to be created")
+
+		return
 	}
 
 	if len(lc.endpoints) != 2 {
@@ -258,6 +262,8 @@ func TestNewWeighted(t *testing.T) {
 
 	if w == nil {
 		t.Fatal("Expected weighted load balancer to be created")
+
+		return
 	}
 
 	if w.totalWeight != 300 {

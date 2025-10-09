@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 // TestRedisSessionManagement tests Redis session storage and failure scenarios.

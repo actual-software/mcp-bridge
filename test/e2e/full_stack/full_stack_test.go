@@ -6,10 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
-
 	"github.com/actual-software/mcp-bridge/test/testutil/e2e"
+	"github.com/stretchr/testify/require"
 )
 
 // Service URLs and endpoints - removed unused constants

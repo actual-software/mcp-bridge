@@ -358,11 +358,15 @@ func validateSuccessfulTokenResult(t *testing.T, tt jwtValidateTokenTestCase, cl
 
 	if claims == nil {
 		t.Fatal("Expected claims to be returned")
+
+		return
 	}
 
 	expectedClaims, ok := tt.claims.(*Claims)
 	if !ok {
 		t.Fatal("Expected *Claims type in test case")
+
+		return
 	}
 
 	if claims.Subject != expectedClaims.Subject {

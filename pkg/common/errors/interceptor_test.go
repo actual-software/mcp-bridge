@@ -47,6 +47,8 @@ func TestNewGRPCErrorInterceptor(t *testing.T) {
 
 	if interceptor == nil {
 		t.Fatal("NewGRPCErrorInterceptor returned nil")
+
+		return
 	}
 
 	if interceptor.logger != logger {

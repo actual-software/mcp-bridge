@@ -30,13 +30,13 @@ const (
 	networkPolicyMethod = "networkpolicy"
 	resilienceMethod    = "resilience"
 
-	// JWT configuration constants matching the gateway configuration
+	// JWT configuration constants matching the gateway configuration.
 	jwtSecret   = "test-secret-key-for-e2e-testing"
 	jwtIssuer   = "mcp-gateway-e2e"
 	jwtAudience = "mcp-clients"
 )
 
-// generateTestJWT creates a JWT token for E2E testing
+// generateTestJWT creates a JWT token for E2E testing.
 func generateTestJWT(t *testing.T) string {
 	t.Helper()
 
@@ -527,7 +527,8 @@ func setupPerformanceTestCluster(
 }
 
 func runPerformanceTestScenarios(
-	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, testSuite *e2e.TestSuite, logger *zap.Logger,
+	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack,
+	clusterConfig *ClusterConfig, testSuite *e2e.TestSuite, logger *zap.Logger,
 ) {
 	t.Helper()
 
@@ -649,7 +650,8 @@ func setupFailoverTestCluster(
 }
 
 func runFailoverTestScenarios(
-	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, testSuite *e2e.TestSuite, logger *zap.Logger,
+	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack,
+	clusterConfig *ClusterConfig, testSuite *e2e.TestSuite, logger *zap.Logger,
 ) {
 	t.Helper()
 
@@ -2256,9 +2258,11 @@ func validateClusterReadiness(
 func validateNodeReadiness(ctx context.Context, config *ClusterConfig, logger *zap.Logger) error {
 	// Check that all nodes are ready - use simpler JSONPath that's more reliable
 	// #nosec G204 - command with controlled test inputs
+	jsonPath := "jsonpath={range .items[*]}{.metadata.name}{'\\t'}" +
+		"{.status.conditions[?(@.type==\"Ready\")].status}{'\\n'}{end}"
 	readyNodesCmd := exec.CommandContext(
 		ctx, "kubectl", "get", "nodes",
-		"-o", "jsonpath={range .items[*]}{.metadata.name}{'\\t'}{.status.conditions[?(@.type==\"Ready\")].status}{'\\n'}{end}",
+		"-o", jsonPath,
 	)
 
 	output, err := readyNodesCmd.CombinedOutput()
@@ -3327,6 +3331,35 @@ func verifyAdaptiveRollingUpdateResults(
 	logger.Info("Rolling update verification completed", zap.Float64("success_rate", successRate))
 }
 
+// testBaselineConnectivity tests baseline connectivity with retries.
+func testBaselineConnectivity(t *testing.T, client *e2e.MCPClient, logger *zap.Logger) {
+	t.Helper()
+
+	var response *e2e.MCPResponse
+	var err error
+	maxRetries := 3
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		response, err = client.CallTool("echo", map[string]interface{}{
+			"message": "baseline connectivity test",
+		})
+		if err == nil {
+			break
+		}
+
+		if attempt < maxRetries {
+			logger.Warn("Baseline connectivity check failed, retrying",
+				zap.Int("attempt", attempt),
+				zap.Int("max_retries", maxRetries),
+				zap.Error(err))
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	require.NoError(t, err, "Baseline connectivity should work after retries")
+	require.NotNil(t, response, "Baseline response should not be nil")
+}
+
 // testKubernetesNetworkPartitionAdaptive runs network partition tests with adaptive methods.
 func testKubernetesNetworkPartitionAdaptive(
 	t *testing.T,
@@ -3347,27 +3380,7 @@ func testKubernetesNetworkPartitionAdaptive(
 	}
 
 	// Test baseline connectivity with retries
-	// After running previous tests for 15+ minutes, the connection may need time to recover
-	var response *e2e.MCPResponse
-	var err error
-	maxRetries := 3
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		response, err = client.CallTool("echo", map[string]interface{}{
-			"message": "baseline connectivity test",
-		})
-		if err == nil {
-			break
-		}
-		if attempt < maxRetries {
-			logger.Warn("Baseline connectivity check failed, retrying",
-				zap.Int("attempt", attempt),
-				zap.Int("max_retries", maxRetries),
-				zap.Error(err))
-			time.Sleep(2 * time.Second)
-		}
-	}
-	require.NoError(t, err, "Baseline connectivity should work after retries")
-	require.NotNil(t, response, "Baseline response should not be nil")
+	testBaselineConnectivity(t, client, logger)
 
 	// Check adaptations to determine which tests to run
 	enableNetworkPolicies, _ := adaptations["enable_network_policies"].(bool)
@@ -3382,35 +3395,51 @@ func testKubernetesNetworkPartitionAdaptive(
 		netCapabilities, clusterConfig, enableNetworkPolicies, enablePodDisruption, logger,
 	)
 
-	// Execute network partition test based on available method and cluster capabilities
-	switch partitionMethod {
-	case "networkpolicy":
-		if enableNetworkPolicies && !clusterConfig.ResourceConstraints {
-			err = testNetworkPolicyPartition(t, client, stack, netCapabilities, logger)
-		} else {
-			logger.Info("NetworkPolicy test skipped due to resource constraints or adaptation settings")
-			err = testNetworkResilience(t, client, logger)
-		}
-	case "iptables":
-		err = testIptablesPartition(t, client, stack, netCapabilities, logger)
-	case "pod-disruption":
-		if enablePodDisruption && clusterConfig.ReplicaCount > 1 {
-			err = testPodDisruptionPartitionAdaptive(t, client, stack, clusterConfig, logger)
-		} else {
-			logger.Info("Pod disruption test skipped - insufficient replicas or disabled by adaptation")
-			err = testNetworkResilience(t, client, logger)
-		}
-	case resilienceMethod:
-		err = testNetworkResilienceAdaptive(t, client, clusterConfig, logger)
-	default:
-		err = testNetworkResilienceAdaptive(t, client, clusterConfig, logger)
-	}
-
+	// Execute the selected partition test
+	err = executePartitionTest(
+		t, client, stack, clusterConfig, partitionMethod,
+		enableNetworkPolicies, enablePodDisruption, netCapabilities, logger,
+	)
 	require.NoError(t, err, "Network partition test should complete successfully")
 
 	logger.Info("Adaptive network partition test completed successfully",
 		zap.String("method", partitionMethod),
 		zap.Bool("resource_constrained", clusterConfig.ResourceConstraints))
+}
+
+// executePartitionTest executes the partition test based on the selected method.
+func executePartitionTest(
+	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack,
+	clusterConfig *ClusterConfig, partitionMethod string,
+	enableNetworkPolicies, enablePodDisruption bool,
+	netCapabilities *NetworkCapabilities, logger *zap.Logger,
+) error {
+	t.Helper()
+
+	switch partitionMethod {
+	case "networkpolicy":
+		if enableNetworkPolicies && !clusterConfig.ResourceConstraints {
+			return testNetworkPolicyPartition(t, client, stack, netCapabilities, logger)
+		}
+
+		logger.Info("NetworkPolicy test skipped due to resource constraints or adaptation settings")
+
+		return testNetworkResilience(t, client, logger)
+	case "iptables":
+		return testIptablesPartition(t, client, stack, netCapabilities, logger)
+	case "pod-disruption":
+		if enablePodDisruption && clusterConfig.ReplicaCount > 1 {
+			return testPodDisruptionPartitionAdaptive(t, client, stack, clusterConfig, logger)
+		}
+
+		logger.Info("Pod disruption test skipped - insufficient replicas or disabled by adaptation")
+
+		return testNetworkResilience(t, client, logger)
+	case resilienceMethod:
+		return testNetworkResilienceAdaptive(t, client, clusterConfig, logger)
+	default:
+		return testNetworkResilienceAdaptive(t, client, clusterConfig, logger)
+	}
 }
 
 // selectPartitionMethodAdaptive selects partition method considering cluster constraints.

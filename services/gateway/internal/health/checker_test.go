@@ -77,6 +77,11 @@ func (m *MockDiscovery) SetEndpoints(namespace string, endpoints []discovery.End
 	m.endpoints[namespace] = endpoints
 }
 
+// RegisterEndpointChangeCallback is a no-op for mock discovery.
+func (m *MockDiscovery) RegisterEndpointChangeCallback(callback func(namespace string)) {
+	// Mock doesn't trigger endpoint changes
+}
+
 func TestCreateHealthMonitor(t *testing.T) {
 	logger := testutil.NewTestLogger(t)
 	mockDiscovery := NewMockDiscovery()
