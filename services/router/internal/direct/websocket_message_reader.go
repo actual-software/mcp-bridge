@@ -2,9 +2,7 @@ package direct
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
@@ -123,21 +121,11 @@ func (r *WebSocketMessageReader) readResponse(conn *websocket.Conn) (response *m
 		}
 	}()
 
-	// Gateway wraps responses in WireMessage format, we need to unwrap
-	var wireMsg WireMessage
+	var resp mcp.Response
 
-	err = conn.ReadJSON(&wireMsg)
-	if err != nil {
-		return nil, err
-	}
+	err = conn.ReadJSON(&resp)
 
-	// Extract MCP response from wire message payload
-	resp, err := r.extractMCPResponse(&wireMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
+	return &resp, err
 }
 
 func (r *WebSocketMessageReader) handleReadError(ctx context.Context, err error) {
@@ -239,33 +227,4 @@ func (r *WebSocketMessageReader) deliverResponse(responseID string, response *mc
 			zap.String("client_name", r.client.name),
 			zap.Uint64("active_requests", uint64(len(r.client.requestMap))))
 	}
-}
-
-// WireMessage represents the wire protocol message format from gateway.
-type WireMessage struct {
-	ID              interface{} `json:"id"`
-	Timestamp       string      `json:"timestamp"`
-	Source          string      `json:"source"`
-	TargetNamespace string      `json:"target_namespace,omitempty"`
-	MCPPayload      interface{} `json:"mcp_payload"`
-}
-
-// extractMCPResponse extracts and unmarshals the MCP response from wire message.
-func (r *WebSocketMessageReader) extractMCPResponse(wireMsg *WireMessage) (*mcp.Response, error) {
-	if wireMsg.MCPPayload == nil {
-		return nil, fmt.Errorf("wire message missing mcp_payload")
-	}
-
-	// Marshal the payload back to JSON then unmarshal into mcp.Response
-	payloadBytes, err := json.Marshal(wireMsg.MCPPayload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal mcp payload: %w", err)
-	}
-
-	var resp mcp.Response
-	if err := json.Unmarshal(payloadBytes, &resp); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal mcp response: %w", err)
-	}
-
-	return &resp, nil
 }
