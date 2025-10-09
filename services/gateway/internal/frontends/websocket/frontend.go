@@ -530,12 +530,8 @@ func (f *Frontend) handleClientWrite(client *ClientConnection) {
 			return
 		case msg, ok := <-client.WriteCh:
 			if !ok {
-				client.logger.Debug("WriteCh closed, exiting write handler")
 				return
 			}
-
-			client.logger.Debug("Received message from WriteCh, writing to WebSocket",
-				zap.Int("message_size", len(msg)))
 
 			if err := client.Conn.SetWriteDeadline(time.Now().Add(defaultWriteWait)); err != nil {
 				client.logger.Warn("Failed to set write deadline", zap.Error(err))
@@ -546,9 +542,6 @@ func (f *Frontend) handleClientWrite(client *ClientConnection) {
 
 				return
 			}
-
-			client.logger.Debug("Successfully wrote message to WebSocket",
-				zap.Int("message_size", len(msg)))
 
 		case <-ticker.C:
 			if err := client.Conn.SetWriteDeadline(time.Now().Add(defaultWriteWait)); err != nil {
@@ -599,12 +592,6 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 	// Add session to context
 	ctx = context.WithValue(ctx, contextKeySession, client.Session)
 
-	// Log request routing
-	client.logger.Debug("Routing WebSocket request",
-		zap.String("method", req.Method),
-		zap.Any("id", req.ID),
-		zap.String("target_namespace", wireMsg.TargetNamespace))
-
 	// Route the request
 	resp, err := f.router.RouteRequest(ctx, &req, wireMsg.TargetNamespace)
 	if err != nil {
@@ -615,9 +602,6 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 		return err
 	}
 
-	client.logger.Debug("Request routed successfully, sending response",
-		zap.Any("response_id", resp.ID))
-
 	// Send response
 	if err := f.sendResponse(client, resp); err != nil {
 		client.logger.Error("Failed to send response to WriteCh",
@@ -625,9 +609,6 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 			zap.Error(err))
 		return err
 	}
-
-	client.logger.Debug("Response sent to WriteCh successfully",
-		zap.Any("response_id", resp.ID))
 
 	return nil
 }

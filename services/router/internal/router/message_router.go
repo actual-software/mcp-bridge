@@ -235,9 +235,6 @@ func (mr *MessageRouter) handleWSToStdout() {
 func (mr *MessageRouter) isConnectionReady() bool {
 	state := mr.connMgr.GetState()
 	if state != StateConnected {
-		mr.logger.Warn("DIAG: Gateway connection not ready",
-			zap.String("state", state.String()),
-		)
 		// Check context again before sleeping.
 		select {
 		case <-mr.ctx.Done():
@@ -262,12 +259,7 @@ func (mr *MessageRouter) processWSMessage() {
 
 	// Only route response if no error occurred and response is not nil.
 	if resp != nil {
-		mr.logger.Info("DIAG: Received response from gateway, routing",
-			zap.Any("request_id", resp.ID),
-		)
 		mr.routeResponse(resp)
-	} else {
-		mr.logger.Warn("DIAG: Received nil response from gateway")
 	}
 }
 
@@ -796,38 +788,21 @@ func (mr *MessageRouter) processGatewayRequest(
 		}
 	}
 
-	mr.logger.Info("DIAG: Routing request to gateway connection",
-		zap.Any("request_id", req.ID),
-		zap.String("method", req.Method),
-	)
-
 	// Track gateway request.
 	mr.metricsCol.IncrementGatewayRequests()
-
-	mr.logger.Info("DIAG: Launching async goroutine for request",
-		zap.Any("request_id", req.ID),
-		zap.String("method", req.Method),
-	)
 
 	// Launch goroutine to handle send + wait for response asynchronously.
 	// This allows multiple concurrent in-flight requests to the gateway.
 	go func() {
-		mr.logger.Info("DIAG: Goroutine started for request",
-			zap.Any("request_id", req.ID),
-			zap.String("method", req.Method),
-		)
-
 		// Forward to gateway.
 		sendStart := time.Now()
 		if err := mr.gwClient.SendRequest(ctx, req); err != nil {
 			cleanup() // Clean up on send error
 			mr.metricsCol.IncrementErrors()
-			mr.logger.Error("DIAG: Failed to send request to gateway",
+			mr.logger.Error("Failed to send request to gateway",
 				zap.Any("request_id", req.ID),
 				zap.String("method", req.Method),
-				zap.Duration("send_duration", time.Since(sendStart)),
-				zap.Error(err),
-			)
+				zap.Error(err))
 
 			// Send error response to stdout
 			mr.sendErrorResponse(req.ID, err)
@@ -835,49 +810,27 @@ func (mr *MessageRouter) processGatewayRequest(
 			return
 		}
 
-		mr.logger.Info("DIAG: Request sent to gateway successfully",
-			zap.Any("request_id", req.ID),
-			zap.String("method", req.Method),
-			zap.Duration("send_duration", time.Since(sendStart)),
-		)
-
 		// Wait for response with timeout.
 		timeout := mr.config.GetRequestTimeout()
-
-		mr.logger.Info("DIAG: Waiting for response from gateway",
-			zap.Any("request_id", req.ID),
-			zap.String("method", req.Method),
-			zap.Duration("timeout", timeout),
-		)
 
 		var resp *mcp.Response
 
 		select {
 		case resp = <-respChan:
 			// Response received - channel will be cleaned up by routeResponse.
-			responseReceivedAt := time.Now()
-			mr.logger.Info("DIAG: Response received from gateway",
-				zap.Any("request_id", req.ID),
-				zap.String("method", req.Method),
-				zap.Duration("wait_duration", responseReceivedAt.Sub(sendStart)),
-			)
-
 			// Record request duration.
 			duration := time.Since(startTime)
 			mr.metricsCol.RecordRequestDuration(req.Method, duration)
 
 			// Send response and record metrics.
 			// Use a timeout to avoid blocking forever if stdout channel is full.
-			stdoutSendStart := time.Now()
 			if err := mr.sendResponseWithTimeout(resp, 5*time.Second); err != nil {
 				// CRITICAL: cleanup and send error if we can't deliver the response
 				cleanup()
 				mr.metricsCol.IncrementErrors()
-				mr.logger.Error("DIAG: Failed to send response to stdout",
+				mr.logger.Error("Failed to send response to stdout",
 					zap.Any("request_id", req.ID),
-					zap.Duration("stdout_send_duration", time.Since(stdoutSendStart)),
-					zap.Error(err),
-				)
+					zap.Error(err))
 
 				// Try to send error response (with same timeout risk, but at least we try)
 				mr.sendErrorResponse(req.ID, err)
@@ -886,40 +839,26 @@ func (mr *MessageRouter) processGatewayRequest(
 			}
 
 			mr.metricsCol.IncrementResponses()
-			mr.logger.Info("DIAG: Response sent to stdout successfully",
-				zap.Any("request_id", req.ID),
-				zap.String("method", req.Method),
-				zap.Duration("stdout_send_duration", time.Since(stdoutSendStart)),
-				zap.Duration("total_duration", time.Since(startTime)),
-			)
 
 		case <-time.After(timeout):
 			cleanup() // Clean up on timeout
 			mr.metricsCol.IncrementErrors()
-			mr.logger.Error("DIAG: Gateway response timeout in goroutine",
+			mr.logger.Error("Gateway response timeout",
 				zap.Any("request_id", req.ID),
 				zap.String("method", req.Method),
-				zap.Duration("timeout", timeout),
-				zap.Duration("elapsed", time.Since(sendStart)),
-			)
+				zap.Duration("timeout", timeout))
 
 			mr.sendErrorResponse(req.ID, fmt.Errorf("request timeout after %v", timeout))
 
 		case <-mr.ctx.Done():
 			cleanup() // Clean up on context cancellation
 			mr.metricsCol.IncrementErrors()
-			mr.logger.Error("DIAG: Context canceled during request",
+			mr.logger.Error("Context canceled during request",
 				zap.Any("request_id", req.ID),
-				zap.String("method", req.Method),
-			)
+				zap.String("method", req.Method))
 
 			mr.sendErrorResponse(req.ID, errors.New("context canceled"))
 		}
-
-		mr.logger.Info("DIAG: Goroutine exiting",
-			zap.Any("request_id", req.ID),
-			zap.String("method", req.Method),
-		)
 	}()
 
 	// Return immediately to allow processing next request.
@@ -1045,47 +984,34 @@ func (mr *MessageRouter) sendErrorResponse(id interface{}, err error) {
 
 // routeResponse routes a response to the appropriate waiting request.
 func (mr *MessageRouter) routeResponse(resp *mcp.Response) {
-	mr.logger.Info("DIAG: Received response from gateway WebSocket",
-		zap.Any("request_id", resp.ID),
-	)
-
 	// Load and delete in one atomic operation to prevent race conditions.
 	if chInterface, ok := mr.pendingReqs.LoadAndDelete(resp.ID); ok {
 		ch, ok := chInterface.(chan *mcp.Response)
 		if !ok {
-			mr.logger.Error("DIAG: Pending request channel has wrong type",
+			mr.logger.Error("Pending request channel has wrong type",
 				zap.Any("request_id", resp.ID),
 			)
 			return
 		}
 
-		mr.logger.Info("DIAG: Found pending request, routing response",
-			zap.Any("request_id", resp.ID),
-		)
-
 		// Use select to prevent blocking and provide context cancellation.
 		select {
 		case ch <- resp:
-			mr.logger.Info("DIAG: Response sent to goroutine channel",
-				zap.Any("request_id", resp.ID),
-			)
+			// Response delivered successfully.
 		case <-mr.ctx.Done():
-			mr.logger.Warn("DIAG: Context canceled while routing response",
+			mr.logger.Warn("Context canceled while routing response",
 				zap.Any("request_id", resp.ID),
 			)
 		default:
-			mr.logger.Warn("DIAG: Failed to route response - channel full or closed",
+			mr.logger.Warn("Failed to route response - channel full or closed",
 				zap.Any("request_id", resp.ID),
 			)
 		}
 
 		// Close the channel to prevent goroutine leaks.
 		close(ch)
-		mr.logger.Info("DIAG: Response channel closed",
-			zap.Any("request_id", resp.ID),
-		)
 	} else {
-		mr.logger.Warn("DIAG: Received response for unknown/expired request",
+		mr.logger.Warn("Received response for unknown/expired request",
 			zap.Any("request_id", resp.ID),
 		)
 	}

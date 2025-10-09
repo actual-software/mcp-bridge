@@ -207,32 +207,19 @@ func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 		msg.AuthToken = c.config.Auth.Token
 	}
 
-	c.logger.Info("DIAG: Sending request to gateway WebSocket",
-		zap.Any("id", req.ID),
-		zap.String("method", req.Method),
-	)
-
 	// Set write deadline.
 	deadline := time.Now().Add(defaultRetryCount * time.Second)
 	if err := currentConn.SetWriteDeadline(deadline); err != nil {
 		c.logger.Debug("Failed to set write deadline", zap.Error(err))
 	}
 
-	beforeWrite := time.Now()
 	// Send as JSON.
 	err := currentConn.WriteJSON(msg)
-	writeComplete := time.Now()
 
 	if err != nil {
-		c.logger.Error("DIAG: Gateway WebSocket write failed",
+		c.logger.Error("Gateway WebSocket write failed",
 			zap.Any("request_id", req.ID),
-			zap.Duration("write_duration", writeComplete.Sub(beforeWrite)),
 			zap.Error(err))
-	} else {
-		c.logger.Info("DIAG: Gateway WebSocket write completed",
-			zap.Any("request_id", req.ID),
-			zap.Duration("write_duration", writeComplete.Sub(beforeWrite)),
-			zap.Duration("total_send_duration", writeComplete.Sub(startTime)))
 	}
 
 	return err
