@@ -850,11 +850,16 @@ func (mr *MessageRouter) processGatewayRequest(
 			// Send response and record metrics.
 			// Use a timeout to avoid blocking forever if stdout channel is full.
 			if err := mr.sendResponseWithTimeout(resp, 5*time.Second); err != nil {
+				// CRITICAL: cleanup and send error if we can't deliver the response
+				cleanup()
 				mr.metricsCol.IncrementErrors()
-				mr.logger.Error("Failed to send response",
+				mr.logger.Error("Failed to send response to stdout, sending error",
 					zap.Any("request_id", req.ID),
 					zap.Error(err),
 				)
+
+				// Try to send error response (with same timeout risk, but at least we try)
+				mr.sendErrorResponse(req.ID, err)
 
 				return
 			}

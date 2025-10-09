@@ -62,8 +62,9 @@ var (
 
 const (
 	// DefaultChannelBufferSize defines the buffer size for stdin/stdout channels.
-	// Large enough to prevent blocking during burst traffic while maintaining memory efficiency.
-	DefaultChannelBufferSize = 100
+	// Large buffer (1000) to handle high concurrency and prevent backpressure during bursts.
+	// With async request processing, many concurrent responses can arrive simultaneously.
+	DefaultChannelBufferSize = 1000
 
 	// MCPInternalErrorCode represents JSON-RPC 2.0 internal error code.
 	// As defined in JSON-RPC 2.0 specification: https://www.jsonrpc.org/specification
