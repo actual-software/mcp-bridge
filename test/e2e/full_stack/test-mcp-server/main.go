@@ -226,7 +226,12 @@ func (s *TestMCPServer) handleMCP(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		s.logger.Error("Failed to encode response", zap.Error(err))
+		return
 	}
+
+	s.logger.Info("Sent MCP response",
+		zap.String("method", req.Method),
+		zap.Any("id", req.ID))
 }
 
 func (s *TestMCPServer) handleToolCall(response *MCPResponse, req MCPRequest) {

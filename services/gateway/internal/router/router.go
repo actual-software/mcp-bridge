@@ -103,6 +103,7 @@ func InitializeRequestRouter(
 				MaxIdleConns:        defaultMaxRetries,
 				MaxIdleConnsPerHost: defaultRetryCount,
 				IdleConnTimeout:     defaultTimeoutSeconds * time.Second, // Reduced from 90s
+				DisableKeepAlives:   true,                                // Disable connection reuse to prevent stale connection issues during endpoint changes
 				// Add connection timeouts for faster failure detection
 				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 					d := &net.Dialer{Timeout: defaultDialTimeout}
