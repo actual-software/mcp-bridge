@@ -71,8 +71,10 @@ const (
 	MCPInternalErrorCode = -32603
 
 	// DefaultReceiveTimeout is the maximum time to wait for WebSocket responses.
-	// Balances responsiveness with network latency tolerance.
-	DefaultReceiveTimeout = 5 * time.Second
+	// CRITICAL: Must be LONGER than WebSocket read deadline (30s in gateway client)
+	// to prevent goroutine leaks. When context times out before read completes,
+	// new read goroutines spawn while old ones block, causing "repeated read" panics.
+	DefaultReceiveTimeout = 35 * time.Second
 
 	// ConnectionStateCheckInterval defines how frequently to check connection state.
 	// Short enough for quick failure detection, long enough to avoid CPU overhead.
