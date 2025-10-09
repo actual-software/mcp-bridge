@@ -457,6 +457,10 @@ func (ts *TestSuite) Reconnect(ctx context.Context) error {
 	// Stop the existing router
 	if ts.router != nil {
 		ts.router.Stop()
+		// Give extra time for all goroutines to fully terminate
+		// This prevents "repeated read on failed websocket connection" panics
+		// from background read loops still running after Stop() returns
+		time.Sleep(2 * time.Second)
 	}
 
 	// Create new RouterController
