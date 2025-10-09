@@ -86,8 +86,10 @@ func TestKubernetesEndToEnd(t *testing.T) {
 
 	// Setup Kubernetes infrastructure
 	stack, client, testSuite := setupKubernetesInfrastructure(t, ctx, logger)
-	defer stack.Cleanup()
 	defer testSuite.Teardown()
+	// NOTE: stack.Cleanup() is NOT called here - the GitHub Actions workflow
+	// collects artifacts after test completion, requiring the cluster to remain alive.
+	// The workflow handles cluster cleanup in the "Cleanup resources" step.
 
 	// Run comprehensive test scenarios
 	runKubernetesTestScenarios(t, client, stack)
@@ -466,8 +468,10 @@ func TestKubernetesPerformance(t *testing.T) {
 
 	// Setup and validate cluster for performance testing
 	stack, client, clusterConfig, testSuite := setupPerformanceTestCluster(t, ctx, logger)
-	defer stack.Cleanup()
 	defer testSuite.Teardown()
+	// NOTE: stack.Cleanup() is NOT called here - the GitHub Actions workflow
+	// collects artifacts after test completion, requiring the cluster to remain alive.
+	// The workflow handles cluster cleanup in the "Cleanup resources" step.
 
 	// Run adaptive performance test scenarios
 	runPerformanceTestScenarios(t, client, stack, clusterConfig, logger)
@@ -580,8 +584,10 @@ func TestKubernetesFailover(t *testing.T) {
 
 	// Setup and validate cluster for failover testing
 	stack, client, clusterConfig, testSuite := setupFailoverTestCluster(t, ctx, logger)
-	defer stack.Cleanup()
 	defer testSuite.Teardown()
+	// NOTE: stack.Cleanup() is NOT called here - the GitHub Actions workflow
+	// collects artifacts after test completion, requiring the cluster to remain alive.
+	// The workflow handles cluster cleanup in the "Cleanup resources" step.
 
 	// Run adaptive failover test scenarios
 	runFailoverTestScenarios(t, client, stack, clusterConfig, logger)
