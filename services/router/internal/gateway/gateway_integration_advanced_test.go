@@ -307,7 +307,7 @@ func createServerShutdownTest() failoverScenarioTest {
 			return err
 		},
 		expectedSuccess: false,
-		expectedError:   "pipe", // Accept "broken pipe" or "pipe" errors from connection failures
+		expectedError:   "connection closed unexpectedly", // More descriptive error from improved error handling
 	}
 }
 

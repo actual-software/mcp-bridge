@@ -589,19 +589,19 @@ func createErrorRecoveryTests() []errorRecoveryTest {
 		{
 			name:          "malformed version negotiation",
 			handler:       handleMalformedVersionNegotiation,
-			expectedError: "reset", // Accept "connection reset by peer" errors
+			expectedError: "handshake failed", // More descriptive error from improved error handling
 			shouldRecover: false,
 		},
 		{
 			name:          "connection drop after handshake",
 			handler:       handleConnectionDropAfterHandshake,
-			expectedError: "pipe", // Accept "broken pipe" or connection errors
+			expectedError: "connection closed unexpectedly", // More descriptive error from improved error handling
 			shouldRecover: true,
 		},
 		{
 			name:          "partial message transmission",
 			handler:       handlePartialMessageTransmission,
-			expectedError: "pipe", // Accept "broken pipe" or connection errors
+			expectedError: "connection closed unexpectedly", // More descriptive error from improved error handling
 			shouldRecover: true,
 		},
 	}

@@ -331,11 +331,17 @@ func receiveWebSocketResponse(t *testing.T, ws *websocket.Conn, requestReceived 
 func verifyWebSocketResponse(t *testing.T, response map[string]interface{}) {
 	t.Helper()
 
-	if response["jsonrpc"] != "2.0" {
-		t.Errorf("Expected jsonrpc 2.0, got %v", response["jsonrpc"])
+	// Extract MCP payload from wire message
+	mcpPayload, ok := response["mcp_payload"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Response missing mcp_payload: %+v", response)
 	}
 
-	if result, ok := response["result"].(map[string]interface{}); ok {
+	if mcpPayload["jsonrpc"] != "2.0" {
+		t.Errorf("Expected jsonrpc 2.0, got %v", mcpPayload["jsonrpc"])
+	}
+
+	if result, ok := mcpPayload["result"].(map[string]interface{}); ok {
 		if result["echo"] != "test/echo" {
 			t.Errorf("Expected echo 'test/echo', got %v", result["echo"])
 		}
@@ -441,7 +447,13 @@ func TestWebSocketInvalidMessage(t *testing.T) {
 		t.Fatalf("Failed to read response: %v", err)
 	}
 
-	if response["error"] == nil {
+	// Extract MCP payload from wire message
+	mcpPayload, ok := response["mcp_payload"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Response missing mcp_payload: %+v", response)
+	}
+
+	if mcpPayload["error"] == nil {
 		t.Error("Expected error in response")
 	}
 }
