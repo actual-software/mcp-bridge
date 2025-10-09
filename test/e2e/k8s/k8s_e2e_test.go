@@ -670,10 +670,6 @@ func runFailoverTestScenarios(
 		testKubernetesRollingUpdateAdaptive(t, client, stack, clusterConfig, failoverAdaptations)
 	})
 
-	// Allow system to stabilize after rolling updates before reconnecting
-	logger.Info("Allowing system to stabilize after rolling updates before reconnection")
-	time.Sleep(10 * time.Second)
-
 	// Reconnect router for test isolation before NetworkPartitionHandling
 	logger.Info("Reconnecting router for test isolation before NetworkPartitionHandling")
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
