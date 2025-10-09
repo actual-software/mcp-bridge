@@ -207,7 +207,7 @@ func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 		msg.AuthToken = c.config.Auth.Token
 	}
 
-	c.logger.Debug("Sending request to WebSocket",
+	c.logger.Info("DIAG: Sending request to gateway WebSocket",
 		zap.Any("id", req.ID),
 		zap.String("method", req.Method),
 	)
@@ -224,12 +224,12 @@ func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 	writeComplete := time.Now()
 
 	if err != nil {
-		c.logger.Error("WebSocket write failed",
+		c.logger.Error("DIAG: Gateway WebSocket write failed",
 			zap.Any("request_id", req.ID),
 			zap.Duration("write_duration", writeComplete.Sub(beforeWrite)),
 			zap.Error(err))
 	} else {
-		c.logger.Debug("WebSocket write completed",
+		c.logger.Info("DIAG: Gateway WebSocket write completed",
 			zap.Any("request_id", req.ID),
 			zap.Duration("write_duration", writeComplete.Sub(beforeWrite)),
 			zap.Duration("total_send_duration", writeComplete.Sub(startTime)))
