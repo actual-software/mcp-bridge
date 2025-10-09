@@ -596,7 +596,7 @@ func TestKubernetesFailover(t *testing.T) {
 	// The workflow handles cluster cleanup in the "Cleanup resources" step.
 
 	// Run adaptive failover test scenarios
-	runFailoverTestScenarios(t, client, stack, clusterConfig, logger)
+	runFailoverTestScenarios(t, client, stack, clusterConfig, testSuite, logger)
 }
 
 func setupFailoverTestCluster(
@@ -649,7 +649,7 @@ func setupFailoverTestCluster(
 }
 
 func runFailoverTestScenarios(
-	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, logger *zap.Logger,
+	t *testing.T, client *e2e.MCPClient, stack *KubernetesStack, clusterConfig *ClusterConfig, testSuite *e2e.TestSuite, logger *zap.Logger,
 ) {
 	t.Helper()
 
@@ -669,6 +669,18 @@ func runFailoverTestScenarios(
 	t.Run("RollingUpdates", func(t *testing.T) {
 		testKubernetesRollingUpdateAdaptive(t, client, stack, clusterConfig, failoverAdaptations)
 	})
+
+	// Reconnect router for test isolation before NetworkPartitionHandling
+	logger.Info("Reconnecting router for test isolation before NetworkPartitionHandling")
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	err := testSuite.Reconnect(ctx)
+	require.NoError(t, err, "Failed to reconnect router for test isolation")
+
+	// Update client reference after reconnection
+	client = testSuite.GetClient()
+	logger.Info("Router reconnected successfully")
 
 	// Test network partition handling (adaptive based on cluster capabilities)
 	t.Run("NetworkPartitionHandling", func(t *testing.T) {
