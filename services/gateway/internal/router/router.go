@@ -745,7 +745,8 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 		return
 	}
 
-	resp, err := r.httpClient.Do(req)
+	client := r.getOrCreateHTTPClient(endpoint)
+	resp, err := client.Do(req)
 	if err != nil {
 		endpoint.Healthy = false
 		r.logger.Debug("Endpoint health check failed",
