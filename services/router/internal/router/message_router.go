@@ -795,7 +795,6 @@ func (mr *MessageRouter) processGatewayRequest(
 	// This allows multiple concurrent in-flight requests to the gateway.
 	go func() {
 		// Forward to gateway.
-		sendStart := time.Now()
 		if err := mr.gwClient.SendRequest(ctx, req); err != nil {
 			cleanup() // Clean up on send error
 			mr.metricsCol.IncrementErrors()
