@@ -44,11 +44,23 @@ func NewKubernetesStack(t *testing.T) *KubernetesStack {
 
 	logger := e2e.NewTestLogger()
 
+	// Use environment variables if set (for GitHub Actions),
+	// otherwise use default values for local testing.
+	clusterName := os.Getenv("K8S_TEST_CLUSTER_NAME")
+	if clusterName == "" {
+		clusterName = "mcp-e2e-test"
+	}
+
+	namespace := os.Getenv("K8S_TEST_NAMESPACE")
+	if namespace == "" {
+		namespace = "mcp-e2e"
+	}
+
 	return &KubernetesStack{
 		t:           t,
 		logger:      logger,
-		clusterName: "mcp-e2e-test",
-		namespace:   "mcp-e2e",
+		clusterName: clusterName,
+		namespace:   namespace,
 		services:    make(map[string]string),
 		cleanup:     make([]func(), 0),
 	}
