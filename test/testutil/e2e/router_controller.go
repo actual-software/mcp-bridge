@@ -286,7 +286,24 @@ func (rc *RouterController) SendRequestAndWait(req MCPRequest, timeout time.Dura
 	case respData := <-respChan:
 		return respData, nil
 	case <-time.After(timeout):
-		return nil, errors.New("timeout waiting for response")
+		// Check if router process is still alive on timeout
+		var processState string
+		if rc.cmd != nil && rc.cmd.Process != nil {
+			// Check process state (nil means still running)
+			if rc.cmd.ProcessState == nil {
+				processState = "ALIVE"
+			} else {
+				processState = fmt.Sprintf("EXITED: %s", rc.cmd.ProcessState.String())
+			}
+		} else {
+			processState = "NOT_STARTED"
+		}
+		rc.logger.Error("Request timeout",
+			zap.String("request_id", req.ID),
+			zap.String("method", req.Method),
+			zap.Duration("timeout", timeout),
+			zap.String("router_process", processState))
+		return nil, fmt.Errorf("timeout waiting for response (router process: %s)", processState)
 	case <-rc.ctx.Done():
 		return nil, errors.New("router controller stopped")
 	}
@@ -488,7 +505,8 @@ func (rc *RouterController) handleStderr() {
 	scanner := bufio.NewScanner(rc.stderr)
 	for scanner.Scan() {
 		line := scanner.Text()
-		rc.logger.Debug("Router stderr", zap.String("line", line))
+		// Log at INFO level to ensure DIAG logs are visible in test output
+		rc.logger.Info("Router stderr", zap.String("line", line))
 	}
 
 	if err := scanner.Err(); err != nil && !rc.isContextCanceled() {
