@@ -77,8 +77,8 @@ func TestInitializeRequestRouter(t *testing.T) {
 		t.Error("Logger not set correctly")
 	}
 
-	if router.httpClient == nil {
-		t.Error("HTTP client not initialized")
+	if router.endpointClients == nil {
+		t.Error("Endpoint clients map not initialized")
 	}
 
 	if router.balancers == nil {
@@ -582,12 +582,12 @@ func setupSessionTestRouter(backend *httptest.Server) *Router {
 				TimeoutSeconds:   30,
 			},
 		},
-		discovery:  mockDiscovery,
-		metrics:    testutil.CreateTestMetricsRegistry(),
-		logger:     zap.NewNop(),
-		balancers:  make(map[string]loadbalancer.LoadBalancer),
-		breakers:   make(map[string]*circuit.CircuitBreaker),
-		httpClient: http.DefaultClient,
+		discovery:       mockDiscovery,
+		metrics:         testutil.CreateTestMetricsRegistry(),
+		logger:          zap.NewNop(),
+		balancers:       make(map[string]loadbalancer.LoadBalancer),
+		breakers:        make(map[string]*circuit.CircuitBreaker),
+		endpointClients: make(map[string]*http.Client),
 	}
 }
 
@@ -684,7 +684,7 @@ func testForwardRequestError(t *testing.T, tt struct {
 	_, _ = fmt.Sscanf(parts[1], "%d", &port)
 
 	router := &Router{
-		httpClient: http.DefaultClient,
+		endpointClients: make(map[string]*http.Client),
 	}
 
 	endpoint := &discovery.Endpoint{
@@ -774,11 +774,9 @@ func testEndpointCheck(t *testing.T, tt struct {
 	_, _ = fmt.Sscanf(parts[1], "%d", &port)
 
 	router := &Router{
-		httpClient: &http.Client{
-			Timeout: 1 * time.Second,
-		},
-		logger:   zap.NewNop(),
-		breakers: make(map[string]*circuit.CircuitBreaker),
+		endpointClients: make(map[string]*http.Client),
+		logger:          zap.NewNop(),
+		breakers:        make(map[string]*circuit.CircuitBreaker),
 		config: config.RoutingConfig{
 			CircuitBreaker: config.CircuitBreakerConfig{
 				TimeoutSeconds: 10,
@@ -862,12 +860,12 @@ func setupConcurrentTestRouter(backend *httptest.Server) *Router {
 				TimeoutSeconds:   30,
 			},
 		},
-		discovery:  mockDiscovery,
-		metrics:    testutil.CreateTestMetricsRegistry(),
-		logger:     zap.NewNop(),
-		balancers:  make(map[string]loadbalancer.LoadBalancer),
-		breakers:   make(map[string]*circuit.CircuitBreaker),
-		httpClient: http.DefaultClient,
+		discovery:       mockDiscovery,
+		metrics:         testutil.CreateTestMetricsRegistry(),
+		logger:          zap.NewNop(),
+		balancers:       make(map[string]loadbalancer.LoadBalancer),
+		breakers:        make(map[string]*circuit.CircuitBreaker),
+		endpointClients: make(map[string]*http.Client),
 	}
 }
 
@@ -1048,12 +1046,12 @@ func BenchmarkRouter_RouteRequest(b *testing.B) {
 				TimeoutSeconds:   30,
 			},
 		},
-		discovery:  mockDiscovery,
-		metrics:    testutil.CreateTestMetricsRegistry(),
-		logger:     zap.NewNop(),
-		balancers:  make(map[string]loadbalancer.LoadBalancer),
-		breakers:   make(map[string]*circuit.CircuitBreaker),
-		httpClient: http.DefaultClient,
+		discovery:       mockDiscovery,
+		metrics:         testutil.CreateTestMetricsRegistry(),
+		logger:          zap.NewNop(),
+		balancers:       make(map[string]loadbalancer.LoadBalancer),
+		breakers:        make(map[string]*circuit.CircuitBreaker),
+		endpointClients: make(map[string]*http.Client),
 	}
 
 	req := &mcp.Request{

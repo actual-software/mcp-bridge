@@ -74,8 +74,9 @@ type Router struct {
 	breakers  map[string]*circuit.CircuitBreaker
 	breakerMu sync.RWMutex
 
-	// HTTP client for backend connections
-	httpClient *http.Client
+	// HTTP clients per endpoint for proper connection lifecycle management
+	endpointClients  map[string]*http.Client
+	endpointClientMu sync.RWMutex
 
 	// Request counter for round-robin
 	requestCounter uint64
@@ -90,30 +91,13 @@ func InitializeRequestRouter(
 	logger *zap.Logger,
 ) *Router {
 	r := &Router{
-		config:    cfg,
-		discovery: discovery,
-		metrics:   metrics,
-		logger:    logger,
-		balancers: make(map[string]loadbalancer.LoadBalancer),
-		breakers:  make(map[string]*circuit.CircuitBreaker),
-		httpClient: &http.Client{
-			// Reduce timeout for faster error propagation
-			Timeout: defaultMaxConnections * time.Second, // Was 30s, now 5s for faster failure detection
-			Transport: &http.Transport{
-				MaxIdleConns:        defaultMaxRetries,
-				MaxIdleConnsPerHost: defaultRetryCount,
-				IdleConnTimeout:     defaultTimeoutSeconds * time.Second, // Reduced from 90s
-				DisableKeepAlives:   true,                                // Disable connection reuse to prevent stale connection issues during endpoint changes
-				// Add connection timeouts for faster failure detection
-				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-					d := &net.Dialer{Timeout: defaultDialTimeout}
-
-					return d.DialContext(ctx, network, addr)
-				},
-				TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,
-				ResponseHeaderTimeout: defaultResponseHeaderTimeout,
-			},
-		},
+		config:          cfg,
+		discovery:       discovery,
+		metrics:         metrics,
+		logger:          logger,
+		balancers:       make(map[string]loadbalancer.LoadBalancer),
+		breakers:        make(map[string]*circuit.CircuitBreaker),
+		endpointClients: make(map[string]*http.Client),
 	}
 
 	// Register callback to invalidate load balancer cache when endpoints change
@@ -449,8 +433,11 @@ func (r *Router) forwardRequestHTTP(
 	// Enhance request with session and tracing
 	r.enhanceHTTPRequest(ctx, httpReq, span)
 
+	// Get or create HTTP client for this endpoint
+	client := r.getOrCreateHTTPClient(endpoint)
+
 	// Send request and get response
-	httpResp, err := r.httpClient.Do(httpReq)
+	httpResp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, WrapHTTPError(ctx, err, "request", endpoint)
 	}
@@ -807,10 +794,89 @@ func (r *Router) updateLoadBalancers() {
 // invalidateLoadBalancer invalidates the load balancer cache for a specific namespace.
 func (r *Router) invalidateLoadBalancer(namespace string) {
 	r.balancerMu.Lock()
-	defer r.balancerMu.Unlock()
-
 	delete(r.balancers, namespace)
+	r.balancerMu.Unlock()
+
+	// Close HTTP clients for endpoints in this namespace
+	r.closeEndpointClientsForNamespace(namespace)
+
 	r.logger.Info("Load balancer invalidated due to endpoint change", zap.String("namespace", namespace))
+}
+
+// getEndpointKey generates a unique key for an endpoint.
+func getEndpointKey(endpoint *discovery.Endpoint) string {
+	return fmt.Sprintf("%s:%d", endpoint.Address, endpoint.Port)
+}
+
+// getOrCreateHTTPClient returns an HTTP client for the given endpoint, creating it if necessary.
+func (r *Router) getOrCreateHTTPClient(endpoint *discovery.Endpoint) *http.Client {
+	key := getEndpointKey(endpoint)
+
+	// Try read lock first for fast path
+	r.endpointClientMu.RLock()
+	if client, exists := r.endpointClients[key]; exists {
+		r.endpointClientMu.RUnlock()
+		return client
+	}
+	r.endpointClientMu.RUnlock()
+
+	// Create new client with write lock
+	r.endpointClientMu.Lock()
+	defer r.endpointClientMu.Unlock()
+
+	// Double-check after acquiring write lock
+	if client, exists := r.endpointClients[key]; exists {
+		return client
+	}
+
+	// Create new HTTP client for this endpoint
+	client := &http.Client{
+		Timeout: defaultMaxConnections * time.Second,
+		Transport: &http.Transport{
+			MaxIdleConns:        defaultMaxRetries,
+			MaxIdleConnsPerHost: 5, // Reduced from 10 for better scaling with many endpoints
+			IdleConnTimeout:     defaultTimeoutSeconds * time.Second,
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				d := &net.Dialer{Timeout: defaultDialTimeout}
+				return d.DialContext(ctx, network, addr)
+			},
+			TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,
+			ResponseHeaderTimeout: defaultResponseHeaderTimeout,
+		},
+	}
+
+	r.endpointClients[key] = client
+	r.logger.Debug("Created HTTP client for endpoint",
+		zap.String("endpoint", key),
+		zap.String("namespace", endpoint.Namespace))
+
+	return client
+}
+
+// closeEndpointClientsForNamespace closes and removes HTTP clients for all endpoints in a namespace.
+func (r *Router) closeEndpointClientsForNamespace(namespace string) {
+	// Get all endpoints for this namespace
+	endpoints := r.discovery.GetEndpoints(namespace)
+
+	r.endpointClientMu.Lock()
+	defer r.endpointClientMu.Unlock()
+
+	closedCount := 0
+	for _, endpoint := range endpoints {
+		key := getEndpointKey(&endpoint)
+		if client, exists := r.endpointClients[key]; exists {
+			// Close idle connections for this endpoint
+			client.CloseIdleConnections()
+			delete(r.endpointClients, key)
+			closedCount++
+		}
+	}
+
+	if closedCount > 0 {
+		r.logger.Debug("Closed HTTP clients for namespace",
+			zap.String("namespace", namespace),
+			zap.Int("count", closedCount))
+	}
 }
 
 // GetRequestCount returns the total request count.
