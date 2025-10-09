@@ -967,6 +967,7 @@ func TestExtractNamespace(t *testing.T) {
 		{"initialize", "system"},
 		{"tools/list", "system"},
 		{"tools/call", "system"},
+		{"ping", "system"},
 		{"docker.listContainers", "docker"},
 		{"custom.namespace.method", "custom"},
 		{"simplemethod", "default"},

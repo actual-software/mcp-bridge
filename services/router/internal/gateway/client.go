@@ -352,7 +352,7 @@ func (c *Client) markConnectionClosed() {
 // extractNamespace extracts the namespace from a method name.
 func extractNamespace(method string) string {
 	// Handle standard MCP methods - route to system namespace.
-	if method == "initialize" || method == "tools/list" || method == "tools/call" {
+	if method == "initialize" || method == "tools/list" || method == "tools/call" || method == "ping" {
 		return "system"
 	}
 
