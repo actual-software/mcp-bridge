@@ -854,26 +854,29 @@ func (r *Router) getOrCreateHTTPClient(endpoint *discovery.Endpoint) *http.Clien
 	return client
 }
 
-// closeEndpointClientsForNamespace closes and removes HTTP clients for endpoints no longer in the namespace.
+// closeEndpointClientsForNamespace closes and removes HTTP clients for endpoints no longer active in ANY namespace.
 func (r *Router) closeEndpointClientsForNamespace(namespace string) {
-	// Get current active endpoints for this namespace
-	endpoints := r.discovery.GetEndpoints(namespace)
+	// Get ALL active endpoints across ALL namespaces to avoid closing clients still in use
+	allActiveKeys := make(map[string]bool)
 
-	// Create set of active endpoint keys
-	activeKeys := make(map[string]bool)
-	for _, endpoint := range endpoints {
-		key := getEndpointKey(&endpoint)
-		activeKeys[key] = true
+	// We need to check all namespaces because endpoint keys don't include namespace
+	// (multiple namespaces could have endpoints with same address:port)
+	for ns := range r.balancers {
+		endpoints := r.discovery.GetEndpoints(ns)
+		for _, endpoint := range endpoints {
+			key := getEndpointKey(&endpoint)
+			allActiveKeys[key] = true
+		}
 	}
 
 	r.endpointClientMu.Lock()
 	defer r.endpointClientMu.Unlock()
 
-	// Close HTTP clients for endpoints that are no longer active
+	// Close HTTP clients for endpoints that are no longer active in ANY namespace
 	closedCount := 0
 	for key, client := range r.endpointClients {
-		// Only close if this endpoint is not in the active set
-		if !activeKeys[key] {
+		// Only close if this endpoint is not active in any namespace
+		if !allActiveKeys[key] {
 			// Close idle connections for this endpoint
 			client.CloseIdleConnections()
 			delete(r.endpointClients, key)
@@ -881,13 +884,13 @@ func (r *Router) closeEndpointClientsForNamespace(namespace string) {
 
 			r.logger.Debug("Closed HTTP client for removed endpoint",
 				zap.String("endpoint", key),
-				zap.String("namespace", namespace))
+				zap.String("triggering_namespace", namespace))
 		}
 	}
 
 	if closedCount > 0 {
-		r.logger.Debug("Closed HTTP clients for namespace",
-			zap.String("namespace", namespace),
+		r.logger.Debug("Closed HTTP clients after namespace change",
+			zap.String("triggering_namespace", namespace),
 			zap.Int("count", closedCount))
 	}
 }
