@@ -859,9 +859,17 @@ func (r *Router) closeEndpointClientsForNamespace(namespace string) {
 	// Get ALL active endpoints across ALL namespaces to avoid closing clients still in use
 	allActiveKeys := make(map[string]bool)
 
+	// Get list of namespaces with proper locking to avoid concurrent map iteration
+	r.balancerMu.RLock()
+	namespaces := make([]string, 0, len(r.balancers))
+	for ns := range r.balancers {
+		namespaces = append(namespaces, ns)
+	}
+	r.balancerMu.RUnlock()
+
 	// We need to check all namespaces because endpoint keys don't include namespace
 	// (multiple namespaces could have endpoints with same address:port)
-	for ns := range r.balancers {
+	for _, ns := range namespaces {
 		endpoints := r.discovery.GetEndpoints(ns)
 		for _, endpoint := range endpoints {
 			key := getEndpointKey(&endpoint)
