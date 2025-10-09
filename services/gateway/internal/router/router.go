@@ -854,22 +854,34 @@ func (r *Router) getOrCreateHTTPClient(endpoint *discovery.Endpoint) *http.Clien
 	return client
 }
 
-// closeEndpointClientsForNamespace closes and removes HTTP clients for all endpoints in a namespace.
+// closeEndpointClientsForNamespace closes and removes HTTP clients for endpoints no longer in the namespace.
 func (r *Router) closeEndpointClientsForNamespace(namespace string) {
-	// Get all endpoints for this namespace
+	// Get current active endpoints for this namespace
 	endpoints := r.discovery.GetEndpoints(namespace)
+
+	// Create set of active endpoint keys
+	activeKeys := make(map[string]bool)
+	for _, endpoint := range endpoints {
+		key := getEndpointKey(&endpoint)
+		activeKeys[key] = true
+	}
 
 	r.endpointClientMu.Lock()
 	defer r.endpointClientMu.Unlock()
 
+	// Close HTTP clients for endpoints that are no longer active
 	closedCount := 0
-	for _, endpoint := range endpoints {
-		key := getEndpointKey(&endpoint)
-		if client, exists := r.endpointClients[key]; exists {
+	for key, client := range r.endpointClients {
+		// Only close if this endpoint is not in the active set
+		if !activeKeys[key] {
 			// Close idle connections for this endpoint
 			client.CloseIdleConnections()
 			delete(r.endpointClients, key)
 			closedCount++
+
+			r.logger.Debug("Closed HTTP client for removed endpoint",
+				zap.String("endpoint", key),
+				zap.String("namespace", namespace))
 		}
 	}
 
