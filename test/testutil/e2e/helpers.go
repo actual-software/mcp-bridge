@@ -451,6 +451,49 @@ func (ts *TestSuite) Teardown() {
 	}
 }
 
+// Reconnect tears down and re-establishes the router connection.
+// This is useful for test isolation between scenarios to ensure a fresh WebSocket connection.
+func (ts *TestSuite) Reconnect(ctx context.Context) error {
+	// Stop the existing router
+	if ts.router != nil {
+		ts.router.Stop()
+	}
+
+	// Create new RouterController
+	ts.router = NewRouterController(ts.t, ts.env.Config.GatewayURL)
+
+	// Build and start the router
+	if err := ts.router.BuildRouterWithContext(ctx); err != nil {
+		return fmt.Errorf("failed to build router: %w", err)
+	}
+
+	if err := ts.router.Start(); err != nil {
+		return fmt.Errorf("failed to start router: %w", err)
+	}
+
+	// Wait for router to become healthy
+	if err := ts.router.WaitForHealthy(defaultTestTimeout); err != nil {
+		return fmt.Errorf("router failed to become healthy: %w", err)
+	}
+
+	// Create new MCP client using the reconnected router
+	ts.client = NewMCPClient(ts.router, ts.env.Logger)
+
+	// Reinitialize the client
+	initResp, err := ts.client.Initialize()
+	if err != nil {
+		return fmt.Errorf("failed to initialize MCP client: %w", err)
+	}
+	if initResp == nil {
+		return fmt.Errorf("initialize response is nil")
+	}
+	if !ts.client.IsInitialized() {
+		return fmt.Errorf("client should be initialized")
+	}
+
+	return nil
+}
+
 // GetClient returns the MCP client for making requests.
 func (ts *TestSuite) GetClient() *MCPClient {
 	return ts.client
