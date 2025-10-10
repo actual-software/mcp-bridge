@@ -685,8 +685,11 @@ func testForwardRequestError(t *testing.T, tt struct {
 	port := 80
 	_, _ = fmt.Sscanf(parts[1], "%d", &port)
 
+	logger := testutil.NewTestLogger(t)
+
 	router := &Router{
 		endpointClients: make(map[string]*http.Client),
+		logger:          logger,
 	}
 
 	endpoint := &discovery.Endpoint{
