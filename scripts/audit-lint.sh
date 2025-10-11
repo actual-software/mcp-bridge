@@ -69,7 +69,7 @@ run_linting_analysis() {
                 # Run golangci-lint for this module
                 local module_issues=0
                 local module_output_temp=$(mktemp)
-                if ~/go/bin/golangci-lint run ./... --timeout="${TIMEOUT}" ${config_arg} --max-issues-per-linter=1000 --max-same-issues=1000 > "${module_output_temp}" 2>&1; then
+                if ~/go/bin/golangci-lint run ./... --no-cache --timeout="${TIMEOUT}" ${config_arg} --max-issues-per-linter=1000 --max-same-issues=1000 > "${module_output_temp}" 2>&1; then
                     echo "Module ${module_name}: 0 issues"
                     rm -f "${module_output_temp}"
                 else
