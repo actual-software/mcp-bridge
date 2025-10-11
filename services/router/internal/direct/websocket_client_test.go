@@ -497,10 +497,10 @@ func TestWebSocketClientHealthCheck(t *testing.T) {
 	err = client.Connect(ctx)
 	require.NoError(t, err)
 
-	defer func() {
+	t.Cleanup(func() {
 		err := client.Close(ctx)
 		require.NoError(t, err)
-	}()
+	})
 
 	// Wait for a few health checks to run.
 	time.Sleep(2 * constants.TestSleepShort)

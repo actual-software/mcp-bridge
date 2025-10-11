@@ -129,6 +129,13 @@ func (r *StdioResponseReader) handleEOF() {
 }
 
 func (r *StdioResponseReader) logDecodeError(err error) {
+	// Don't log if shutting down
+	select {
+	case <-r.client.shutdownCh:
+		return
+	default:
+	}
+
 	r.client.mu.RLock()
 	startTime := r.client.startTime
 	r.client.mu.RUnlock()

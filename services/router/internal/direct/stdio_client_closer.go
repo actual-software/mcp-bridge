@@ -152,6 +152,8 @@ func (c *StdioClientCloser) waitForCleanup(ctx context.Context) error {
 	select {
 	case <-finished:
 		c.logger.Debug("all background routines finished")
+		// Small delay to ensure any final log statements complete
+		time.Sleep(10 * time.Millisecond)
 	case <-time.After(waitTimeout):
 		c.logger.Warn("timeout waiting for background routines", zap.Duration("timeout", waitTimeout))
 	case <-ctx.Done():

@@ -405,10 +405,17 @@ func (c *WebSocketClient) healthCheckLoop(parentCtx context.Context) {
 		case <-ticker.C:
 			ctx, cancel := context.WithTimeout(parentCtx, c.config.HealthCheck.Timeout)
 			if err := c.Health(ctx); err != nil {
-				c.logger.Warn("health check failed", zap.Error(err))
-				// Consider reconnection if unhealthy.
-				if c.shouldReconnect() {
-					go c.reconnect(parentCtx)
+				// Only log if we're not shutting down
+				select {
+				case <-c.shutdownCh:
+					cancel()
+					return
+				default:
+					c.logger.Warn("health check failed", zap.Error(err))
+					// Consider reconnection if unhealthy.
+					if c.shouldReconnect() {
+						go c.reconnect(parentCtx)
+					}
 				}
 			}
 
@@ -538,6 +545,8 @@ func (c *WebSocketClient) waitForShutdown(ctx context.Context) error {
 	select {
 	case <-finished:
 		c.logger.Debug("all background routines finished")
+		// Small delay to ensure any final log statements complete
+		time.Sleep(10 * time.Millisecond)
 	case <-time.After(constants.GracefulShutdownTimeout):
 		c.logger.Debug("background routines did not finish quickly, continuing with close")
 	case <-ctx.Done():
