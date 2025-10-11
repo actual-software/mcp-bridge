@@ -46,7 +46,7 @@ func newEncryptedFileStore(appName string) (TokenStore, error) {
 	}
 
 	// Create app-specific directory.
-	appDir := filepath.Join(configDir, "mcp-router")
+	appDir := filepath.Join(configDir, "mcp-router", appName)
 	if err := os.MkdirAll(appDir, DirectoryPermissions); err != nil {
 		return nil, fmt.Errorf("failed to create config directory: %w", err)
 	}

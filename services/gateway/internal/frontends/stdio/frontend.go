@@ -86,6 +86,7 @@ type ClientConnection struct {
 	created  time.Time
 	lastUsed time.Time
 	mu       sync.RWMutex
+	wg       sync.WaitGroup // tracks pending route requests for this connection
 }
 
 // Frontend implements the stdio frontend for MCP clients.
@@ -402,6 +403,9 @@ func (f *Frontend) handleConnection(ctx context.Context, rawConn io.ReadWriteClo
 
 	// Process requests
 	f.processRequests(ctx, conn)
+
+	// Wait for all pending route requests to complete before closing connection
+	conn.wg.Wait()
 }
 
 // closeConnection safely closes the raw connection.
@@ -548,6 +552,7 @@ func (f *Frontend) handleRequest(ctx context.Context, conn *ClientConnection, re
 
 	// Route request asynchronously
 	f.wg.Add(1)
+	conn.wg.Add(1) // track this request for connection cleanup
 
 	go f.routeRequest(ctx, conn, req)
 }
@@ -617,6 +622,7 @@ func (f *Frontend) isAuthField(field string) bool {
 // routeRequest processes a single request.
 func (f *Frontend) routeRequest(ctx context.Context, conn *ClientConnection, req *mcp.Request) {
 	defer f.wg.Done()
+	defer conn.wg.Done() // signal this request is complete for connection cleanup
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeoutSeconds*time.Second)
 	defer cancel()
