@@ -176,6 +176,7 @@ jobs:
     permissions:
       security-events: write
       contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
