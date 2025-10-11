@@ -1386,11 +1386,17 @@ func setupErrorHandlingRouter(t *testing.T, mockServer *httptest.Server) *LocalR
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
 
 	t.Cleanup(func() {
 		cancel()
+		// Wait for router to fully stop before test cleanup completes
+		<-done
 	})
 
 	return router

@@ -301,23 +301,24 @@ func (v *StressTestValidator) logResults() {
 
 	v.t.Logf("Concurrent fallback stress test results:")
 	v.t.Logf("  Total requests: %d", v.totalRequests)
-	v.t.Logf("  Successful requests: %d", v.metrics.successCount)
-	v.t.Logf("  Failed requests: %d", v.metrics.errorCount)
+	v.t.Logf("  Successful requests: %d", atomic.LoadInt64(&v.metrics.successCount))
+	v.t.Logf("  Failed requests: %d", atomic.LoadInt64(&v.metrics.errorCount))
 	v.t.Logf("  Duration: %v", v.duration)
 	v.t.Logf("  Throughput: %.2f req/s", throughput)
-	v.t.Logf("  Direct attempts: %d", v.metrics.directAttempts)
-	v.t.Logf("  Direct failures: %d", v.metrics.directFailures)
-	v.t.Logf("  Gateway attempts: %d", v.metrics.gatewayAttempts)
+	v.t.Logf("  Direct attempts: %d", atomic.LoadInt64(&v.metrics.directAttempts))
+	v.t.Logf("  Direct failures: %d", atomic.LoadInt64(&v.metrics.directFailures))
+	v.t.Logf("  Gateway attempts: %d", atomic.LoadInt64(&v.metrics.gatewayAttempts))
 	v.t.Logf("  Fallback successes: %d", v.metricsCol.GetMetrics().FallbackSuccesses)
 }
 
 // validateSuccessRate checks if success rate is acceptable.
 func (v *StressTestValidator) validateSuccessRate() {
-	if v.metrics.successCount == 0 {
+	successCount := atomic.LoadInt64(&v.metrics.successCount)
+	if successCount == 0 {
 		v.t.Error("Expected some successful requests")
 	}
 
-	successRate := float64(v.metrics.successCount) / float64(v.totalRequests)
+	successRate := float64(successCount) / float64(v.totalRequests)
 	if successRate < 0.8 {
 		v.t.Errorf("Success rate %.2f%% too low for stress test", successRate*100)
 	}
@@ -325,7 +326,7 @@ func (v *StressTestValidator) validateSuccessRate() {
 
 // validateGatewayFallback checks if gateway fallback occurred.
 func (v *StressTestValidator) validateGatewayFallback() {
-	if v.metrics.gatewayAttempts == 0 {
+	if atomic.LoadInt64(&v.metrics.gatewayAttempts) == 0 {
 		v.t.Error("Expected some gateway attempts due to fallback")
 	}
 }
