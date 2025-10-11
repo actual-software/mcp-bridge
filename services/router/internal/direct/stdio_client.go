@@ -311,10 +311,15 @@ func (c *StdioClient) healthCheckLoop(parentCtx context.Context) {
 			if err := c.Health(ctx); err != nil {
 				c.logger.Warn("health check failed", zap.Error(err))
 				// Consider restarting the process if it's unhealthy.
-				if c.restarts < c.config.Process.MaxRestarts {
+				c.mu.RLock()
+				restarts := c.restarts
+				maxRestarts := c.config.Process.MaxRestarts
+				c.mu.RUnlock()
+
+				if restarts < maxRestarts {
 					c.logger.Info("attempting to restart unhealthy process",
-						zap.Int("restart_count", c.restarts),
-						zap.Int("max_restarts", c.config.Process.MaxRestarts))
+						zap.Int("restart_count", restarts),
+						zap.Int("max_restarts", maxRestarts))
 
 					go c.restartProcess(parentCtx)
 				}

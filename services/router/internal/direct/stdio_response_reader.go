@@ -129,7 +129,7 @@ func (r *StdioResponseReader) handleEOF() {
 }
 
 func (r *StdioResponseReader) logDecodeError(err error) {
-	// Don't log if shutting down
+	// Don't log if shutting down - check twice to minimize race window
 	select {
 	case <-r.client.shutdownCh:
 		return
@@ -140,10 +140,16 @@ func (r *StdioResponseReader) logDecodeError(err error) {
 	startTime := r.client.startTime
 	r.client.mu.RUnlock()
 
-	r.client.logger.Error("failed to decode response",
-		zap.Error(err),
-		zap.String("client_name", r.client.name),
-		zap.Duration("uptime", time.Since(startTime)))
+	// Check again right before logging
+	select {
+	case <-r.client.shutdownCh:
+		return
+	default:
+		r.client.logger.Error("failed to decode response",
+			zap.Error(err),
+			zap.String("client_name", r.client.name),
+			zap.Duration("uptime", time.Since(startTime)))
+	}
 
 	r.client.updateMetrics(func(m *ClientMetrics) {
 		m.ErrorCount++
