@@ -449,8 +449,7 @@ type TestDirectManager struct {
 func (t *TestDirectManager) Start(ctx context.Context) error { return nil }
 func (t *TestDirectManager) Stop(ctx context.Context) error  { return nil }
 
-//nolint:ireturn // Test helper requires interface return
-func (t *TestDirectManager) GetClient(ctx context.Context, serverURL string) (direct.DirectClient, error) {
+func (t *TestDirectManager) GetClient(ctx context.Context, serverURL string) (direct.DirectClient, error) { //nolint:ireturn // Test mock must implement interface
 	atomic.AddInt64(&t.getClientCalled, 1)
 
 	t.mu.RLock()

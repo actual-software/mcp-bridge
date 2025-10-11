@@ -299,8 +299,7 @@ func TestDirectClientManagerProtocolDetection(t *testing.T) {
 	runProtocolDetectionTests(t, manager, testCases)
 }
 
-//nolint:ireturn // Test helper requires interface return
-func setupProtocolDetectionManager(t *testing.T, logger *zap.Logger) DirectClientManagerInterface {
+func setupProtocolDetectionManager(t *testing.T, logger *zap.Logger) *DirectClientManager {
 	t.Helper()
 
 	config := DirectConfig{
@@ -501,8 +500,7 @@ func TestDirectClientManagerValidURLs(t *testing.T) {
 	runValidURLsTests(t, manager, testCases)
 }
 
-//nolint:ireturn // Test helper requires interface return
-func setupValidURLsManager(t *testing.T, logger *zap.Logger) DirectClientManagerInterface {
+func setupValidURLsManager(t *testing.T, logger *zap.Logger) *DirectClientManager {
 	t.Helper()
 
 	config := DirectConfig{
@@ -1498,8 +1496,7 @@ func TestDirectClientManagerErrorHandlingComprehensive(t *testing.T) {
 	runErrorHandlingTests(t, manager, ctx, errorTestCases)
 }
 
-//nolint:ireturn // Test helper requires interface return
-func setupErrorHandlingTestManager(t *testing.T) DirectClientManagerInterface {
+func setupErrorHandlingTestManager(t *testing.T) *DirectClientManager {
 	t.Helper()
 	logger := zaptest.NewLogger(t)
 	config := DirectConfig{
