@@ -57,7 +57,7 @@ Any Protocol        • Direct Connections     • Universal Backend   Any Proto
 • WebSocket         • Connection Pooling     • Health Monitoring   • WebSocket
 • HTTP              • Secure Storage         • Auth & Rate Limit   • HTTP
 • SSE               • Auto-reconnect         • Circuit Breakers    • SSE
-                                            • Service Discovery
+                                             • Service Discovery
 ```
 
 ### Protocol Support
