@@ -490,8 +490,6 @@ func (d *KubernetesDiscovery) handleServiceEvents(namespace string, events <-cha
 
 // handleEndpointEvents handles endpoint watch events.
 func (d *KubernetesDiscovery) handleEndpointEvents(namespace string, events <-chan watch.Event) {
-	defer d.wg.Done()
-
 	for {
 		select {
 		case <-d.ctx.Done():
