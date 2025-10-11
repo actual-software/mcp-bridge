@@ -125,7 +125,7 @@ ulimit -n 65536
 - Service Discovery: Kubernetes, Consul, or static configuration
 
 ### Build Requirements (optional)
-- Go 1.23.0+
+- Go 1.25.0+
 - Make
 - Docker (for gateway images)
 

@@ -138,7 +138,7 @@ MCP_LOGGING_LEVEL=debug mcp-router
 
 - **Issues**: [GitHub Issues](https://github.com/actual-software/mcp-bridge/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/actual-software/mcp-bridge/discussions)
-- **Security**: security@example.com
+- **Security**: poile@actual.ai
 
 ## Contributing
 

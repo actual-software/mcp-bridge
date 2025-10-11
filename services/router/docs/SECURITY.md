@@ -378,7 +378,7 @@ advanced:
 If you discover a security vulnerability:
 
 1. **Do NOT** open a public issue
-2. Email security@example.com with details
+2. Email poile@actual.ai with details
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce

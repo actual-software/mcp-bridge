@@ -299,7 +299,7 @@ certificate_rotation:
   notifications:
     webhook_url: "https://monitoring.example.com/webhook"
     email_addresses:
-      - "ops@example.com"
+      - "poile@actual.ai"
   
   # Backup settings
   backup:

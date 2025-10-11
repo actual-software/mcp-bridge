@@ -1946,7 +1946,7 @@ kubectl logs -n mcp-system deployment/mcp-gateway | jq 'select(.msg | contains("
 kubectl logs -n mcp-system deployment/mcp-gateway | jq 'select(.level=="error")'
 
 # Specific user
-kubectl logs -n mcp-system deployment/mcp-gateway | jq 'select(.user=="user@example.com")'
+kubectl logs -n mcp-system deployment/mcp-gateway | jq 'select(.user=="poile@actual.ai")'
 ```
 
 #### Router logs

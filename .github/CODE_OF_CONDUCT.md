@@ -30,7 +30,7 @@ This Code of Conduct applies within all project spaces and when an individual is
 
 ## Enforcement
 
-Instances of unacceptable behavior may be reported by contacting the project team at conduct@example.com. All complaints will be reviewed and investigated promptly and fairly.
+Instances of unacceptable behavior may be reported by contacting the project team at poile@actual.ai. All complaints will be reviewed and investigated promptly and fairly.
 
 Project maintainers who do not follow or enforce the Code of Conduct may face temporary or permanent repercussions.
 

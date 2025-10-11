@@ -9,36 +9,6 @@ This document tracks remaining work, known issues, and planned features for MCP 
 
 ## 🔴 High Priority
 
-### Test Infrastructure Fixes
-
-#### 1. Fix Stdio Client Concurrent Tests
-**Tests Affected:**
-- `TestDirectClient_ConcurrentRequests`
-- `TestDirectClient_StressTest`
-
-**Issue:** Tests use `echo` commands which exit immediately, but stdio client expects persistent processes. This creates a fundamental architecture mismatch where the client tries to send multiple requests to terminated processes.
-
-**Action Required:**
-- [ ] Create mock persistent MCP server processes for testing
-- [ ] Update test architecture to use appropriate persistent commands
-- [ ] Create test utilities that simulate long-running MCP server behavior
-
-**Impact:** Test failures don't indicate implementation bugs - core stdio functionality is solid. This is purely test infrastructure.
-
-#### 2. Fix Stdio Health Check Test
-**Test Affected:**
-- `TestStdioClientHealthCheck`
-
-**Issue:** Expected 3 successful health checks but only got 2. Symptoms include:
-- Background routines timing out
-- "client is shutting down" errors during health checks
-- Automatic restart attempts triggered
-
-**Action Required:**
-- [ ] Investigate health check timing coordination
-- [ ] Fix shutdown sequence to ensure health checks complete
-- [ ] Review health check interval vs. test duration
-
 ### Documentation Updates
 
 #### 1. Update Planning Documentation
@@ -173,7 +143,7 @@ This document tracks remaining work, known issues, and planned features for MCP 
 ### Testing & Quality Assurance
 
 #### Test Coverage Improvements
-- [ ] Increase test coverage from 89.2% to 95%+
+- [ ] Increase test coverage from 69.0% to 75%+
 - [ ] Add more edge case tests
 - [ ] Expand integration test scenarios
 - [ ] Add property-based testing
@@ -306,14 +276,13 @@ This document tracks remaining work, known issues, and planned features for MCP 
 ## 📊 Current Status
 
 **Production Readiness:** 99%
-**Test Coverage:** 89.2%
+**Test Coverage:** 69.0%
 **Security:** OWASP Compliant, Audit Pending
 **Documentation:** Comprehensive
 
 **What's Blocking 100% Production Readiness:**
 1. External security audit completion
-2. Test infrastructure fixes (non-blocking - doesn't affect production code)
-3. Helm charts promotion from beta to stable
+2. Helm charts promotion from beta to stable
 
 **Recommendation:** System is ready for production deployment. Outstanding items are enhancements and optimizations for future versions.
 

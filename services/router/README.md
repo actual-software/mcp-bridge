@@ -370,7 +370,7 @@ gateway:
     scopes: ["mcp:read", "mcp:write"]
     
     # For password grant type
-    username: "user@example.com"
+    username: "poile@actual.ai"
     password_secure_key: oauth-password  # Secure storage
     # OR
     password_env: OAUTH_PASSWORD
@@ -462,7 +462,7 @@ This design ensures that:
 
 ### Prerequisites
 
-- Go 1.23.0 or higher (toolchain 1.24.5 recommended)
+- Go 1.25.0 or higher (toolchain 1.25.0 recommended)
 - Make
 
 ### Building

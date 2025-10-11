@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Common package test coverage (100% coverage achieved)
 
 ### Changed
-- Overall test coverage improved from 84.3% to 89.2%
+- Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 - Documentation updated to reflect current project state
 
@@ -84,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### 🧪 **Testing Infrastructure**
 - **Comprehensive Test Suite**
-  - 89.2% overall test coverage
+  - 69.0% overall test coverage
   - Unit tests with table-driven patterns
   - Integration tests with real services
   - End-to-end tests with full MCP protocol
@@ -205,7 +205,7 @@ connection:
 ### Dependencies
 
 #### **Runtime Dependencies**
-- Go 1.23.0+ (toolchain 1.25.0 recommended) for building from source
+- Go 1.25.0+ (toolchain 1.25.0 recommended) for building from source
 - Redis 6.0+ for session storage (optional)
 - PostgreSQL 12+ for persistent storage (optional)
 

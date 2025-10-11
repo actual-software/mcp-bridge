@@ -537,7 +537,7 @@ Key indicators of compromise:
 
 See [security.txt](/.well-known/security.txt) for reporting procedures.
 
-Email: security@mcp-gateway.example.com
+Email: poile@actual.ai
 PGP Key: [Available on request]
 
 We follow coordinated disclosure and appreciate responsible reporting.

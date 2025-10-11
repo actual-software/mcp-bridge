@@ -171,7 +171,7 @@ Options:
 - Optional demo mode
 
 **Requirements**:
-- Git, Go 1.23.0+, Make
+- Git, Go 1.25.0+, Make
 - Optional: Docker, docker-compose, jq, yq
 
 **Output**:

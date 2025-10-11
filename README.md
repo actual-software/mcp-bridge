@@ -1,8 +1,8 @@
 # MCP Bridge
 
-[![Go Version](https://img.shields.io/badge/go-1.23.0+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/go-1.25.0+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Test Coverage](https://img.shields.io/badge/coverage-80.3%25-brightgreen.svg)](COVERAGE.md)
+[![Test Coverage](https://img.shields.io/badge/coverage-69.0%25-yellow.svg)](COVERAGE.md)
 [![Security](https://img.shields.io/badge/security-OWASP%20compliant-green.svg)](docs/OWASP_SECURITY.md)
 [![Production Ready](https://img.shields.io/badge/production-ready-brightgreen.svg)](docs/PRODUCTION_READINESS.md)
 [![Go Report Card](https://goreportcard.com/badge/github.com/actual-software/mcp-bridge)](https://goreportcard.com/report/github.com/actual-software/mcp-bridge)
@@ -57,7 +57,7 @@ Any Protocol        • Direct Connections     • Universal Backend   Any Proto
 • WebSocket         • Connection Pooling     • Health Monitoring   • WebSocket
 • HTTP              • Secure Storage         • Auth & Rate Limit   • HTTP
 • SSE               • Auto-reconnect         • Circuit Breakers    • SSE
-                                            • Service Discovery    • gRPC
+                                            • Service Discovery
 ```
 
 ### Protocol Support
@@ -151,7 +151,7 @@ The server-side component that provides universal protocol routing to any backen
 
 ### Prerequisites
 
-- **Go 1.23.0+** (toolchain 1.24.5 recommended) - For building from source
+- **Go 1.25.0+** (toolchain 1.25.0 recommended) - For building from source
 - **Docker** 24.0+ - For containerized deployment
 - **kubectl** 1.24+ - For Kubernetes deployment
 - **Kubernetes** 1.24+ (optional) - For production deployment
@@ -386,7 +386,7 @@ docker-compose -f deployment/local/docker-compose.yml up -d
 
 The project maintains comprehensive test coverage across multiple categories:
 
-- **Unit Tests**: 80.3% production code coverage with comprehensive service tests
+- **Unit Tests**: 69.0% production code coverage with comprehensive service tests
 - **Integration Tests**: End-to-end service testing
 - **Load Tests**: 10k+ concurrent connections
 - **Chaos Tests**: Network partitions, service failures
@@ -429,7 +429,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: Check our [docs](docs/) directory
 - **Issues**: Report bugs on [GitHub Issues](https://github.com/actual-software/mcp-bridge/issues)
 - **Discussions**: Join our [GitHub Discussions](https://github.com/actual-software/mcp-bridge/discussions)
-- **Security**: Report security issues to [security@example.com](mailto:security@example.com)
+- **Security**: Report security issues to [poile@actual.ai](mailto:poile@actual.ai)
 
 ---
 

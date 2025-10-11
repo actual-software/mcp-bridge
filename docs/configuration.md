@@ -816,7 +816,7 @@ security:
     
   security_txt:
     enabled: true
-    contact: "security@example.com"
+    contact: "poile@actual.ai"
     expires: "2025-12-31T23:59:59Z"
     preferred_languages: ["en", "es"]
     canonical: "https://example.com/.well-known/security.txt"

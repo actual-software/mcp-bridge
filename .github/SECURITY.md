@@ -15,7 +15,7 @@ Please report security concerns privately rather than through public issues.
 
 ### Contact Methods
 
-**Primary**: Email to security@example.com (update with actual contact)
+**Primary**: Email to poile@actual.ai (update with actual contact)
 
 **Alternative**: Use GitHub's private reporting feature:
 1. Navigate to the Security tab
@@ -162,7 +162,7 @@ We follow responsible disclosure practices:
 ## Contact Information
 
 For urgent security matters:
-- **Email**: security@example.com (replace with actual contact)
+- **Email**: poile@actual.ai (replace with actual contact)
 - **Response**: Within 24 hours for critical issues
 - **Encryption**: PGP key available upon request
 

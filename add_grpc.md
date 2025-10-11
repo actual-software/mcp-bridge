@@ -30,7 +30,7 @@ Implement comprehensive gRPC support for both Gateway (backend) and Router (dire
 - **Test Documentation:** Clear test names and documented test scenarios
 
 ### Coverage Requirements
-- **Overall Coverage:** ≥80% for production code (current: 80.3%)
+- **Overall Coverage:** ≥80% for production code (current: 69.0%)
 - **New Code Coverage:** ≥80% for all gRPC implementation
 - **Critical Paths:** 100% coverage for:
   - Error handling paths
@@ -158,7 +158,7 @@ type BackendConfig struct {
 4. **Isolate changes** - gRPC code in its own package, minimal changes to shared code
 
 **Rationale:**
-- Existing code is production-tested (80.3% coverage)
+- Existing code is production-tested (69.0% coverage)
 - Patterns are understood by current maintainers
 - Refactoring all backends is a separate v2.0.0 effort
 - Adding one protocol shouldn't trigger a full architectural rewrite

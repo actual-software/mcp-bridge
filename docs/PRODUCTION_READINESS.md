@@ -6,7 +6,7 @@ This document provides a comprehensive checklist for deploying MCP Bridge to pro
 
 MCP Bridge has been extensively tested and validated for production deployment with the following characteristics:
 
-- **Code Coverage**: 80.3% (production code)
+- **Code Coverage**: 69.0% (production code)
 - **Security Scanning**: 10+ automated security tools
 - **Load Tested**: 10,000+ concurrent connections
 - **Deployment Options**: Docker, Kubernetes (Helm), systemd
@@ -18,7 +18,7 @@ MCP Bridge has been extensively tested and validated for production deployment w
 ### 1. Infrastructure Requirements
 
 **Minimum Requirements**:
-- [ ] Go 1.23.0+ installed (if building from source)
+- [ ] Go 1.25.0+ installed (if building from source)
 - [ ] Docker 24.0+ (for containerized deployment)
 - [ ] Kubernetes 1.24+ (for K8s deployment)
 - [ ] Redis 7.0+ (for session storage and rate limiting)
