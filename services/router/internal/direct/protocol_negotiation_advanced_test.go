@@ -940,9 +940,9 @@ func testNetworkErrorRecovery(t *testing.T, manager *DirectClientManager, ctx co
 }
 
 // TestAdvancedProtocolNegotiation_PerformanceCharacteristics tests performance aspects.
+// Note: This test does not use t.Parallel() because subtests share manager state
+// and must run sequentially to avoid metric interference.
 func TestAdvancedProtocolNegotiation_PerformanceCharacteristics(t *testing.T) {
-	t.Parallel()
-
 	if testing.Short() {
 		t.Skip("Skipping performance test in short mode")
 	}
@@ -955,13 +955,12 @@ func TestAdvancedProtocolNegotiation_PerformanceCharacteristics(t *testing.T) {
 	server := setupPerformanceTestServer()
 	t.Cleanup(server.Close)
 
+	// Run subtests sequentially to avoid interference with shared manager metrics
 	t.Run("detection_performance", func(t *testing.T) {
-		t.Parallel()
 		runDetectionPerformanceTest(t, manager, server.URL)
 	})
 
 	t.Run("cache_effectiveness", func(t *testing.T) {
-		t.Parallel()
 		runCacheEffectivenessTest(t, manager, server.URL)
 	})
 }

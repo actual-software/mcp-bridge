@@ -344,27 +344,18 @@ func TestEncryptionDecryption(t *testing.T) {
 }
 
 func TestConcurrentAccess(t *testing.T) {
-	store := setupConcurrentTest(t)
+	if testing.Short() {
+		t.Skip("Skipping concurrent keychain test in short mode")
+	}
+
+	store, err := NewTokenStore("test-concurrent")
+	require.NoError(t, err, "Failed to create store")
 
 	done := make(chan bool, 10)
 
 	runConcurrentWrites(t, store, done)
 	runConcurrentReads(t, store, done)
 	cleanupConcurrentTest(t, store)
-}
-
-// setupConcurrentTest creates a token store for concurrent testing.
-//
-//nolint:ireturn // Test helper requires interface return
-func setupConcurrentTest(t *testing.T) TokenStore {
-	t.Helper()
-
-	store, err := NewTokenStore("test-concurrent")
-	if err != nil {
-		t.Fatalf("Failed to create store: %v", err)
-	}
-
-	return store
 }
 
 // runConcurrentWrites performs concurrent write operations and waits for completion.
@@ -457,16 +448,14 @@ func TestDeleteNonExistent(t *testing.T) {
 func TestEncryptedFileStore_SecurityFeatures(t *testing.T) {
 	tempDir := t.TempDir()
 
-	fileStore, store := setupSecurityTestStore(t, tempDir)
+	fileStore := setupSecurityTestStore(t, tempDir)
 
 	testEncryptionVariability(t, fileStore)
-	testFilePermissions(t, store, fileStore)
+	testFilePermissions(t, fileStore, fileStore)
 }
 
 // setupSecurityTestStore creates an encrypted file store for security testing.
-//
-//nolint:ireturn // Test helper requires interface return
-func setupSecurityTestStore(t *testing.T, tempDir string) (*encryptedFileStore, TokenStore) {
+func setupSecurityTestStore(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
 	store, err := newEncryptedFileStore("security-test")
@@ -479,7 +468,7 @@ func setupSecurityTestStore(t *testing.T, tempDir string) (*encryptedFileStore, 
 
 	fileStore.filePath = filepath.Join(tempDir, "secure-tokens.enc")
 
-	return fileStore, store
+	return fileStore
 }
 
 // testEncryptionVariability tests that encryption produces different outputs for same input.
@@ -635,9 +624,7 @@ func TestEncryptedFileStore_ConcurrentOperations(t *testing.T) {
 }
 
 // setupConcurrentEncryptedTest creates an encrypted file store for concurrent testing.
-//
-//nolint:ireturn // Test helper requires interface return
-func setupConcurrentEncryptedTest(t *testing.T, tempDir string) TokenStore {
+func setupConcurrentEncryptedTest(t *testing.T, tempDir string) *encryptedFileStore {
 	t.Helper()
 
 	store, err := newEncryptedFileStore("concurrent-test")
@@ -650,7 +637,7 @@ func setupConcurrentEncryptedTest(t *testing.T, tempDir string) TokenStore {
 
 	fileStore.filePath = filepath.Join(tempDir, "concurrent.enc")
 
-	return store
+	return fileStore
 }
 
 // runConcurrentEncryptedWrites performs concurrent write operations for encrypted store.
@@ -706,21 +693,11 @@ func verifyConcurrentEncryptedTokens(t *testing.T, store TokenStore, numGoroutin
 }
 
 func TestTokenStore_EdgeCases(t *testing.T) {
-	store := setupTokenStoreEdgeCaseTest(t)
+	store, err := NewTokenStore("edge-case-test")
+	require.NoError(t, err, "Failed to create store")
+
 	tests := createTokenStoreEdgeCaseTests()
 	runTokenStoreEdgeCaseTests(t, store, tests)
-}
-
-//nolint:ireturn // Test helper requires interface return
-func setupTokenStoreEdgeCaseTest(t *testing.T) TokenStore {
-	t.Helper()
-
-	store, err := NewTokenStore("edge-case-test")
-	if err != nil {
-		t.Fatalf("Failed to create store: %v", err)
-	}
-
-	return store
 }
 
 func createTokenStoreEdgeCaseTests() []struct {
@@ -857,7 +834,8 @@ func TestTokenStore_PerformanceUnderLoad(t *testing.T) {
 		t.Skip("Skipping performance test in short mode")
 	}
 
-	store := setupPerformanceTest(t)
+	store, err := NewTokenStore("performance-test")
+	require.NoError(t, err, "Failed to create store")
 
 	const numTokens = 500
 
@@ -865,20 +843,6 @@ func TestTokenStore_PerformanceUnderLoad(t *testing.T) {
 	runBulkRetrieveOperations(t, store, numTokens)
 	testListPerformance(t, store, numTokens)
 	cleanupPerformanceTest(t, store, numTokens)
-}
-
-// setupPerformanceTest creates a token store for performance testing.
-//
-//nolint:ireturn // Test helper requires interface return.
-func setupPerformanceTest(t *testing.T) TokenStore {
-	t.Helper()
-
-	store, err := NewTokenStore("performance-test")
-	if err != nil {
-		t.Fatalf("Failed to create store: %v", err)
-	}
-
-	return store
 }
 
 // runBulkStoreOperations performs bulk store operations and measures performance.

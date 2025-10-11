@@ -46,11 +46,11 @@ const (
 )
 
 const (
-	defaultMaxConnections    = 5
-	defaultMaxRetries        = 100
-	defaultRetryCount        = 10
-	defaultBufferSize        = 1024
-	defaultTimeoutSeconds    = 30
+	defaultMaxConnections      = 5
+	defaultMaxRetries          = 100
+	defaultRetryCount          = 10
+	defaultBufferSize          = 1024
+	defaultTimeoutSeconds      = 30
 	defaultMaxIdleConnsPerHost = 5
 
 	// Timeout constants.
