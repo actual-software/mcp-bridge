@@ -603,10 +603,10 @@ func TestWebSocketClientHeaders(t *testing.T) {
 	err = client.Connect(ctx)
 	require.NoError(t, err)
 
-	defer func() {
+	t.Cleanup(func() {
 		err := client.Close(ctx)
 		require.NoError(t, err)
-	}()
+	})
 
 	assert.Equal(t, StateConnected, client.GetState())
 }

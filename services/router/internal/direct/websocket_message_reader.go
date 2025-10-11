@@ -80,9 +80,14 @@ func (r *WebSocketMessageReader) readSingleMessage(ctx context.Context) {
 	r.client.mu.RUnlock()
 
 	if state == StateClosed || state == StateClosing || state == StateError {
-		r.client.logger.Debug("skipping read on closed/closing/error state connection")
-
-		return
+		// Don't log if shutting down to avoid logging after test completion
+		select {
+		case <-r.client.shutdownCh:
+			return
+		default:
+			r.client.logger.Debug("skipping read on closed/closing/error state connection")
+			return
+		}
 	}
 
 	response, err := r.readResponse(conn)

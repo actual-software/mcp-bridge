@@ -1861,7 +1861,7 @@ func TestConnectionManager_StateTransitions(t *testing.T) {
 		routerWg.Wait()
 	}()
 
-	stateHistory, statesSeen := monitorStateTransitions(t, router, ctx, &connectAttempt, &shouldFail)
+	monitor := monitorStateTransitions(t, router, ctx, &connectAttempt, &shouldFail)
 
 	go func() {
 		defer routerWg.Done()
@@ -1873,19 +1873,8 @@ func TestConnectionManager_StateTransitions(t *testing.T) {
 		return router.GetState() == StateConnected
 	}, 10*time.Second, 50*time.Millisecond, "Router should eventually connect")
 
-	// Make copies of the state tracking data
-	stateMu := sync.Mutex{}
-	stateMu.Lock()
-
-	history := make([]ConnectionState, len(stateHistory))
-	copy(history, stateHistory)
-
-	seen := make(map[ConnectionState]bool)
-	for k, v := range statesSeen {
-		seen[k] = v
-	}
-
-	stateMu.Unlock()
+	// Get thread-safe copies of the state tracking data
+	history, seen := monitor.getCopies()
 
 	validateStateTransitions(t, seen, &connectAttempt, history)
 }
@@ -1944,27 +1933,49 @@ func setupStateTransitionRouter(t *testing.T, wsURL string) *LocalRouter {
 }
 
 // monitorStateTransitions tracks router state changes and manages transition logic.
+// stateMonitor encapsulates state monitoring data.
+type stateMonitor struct {
+	mu           sync.Mutex
+	stateHistory []ConnectionState
+	statesSeen   map[ConnectionState]bool
+}
+
+// getCopies returns thread-safe copies of the monitoring data.
+func (sm *stateMonitor) getCopies() ([]ConnectionState, map[ConnectionState]bool) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	history := make([]ConnectionState, len(sm.stateHistory))
+	copy(history, sm.stateHistory)
+
+	seen := make(map[ConnectionState]bool)
+	for k, v := range sm.statesSeen {
+		seen[k] = v
+	}
+
+	return history, seen
+}
+
 func monitorStateTransitions(
 	t *testing.T,
 	router *LocalRouter,
 	ctx context.Context,
 	connectAttempt, shouldFail *int32,
-) ([]ConnectionState, map[ConnectionState]bool) {
+) *stateMonitor {
 	t.Helper()
 
-	stateHistory := []ConnectionState{}
-	stateMu := sync.Mutex{}
-	statesSeen := make(map[ConnectionState]bool)
+	monitor := &stateMonitor{
+		stateHistory: []ConnectionState{},
+		statesSeen:   make(map[ConnectionState]bool),
+	}
 
 	go func() {
 		lastState := router.GetState()
 
-		stateMu.Lock()
-
-		stateHistory = append(stateHistory, lastState)
-		statesSeen[lastState] = true
-
-		stateMu.Unlock()
+		monitor.mu.Lock()
+		monitor.stateHistory = append(monitor.stateHistory, lastState)
+		monitor.statesSeen[lastState] = true
+		monitor.mu.Unlock()
 
 		ticker := time.NewTicker(5 * time.Millisecond)
 		defer ticker.Stop()
@@ -1974,31 +1985,27 @@ func monitorStateTransitions(
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				processStateChange(router, &stateMu, &stateHistory, &statesSeen, &lastState, connectAttempt, shouldFail)
+				processStateChange(router, monitor, &lastState, connectAttempt, shouldFail)
 			}
 		}
 	}()
 
-	return stateHistory, statesSeen
+	return monitor
 }
 
 // processStateChange handles individual state changes and triggers connection success when appropriate.
 func processStateChange(
 	router *LocalRouter,
-	stateMu *sync.Mutex,
-	stateHistory *[]ConnectionState,
-	statesSeen *map[ConnectionState]bool,
+	monitor *stateMonitor,
 	lastState *ConnectionState,
 	connectAttempt, shouldFail *int32,
 ) {
 	currentState := router.GetState()
 	if currentState != *lastState {
-		stateMu.Lock()
-
-		*stateHistory = append(*stateHistory, currentState)
-		(*statesSeen)[currentState] = true
-
-		stateMu.Unlock()
+		monitor.mu.Lock()
+		monitor.stateHistory = append(monitor.stateHistory, currentState)
+		monitor.statesSeen[currentState] = true
+		monitor.mu.Unlock()
 
 		*lastState = currentState
 
