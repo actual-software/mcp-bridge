@@ -23,16 +23,18 @@ type MetricsCollector struct {
 	fallbackFailures  uint64 // Failed fallbacks (both direct and gateway failed)
 
 	// Detailed metrics with synchronization.
-	requestDuration   sync.Map // map[string][]time.Duration
-	responseSizes     []int
-	responseSizesMu   sync.Mutex
-	activeConnections int32 // Use atomic.AddInt32 to modify
+	requestDuration     map[string][]time.Duration
+	requestDurationMu   sync.Mutex
+	responseSizes       []int
+	responseSizesMu     sync.Mutex
+	activeConnections   int32 // Use atomic.AddInt32 to modify
 }
 
 // NewMetricsCollector creates a new metrics collector.
 func NewMetricsCollector(logger *zap.Logger) *MetricsCollector {
 	return &MetricsCollector{
-		logger: logger,
+		logger:          logger,
+		requestDuration: make(map[string][]time.Duration),
 	}
 }
 
@@ -78,17 +80,10 @@ func (mc *MetricsCollector) IncrementConnectionRetries() {
 
 // RecordRequestDuration records the duration of a request by method.
 func (mc *MetricsCollector) RecordRequestDuration(method string, duration time.Duration) {
-	val, _ := mc.requestDuration.LoadOrStore(method, []time.Duration{})
+	mc.requestDurationMu.Lock()
+	defer mc.requestDurationMu.Unlock()
 
-	durations, ok := val.([]time.Duration)
-	if !ok {
-		mc.logger.Error("Invalid type stored in RequestDuration map", zap.String("method", method))
-
-		durations = []time.Duration{}
-	}
-
-	durations = append(durations, duration)
-	mc.requestDuration.Store(method, durations)
+	mc.requestDuration[method] = append(mc.requestDuration[method], duration)
 }
 
 // RecordResponseSize records the size of a response.
@@ -122,21 +117,16 @@ func (mc *MetricsCollector) GetMetrics() *Metrics {
 	copy(responseSizesCopy, mc.responseSizes)
 	mc.responseSizesMu.Unlock()
 
-	// Convert sync.Map to regular map to avoid copy lock value issue
+	// Copy request durations with proper synchronization
+	mc.requestDurationMu.Lock()
 	requestDurationCopy := make(map[string][]time.Duration)
-
-	mc.requestDuration.Range(func(key, value interface{}) bool {
-		if k, ok := key.(string); ok {
-			if v, ok := value.([]time.Duration); ok {
-				// Create a copy of the slice to avoid shared references
-				durCopy := make([]time.Duration, len(v))
-				copy(durCopy, v)
-				requestDurationCopy[k] = durCopy
-			}
-		}
-
-		return true
-	})
+	for method, durations := range mc.requestDuration {
+		// Create a copy of the slice to avoid shared references
+		durCopy := make([]time.Duration, len(durations))
+		copy(durCopy, durations)
+		requestDurationCopy[method] = durCopy
+	}
+	mc.requestDurationMu.Unlock()
 
 	return &Metrics{
 		RequestsTotal:     atomic.LoadUint64(&mc.requestsTotal),
@@ -187,11 +177,9 @@ func (mc *MetricsCollector) Reset() {
 	atomic.StoreInt32(&mc.activeConnections, 0)
 
 	// Clear request duration map.
-	mc.requestDuration.Range(func(key, value interface{}) bool {
-		mc.requestDuration.Delete(key)
-
-		return true
-	})
+	mc.requestDurationMu.Lock()
+	mc.requestDuration = make(map[string][]time.Duration)
+	mc.requestDurationMu.Unlock()
 
 	// Clear response sizes.
 	mc.responseSizesMu.Lock()

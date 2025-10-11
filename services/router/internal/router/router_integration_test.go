@@ -65,9 +65,17 @@ func TestRouterIntegration_MessageFlow(t *testing.T) {
 	done := make(chan struct{})
 
 	router, ctx, cancel := setupIntegrationTest(t)
-	defer cancel()
+	routerDone := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(routerDone)
+	}()
+
+	t.Cleanup(func() {
+		cancel()
+		<-routerDone
+	})
 
 	waitForConnection(t, router)
 	sendInitializationRequest(t, router)

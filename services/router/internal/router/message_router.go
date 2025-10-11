@@ -846,21 +846,23 @@ func (mr *MessageRouter) processGatewayRequest(
 		case <-time.After(timeout):
 			cleanup() // Clean up on timeout
 			mr.metricsCol.IncrementErrors()
-			mr.logger.Error("Gateway response timeout",
-				zap.Any("request_id", req.ID),
-				zap.String("method", req.Method),
-				zap.Duration("timeout", timeout))
+			// Only log if not shutting down to avoid race with test completion
+			select {
+			case <-mr.ctx.Done():
+				return
+			default:
+				mr.logger.Error("Gateway response timeout",
+					zap.Any("request_id", req.ID),
+					zap.String("method", req.Method),
+					zap.Duration("timeout", timeout))
 
-			mr.sendErrorResponse(req.ID, fmt.Errorf("request timeout after %v", timeout))
+				mr.sendErrorResponse(req.ID, fmt.Errorf("request timeout after %v", timeout))
+			}
 
 		case <-mr.ctx.Done():
 			cleanup() // Clean up on context cancellation
 			mr.metricsCol.IncrementErrors()
-			mr.logger.Error("Context canceled during request",
-				zap.Any("request_id", req.ID),
-				zap.String("method", req.Method))
-
-			mr.sendErrorResponse(req.ID, errors.New("context canceled"))
+			// Don't log on shutdown - context is already canceled
 		}
 	}()
 
@@ -976,10 +978,16 @@ func (mr *MessageRouter) sendErrorResponse(id interface{}, err error) {
 	}
 
 	if sendErr := mr.sendResponse(resp); sendErr != nil {
-		mr.logger.Error("Failed to send error response",
-			zap.Error(sendErr),
-			zap.Error(err),
-		)
+		// Only log if not shutting down to avoid race with test completion
+		select {
+		case <-mr.ctx.Done():
+			return
+		default:
+			mr.logger.Error("Failed to send error response",
+				zap.Error(sendErr),
+				zap.Error(err),
+			)
+		}
 	}
 
 	mr.metricsCol.IncrementErrors()

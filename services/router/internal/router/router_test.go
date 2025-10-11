@@ -1289,9 +1289,17 @@ func TestMessageRouter_ConnectionStateHandling(t *testing.T) {
 	router := setupConnectionStateTestRouter(t, mockServer)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	testQueuedRequestWhileDisconnected(t, router)
 	verifyConnectionAttempts(t, &mockConnectAttempts)
@@ -1504,12 +1512,17 @@ func setupConcurrentRequestsRouter(t *testing.T, mockServer *httptest.Server) *L
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
 
 	// Store cleanup function
 	t.Cleanup(func() {
 		cancel()
+		<-done
 	})
 
 	return router
@@ -1715,9 +1728,17 @@ func TestMessageRouter_RequestTimeout(t *testing.T) {
 	router := setupTimeoutTestRouter(t, mockServer)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	waitForRouterConnection(t, router)
 	testRequestTimeout(t, router)
@@ -2047,9 +2068,17 @@ func TestRequestQueue_FullLifecycle(t *testing.T) {
 	router := setupQueueLifecycleRouter(t, mockServer.URL)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	queuedRequestIDs := []string{"queued-1", "queued-2", "queued-3"}
 	responsesReceived := make(map[string]bool)
@@ -2247,9 +2276,17 @@ func TestRequestQueue_OverflowHandling(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	// Give router time to attempt connection (will fail).
 	time.Sleep(constants.TestSleepShort)
@@ -2530,9 +2567,17 @@ func TestDirectToGatewayFallback(t *testing.T) {
 	router := setupFallbackRouter(t, cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	waitForRouterConnection(t, router)
 
@@ -2741,9 +2786,17 @@ func runRoutingDecisionTest(t *testing.T, tt routingDecisionTest) {
 	router := createRoutingTestRouter(t, gatewayServer.URL, tt)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	waitForRouterConnection(t, router)
 
@@ -3167,9 +3220,17 @@ func BenchmarkRouter_ConcurrentRequests(b *testing.B) {
 
 	router := setupConcurrentBenchmarkRouter(b, mockServer)
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	b.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	waitForBenchmarkRouterConnection(b, router)
 
@@ -3263,9 +3324,17 @@ func BenchmarkRouter_LargePayloads(b *testing.B) {
 
 	router := setupLargePayloadBenchmarkRouter(b, mockServer)
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	done := make(chan struct{})
 
-	go func() { _ = router.Run(ctx) }()
+	go func() {
+		_ = router.Run(ctx)
+		close(done)
+	}()
+
+	b.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	waitForBenchmarkRouterConnection(b, router)
 	runLargePayloadBenchmark(b, router, largeData)
