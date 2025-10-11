@@ -757,7 +757,7 @@ func createCheckEndpointTests() []struct {
 		{
 			name: "Timeout",
 			handler: http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
-				time.Sleep(2 * time.Second)
+				time.Sleep(3 * time.Second) // Must be > defaultHealthCheckTimeout (2s)
 			}),
 			expectedHealth: false,
 		},
