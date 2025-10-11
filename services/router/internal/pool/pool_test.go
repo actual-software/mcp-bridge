@@ -782,6 +782,9 @@ func verifyMinimumConnections(t *testing.T, pool *Pool, config Config) {
 
 // Test pool behavior under stress.
 func TestPoolStressScenarios(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping stress test in short mode")
+	}
 	logger := zap.NewNop()
 	factory := &mockFactory{}
 

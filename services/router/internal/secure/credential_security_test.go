@@ -710,6 +710,9 @@ func testContextCancellation(t *testing.T, store TokenStore) {
 func testSystemResourceLimits(t *testing.T, store TokenStore) {
 	t.Helper()
 	// Test behavior when approaching system limits.
+	if testing.Short() {
+		t.Skip("Skipping resource limits test in short mode")
+	}
 
 	// Test file descriptor limits (if applicable).
 	t.Run("file_descriptor_limits", func(t *testing.T) {

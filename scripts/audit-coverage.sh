@@ -82,17 +82,17 @@ run_coverage_analysis() {
                 local module_timeout=420  # 7 minutes for main modules
                 case "${module_dir}" in
                     "./test/e2e/"*) module_timeout=3600 ;;    # 60 minutes for E2E tests
-                    "./services/router"*) module_timeout=720 ;; # 12 minutes for router
+                    "./services/router"*) module_timeout=900 ;; # 15 minutes for router
                     "./services/"*) module_timeout=600 ;;     # 10 minutes for other service modules
                     ".") module_timeout=480 ;;                # 8 minutes for root
                 esac
                 echo "Starting coverage collection (timeout: ${module_timeout}s)..."
 
-                # Run tests WITHOUT -short to get real test results
+                # Run tests with -short to skip stress tests and long-running benchmarks
                 local start_time=$(date +%s)
-                echo "Running go test (allowing integration tests to complete)..."
+                echo "Running go test (skipping stress tests with -short flag)..."
 
-                if timeout ${module_timeout}s go test -coverprofile="${module_profile}" -covermode=atomic ./... > "${module_log}" 2>&1; then
+                if timeout ${module_timeout}s go test -short -timeout=${module_timeout}s -coverprofile="${module_profile}" -covermode=atomic ./... > "${module_log}" 2>&1; then
                     # Check if profile was actually created and has content
                     if [[ -f "${module_profile}" ]] && [[ $(wc -l < "${module_profile}") -gt 1 ]]; then
                         local coverage_lines=$(wc -l < "${module_profile}")

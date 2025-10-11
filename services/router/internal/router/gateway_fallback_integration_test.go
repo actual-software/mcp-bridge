@@ -299,6 +299,9 @@ func TestMessageRouter_FallbackPerformanceComparison(t *testing.T) {
 
 // TestMessageRouter_ConcurrentFallbackStressTest stress tests concurrent fallback operations.
 func TestMessageRouter_ConcurrentFallbackStressTest(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping stress test in short mode")
+	}
 	handler := CreateStressTestHandler(t)
 	handler.ExecuteTest()
 }

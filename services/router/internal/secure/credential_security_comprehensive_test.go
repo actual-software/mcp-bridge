@@ -567,6 +567,10 @@ func TestTokenStore_StressTest(t *testing.T) {
 }
 
 func TestTokenStore_MemoryLeaks(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping memory leak test in short mode")
+	}
+
 	// Test for potential memory leaks.
 	store, err := NewTokenStore("memory-leak-test")
 	if err != nil {

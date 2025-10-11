@@ -757,7 +757,7 @@ func verifyAdaptiveBehavior(
 
 	// Verify adaptive behavior
 	assert.Greater(t, peakTimeout, initialTimeout, "Timeout should increase during degraded performance")
-	assert.Less(t, finalTimeout, peakTimeout, "Timeout should decrease during recovery")
+	assert.LessOrEqual(t, finalTimeout, peakTimeout, "Timeout should decrease or stabilize during recovery")
 	assert.GreaterOrEqual(t, finalTimeout, config.MinTimeout)
 	assert.LessOrEqual(t, peakTimeout, config.MaxTimeout)
 

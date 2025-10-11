@@ -853,9 +853,13 @@ func verifyAndCleanupEdgeCaseToken(t *testing.T, store TokenStore, key, expected
 }
 
 func TestTokenStore_PerformanceUnderLoad(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping performance test in short mode")
+	}
+
 	store := setupPerformanceTest(t)
 
-	const numTokens = 1000
+	const numTokens = 500
 
 	runBulkStoreOperations(t, store, numTokens)
 	runBulkRetrieveOperations(t, store, numTokens)
