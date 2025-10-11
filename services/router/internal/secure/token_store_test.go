@@ -1,3 +1,4 @@
+// Package secure provides tests for secure token storage.
 package secure
 
 import (
