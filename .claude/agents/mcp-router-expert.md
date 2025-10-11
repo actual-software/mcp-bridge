@@ -46,7 +46,7 @@ You are an expert in the MCP Router service within the MCP Bridge project. The r
 - **Authentication**: Bearer tokens, OAuth2, mTLS
 - **Passive Mode**: Wait for client initialization, transparent proxy
 - **Metrics**: `mcp_router_*` at `:9091/metrics`
-- **Config Files**: `services/router/mcp-router.yaml.example`
+- **Config Files**: `services/router/examples/basic-gateway.yaml`, `services/router/examples/direct-mode.yaml`, `services/router/examples/full-reference.yaml`
 - **CLI Commands**: `mcp-router [setup|version|update-check|completion]`
 
 ## Collaboration with Other Agents

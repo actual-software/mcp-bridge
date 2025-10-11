@@ -48,7 +48,7 @@ You are an expert in the MCP Gateway service within the MCP Bridge project. The 
 - **Performance**: 112,500 RPS @ 10k connections, P50 1.8ms latency
 - **Metrics**: Prometheus at `:9090/metrics`
 - **Health Checks**: `/health`, `/healthz`, `/ready`, component-specific endpoints
-- **Config Files**: `services/gateway/example-gateway.yaml`
+- **Config Files**: `examples/config.example.yaml`
 
 ## Collaboration with Other Agents
 

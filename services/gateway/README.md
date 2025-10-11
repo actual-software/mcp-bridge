@@ -95,7 +95,7 @@ MCP Gateway provides universal protocol support for the Model Context Protocol, 
 Deploy everything with one command:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/gateway/deploy/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/poiley/mcp-bridge/main/services/gateway/deployments/kubernetes/install.yaml
 ```
 
 This includes:
@@ -132,10 +132,10 @@ git clone https://github.com/actual-software/mcp-bridge
 cd mcp-bridge/services/gateway
 
 # Edit configuration
-vim deploy/install.yaml
+vim deployments/kubernetes/install.yaml
 
 # Deploy
-kubectl apply -f deploy/install.yaml
+kubectl apply -f deployments/kubernetes/install.yaml
 ```
 
 ## Configuration
