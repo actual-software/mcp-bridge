@@ -720,11 +720,13 @@ func testMaxLifetime(t *testing.T, factory *mockFactory, logger *zap.Logger) {
 	initialCreated := initialStats.CreatedCount
 
 	time.Sleep(config.MaxLifetime + 2*config.HealthCheckInterval)
+
 	verifyConnectionReplacement(t, pool, initialCreated)
 
 	// Verify minimum connections are maintained after replacement
 	require.Eventually(t, func() bool {
 		stats := pool.Stats()
+
 		return stats.TotalConnections >= int64(config.MinSize)
 	}, time.Second, testTimeout*time.Millisecond, "Pool should maintain minimum connections after expiry")
 }
