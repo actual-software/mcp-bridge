@@ -23,11 +23,11 @@ type MetricsCollector struct {
 	fallbackFailures  uint64 // Failed fallbacks (both direct and gateway failed)
 
 	// Detailed metrics with synchronization.
-	requestDuration     map[string][]time.Duration
-	requestDurationMu   sync.Mutex
-	responseSizes       []int
-	responseSizesMu     sync.Mutex
-	activeConnections   int32 // Use atomic.AddInt32 to modify
+	requestDuration   map[string][]time.Duration
+	requestDurationMu sync.Mutex
+	responseSizes     []int
+	responseSizesMu   sync.Mutex
+	activeConnections int32 // Use atomic.AddInt32 to modify
 }
 
 // NewMetricsCollector creates a new metrics collector.

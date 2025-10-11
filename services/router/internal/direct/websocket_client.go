@@ -409,6 +409,7 @@ func (c *WebSocketClient) healthCheckLoop(parentCtx context.Context) {
 				select {
 				case <-c.shutdownCh:
 					cancel()
+
 					return
 				default:
 					c.logger.Warn("health check failed", zap.Error(err))
@@ -546,7 +547,7 @@ func (c *WebSocketClient) waitForShutdown(ctx context.Context) error {
 	case <-finished:
 		c.logger.Debug("all background routines finished")
 		// Small delay to ensure any final log statements complete
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(logCompletionDelay)
 	case <-time.After(constants.GracefulShutdownTimeout):
 		c.logger.Debug("background routines did not finish quickly, continuing with close")
 	case <-ctx.Done():

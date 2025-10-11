@@ -8,6 +8,11 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	// logCompletionDelay is a small delay to ensure any final log statements complete before shutdown.
+	logCompletionDelay = 10 * time.Millisecond
+)
+
 // StdioClientCloser manages the graceful shutdown of StdioClient.
 type StdioClientCloser struct {
 	client *StdioClient
@@ -153,7 +158,7 @@ func (c *StdioClientCloser) waitForCleanup(ctx context.Context) error {
 	case <-finished:
 		c.logger.Debug("all background routines finished")
 		// Small delay to ensure any final log statements complete
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(logCompletionDelay)
 	case <-time.After(waitTimeout):
 		c.logger.Warn("timeout waiting for background routines", zap.Duration("timeout", waitTimeout))
 	case <-ctx.Done():

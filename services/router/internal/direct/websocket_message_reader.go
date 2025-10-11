@@ -86,6 +86,7 @@ func (r *WebSocketMessageReader) readSingleMessage(ctx context.Context) {
 			return
 		default:
 			r.client.logger.Debug("skipping read on closed/closing/error state connection")
+
 			return
 		}
 	}
