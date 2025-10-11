@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -65,17 +66,17 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 
 	var requestCount int64
 
-	mockClients.gwClient.sendRequestFunc = func(ctx context.Context, req *mcp.Request) error {
+	mockClients.gwClient.SetSendRequestFunc(func(ctx context.Context, req *mcp.Request) error {
 		atomic.AddInt64(&requestCount, 1)
 		time.Sleep(5 * time.Millisecond) // Simulate gateway latency
 
 		return nil
-	}
+	})
 
-	mockClients.directManager.getClientFunc = func(ctx context.Context, serverURL string) (direct.DirectClient, error) {
-		return &TestDirectClient{
-			connectFunc: func(ctx context.Context) error { return nil },
-			sendRequestFunc: func(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
+	mockClients.directManager.SetGetClientFunc(func(ctx context.Context, serverURL string) (direct.DirectClient, error) {
+		return NewTestDirectClient(
+			func(ctx context.Context) error { return nil },
+			func(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
 				atomic.AddInt64(&requestCount, 1)
 				time.Sleep(1 * time.Millisecond) // Simulate direct latency
 
@@ -85,16 +86,16 @@ func runPerformanceComparisonTest(t *testing.T, scenario struct {
 					Result:  map[string]interface{}{"status": "ok"},
 				}, nil
 			},
-			closeFunc: func(ctx context.Context) error { return nil },
-		}, nil
-	}
+			func(ctx context.Context) error { return nil },
+		), nil
+	})
 
 	msgRouter := setupMessageRouterForPerformance(cfg, logger, mockClients)
 	defer msgRouter.Stop()
 
 	performanceMeasurements := measurePerformance(t, msgRouter, scenario.useDirectMode)
 
-	validatePerformanceResults(t, scenario, performanceMeasurements, requestCount)
+	validatePerformanceResults(t, scenario, performanceMeasurements, atomic.LoadInt64(&requestCount))
 }
 
 func createPerformanceTestConfig(useDirectMode bool) *config.Config {
@@ -126,8 +127,8 @@ func createMockClientsForPerformance() struct {
 	directManager *TestDirectManager
 } {
 	mockGwClient := NewTestGatewayClient()
-	mockGwClient.connectFunc = func(ctx context.Context) error { return nil }
-	mockGwClient.isConnectedFunc = func() bool { return true }
+	mockGwClient.SetConnectFunc(func(ctx context.Context) error { return nil })
+	mockGwClient.SetIsConnectedFunc(func() bool { return true })
 
 	mockDirectManager := &TestDirectManager{}
 
@@ -309,6 +310,7 @@ func TestMessageRouter_ConcurrentFallbackStressTest(t *testing.T) {
 // Mock implementations for testing.
 
 type TestGatewayClient struct {
+	mu                  sync.RWMutex
 	connectFunc         func(context.Context) error
 	sendRequestFunc     func(context.Context, *mcp.Request) error
 	receiveResponseFunc func() (*mcp.Response, error)
@@ -326,8 +328,12 @@ func NewTestGatewayClient() *TestGatewayClient {
 }
 
 func (t *TestGatewayClient) Connect(ctx context.Context) error {
-	if t.connectFunc != nil {
-		return t.connectFunc(ctx)
+	t.mu.RLock()
+	fn := t.connectFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		return fn(ctx)
 	}
 
 	return nil
@@ -336,8 +342,12 @@ func (t *TestGatewayClient) Connect(ctx context.Context) error {
 func (t *TestGatewayClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 	atomic.AddInt64(&t.sendRequestCalled, 1)
 
-	if t.sendRequestFunc != nil {
-		if err := t.sendRequestFunc(ctx, req); err != nil {
+	t.mu.RLock()
+	fn := t.sendRequestFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		if err := fn(ctx, req); err != nil {
 			return err
 		}
 	}
@@ -370,8 +380,12 @@ func (t *TestGatewayClient) SendRequest(ctx context.Context, req *mcp.Request) e
 }
 
 func (t *TestGatewayClient) ReceiveResponse() (*mcp.Response, error) {
-	if t.receiveResponseFunc != nil {
-		return t.receiveResponseFunc()
+	t.mu.RLock()
+	fn := t.receiveResponseFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		return fn()
 	}
 
 	// Wait for a response with a short timeout to not block the router.
@@ -386,15 +400,48 @@ func (t *TestGatewayClient) ReceiveResponse() (*mcp.Response, error) {
 
 func (t *TestGatewayClient) SendPing() error { return nil }
 func (t *TestGatewayClient) IsConnected() bool {
-	if t.isConnectedFunc != nil {
-		return t.isConnectedFunc()
+	t.mu.RLock()
+	fn := t.isConnectedFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		return fn()
 	}
 
 	return true
 }
 func (t *TestGatewayClient) Close() error { return nil }
 
+// SetConnectFunc safely sets the connect function for testing.
+func (t *TestGatewayClient) SetConnectFunc(fn func(context.Context) error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.connectFunc = fn
+}
+
+// SetSendRequestFunc safely sets the send request function for testing.
+func (t *TestGatewayClient) SetSendRequestFunc(fn func(context.Context, *mcp.Request) error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.sendRequestFunc = fn
+}
+
+// SetReceiveResponseFunc safely sets the receive response function for testing.
+func (t *TestGatewayClient) SetReceiveResponseFunc(fn func() (*mcp.Response, error)) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.receiveResponseFunc = fn
+}
+
+// SetIsConnectedFunc safely sets the is connected function for testing.
+func (t *TestGatewayClient) SetIsConnectedFunc(fn func() bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.isConnectedFunc = fn
+}
+
 type TestDirectManager struct {
+	mu              sync.RWMutex
 	getClientFunc   func(context.Context, string) (direct.DirectClient, error)
 	getClientCalled int64
 }
@@ -406,30 +453,63 @@ func (t *TestDirectManager) Stop(ctx context.Context) error  { return nil }
 func (t *TestDirectManager) GetClient(ctx context.Context, serverURL string) (direct.DirectClient, error) {
 	atomic.AddInt64(&t.getClientCalled, 1)
 
-	if t.getClientFunc != nil {
-		return t.getClientFunc(ctx, serverURL)
+	t.mu.RLock()
+	fn := t.getClientFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		return fn(ctx, serverURL)
 	}
 
 	return nil, errors.New("no client available")
 }
 
+// SetGetClientFunc safely sets the get client function for testing.
+func (t *TestDirectManager) SetGetClientFunc(fn func(context.Context, string) (direct.DirectClient, error)) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.getClientFunc = fn
+}
+
 type TestDirectClient struct {
+	mu              sync.RWMutex
 	connectFunc     func(context.Context) error
 	sendRequestFunc func(context.Context, *mcp.Request) (*mcp.Response, error)
 	closeFunc       func(context.Context) error
 }
 
+// NewTestDirectClient creates a new TestDirectClient with the given functions.
+func NewTestDirectClient(
+	connectFunc func(context.Context) error,
+	sendRequestFunc func(context.Context, *mcp.Request) (*mcp.Response, error),
+	closeFunc func(context.Context) error,
+) *TestDirectClient {
+	return &TestDirectClient{
+		connectFunc:     connectFunc,
+		sendRequestFunc: sendRequestFunc,
+		closeFunc:       closeFunc,
+	}
+}
+
 func (t *TestDirectClient) Connect(ctx context.Context) error {
-	if t.connectFunc != nil {
-		return t.connectFunc(ctx)
+	t.mu.RLock()
+	fn := t.connectFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		return fn(ctx)
 	}
 
 	return nil
 }
 
 func (t *TestDirectClient) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
-	if t.sendRequestFunc != nil {
-		return t.sendRequestFunc(ctx, req)
+	t.mu.RLock()
+	fn := t.sendRequestFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		return fn(ctx, req)
 	}
 
 	return &mcp.Response{JSONRPC: constants.TestJSONRPCVersion, ID: req.ID}, nil
@@ -438,8 +518,12 @@ func (t *TestDirectClient) SendRequest(ctx context.Context, req *mcp.Request) (*
 func (t *TestDirectClient) Health(ctx context.Context) error { return nil }
 
 func (t *TestDirectClient) Close(ctx context.Context) error {
-	if t.closeFunc != nil {
-		return t.closeFunc(ctx)
+	t.mu.RLock()
+	fn := t.closeFunc
+	t.mu.RUnlock()
+
+	if fn != nil {
+		return fn(ctx)
 	}
 
 	return nil

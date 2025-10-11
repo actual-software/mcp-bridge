@@ -19,6 +19,7 @@ import (
 
 // MockDirectClient implements DirectClient interface for testing.
 type MockDirectClient struct {
+	mu              sync.RWMutex
 	name            string
 	protocol        string
 	url             string
@@ -49,6 +50,9 @@ func NewMockDirectClient(name, protocol, url string) *MockDirectClient {
 }
 
 func (m *MockDirectClient) Connect(ctx context.Context) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.connectError != nil {
 		return m.connectError
 	}
@@ -60,6 +64,9 @@ func (m *MockDirectClient) Connect(ctx context.Context) error {
 }
 
 func (m *MockDirectClient) SendRequest(ctx context.Context, req *mcp.Request) (*mcp.Response, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if !m.connected {
 		return nil, ErrClientNotConnected
 	}
@@ -82,6 +89,9 @@ func (m *MockDirectClient) SendRequest(ctx context.Context, req *mcp.Request) (*
 }
 
 func (m *MockDirectClient) Health(ctx context.Context) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.lastHealthCheck = time.Now()
 	if m.healthError != nil {
 		m.isHealthy = false
@@ -95,6 +105,9 @@ func (m *MockDirectClient) Health(ctx context.Context) error {
 }
 
 func (m *MockDirectClient) Close(ctx context.Context) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.closeError != nil {
 		return m.closeError
 	}
@@ -105,14 +118,23 @@ func (m *MockDirectClient) Close(ctx context.Context) error {
 }
 
 func (m *MockDirectClient) GetName() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.name
 }
 
 func (m *MockDirectClient) GetProtocol() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return m.protocol
 }
 
 func (m *MockDirectClient) GetMetrics() ClientMetrics {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	return ClientMetrics{
 		RequestCount:    m.requestCount,
 		ErrorCount:      m.errorCount,
@@ -122,6 +144,38 @@ func (m *MockDirectClient) GetMetrics() ClientMetrics {
 		ConnectionTime:  m.connectionTime,
 		LastUsed:        m.lastUsed,
 	}
+}
+
+// SetHealthError safely sets the health error for testing.
+func (m *MockDirectClient) SetHealthError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.healthError = err
+}
+
+// SetRequestError safely sets the request error for testing.
+func (m *MockDirectClient) SetRequestError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.requestError = err
+}
+
+// SetConnectError safely sets the connect error for testing.
+func (m *MockDirectClient) SetConnectError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.connectError = err
+}
+
+// SetCloseError safely sets the close error for testing.
+func (m *MockDirectClient) SetCloseError(err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.closeError = err
 }
 
 func TestNewDirectClientManager(t *testing.T) {

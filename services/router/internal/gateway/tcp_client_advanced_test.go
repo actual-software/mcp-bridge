@@ -1001,8 +1001,9 @@ func TestTCPClient_HealthMonitoring(t *testing.T) {
 	// Allow time for all pings to be processed.
 	time.Sleep(100 * time.Millisecond)
 
-	if pingCount != numPings {
-		t.Errorf("Expected %d pings received, got %d", numPings, pingCount)
+	actualPingCount := atomic.LoadInt64(&pingCount)
+	if actualPingCount != numPings {
+		t.Errorf("Expected %d pings received, got %d", numPings, actualPingCount)
 	}
 }
 

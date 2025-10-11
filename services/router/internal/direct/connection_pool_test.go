@@ -312,8 +312,8 @@ func TestConnectionPool_HealthChecking(t *testing.T) {
 	// Initially healthy.
 	assert.True(t, conn.GetHealthy())
 
-	// Set health error directly on mock.
-	mock.healthError = errors.New("simulated health failure")
+	// Set health error safely on mock.
+	mock.SetHealthError(errors.New("simulated health failure"))
 
 	// Wait for health check to detect failure.
 	time.Sleep(5 * constants.TestSleepShort)
