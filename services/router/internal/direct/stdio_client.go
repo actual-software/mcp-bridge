@@ -238,16 +238,29 @@ func (c *StdioClient) monitorStderr() {
 					}
 				}
 
-				c.logger.Error("error reading stderr", zap.Error(err))
+				// Check shutdown before logging to avoid race with test cleanup
+				select {
+				case <-c.shutdownCh:
+					return
+				default:
+					c.logger.Error("error reading stderr", zap.Error(err))
+				}
 			}
 			// EOF or scanner finished.
 			return
 		}
 
 		line := scanner.Text()
-		c.logger.Warn("process stderr",
-			zap.String("line", line),
-			zap.String("client_name", c.name))
+
+		// Check shutdown before logging to avoid race with test cleanup
+		select {
+		case <-c.shutdownCh:
+			return
+		default:
+			c.logger.Warn("process stderr",
+				zap.String("line", line),
+				zap.String("client_name", c.name))
+		}
 	}
 }
 
