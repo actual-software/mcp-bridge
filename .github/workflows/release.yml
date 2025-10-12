@@ -77,20 +77,29 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
         run: |
-          BINARY_NAME="mcp-${{ matrix.service }}"
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            BINARY_NAME="${BINARY_NAME}.exe"
-          fi
-          
-          # Use make build to ensure proper build process
+          # Build using make
           make build
-          
-          # Copy the built binary to the expected name for release
+
+          # Determine source binary name (Go adds .exe automatically for Windows)
           if [ "${{ matrix.service }}" = "router" ]; then
-            cp bin/mcp-router "${BINARY_NAME}"
+            SOURCE_BINARY="bin/mcp-router"
           else
-            cp bin/mcp-${{ matrix.service }} "${BINARY_NAME}"
+            SOURCE_BINARY="bin/mcp-${{ matrix.service }}"
           fi
+
+          # Add .exe extension if Windows
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            SOURCE_BINARY="${SOURCE_BINARY}.exe"
+          fi
+
+          # Determine target binary name
+          TARGET_BINARY="mcp-${{ matrix.service }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            TARGET_BINARY="${TARGET_BINARY}.exe"
+          fi
+
+          # Copy the built binary
+          cp "${SOURCE_BINARY}" "${TARGET_BINARY}"
 
       - name: Create archive
         working-directory: services/${{ matrix.service }}
@@ -157,7 +166,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: services/${{ matrix.service }}
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
