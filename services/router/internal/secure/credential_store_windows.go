@@ -102,7 +102,7 @@ func (s *credentialStore) Retrieve(key string) (string, error) {
 	defer credFree.Call(credPtr)
 
 	cred := (*credential)(unsafe.Pointer(credPtr))
-	tokenBytes := (*[defaultBufferSize]byte)(unsafe.Pointer(cred.CredentialBlob))[:cred.CredentialBlobSize:cred.CredentialBlobSize]
+	tokenBytes := unsafe.Slice(cred.CredentialBlob, cred.CredentialBlobSize)
 
 	return string(tokenBytes), nil
 }
