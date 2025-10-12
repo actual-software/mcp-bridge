@@ -29,12 +29,15 @@ COPY pkg/ ../../pkg/
 
 # Build arguments
 ARG VERSION=v1.0.0
-ARG BUILD_TIME=unknown
+ARG BUILD_TIME
 ARG GIT_COMMIT=unknown
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${GIT_COMMIT} -s -w" \
+RUN BUILD_TIME_VAL="${BUILD_TIME:-$(date +%FT%T%z)}" && \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+    -ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME_VAL} -X main.GitCommit=${GIT_COMMIT} -s -w" \
     -o mcp-gateway \
     ./cmd/mcp-gateway
 

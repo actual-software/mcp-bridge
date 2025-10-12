@@ -174,7 +174,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ needs.create-release.outputs.version }}
-            BUILD_TIME=$(date +%FT%T%z)
             GIT_COMMIT=${{ github.sha }}
 
   create-install-script:
