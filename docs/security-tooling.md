@@ -169,19 +169,21 @@ The `scripts/security-scan.sh` script provides comprehensive security scanning:
 
 #### TruffleHog Configuration
 
-TruffleHog is configured via `.trufflehog.yaml` to exclude intentional test fixtures:
+TruffleHog is configured with `--exclude-globs` to skip intentional test fixtures:
 
-**Excluded Paths:**
-- `test/e2e/*/certs/` - E2E test certificates for TLS/mTLS testing
+**Excluded Globs:**
+- `test/e2e/**/certs/**` - E2E test certificates for TLS/mTLS testing
 - `**/*_test.go` - Go test files with embedded test keys
-- `**/testdata/` - Test fixture directories
-- `node_modules/` - Third-party dependencies
+- `**/testdata/**` - Test fixture directories
+- `node_modules/**` - Third-party dependencies
 
 **Rationale:** Test certificates and fixtures are intentionally committed for E2E testing and are never used in production. These keys are:
 - Generated specifically for test environments
 - Not valid for any production system
 - Required for testing TLS, mTLS, and authentication features
 - Safe to commit as they have no security value outside tests
+
+See `.trufflehog-exclude` for the full list of excluded patterns.
 
 ### SBOM Tools
 

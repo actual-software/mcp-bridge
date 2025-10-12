@@ -1,0 +1,5 @@
+test/e2e/full_stack/certs/
+test/e2e/weather/certs/
+.*_test\.go$
+.*/testdata/
+node_modules/
