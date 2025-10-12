@@ -326,16 +326,32 @@ volumes:
 
 ### Universal Protocol Architecture
 
-```
-┌─────────────┐     ┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│ Claude CLI  │────►│   MCP Router    │────►│   MCP Gateway    │────►│ MCP Servers │
-│             │     │ Direct Protocols│     │Universal Backend │     │  Any Protocol│
-└─────────────┘     └─────────────────┘     └──────────────────┘     └─────────────┘
-     stdio               stdio/ws/http          stdio/ws/http/sse         Multiple
-                        WebSocket/SSE           TCP Binary/WebSocket     Protocols
-                        TCP Binary             Cross-Protocol Load Bal.  Supported
-                        98% Auto-Detection     Service Discovery
-                        65% Latency Reduction  Predictive Monitoring
+```mermaid
+graph LR
+    subgraph "Client"
+        CLI[Claude CLI<br/>━━━━━━━━<br/>stdio]
+    end
+
+    subgraph "Router"
+        Router[MCP Router<br/>━━━━━━━━<br/>Direct Protocols<br/>• stdio/ws/http<br/>• WebSocket/SSE<br/>• TCP Binary<br/>━━━━━━━━<br/>98% Auto-Detection<br/>65% Latency Reduction]
+    end
+
+    subgraph "Gateway"
+        Gateway[MCP Gateway<br/>━━━━━━━━<br/>Universal Backend<br/>• stdio/ws/http/sse<br/>• TCP Binary/WebSocket<br/>━━━━━━━━<br/>Cross-Protocol Load Bal.<br/>Service Discovery<br/>Predictive Monitoring]
+    end
+
+    subgraph "Backends"
+        Servers[MCP Servers<br/>━━━━━━━━<br/>Any Protocol<br/>Multiple Protocols<br/>Supported]
+    end
+
+    CLI -->|stdio| Router
+    Router -->|Multiple Protocols| Gateway
+    Gateway -->|Protocol-Aware| Servers
+
+    style CLI fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Servers fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
 ```
 
 **Flow Options:**

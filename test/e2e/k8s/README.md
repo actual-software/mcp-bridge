@@ -15,17 +15,21 @@ The Kubernetes E2E tests validate the complete MCP system deployment and functio
 
 ## Test Architecture
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Test Client   │───▶│   MCP Gateway    │───▶│  Test MCP       │
-│  (WebSocket)    │    │  (Load Balancer) │    │  Server (2x)    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                       ┌──────────────────┐
-                       │     Redis        │
-                       │   (Sessions)     │
-                       └──────────────────┘
+```mermaid
+graph LR
+    Client[Test Client<br/>━━━━━━━━<br/>WebSocket]
+    Gateway[MCP Gateway<br/>━━━━━━━━<br/>Load Balancer]
+    Servers[Test MCP<br/>Server 2x]
+    Redis[(Redis<br/>━━━━━━━━<br/>Sessions)]
+
+    Client --> Gateway
+    Gateway --> Servers
+    Gateway --> Redis
+
+    style Client fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Servers fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
+    style Redis fill:#ffe1e1,stroke:#cc0066,stroke-width:2px
 ```
 
 ### Components Deployed

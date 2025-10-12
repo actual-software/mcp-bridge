@@ -111,19 +111,26 @@ MCP_LOGGING_LEVEL=debug mcp-router
 
 ## Architecture Overview
 
-```
-┌─────────────┐         ┌──────────────┐         ┌─────────────┐
-│  Claude CLI │ <stdio> │  MCP Router  │ <ws/tcp>│ MCP Gateway │
-└─────────────┘         └──────────────┘         └─────────────┘
-                               │
-                        ┌──────┴───────┐
-                        │   Features   │
-                        ├──────────────┤
-                        │ - Auth       │
-                        │ - Rate Limit │
-                        │ - Metrics    │
-                        │ - Retry      │
-                        └──────────────┘
+```mermaid
+graph LR
+    subgraph "Client"
+        CLI[Claude CLI]
+    end
+
+    subgraph "Router"
+        Router[MCP Router<br/>━━━━━━━━<br/>Features:<br/>• Auth<br/>• Rate Limit<br/>• Metrics<br/>• Retry]
+    end
+
+    subgraph "Gateway"
+        Gateway[MCP Gateway]
+    end
+
+    CLI <-->|stdio| Router
+    Router <-->|WebSocket/TCP| Gateway
+
+    style CLI fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
 ```
 
 ## Version Compatibility

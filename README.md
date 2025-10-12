@@ -48,16 +48,32 @@ docker-compose up -d
 
 MCP Bridge provides universal protocol support, enabling any MCP client to connect to any MCP server regardless of protocol through a scalable gateway architecture:
 
-```
-┌─────────────┐     ┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
-│ MCP Client  │────►│     Router      │────►│   Gateway    │────►│ MCP Server  │
-└─────────────┘     └─────────────────┘     └──────────────┘     └─────────────┘
-Any Protocol        • Direct Connections     • Universal Backend   Any Protocol
-• stdio             • Protocol Detection     • Load Balancing      • stdio
-• WebSocket         • Connection Pooling     • Health Monitoring   • WebSocket
-• HTTP              • Secure Storage         • Auth & Rate Limit   • HTTP
-• SSE               • Auto-reconnect         • Circuit Breakers    • SSE
-                                             • Service Discovery
+```mermaid
+graph LR
+    subgraph "Client Layer"
+        Client[MCP Client<br/>━━━━━━━━<br/>Any Protocol<br/>• stdio<br/>• WebSocket<br/>• HTTP<br/>• SSE]
+    end
+
+    subgraph "Router Layer"
+        Router[Router<br/>━━━━━━━━<br/>• Direct Connections<br/>• Protocol Detection<br/>• Connection Pooling<br/>• Secure Storage<br/>• Auto-reconnect]
+    end
+
+    subgraph "Gateway Layer"
+        Gateway[Gateway<br/>━━━━━━━━<br/>• Universal Backend<br/>• Load Balancing<br/>• Health Monitoring<br/>• Auth & Rate Limit<br/>• Circuit Breakers<br/>• Service Discovery]
+    end
+
+    subgraph "Server Layer"
+        Server[MCP Server<br/>━━━━━━━━<br/>Any Protocol<br/>• stdio<br/>• WebSocket<br/>• HTTP<br/>• SSE]
+    end
+
+    Client -->|Protocol<br/>Bridge| Router
+    Router -->|WebSocket/TCP<br/>Connection| Gateway
+    Gateway -->|Protocol-Aware<br/>Routing| Server
+
+    style Client fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
 ```
 
 ### Protocol Support

@@ -55,16 +55,35 @@ MCP Gateway provides universal protocol support for the Model Context Protocol, 
 
 ## Architecture
 
+The MCP Gateway provides universal protocol support with intelligent routing and high availability.
+
+**See [Architecture Documentation](docs/ARCHITECTURE.md) for detailed architecture diagrams and design.**
+
 ### Universal Protocol Gateway
-```
-┌─────────────┐   Any Protocol    ┌─────────────────┐   Any Protocol   ┌─────────────┐
-│ MCP Client  ├──────────────────►│   MCP Gateway   ├─────────────────►│ MCP Server  │
-└─────────────┘                   └─────────┬───────┘                  └─────────────┘
-• stdio                                     │                          • stdio
-• WebSocket                                 ▼                          • WebSocket  
-• HTTP                              ┌─────────────┐                    • HTTP
-• SSE                               │    Redis    │                    • SSE
-• TCP Binary                        └─────────────┘                    • TCP Binary
+
+```mermaid
+graph LR
+    subgraph "Client"
+        Client[MCP Client<br/>━━━━━━━━<br/>Any Protocol<br/>• stdio<br/>• WebSocket<br/>• HTTP<br/>• SSE<br/>• TCP Binary]
+    end
+
+    subgraph "Gateway"
+        GW[MCP Gateway]
+        Redis[(Redis<br/>Session Storage)]
+    end
+
+    subgraph "Backend"
+        Server[MCP Server<br/>━━━━━━━━<br/>Any Protocol<br/>• stdio<br/>• WebSocket<br/>• HTTP<br/>• SSE<br/>• TCP Binary]
+    end
+
+    Client -->|Any Protocol| GW
+    GW -->|Any Protocol| Server
+    GW -.->|State| Redis
+
+    style Client fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style GW fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Redis fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
 ```
 
 ### Backend Protocol Support
@@ -475,6 +494,7 @@ The gateway provides health monitoring endpoints for Kubernetes and other orches
 
 ## Documentation
 
+- [Architecture and Design](docs/ARCHITECTURE.md) - Comprehensive architecture documentation with diagrams
 - [Circuit Breakers and Resilience](docs/CIRCUIT_BREAKERS.md)
 - [Connection Limits and DoS Protection](docs/CONNECTION_LIMITS.md)
 - [Binary Protocol Specification](docs/BINARY_PROTOCOL.md)

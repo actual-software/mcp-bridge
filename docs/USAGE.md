@@ -19,10 +19,16 @@ MCP Bridge provides two main components for connecting clients to MCP servers:
 - **Gateway**: Server-side component that routes requests to backend MCP servers
 - **Router**: Client-side component that connects local clients to gateways or direct MCP servers
 
-```
-┌─────────────┐     ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│ MCP Client  │────►│   Router    │────►│   Gateway    │────►│ MCP Server  │
-└─────────────┘     └─────────────┘     └──────────────┘     └─────────────┘
+```mermaid
+graph LR
+    Client[MCP Client] --> Router[Router]
+    Router --> Gateway[Gateway]
+    Gateway --> Server[MCP Server]
+
+    style Client fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
 ```
 
 ## Basic Concepts

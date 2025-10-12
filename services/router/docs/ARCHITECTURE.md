@@ -46,26 +46,135 @@ A thread-safe FIFO queue for requests:
 - **Timeout support**: Respects request timeouts even while queued
 - **Metrics tracking**: Monitors queued, processed, and dropped requests
 
+## Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph "Client Process"
+        Client[Claude CLI Client]
+        stdin[stdin]
+        stdout[stdout]
+    end
+
+    subgraph "MCP Router"
+        StdioHandler[StdioHandler]
+        MessageRouter[MessageRouter]
+        ConnectionManager[ConnectionManager]
+        RequestQueue[RequestQueue]
+        GatewayClient[Gateway Client]
+
+        StdioHandler -->|stdinChan| MessageRouter
+        MessageRouter -->|stdoutChan| StdioHandler
+        MessageRouter -->|requests| GatewayClient
+        GatewayClient -->|responses| MessageRouter
+        MessageRouter -->|enqueue| RequestQueue
+        RequestQueue -->|dequeue| MessageRouter
+        ConnectionManager -->|stateChangeChan| MessageRouter
+        ConnectionManager -->|manages| GatewayClient
+    end
+
+    subgraph "Remote Gateway"
+        Gateway[MCP Gateway Server]
+    end
+
+    Client -->|stdio| stdin
+    stdout -->|stdio| Client
+    stdin --> StdioHandler
+    StdioHandler --> stdout
+    GatewayClient <-->|WebSocket/TCP| Gateway
+
+    style Client fill:#e1f5ff
+    style MessageRouter fill:#fff4e1
+    style ConnectionManager fill:#ffe1f5
+    style RequestQueue fill:#e1ffe1
+```
+
 ## Data Flow
 
 ### Request Flow (Connected State)
-```
-1. Client → stdin → StdioHandler
-2. StdioHandler → MessageRouter (via channel)
-3. MessageRouter → GatewayClient → Gateway
-4. Gateway → GatewayClient → MessageRouter
-5. MessageRouter → stdout → Client
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant StdioHandler
+    participant MessageRouter
+    participant GatewayClient
+    participant Gateway
+
+    Client->>StdioHandler: Request via stdin
+    StdioHandler->>MessageRouter: Forward to stdinChan
+    MessageRouter->>MessageRouter: Track request ID
+    MessageRouter->>GatewayClient: Send request
+    GatewayClient->>Gateway: WebSocket/TCP
+    Gateway->>GatewayClient: Response
+    GatewayClient->>MessageRouter: Forward response
+    MessageRouter->>MessageRouter: Correlate via request ID
+    MessageRouter->>StdioHandler: Send to stdoutChan
+    StdioHandler->>Client: Response via stdout
 ```
 
 ### Request Flow (Disconnected State)
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant StdioHandler
+    participant MessageRouter
+    participant RequestQueue
+    participant ConnectionManager
+    participant GatewayClient
+    participant Gateway
+
+    Client->>StdioHandler: Request via stdin
+    StdioHandler->>MessageRouter: Forward to stdinChan
+    MessageRouter->>MessageRouter: Check connection state
+    MessageRouter->>RequestQueue: Enqueue request
+
+    Note over RequestQueue: Request waits in queue
+
+    ConnectionManager->>ConnectionManager: Reconnect attempt
+    ConnectionManager->>GatewayClient: Establish connection
+    GatewayClient->>Gateway: Connect
+    Gateway-->>GatewayClient: Connected
+    ConnectionManager->>MessageRouter: StateConnected event
+
+    MessageRouter->>RequestQueue: Dequeue all requests
+    RequestQueue-->>MessageRouter: Queued requests
+
+    loop For each queued request
+        MessageRouter->>GatewayClient: Send request
+        GatewayClient->>Gateway: WebSocket/TCP
+        Gateway->>GatewayClient: Response
+        GatewayClient->>MessageRouter: Forward response
+        MessageRouter->>StdioHandler: Send to stdoutChan
+        StdioHandler->>Client: Response via stdout
+    end
 ```
-1. Client → stdin → StdioHandler
-2. StdioHandler → MessageRouter (via channel)
-3. MessageRouter → RequestQueue (enqueue)
-4. [Connection established event]
-5. RequestQueue → MessageRouter (dequeue all)
-6. MessageRouter → GatewayClient → Gateway
-7. [Response flow continues as normal]
+
+## Connection State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> StateInit: Router starts
+    StateInit --> StateConnecting: Initial connection attempt
+    StateConnecting --> StateConnected: Connection successful
+    StateConnecting --> StateReconnecting: Connection failed
+    StateConnected --> StateReconnecting: Connection lost
+    StateReconnecting --> StateConnected: Reconnection successful
+    StateReconnecting --> StateError: Max retries exceeded
+    StateConnected --> StateShutdown: Graceful shutdown
+    StateReconnecting --> StateShutdown: Shutdown requested
+    StateError --> StateShutdown: Shutdown requested
+    StateShutdown --> [*]
+
+    StateConnected: Connection established
+    StateConnected: Queue processing active
+
+    StateReconnecting: Exponential backoff
+    StateReconnecting: Requests queued
+
+    StateError: Unrecoverable error
+    StateError: No reconnection attempts
 ```
 
 ## Event-Driven Architecture
@@ -107,6 +216,44 @@ This ensures:
 - True proxy behavior (transparent to protocol)
 
 ## Request Queueing Strategy
+
+### Queue Processing Flow
+
+```mermaid
+flowchart TD
+    Start([Request Received]) --> CheckState{Connection<br/>State?}
+
+    CheckState -->|Connected| SendDirect[Send to Gateway]
+    CheckState -->|Disconnected| CheckQueue{Queue<br/>Full?}
+
+    CheckQueue -->|No| Enqueue[Add to Queue]
+    CheckQueue -->|Yes| Reject[Reject with<br/>Backpressure Error]
+
+    Enqueue --> WaitConnection[Wait for Connection]
+    WaitConnection --> StateChange{State<br/>Change Event}
+
+    StateChange -->|Connected| Dequeue[Dequeue All Requests]
+    StateChange -->|Still Disconnected| WaitConnection
+    StateChange -->|Timeout| ExpireRequest[Expire Request]
+
+    Dequeue --> ProcessQueue[Process FIFO Order]
+    ProcessQueue --> SendQueued[Send to Gateway]
+
+    SendDirect --> AwaitResponse[Await Response]
+    SendQueued --> AwaitResponse
+    ExpireRequest --> ReturnError[Return Timeout Error]
+    Reject --> ReturnError
+
+    AwaitResponse --> Response[Return Response]
+    ReturnError --> End([Done])
+    Response --> End
+
+    style CheckState fill:#fff4e1
+    style CheckQueue fill:#ffe1e1
+    style Enqueue fill:#e1ffe1
+    style Reject fill:#ffe1e1
+    style Dequeue fill:#e1f5ff
+```
 
 ### Queue Behavior
 1. **Enqueue**: When not connected, requests are added to queue

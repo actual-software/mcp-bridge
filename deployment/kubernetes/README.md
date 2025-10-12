@@ -38,35 +38,40 @@ This creates:
 
 ## Architecture
 
-```
-┌─────────────────┐
-│   Ingress       │  External HTTPS
-│  (TLS Termination) │
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│  Gateway Service │  LoadBalancer
-│   (ClusterIP)    │  Internal routing
-└────────┬────────┘
-         │
-    ┌────▼─────┬──────────┐
-    │          │          │
-┌───▼───┐ ┌───▼───┐ ┌───▼───┐
-│Gateway│ │Gateway│ │Gateway│  Pods (replicas: 3)
-│  Pod  │ │  Pod  │ │  Pod  │  HPA: 2-10
-└───┬───┘ └───┬───┘ └───┬───┘
-    │         │         │
-    └─────────┴─────────┘
-              │
-         ┌────▼─────┐
-         │  Redis   │  Session storage
-         │  Cluster │  Rate limiting
-         └──────────┘
-              │
-         ┌────▼─────┐
-         │   MCP    │  Backend servers
-         │  Servers │  Auto-discovered
-         └──────────┘
+```mermaid
+graph TD
+    Ingress[Ingress<br/>━━━━━━━━<br/>External HTTPS<br/>TLS Termination]
+    Service[Gateway Service<br/>━━━━━━━━<br/>LoadBalancer<br/>ClusterIP<br/>Internal routing]
+
+    Pod1[Gateway Pod 1]
+    Pod2[Gateway Pod 2]
+    Pod3[Gateway Pod 3]
+
+    Redis[(Redis Cluster<br/>━━━━━━━━<br/>Session storage<br/>Rate limiting)]
+
+    Servers[MCP Servers<br/>━━━━━━━━<br/>Backend servers<br/>Auto-discovered]
+
+    Ingress --> Service
+    Service --> Pod1
+    Service --> Pod2
+    Service --> Pod3
+
+    Pod1 --> Redis
+    Pod2 --> Redis
+    Pod3 --> Redis
+
+    Redis --> Servers
+
+    Note1[Pods: replicas 3<br/>HPA: 2-10]
+
+    style Ingress fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style Service fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Pod1 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Pod2 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Pod3 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Redis fill:#ffe1e1,stroke:#cc0066,stroke-width:2px
+    style Servers fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
+    style Note1 fill:#f9f9f9,stroke:#999,stroke-width:1px,stroke-dasharray: 5 5
 ```
 
 ## Prerequisites

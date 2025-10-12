@@ -6,18 +6,21 @@ This directory contains comprehensive end-to-end tests that verify the complete 
 
 The E2E tests use a hybrid approach that combines realistic infrastructure with programmatic testing:
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────┐
-│   Go Test       │───▶│   Real MCP       │───▶│   Real Gateway      │
-│   Framework     │    │   Router Binary  │    │   Binary/Container  │
-│   (stdio driver)│    │   (subprocess)   │    │   (Docker)          │
-└─────────────────┘    └──────────────────┘    └─────────┬───────────┘
-                                                          │
-                                                          ▼
-                                               ┌─────────────────────┐
-                                               │   Real MCP Server   │
-                                               │   (Docker)          │
-                                               └─────────────────────┘
+```mermaid
+graph LR
+    Test[Go Test<br/>Framework<br/>━━━━━━━━<br/>stdio driver]
+    Router[Real MCP<br/>Router Binary<br/>━━━━━━━━<br/>subprocess]
+    Gateway[Real Gateway<br/>Binary/Container<br/>━━━━━━━━<br/>Docker]
+    Server[Real MCP Server<br/>━━━━━━━━<br/>Docker]
+
+    Test --> Router
+    Router --> Gateway
+    Gateway --> Server
+
+    style Test fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
 ```
 
 ## Components

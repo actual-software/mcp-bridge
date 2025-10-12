@@ -32,22 +32,23 @@ The production test setup uses Docker Compose to spin up:
    - Isolated environment
    - Consistent dependencies
 
-```
-┌─────────────────────────────────────────────────────┐
-│                 Docker Network                       │
-│                                                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
-│  │  Redis   │  │ Gateway  │  │  Router  │         │
-│  │  :6379   │  │  :8080   │  │  :8081   │         │
-│  └──────────┘  └──────────┘  └──────────┘         │
-│       ▲             ▲              ▲                │
-│       └─────────────┼──────────────┘                │
-│                     │                               │
-│              ┌──────────────┐                       │
-│              │ Test Runner  │                       │
-│              │  Container   │                       │
-│              └──────────────┘                       │
-└─────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "Docker Network"
+        Redis[Redis<br/>Port 6379]
+        Gateway[Gateway<br/>Port 8080]
+        Router[Router<br/>Port 8081]
+        TestRunner[Test Runner<br/>Container]
+
+        TestRunner -->|Tests| Redis
+        TestRunner -->|Tests| Gateway
+        TestRunner -->|Tests| Router
+    end
+
+    style Redis fill:#ffe1e1,stroke:#cc0066,stroke-width:2px
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
+    style TestRunner fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
 ```
 
 ## Test Types
