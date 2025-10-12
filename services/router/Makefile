@@ -30,8 +30,13 @@ all: build
 build:
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p $(BIN_DIR)
+ifeq ($(GOOS),windows)
+	$(GOBUILD) $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME).exe $(CMD_DIR)
+	@echo "Build complete: $(BIN_DIR)/$(BINARY_NAME).exe"
+else
 	$(GOBUILD) $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) $(CMD_DIR)
 	@echo "Build complete: $(BIN_DIR)/$(BINARY_NAME)"
+endif
 
 # Run tests
 test:

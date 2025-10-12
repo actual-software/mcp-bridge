@@ -31,8 +31,13 @@ all: build
 build:
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p $(BIN_DIR)
+ifeq ($(GOOS),windows)
+	CGO_ENABLED=0 $(GOBUILD) $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME).exe $(CMD_DIR)
+	@echo "Build complete: $(BIN_DIR)/$(BINARY_NAME).exe"
+else
 	CGO_ENABLED=0 $(GOBUILD) $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) $(CMD_DIR)
 	@echo "Build complete: $(BIN_DIR)/$(BINARY_NAME)"
+endif
 
 # Run tests
 test:
