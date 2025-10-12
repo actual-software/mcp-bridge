@@ -97,12 +97,12 @@ graph TB
     Auth -.->|Log| Logs
     CircuitBreaker -.->|Report| Health
 
-    style Auth fill:#ffe1e1
-    style RateLimit fill:#ffe1e1
-    style Router fill:#fff4e1
-    style LB fill:#e1f5ff
-    style Discovery fill:#e1ffe1
-    style CircuitBreaker fill:#ffe1f5
+    style Auth fill:#ffe1e1,color:#000
+    style RateLimit fill:#ffe1e1,color:#000
+    style Router fill:#fff4e1,color:#000
+    style LB fill:#e1f5ff,color:#000
+    style Discovery fill:#e1ffe1,color:#000
+    style CircuitBreaker fill:#ffe1f5,color:#000
 ```
 
 ## Core Components
@@ -285,11 +285,11 @@ flowchart TD
     UpdateLB --> Wait[Wait for Refresh Interval]
     Wait --> HealthCheck
 
-    style K8sWatch fill:#e1f5ff
-    style ConsulWatch fill:#e1f5ff
-    style RegisterBackend fill:#e1ffe1
-    style MarkHealthy fill:#e1ffe1
-    style MarkUnhealthy fill:#ffe1e1
+    style K8sWatch fill:#e1f5ff,color:#000
+    style ConsulWatch fill:#e1f5ff,color:#000
+    style RegisterBackend fill:#e1ffe1,color:#000
+    style MarkHealthy fill:#e1ffe1,color:#000
+    style MarkUnhealthy fill:#ffe1e1,color:#000
 ```
 
 ## Load Balancing Decision Flow
@@ -345,11 +345,11 @@ flowchart TD
     OpenCircuit --> End
     ReturnError --> End
 
-    style FilterHealthy fill:#e1ffe1
-    style ApplyStrategy fill:#fff4e1
-    style SendRequest fill:#e1f5ff
-    style RecordFailure fill:#ffe1e1
-    style OpenCircuit fill:#ffe1e1
+    style FilterHealthy fill:#e1ffe1,color:#000
+    style ApplyStrategy fill:#fff4e1,color:#000
+    style SendRequest fill:#e1f5ff,color:#000
+    style RecordFailure fill:#ffe1e1,color:#000
+    style OpenCircuit fill:#ffe1e1,color:#000
 ```
 
 ## Circuit Breaker State Machine
@@ -464,10 +464,10 @@ flowchart TD
 
     Cleanup --> End([Session Ended])
 
-    style CreateSession fill:#e1ffe1
-    style LoadSession fill:#e1f5ff
-    style SaveRedis fill:#fff4e1
-    style Cleanup fill:#ffe1e1
+    style CreateSession fill:#e1ffe1,color:#000
+    style LoadSession fill:#e1f5ff,color:#000
+    style SaveRedis fill:#fff4e1,color:#000
+    style Cleanup fill:#ffe1e1,color:#000
 ```
 
 ## Authentication Flow
@@ -507,11 +507,11 @@ flowchart TD
     Reject2 --> End
     Proceed --> Next([Next Stage])
 
-    style ValidateJWT fill:#e1f5ff
-    style CheckClaims fill:#fff4e1
-    style ExtractLimits fill:#e1ffe1
-    style Reject fill:#ffe1e1
-    style Reject2 fill:#ffe1e1
+    style ValidateJWT fill:#e1f5ff,color:#000
+    style CheckClaims fill:#fff4e1,color:#000
+    style ExtractLimits fill:#e1ffe1,color:#000
+    style Reject fill:#ffe1e1,color:#000
+    style Reject2 fill:#ffe1e1,color:#000
 ```
 
 ## Performance Characteristics

@@ -17,10 +17,10 @@ graph LR
     Router --> Gateway
     Gateway --> Server
 
-    style Test fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
-    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
-    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
-    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
+    style Test fill:#e1f5ff,stroke:#0066cc,stroke-width:2px,color:#000
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px,color:#000
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px,color:#000
+    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px,color:#000
 ```
 
 ## Components

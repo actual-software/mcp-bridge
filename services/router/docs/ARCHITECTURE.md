@@ -83,10 +83,10 @@ graph TB
     StdioHandler --> stdout
     GatewayClient <-->|WebSocket/TCP| Gateway
 
-    style Client fill:#e1f5ff
-    style MessageRouter fill:#fff4e1
-    style ConnectionManager fill:#ffe1f5
-    style RequestQueue fill:#e1ffe1
+    style Client fill:#e1f5ff,color:#000
+    style MessageRouter fill:#fff4e1,color:#000
+    style ConnectionManager fill:#ffe1f5,color:#000
+    style RequestQueue fill:#e1ffe1,color:#000
 ```
 
 ## Data Flow
@@ -248,11 +248,11 @@ flowchart TD
     ReturnError --> End([Done])
     Response --> End
 
-    style CheckState fill:#fff4e1
-    style CheckQueue fill:#ffe1e1
-    style Enqueue fill:#e1ffe1
-    style Reject fill:#ffe1e1
-    style Dequeue fill:#e1f5ff
+    style CheckState fill:#fff4e1,color:#000
+    style CheckQueue fill:#ffe1e1,color:#000
+    style Enqueue fill:#e1ffe1,color:#000
+    style Reject fill:#ffe1e1,color:#000
+    style Dequeue fill:#e1f5ff,color:#000
 ```
 
 ### Queue Behavior

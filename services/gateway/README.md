@@ -80,10 +80,10 @@ graph LR
     GW -->|Any Protocol| Server
     GW -.->|State| Redis
 
-    style Client fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
-    style GW fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
-    style Redis fill:#fff4e1,stroke:#ff9900,stroke-width:2px
-    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
+    style Client fill:#e1f5ff,stroke:#0066cc,stroke-width:2px,color:#000
+    style GW fill:#e1ffe1,stroke:#00cc66,stroke-width:2px,color:#000
+    style Redis fill:#fff4e1,stroke:#ff9900,stroke-width:2px,color:#000
+    style Server fill:#ffe1f5,stroke:#cc0099,stroke-width:2px,color:#000
 ```
 
 ### Backend Protocol Support

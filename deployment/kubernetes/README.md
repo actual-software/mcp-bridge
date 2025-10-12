@@ -64,14 +64,14 @@ graph TD
 
     Note1[Pods: replicas 3<br/>HPA: 2-10]
 
-    style Ingress fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
-    style Service fill:#fff4e1,stroke:#ff9900,stroke-width:2px
-    style Pod1 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
-    style Pod2 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
-    style Pod3 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
-    style Redis fill:#ffe1e1,stroke:#cc0066,stroke-width:2px
-    style Servers fill:#ffe1f5,stroke:#cc0099,stroke-width:2px
-    style Note1 fill:#f9f9f9,stroke:#999,stroke-width:1px,stroke-dasharray: 5 5
+    style Ingress fill:#e1f5ff,stroke:#0066cc,stroke-width:2px,color:#000
+    style Service fill:#fff4e1,stroke:#ff9900,stroke-width:2px,color:#000
+    style Pod1 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px,color:#000
+    style Pod2 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px,color:#000
+    style Pod3 fill:#e1ffe1,stroke:#00cc66,stroke-width:2px,color:#000
+    style Redis fill:#ffe1e1,stroke:#cc0066,stroke-width:2px,color:#000
+    style Servers fill:#ffe1f5,stroke:#cc0099,stroke-width:2px,color:#000
+    style Note1 fill:#f9f9f9,stroke:#999,stroke-width:1px,stroke-dasharray: 5 5,color:#000
 ```
 
 ## Prerequisites

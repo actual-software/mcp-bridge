@@ -128,9 +128,9 @@ graph LR
     CLI <-->|stdio| Router
     Router <-->|WebSocket/TCP| Gateway
 
-    style CLI fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
-    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px
-    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px
+    style CLI fill:#e1f5ff,stroke:#0066cc,stroke-width:2px,color:#000
+    style Router fill:#fff4e1,stroke:#ff9900,stroke-width:2px,color:#000
+    style Gateway fill:#e1ffe1,stroke:#00cc66,stroke-width:2px,color:#000
 ```
 
 ## Version Compatibility
