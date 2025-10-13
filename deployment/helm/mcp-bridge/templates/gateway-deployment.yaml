@@ -77,10 +77,9 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
-            exec:
-              command:
-                - /usr/local/bin/mcp-gateway
-                - health
+            httpGet:
+              path: /metrics
+              port: 9090
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
