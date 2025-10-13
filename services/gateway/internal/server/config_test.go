@@ -464,7 +464,7 @@ func createDiscoveryValidationTests() []struct {
 					Provider: "jwt",
 				},
 				Discovery: config.ServiceDiscoveryConfig{
-					Provider:          "consul",
+					Provider:          "invalid-provider",
 					NamespaceSelector: []string{"default"},
 				},
 			},
