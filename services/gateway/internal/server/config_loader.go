@@ -232,8 +232,21 @@ func getEffectiveProvider(discovery *config.ServiceDiscoveryConfig) string {
 
 // validateDiscoveryProvider validates the discovery provider type.
 func validateDiscoveryProvider(provider string) error {
-	if provider != "" && provider != AuthProviderKubernetes && provider != AuthProviderStatic {
-		return fmt.Errorf("unsupported service discovery mode: %s", provider)
+	if provider == "" {
+		return nil
+	}
+
+	validProviders := map[string]bool{
+		"static":     true,
+		"kubernetes": true,
+		"sse":        true,
+		"websocket":  true,
+		"stdio":      true,
+		"consul":     true,
+	}
+
+	if !validProviders[provider] {
+		return fmt.Errorf("unsupported service discovery mode: %s (valid options: static, kubernetes, sse, websocket, stdio, consul)", provider)
 	}
 
 	return nil

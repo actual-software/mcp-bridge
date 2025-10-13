@@ -733,7 +733,19 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 	healthCtx, cancel := context.WithTimeout(ctx, defaultHealthCheckTimeout) // Reduced from 5s
 	defer cancel()
 
-	url := fmt.Sprintf("http://%s:%d/health", endpoint.Address, endpoint.Port)
+	// Use endpoint's path if provided, otherwise default to /health
+	healthPath := "/health"
+	if endpoint.Path != "" {
+		healthPath = endpoint.Path
+	}
+
+	// Use endpoint's scheme if provided, otherwise default to http
+	scheme := "http"
+	if endpoint.Scheme != "" {
+		scheme = endpoint.Scheme
+	}
+
+	url := fmt.Sprintf("%s://%s:%d%s", scheme, endpoint.Address, endpoint.Port, healthPath)
 
 	req, err := http.NewRequestWithContext(healthCtx, http.MethodGet, url, nil)
 	if err != nil {
@@ -745,6 +757,9 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 
 		return
 	}
+
+	// Add Accept headers for MCP streamable-http compatibility
+	req.Header.Set("Accept", "text/event-stream, application/json")
 
 	client := r.getOrCreateHTTPClient(endpoint)
 	resp, err := client.Do(req)
