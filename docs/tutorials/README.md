@@ -2,37 +2,6 @@
 
 Step-by-step guides for common MCP Bridge scenarios.
 
-## 📊 Tutorial Status
-
-✅ **All 15 tutorials completed!**
-
-### Available Now
-**Beginner Tutorials (3/3)**
-- ✅ Your First MCP Server
-- ✅ Multi-Tool Server
-- ✅ Client Integration
-
-**Production Deployment (3/3)**
-- ✅ Kubernetes Deployment
-- ✅ Docker Compose Setup
-- ✅ High Availability Setup
-
-**Advanced Features (4/4)**
-- ✅ Load Balancing
-- ✅ Authentication & Security
-- ✅ Protocol Selection Guide
-- ✅ Monitoring & Observability
-
-**Troubleshooting (2/2)**
-- ✅ Connection Troubleshooting
-- ✅ Performance Tuning
-
-**Use Cases (3/3)**
-- ✅ API Gateway Pattern
-- ✅ Multi-Tenant Setup
-- ✅ Development Workflow
-
----
 
 ## Getting Started
 
