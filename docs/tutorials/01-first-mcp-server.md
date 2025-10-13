@@ -16,6 +16,15 @@ A simple weather forecast MCP server that:
 - Returns weather information
 - Integrates with MCP Bridge gateway
 
+## Architecture Overview
+
+In this tutorial, you'll set up:
+1. **MCP Server** - A stdio-based Python server wrapped with WebSocket
+2. **Gateway** - Routes client requests to your MCP server
+3. **Static Discovery** - Manually configured server endpoints
+
+> **Note**: MCP Bridge Gateway supports multiple frontend protocols simultaneously (WebSocket, HTTP, SSE, TCP Binary, stdio). This tutorial uses WebSocket for simplicity, but you can enable multiple protocols at once. See [Configuration Reference](../configuration.md) for the multi-frontend architecture.
+
 ## Step 1: Create the MCP Server
 
 ### Python Implementation
@@ -168,36 +177,49 @@ server:
     enabled: false  # For development only
 
 auth:
-  provider: bearer
+  type: bearer
+  per_message_auth: false
 
-service_discovery:
-  provider: stdio
-  stdio:
-    services:
-      - name: weather
-        namespace: tools
-        command: ["python", "/app/weather_server.py"]
-        working_dir: /app
-        health_check:
-          enabled: true
-          interval: 30s
+discovery:
+  provider: static
+  static:
+    endpoints:
+      default:
+        - url: ws://localhost:9000
+        - url: ws://localhost:9001
+
+rate_limit:
+  enabled: true
+  requests_per_sec: 100
+  burst: 200
 
 metrics:
   enabled: true
-  endpoint: 0.0.0.0:9090
+  endpoint: "0.0.0.0:9090"
 
 logging:
   level: info
   format: json
 ```
 
-## Step 3: Start the Gateway
+## Step 3: Run the Weather Server
+
+First, start your weather MCP server on a WebSocket port:
 
 ```bash
-# Create app directory
-mkdir -p /app
-cp weather_server.py /app/
+# Install websocat for WebSocket server (or use your preferred method)
+# On macOS: brew install websocat
+# On Linux: cargo install websocat
 
+# Start the weather server with WebSocket wrapper
+python weather_server.py | websocat -s 0.0.0.0:9000
+```
+
+Alternatively, you can modify `weather_server.py` to listen on WebSocket directly using a library like `websockets` in Python.
+
+## Step 4: Start the Gateway
+
+```bash
 # Start gateway
 mcp-gateway --config gateway-weather.yaml
 ```
@@ -205,11 +227,11 @@ mcp-gateway --config gateway-weather.yaml
 Output:
 ```
 {"level":"info","msg":"Starting MCP Gateway","port":8443}
-{"level":"info","msg":"Discovered stdio service","name":"weather"}
+{"level":"info","msg":"Service discovery initialized","provider":"static"}
 {"level":"info","msg":"Gateway ready"}
 ```
 
-## Step 4: Test with a Client
+## Step 5: Test with a Client
 
 ### Using WebSocket Client (wscat)
 
@@ -244,21 +266,23 @@ curl -X POST http://localhost:8443/mcp \
   }'
 ```
 
-## Step 5: Monitor the Server
+## Step 6: Monitor the Server
 
 ### Check Health
 
 ```bash
-curl http://localhost:8443/health
+# Check liveness
+curl http://localhost:8443/health/live
+
+# Check readiness
+curl http://localhost:8443/health/ready
 ```
 
-Expected:
+Expected response:
 ```json
 {
   "status": "healthy",
-  "services": {
-    "weather": "healthy"
-  }
+  "timestamp": "2025-10-13T12:00:00Z"
 }
 ```
 
@@ -275,7 +299,7 @@ mcp_gateway_requests_total{method="tools/call"} 1
 mcp_gateway_request_duration_seconds_bucket{method="tools/call",le="0.1"} 1
 ```
 
-## Step 6: Deploy to Production
+## Step 7: Deploy to Production
 
 ### Option 1: Docker
 
@@ -299,6 +323,9 @@ services:
   weather-server:
     build: .
     container_name: weather-mcp-server
+    ports:
+      - "9000:9000"
+    command: python weather_server.py | websocat -s 0.0.0.0:9000
 
   gateway:
     image: ghcr.io/actual-software/mcp-bridge/gateway:latest
@@ -307,8 +334,10 @@ services:
       - "9090:9090"
     volumes:
       - ./gateway-weather.yaml:/etc/mcp/gateway.yaml
+    depends_on:
+      - weather-server
     environment:
-      - MCP_CONFIG=/etc/mcp/gateway.yaml
+      - CONFIG_FILE=/etc/mcp/gateway.yaml
 ```
 
 Start:
@@ -352,25 +381,28 @@ kubectl apply -f weather-deployment.yaml
 Update gateway config for K8s discovery:
 
 ```yaml
-service_discovery:
+discovery:
   provider: kubernetes
   kubernetes:
     in_cluster: true
-    service_labels:
+    namespace_selector:
+      - default
+    label_selector:
       app: weather-server
 ```
 
-## Step 7: Add Authentication (Production)
+## Step 8: Add Authentication (Production)
 
 Update `gateway-weather.yaml`:
 
 ```yaml
 auth:
-  provider: jwt
+  type: jwt
   jwt:
     issuer: mcp-gateway
     audience: mcp-tools
     secret_key_env: JWT_SECRET_KEY
+  per_message_auth: false
 ```
 
 Set secret:
@@ -402,19 +434,21 @@ wscat -c ws://localhost:8443 -H "Authorization: Bearer $TOKEN"
 
 ### Server Not Discovered
 
-**Problem**: Gateway can't find stdio server
+**Problem**: Gateway can't connect to backend server
 
 **Solution**:
 ```bash
 # Check gateway logs
 journalctl -u mcp-gateway -f
 
+# Verify weather server is running and reachable
+curl -v ws://localhost:9000
+
 # Verify server runs independently
 echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | python weather_server.py
 
-# Check file permissions
-ls -la weather_server.py
-chmod +x weather_server.py
+# Check gateway configuration
+cat gateway-weather.yaml | grep -A 5 discovery
 ```
 
 ### Connection Refused
