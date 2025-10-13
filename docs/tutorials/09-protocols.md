@@ -86,10 +86,10 @@ ws.onmessage = (event) => {
 ```
 
 **When to use**:
-- ✅ Browser-based applications
-- ✅ Real-time updates required
-- ✅ Long-lived connections
-- ✅ Need bidirectional communication
+- Browser-based applications
+- Real-time updates required
+- Long-lived connections
+- Need bidirectional communication
 - ❌ Simple request/response only
 
 ### 2. HTTP Protocol
@@ -141,10 +141,10 @@ curl -X POST https://gateway.example.com:8080/api/v1/mcp \
 ```
 
 **When to use**:
-- ✅ Simple request/response patterns
-- ✅ Existing HTTP infrastructure
-- ✅ No streaming required
-- ✅ Easy debugging needed
+- Simple request/response patterns
+- Existing HTTP infrastructure
+- No streaming required
+- Easy debugging needed
 - ❌ Real-time updates required
 - ❌ High message frequency
 
@@ -207,10 +207,10 @@ fetch('https://gateway.example.com:8081/api/v1/request', {
 ```
 
 **When to use**:
-- ✅ Server needs to push updates
-- ✅ Monitoring dashboards
-- ✅ Event notifications
-- ✅ Browser-based clients
+- Server needs to push updates
+- Monitoring dashboards
+- Event notifications
+- Browser-based clients
 - ❌ Client needs to send frequent messages
 - ❌ Need full bidirectional
 
@@ -265,10 +265,10 @@ response, err := client.Call(&protocol.Request{
 ```
 
 **When to use**:
-- ✅ Performance-critical applications
-- ✅ High message frequency
-- ✅ Low latency requirements
-- ✅ Large message volumes
+- Performance-critical applications
+- High message frequency
+- Low latency requirements
+- Large message volumes
 - ❌ Browser clients
 - ❌ Simple debugging needed
 
@@ -310,10 +310,10 @@ echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | \
 ```
 
 **When to use**:
-- ✅ CLI applications
-- ✅ Local development
-- ✅ Process-based integration
-- ✅ CI/CD pipelines
+- CLI applications
+- Local development
+- Process-based integration
+- CI/CD pipelines
 - ❌ Remote clients
 - ❌ Web applications
 
@@ -551,11 +551,9 @@ server:
 
 ## Summary
 
-You've learned:
-- ✅ The 5 protocols MCP Bridge supports
-- ✅ When to use each protocol
-- ✅ How to configure multiple protocols simultaneously
-- ✅ Performance characteristics
-- ✅ Best practices for production deployments
-
-MCP Bridge's multi-frontend architecture lets you support all client types from a single gateway instance!
+This tutorial covered:
+- The 5 protocols MCP Bridge supports
+- When to use each protocol
+- Configuring multiple protocols simultaneously
+- Performance characteristics
+- Best practices for production deployments

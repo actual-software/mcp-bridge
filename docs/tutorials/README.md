@@ -5,7 +5,7 @@ Step-by-step guides for common MCP Bridge scenarios.
 
 ## Getting Started
 
-### 📚 Beginner Tutorials
+### Beginner Tutorials
 
 1. **[Your First MCP Server](01-first-mcp-server.md)** (15 min)
    - Create a simple MCP server
@@ -29,7 +29,7 @@ Step-by-step guides for common MCP Bridge scenarios.
 
 ## Deployment Tutorials
 
-### 🚀 Production Deployment
+### Production Deployment
 
 4. **[Kubernetes Deployment](04-kubernetes-deployment.md)** (35 min)
    - Deploy gateway to K8s with high availability
@@ -54,7 +54,7 @@ Step-by-step guides for common MCP Bridge scenarios.
 
 ## Advanced Topics
 
-### 🔧 Advanced Features
+### Advanced Features
 
 7. **[Load Balancing](07-load-balancing.md)** (35 min)
    - 5 load balancing strategies (Round Robin, Least Connections, Weighted, IP Hash, Least Response Time)
@@ -89,7 +89,7 @@ Step-by-step guides for common MCP Bridge scenarios.
 
 ## Troubleshooting Guides
 
-### 🔍 Common Issues
+### Common Issues
 
 11. **[Connection Troubleshooting](11-connection-troubleshooting.md)** (25 min)
     - Gateway startup failures
@@ -109,7 +109,7 @@ Step-by-step guides for common MCP Bridge scenarios.
 
 ## Use Case Tutorials
 
-### 💼 Real-World Scenarios
+### Real-World Scenarios
 
 13. **[API Gateway Pattern](13-api-gateway.md)** (30 min)
     - Microservice routing configuration

@@ -232,8 +232,8 @@ kubectl get pods -n tenant-b
 ## Summary
 
 Multi-tenant features:
-- ✅ Namespace isolation
-- ✅ Per-tenant auth
-- ✅ Resource quotas
-- ✅ Rate limiting
-- ✅ Network policies
+- Namespace isolation
+- Per-tenant auth
+- Resource quotas
+- Rate limiting
+- Network policies

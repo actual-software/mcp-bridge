@@ -188,8 +188,8 @@ rate_limit:
 ## Summary
 
 API Gateway features:
-- ✅ Microservice routing
-- ✅ API versioning
-- ✅ Request transformation
-- ✅ Response aggregation
-- ✅ Per-key rate limiting
+- Microservice routing
+- API versioning
+- Request transformation
+- Response aggregation
+- Per-key rate limiting

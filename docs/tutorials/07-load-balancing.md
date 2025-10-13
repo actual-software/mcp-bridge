@@ -663,12 +663,12 @@ done | sort | uniq -c
 
 ## Summary
 
-You've successfully:
-- ✅ Learned 5 load balancing strategies
-- ✅ Configured health checks and circuit breakers
-- ✅ Implemented weighted and sticky routing
-- ✅ Set up passive health monitoring
-- ✅ Tested different strategies under load
-- ✅ Optimized backend selection
+This tutorial covered:
+- Learned 5 load balancing strategies
+- Configured health checks and circuit breakers
+- Implemented weighted and sticky routing
+- Set up passive health monitoring
+- Tested different strategies under load
+- Optimized backend selection
 
-Your MCP Bridge now intelligently distributes load across backends!
+

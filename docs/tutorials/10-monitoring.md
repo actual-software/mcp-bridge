@@ -683,12 +683,12 @@ observability:
 
 ## Summary
 
-You've successfully:
-- ✅ Deployed Prometheus, Grafana, Jaeger, and Loki
-- ✅ Created custom dashboards for Gateway and Router
-- ✅ Configured distributed tracing
-- ✅ Set up log aggregation
-- ✅ Defined alerting rules and SLOs
-- ✅ Implemented monitoring best practices
+This tutorial covered:
+- Deployed Prometheus, Grafana, Jaeger, and Loki
+- Created custom dashboards for Gateway and Router
+- Configured distributed tracing
+- Set up log aggregation
+- Defined alerting rules and SLOs
+- Implemented monitoring best practices
 
-Your MCP Bridge now has comprehensive observability!
+

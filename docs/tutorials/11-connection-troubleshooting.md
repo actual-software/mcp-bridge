@@ -399,8 +399,8 @@ kubectl get networkpolicies -n mcp-system
 ## Summary
 
 Common issues resolved:
-- ✅ Gateway startup failures
-- ✅ Client connection problems
-- ✅ Backend connectivity issues
-- ✅ Connection drops
-- ✅ High latency problems
+- Gateway startup failures
+- Client connection problems
+- Backend connectivity issues
+- Connection drops
+- High latency problems

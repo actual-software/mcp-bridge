@@ -856,14 +856,14 @@ kubectl delete namespace mcp-servers
 
 ## Summary
 
-You've successfully:
-- ✅ Deployed MCP Bridge Gateway to Kubernetes
-- ✅ Configured Kubernetes service discovery
-- ✅ Set up high availability with 3 replicas
-- ✅ Enabled TLS and JWT authentication
-- ✅ Configured Redis for session storage
-- ✅ Set up monitoring with Prometheus
-- ✅ Configured horizontal pod autoscaling
-- ✅ Implemented security best practices
+This tutorial covered:
+- Deployed MCP Bridge Gateway to Kubernetes
+- Configured Kubernetes service discovery
+- Set up high availability with 3 replicas
+- Enabled TLS and JWT authentication
+- Configured Redis for session storage
+- Set up monitoring with Prometheus
+- Configured horizontal pod autoscaling
+- Implemented security best practices
 
-Your MCP Bridge is now running in production on Kubernetes!
+

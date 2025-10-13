@@ -225,8 +225,8 @@ rate(process_cpu_seconds_total[1m])
 ## Summary
 
 Optimizations applied:
-- ✅ Connection pooling
-- ✅ Buffer tuning
-- ✅ Runtime configuration
-- ✅ Caching strategy
-- ✅ Resource limits
+- Connection pooling
+- Buffer tuning
+- Runtime configuration
+- Caching strategy
+- Resource limits

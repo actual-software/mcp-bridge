@@ -948,11 +948,11 @@ const client = new MCPClient(url, token, { debug: true });
 
 ## Summary
 
-You've successfully:
-- ✅ Created clients in JavaScript, Python, and Go
-- ✅ Implemented WebSocket, HTTP, and TCP Binary protocols
-- ✅ Added connection management and error handling
-- ✅ Built CLI tools with curl and bash
-- ✅ Learned best practices for production clients
+This tutorial covered:
+- Created clients in JavaScript, Python, and Go
+- Implemented WebSocket, HTTP, and TCP Binary protocols
+- Added connection management and error handling
+- Built CLI tools with curl and bash
+- Learned best practices for production clients
 
-Your applications can now integrate with MCP Bridge Gateway!
+

@@ -632,12 +632,12 @@ openssl s_client -connect gateway.example.com:8443 \
 
 ## Summary
 
-You've learned:
-- ✅ 4 authentication methods (Bearer, JWT, OAuth2, mTLS)
-- ✅ How to configure each method
-- ✅ Token generation and validation
-- ✅ Per-message authentication
-- ✅ Security best practices
-- ✅ Testing and troubleshooting
+This tutorial covered:
+- 4 authentication methods (Bearer, JWT, OAuth2, mTLS)
+- Configuration for each method
+- Token generation and validation
+- Per-message authentication
+- Security best practices
+- Testing and troubleshooting
 
-Your MCP Bridge Gateway is now secured with production-ready authentication!
+

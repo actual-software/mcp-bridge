@@ -495,11 +495,11 @@ journalctl -u mcp-gateway -f
 
 ## Summary
 
-You've successfully:
-- ✅ Created an MCP server with stdio protocol
-- ✅ Configured MCP Bridge gateway
-- ✅ Tested with WebSocket and HTTP clients
-- ✅ Monitored server health and metrics
-- ✅ Deployed to production environments
+This tutorial covered:
+- Created an MCP server with stdio protocol
+- Configured MCP Bridge gateway
+- Tested with WebSocket and HTTP clients
+- Monitored server health and metrics
+- Deployed to production environments
 
-Your server is now ready to serve MCP requests through the gateway!
+
