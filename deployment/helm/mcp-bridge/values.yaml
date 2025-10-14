@@ -14,7 +14,7 @@ fullnameOverride: ""
 image:
   repository: ghcr.io/actual-software/mcp-bridge
   pullPolicy: IfNotPresent
-  tag: "1.0.0-rc1"
+  tag: "v1.0.0-rc4"
 
 # Service account configuration
 serviceAccount:
@@ -47,8 +47,8 @@ gateway:
   name: gateway
   
   image:
-    repository: ghcr.io/actual-software/mcp-bridge/gateway
-    tag: "1.0.0-rc1"
+    repository: ghcr.io/actual-software/mcp-bridge-gateway
+    tag: "v1.0.0-rc4"
   
   replicaCount: 2
   
@@ -122,14 +122,30 @@ gateway:
         rate_limiting:
           enabled: true
           requests_per_minute: 1000
+        frontends:
+          - name: sse
+            protocol: sse
+            enabled: true
+            config:
+              port: 8443
+              tls_enabled: true
+              path_prefix: /
       
       auth:
+        provider: ""
         jwt:
           secret_key_env: JWT_SECRET_KEY
           expiry: 24h
         bearer:
-          enabled: true
-      
+          enabled: false
+
+      sessions:
+        provider: redis
+        redis:
+          url: redis://mcp-gateway-redis-master:6379
+          db: 0
+        ttl: 86400
+
       monitoring:
         metrics:
           enabled: true
@@ -138,11 +154,16 @@ gateway:
         health:
           enabled: true
           path: /health
-      
+
       logging:
         level: info
         format: json
         correlation_id: true
+
+      service_discovery:
+        mode: kubernetes
+        namespace_selector:
+          - mcp
 
 # Router configuration
 router:
@@ -210,9 +231,13 @@ router:
 # Redis configuration (external dependency)
 redis:
   enabled: true
+  image:
+    registry: docker.io
+    repository: redis
+    tag: 7.4-bookworm
   architecture: standalone
   auth:
-    enabled: true
+    enabled: false
     password: ""
   master:
     persistence:

@@ -1,0 +1,52 @@
+# Build artifacts
+bin/
+dist/
+*.test
+*.out
+coverage.out
+coverage.html
+test-report.json
+
+# Development files
+.env
+.env.local
+*.log
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Test files (if you don't need them in production image)
+*_test.go
+testdata/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Dependencies (we'll copy go.mod/go.sum separately)
+vendor/
+
+# Kubernetes and deployment configs
+k8s/
+helm/
+*.yaml
+*.yml
+!gateway.yaml
+
+# Temporary files
+tmp/
+temp/

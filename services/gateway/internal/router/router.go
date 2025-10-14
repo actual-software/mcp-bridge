@@ -478,6 +478,7 @@ func (r *Router) prepareHTTPRequest(
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "text/event-stream, application/json")
 
 	return httpReq, nil
 }

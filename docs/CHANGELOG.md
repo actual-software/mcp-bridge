@@ -14,6 +14,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc6] - 2025-10-14
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **SSE/Streamable-HTTP Accept Header** - Fixed missing `Accept: text/event-stream, application/json` header in gateway HTTP request forwarding. The gateway's health check code had the correct header, but the main request forwarding path (`prepareHTTPRequest`) was missing it, causing 406 "Not Acceptable" errors when routing to MCP servers using streamable-http transport. This prevented end-to-end connectivity from router → gateway → MCP servers like Serena.
+
+### Technical Details
+- Modified `services/gateway/internal/router/router.go:481` to add Accept header to all HTTP requests
+- The bug only affected HTTP/HTTPS backend connections, not WebSocket connections
+- Health checks were working correctly because they already had the Accept header set
+
+## [1.0.0-rc5] - 2025-10-14
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **NoOp Authentication Provider** - Fixed nil pointer panic when using NoOp auth provider. Added required JWT claims to prevent authentication failures when auth is disabled. This enables testing and development scenarios where authentication is not required.
+
+### Changed
+- NoOpProvider now returns valid JWT claims structure instead of nil
+- Authentication can be completely disabled by setting empty provider string in config
+
+## [1.0.0-rc4] - 2025-10-13
+
+### Added
+
+#### 🚀 **New Features**
+- **Optional Authentication** - Added support for disabling authentication entirely by setting an empty provider string in gateway configuration. When provider is empty, gateway uses NoOpProvider which skips all authentication checks. This simplifies development and testing workflows.
+
+### Performance
+
+#### ⚡ **Build Optimizations**
+- **Docker Build Performance** - Optimized Docker builds with multi-stage caching and parallel build stages. Reduced build times significantly through better layer caching strategy and Go module download caching.
+
+### Changed
+- Gateway now supports `auth.provider: ""` configuration to disable authentication
+- Docker builds now use build cache mounts for faster rebuilds
+- Improved Docker layer structure for better caching efficiency
+
+## [1.0.0-rc3] - 2025-10-13
+
+### Added
+
+#### 📚 **Documentation**
+- **MCP Bridge Tutorials** - Added comprehensive tutorial series covering all aspects of MCP Bridge deployment and usage (15 tutorials total)
+- Tutorials cover Kubernetes deployment, Docker deployment, service discovery, authentication, monitoring, and advanced configurations
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **Data Race in Health Checking** - Eliminated data race on endpoint.Healthy field by using atomic.Bool for thread-safe access across concurrent health checks
+- **Gateway Readiness Probe** - Fixed readiness probe to use HTTP metrics endpoint instead of main service endpoint for more reliable health checks
+- **Custom Health Check Paths** - Added support for custom health check paths and ensured compatibility with all discovery provider types (Kubernetes, Consul, Static)
+
+#### 🔧 **Code Quality Fixes**
+- **Atomic Operations** - Fixed atomic operations to use plain uint32 instead of custom types to avoid copylocks warnings
+- **Function Complexity** - Refactored overly long functions into logical helper functions to improve maintainability
+- **Code Formatting** - Added blank lines before return statements for better code readability
+- **Endpoint Initialization** - Fixed endpoint struct initialization in integration tests to match health checking changes
+
+### Security
+
+#### 🔒 **Security Improvements**
+- **TruffleHog Configuration** - Configured TruffleHog secret scanner to exclude test certificates and fixture files, preventing false positives in security scans
+
+### Documentation
+- Completed all 15 MCP Bridge tutorials covering deployment, configuration, and operations
+- Removed unprofessional language from tutorials and documentation
+- Improved tutorial organization and navigation structure
+
+### Changed
+- Health status now tracked with atomic.Bool for thread-safe concurrent access
+- Health checker uses IsHealthy() accessor method for consistent atomic access
+- Readiness probes more reliable with dedicated metrics endpoint checks
+- Discovery providers support configurable health check paths
+
 ## [1.0.0-rc2] - 2025-01-11
 
 ### Added
