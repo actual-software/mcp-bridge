@@ -371,7 +371,7 @@ func testAuthConfigurationCase(t *testing.T, tt authConfigTest, logger *zap.Logg
 		Connection: common.ConnectionConfig{TimeoutMs: 5000},
 	}
 
-	client, err := NewGatewayClient(cfg, logger)
+	client, err := NewGatewayClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -488,7 +488,7 @@ func testTLSConfigurationCase(t *testing.T, url string, tlsConfig common.TLSConf
 		Connection: common.ConnectionConfig{TimeoutMs: 5000},
 	}
 
-	client, err := NewGatewayClient(cfg, logger)
+	client, err := NewGatewayClient(cfg, "", logger)
 	if err != nil {
 		// TLS configuration might fail without actual cert files.
 		// but the factory should still work
@@ -538,7 +538,7 @@ func TestGatewayClient_ConnectionConfiguration(t *testing.T) {
 				Connection: connConfig,
 			}
 
-			client, err := NewGatewayClient(cfg, logger)
+			client, err := NewGatewayClient(cfg, "", logger)
 			if err != nil {
 				t.Fatalf("Failed to create client: %v", err)
 			}
@@ -565,7 +565,7 @@ func BenchmarkNewGatewayClient_WebSocket(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		client, err := NewGatewayClient(cfg, logger)
+		client, err := NewGatewayClient(cfg, "", logger)
 		if err != nil {
 			b.Fatalf("Failed to create client: %v", err)
 		}
@@ -586,7 +586,7 @@ func BenchmarkNewGatewayClient_TCP(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		client, err := NewGatewayClient(cfg, logger)
+		client, err := NewGatewayClient(cfg, "", logger)
 		if err != nil {
 			b.Fatalf("Failed to create client: %v", err)
 		}

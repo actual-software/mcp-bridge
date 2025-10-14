@@ -11,7 +11,7 @@ import (
 //
 //nolint:ireturn // Factory pattern requires interface return
 func createTCPClient(cfg config.GatewayConfig, logger *zap.Logger) (gateway.GatewayClient, error) {
-	return gateway.NewTCPClient(cfg, logger)
+	return gateway.NewTCPClient(cfg, "", logger)
 }
 
 // NewTCPPool creates a new TCP connection pool.

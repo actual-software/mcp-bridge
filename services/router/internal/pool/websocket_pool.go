@@ -11,7 +11,7 @@ import (
 //
 //nolint:ireturn // Factory pattern requires interface return
 func createWebSocketClient(cfg config.GatewayConfig, logger *zap.Logger) (gateway.GatewayClient, error) {
-	return gateway.NewClient(cfg, logger)
+	return gateway.NewClient(cfg, "", logger)
 }
 
 // NewWebSocketPool creates a new WebSocket connection pool.

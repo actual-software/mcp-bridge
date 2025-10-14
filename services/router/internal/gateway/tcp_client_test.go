@@ -280,7 +280,7 @@ func setupTCPTestServer(t *testing.T, tt *tcpConnectTest) *mockTCPServer {
 
 func createTCPTestClient(t *testing.T, cfg config.GatewayConfig, logger *zap.Logger) *TCPClient {
 	t.Helper()
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -351,7 +351,7 @@ func createConnectedTCPClient(t *testing.T, addr string, logger *zap.Logger) *TC
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -438,7 +438,7 @@ func setupTCPClientForResponse(t *testing.T, addr string) (*TCPClient, func()) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -603,7 +603,7 @@ func TestTCPClient_SendPing(t *testing.T) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -721,7 +721,7 @@ func TestTCPClient_Reconnect(t *testing.T) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -778,7 +778,7 @@ func TestTCPClient_TLS(t *testing.T) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -816,7 +816,7 @@ func TestTCPClient_OAuth2(t *testing.T) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}

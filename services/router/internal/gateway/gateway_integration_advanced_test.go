@@ -147,7 +147,7 @@ func createLoadBalancingClient(t *testing.T, clientID int, addresses []string, l
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Errorf("Client %d: Failed to create client: %v", clientID, err)
 
@@ -417,7 +417,7 @@ func runFailoverScenarioTest(t *testing.T, logger *zap.Logger, tt failoverScenar
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -625,7 +625,7 @@ func runSingleOperation(
 	logger *zap.Logger,
 	counters *clientCounters,
 ) {
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		atomic.AddInt64(counters.errors, 1)
 

@@ -30,8 +30,9 @@ const (
 
 // TCPClient manages TCP connections to the gateway using binary protocol.
 type TCPClient struct {
-	config config.GatewayConfig
-	logger *zap.Logger
+	config           config.GatewayConfig
+	logger           *zap.Logger
+	defaultNamespace string
 
 	// TCP connection.
 	conn   net.Conn
@@ -56,11 +57,17 @@ type TCPClient struct {
 }
 
 // NewTCPClient creates a new TCP-based gateway client.
-func NewTCPClient(cfg config.GatewayConfig, logger *zap.Logger) (*TCPClient, error) {
+func NewTCPClient(cfg config.GatewayConfig, defaultNamespace string, logger *zap.Logger) (*TCPClient, error) {
+	// Use provided default namespace, or fall back to NamespaceDefault constant
+	if defaultNamespace == "" {
+		defaultNamespace = NamespaceDefault
+	}
+
 	c := &TCPClient{
-		config:          cfg,
-		logger:          logger,
-		protocolVersion: ProtocolVersion, // Current protocol version
+		config:           cfg,
+		defaultNamespace: defaultNamespace,
+		logger:           logger,
+		protocolVersion:  ProtocolVersion, // Current protocol version
 	}
 
 	// Configure TLS.
@@ -315,7 +322,7 @@ func (c *TCPClient) SendRequest(ctx context.Context, req *mcp.Request) error {
 		ID:              req.ID,
 		Timestamp:       time.Now().UTC().Format(time.RFC3339),
 		Source:          "local-router",
-		TargetNamespace: extractNamespace(req.Method),
+		TargetNamespace: c.extractNamespace(req.Method),
 		AuthToken:       authToken,
 		MCPPayload:      req,
 	}
@@ -444,4 +451,21 @@ func (c *TCPClient) IsConnected() bool {
 	defer c.connMu.Unlock()
 
 	return c.conn != nil
+}
+
+// extractNamespace determines the target namespace from the method name.
+func (c *TCPClient) extractNamespace(method string) string {
+	// Handle standard MCP methods - route to system namespace.
+	if method == "initialize" || method == "tools/list" || method == "tools/call" || method == "ping" {
+		return "system"
+	}
+
+	// Extract namespace from tool name (e.g., "k8s.getPods" -> "k8s")
+	for i := 0; i < len(method); i++ {
+		if method[i] == '.' {
+			return method[:i]
+		}
+	}
+
+	return c.defaultNamespace
 }

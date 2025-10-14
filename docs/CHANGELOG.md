@@ -14,6 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc9] - 2025-10-14
+
+### Added
+
+#### 🚀 **New Features**
+- **Configurable Default Namespace** - Added `default_namespace` configuration option to router's `gateway_pool` config. This allows routing requests to non-default namespaces (e.g., "system") where MCP servers are registered in the gateway's service discovery. Previously, the router hardcoded namespace to "default", causing "no endpoints available" errors when trying to access services registered under different namespaces.
+
+### Technical Details
+- Added `DefaultNamespace` field to `GatewayPoolConfig` struct (default: "default")
+- Modified `Client` and `TCPClient` structs to accept and store `defaultNamespace` parameter
+- Converted `extractNamespace` from standalone function to instance method on both client types
+- Wired configuration value from `GatewayPoolConfig` through factory functions to client constructors
+- Router configuration example: `gateway_pool.default_namespace: system`
+
 ## [1.0.0-rc8] - 2025-10-14
 
 ### Fixed

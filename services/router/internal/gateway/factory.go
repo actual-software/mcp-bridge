@@ -31,7 +31,7 @@ type GatewayClient interface {
 // NewGatewayClient creates a new gateway client based on the URL scheme.
 //
 //nolint:ireturn // Factory pattern requires interface return
-func NewGatewayClient(cfg config.GatewayConfig, logger *zap.Logger) (GatewayClient, error) {
+func NewGatewayClient(cfg config.GatewayConfig, defaultNamespace string, logger *zap.Logger) (GatewayClient, error) {
 	u, err := url.Parse(cfg.URL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid gateway URL: %w", err)
@@ -40,10 +40,10 @@ func NewGatewayClient(cfg config.GatewayConfig, logger *zap.Logger) (GatewayClie
 	switch u.Scheme {
 	case "ws", "wss":
 		// WebSocket client.
-		return NewClient(cfg, logger)
+		return NewClient(cfg, defaultNamespace, logger)
 	case "tcp", SchemeTCPS, SchemeTCPTLS:
 		// TCP client with binary protocol.
-		return NewTCPClient(cfg, logger)
+		return NewTCPClient(cfg, defaultNamespace, logger)
 	default:
 		return nil, fmt.Errorf("unsupported URL scheme: %s", u.Scheme)
 	}

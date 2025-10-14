@@ -266,7 +266,7 @@ func createTCPLifecycleTestClient(t *testing.T, addr string, logger *zap.Logger)
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -458,7 +458,7 @@ func createAndConnectClient(t *testing.T, addr string, logger *zap.Logger) *TCPC
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -682,7 +682,7 @@ func createErrorRecoveryClient(t *testing.T, addr string, logger *zap.Logger) *T
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
@@ -802,7 +802,7 @@ func BenchmarkTCPClient_SendRequest(b *testing.B) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		b.Fatalf("Failed to create client: %v", err)
 	}
@@ -910,7 +910,7 @@ func BenchmarkTCPClient_ConcurrentRequests(b *testing.B) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		b.Fatalf("Failed to create client: %v", err)
 	}
@@ -971,7 +971,7 @@ func TestTCPClient_HealthMonitoring(t *testing.T) {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, logger)
+	client, err := NewTCPClient(cfg, "", logger)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}

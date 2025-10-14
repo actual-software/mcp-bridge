@@ -79,11 +79,12 @@ type ServiceDiscoveryConfig struct {
 
 // GatewayPoolConfig defines configuration for multiple gateway support.
 type GatewayPoolConfig struct {
-	Endpoints        []GatewayEndpoint      `mapstructure:"endpoints"         yaml:"endpoints"`
-	LoadBalancer     LoadBalancerConfig     `mapstructure:"load_balancer"     yaml:"load_balancer"`
-	ServiceDiscovery ServiceDiscoveryConfig `mapstructure:"service_discovery" yaml:"service_discovery"`
-	CircuitBreaker   CircuitBreakerConfig   `mapstructure:"circuit_breaker"   yaml:"circuit_breaker"`
-	NamespaceRouting NamespaceRoutingConfig `mapstructure:"namespace_routing" yaml:"namespace_routing"`
+	Endpoints        []GatewayEndpoint      `mapstructure:"endpoints"          yaml:"endpoints"`
+	DefaultNamespace string                 `mapstructure:"default_namespace"  yaml:"default_namespace"` // Default MCP namespace when not specified
+	LoadBalancer     LoadBalancerConfig     `mapstructure:"load_balancer"      yaml:"load_balancer"`
+	ServiceDiscovery ServiceDiscoveryConfig `mapstructure:"service_discovery"  yaml:"service_discovery"`
+	CircuitBreaker   CircuitBreakerConfig   `mapstructure:"circuit_breaker"    yaml:"circuit_breaker"`
+	NamespaceRouting NamespaceRoutingConfig `mapstructure:"namespace_routing"  yaml:"namespace_routing"`
 }
 
 // CircuitBreakerConfig defines circuit breaker settings for gateway connections.
@@ -283,6 +284,7 @@ func setDefaults(v *viper.Viper) {
 
 func setGatewayPoolDefaults(v *viper.Viper) {
 	// Gateway Pool defaults.
+	v.SetDefault("gateway_pool.default_namespace", "default")
 	v.SetDefault("gateway_pool.load_balancer.strategy", "round_robin")
 	v.SetDefault("gateway_pool.load_balancer.failover_timeout", "30s")
 	v.SetDefault("gateway_pool.load_balancer.retry_count", constants.DefaultMaxRetries)

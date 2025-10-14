@@ -126,7 +126,7 @@ func NewGatewayPool(_ context.Context, cfg *config.Config, logger *zap.Logger) (
 
 	// Initialize endpoint wrappers
 	cbConfig := cfg.GetCircuitBreakerConfig()
-	pool.endpoints = createEndpointWrappers(endpoints, cbConfig, logger)
+	pool.endpoints = createEndpointWrappers(endpoints, cbConfig, cfg.GatewayPool.DefaultNamespace, logger)
 
 	if len(pool.endpoints) == 0 {
 		cancel()
@@ -166,12 +166,13 @@ func createGatewayPoolStruct(
 func createEndpointWrappers(
 	endpoints []config.GatewayEndpoint,
 	cbConfig config.CircuitBreakerConfig,
+	defaultNamespace string,
 	logger *zap.Logger,
 ) []*GatewayEndpointWrapper {
 	var wrappers []*GatewayEndpointWrapper
 
 	for _, endpointConfig := range endpoints {
-		wrapper := createSingleEndpointWrapper(endpointConfig, cbConfig, logger)
+		wrapper := createSingleEndpointWrapper(endpointConfig, cbConfig, defaultNamespace, logger)
 		if wrapper != nil {
 			wrappers = append(wrappers, wrapper)
 		}
@@ -183,6 +184,7 @@ func createEndpointWrappers(
 func createSingleEndpointWrapper(
 	endpointConfig config.GatewayEndpoint,
 	cbConfig config.CircuitBreakerConfig,
+	defaultNamespace string,
 	logger *zap.Logger,
 ) *GatewayEndpointWrapper {
 	// Create gateway config from endpoint config
@@ -193,7 +195,7 @@ func createSingleEndpointWrapper(
 		TLS:        endpointConfig.TLS,
 	}
 
-	client, err := NewGatewayClient(gatewayConfig, logger)
+	client, err := NewGatewayClient(gatewayConfig, defaultNamespace, logger)
 	if err != nil {
 		logger.Error("Failed to create gateway client",
 			zap.String("url", endpointConfig.URL),

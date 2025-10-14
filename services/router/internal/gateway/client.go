@@ -44,8 +44,9 @@ const (
 
 // Client manages the WebSocket connection to the gateway.
 type Client struct {
-	config config.GatewayConfig
-	logger *zap.Logger
+	config           config.GatewayConfig
+	logger           *zap.Logger
+	defaultNamespace string
 
 	// WebSocket connection.
 	conn   *websocket.Conn
@@ -63,10 +64,16 @@ type Client struct {
 }
 
 // NewClient creates a new gateway client.
-func NewClient(cfg config.GatewayConfig, logger *zap.Logger) (*Client, error) {
+func NewClient(cfg config.GatewayConfig, defaultNamespace string, logger *zap.Logger) (*Client, error) {
+	// Use provided default namespace, or fall back to NamespaceDefault constant
+	if defaultNamespace == "" {
+		defaultNamespace = NamespaceDefault
+	}
+
 	c := &Client{
-		config: cfg,
-		logger: logger,
+		config:           cfg,
+		defaultNamespace: defaultNamespace,
+		logger:           logger,
 	}
 
 	// Configure TLS.
@@ -198,7 +205,7 @@ func (c *Client) SendRequest(ctx context.Context, req *mcp.Request) error {
 		ID:              req.ID,
 		Timestamp:       time.Now().UTC().Format(time.RFC3339),
 		Source:          "local-router",
-		TargetNamespace: extractNamespace(req.Method),
+		TargetNamespace: c.extractNamespace(req.Method),
 		MCPPayload:      req,
 	}
 
@@ -337,7 +344,8 @@ func (c *Client) markConnectionClosed() {
 }
 
 // extractNamespace extracts the namespace from a method name.
-func extractNamespace(method string) string {
+// extractNamespace determines the target namespace from the method name.
+func (c *Client) extractNamespace(method string) string {
 	// Handle standard MCP methods - route to system namespace.
 	if method == "initialize" || method == "tools/list" || method == "tools/call" || method == "ping" {
 		return "system"
@@ -350,7 +358,7 @@ func extractNamespace(method string) string {
 		}
 	}
 
-	return NamespaceDefault
+	return c.defaultNamespace
 }
 
 // getCipherSuiteID maps cipher suite name to TLS constant.

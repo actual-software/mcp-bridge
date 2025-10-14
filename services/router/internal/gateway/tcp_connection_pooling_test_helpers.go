@@ -129,7 +129,7 @@ func (env *ConnectionPoolingTestEnvironment) CreateClient() *TCPClient {
 		},
 	}
 
-	client, err := NewTCPClient(cfg, env.logger)
+	client, err := NewTCPClient(cfg, "", env.logger)
 	if err != nil {
 		env.t.Fatalf("Failed to create client: %v", err)
 	}

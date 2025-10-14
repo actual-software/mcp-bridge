@@ -959,7 +959,9 @@ func TestClient_IsConnected(t *testing.T) {
 }
 
 func TestExtractNamespace(t *testing.T) {
-	// ctx := context.Background() - unused
+	// Create a client with default namespace
+	client := &Client{defaultNamespace: "default"}
+
 	tests := []struct {
 		method   string
 		expected string
@@ -976,7 +978,7 @@ func TestExtractNamespace(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.method, func(t *testing.T) {
-			result := extractNamespace(tt.method)
+			result := client.extractNamespace(tt.method)
 			if result != tt.expected {
 				t.Errorf("extractNamespace(%s) = %s, want %s", tt.method, result, tt.expected)
 			}
