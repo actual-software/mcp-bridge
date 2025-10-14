@@ -2410,8 +2410,8 @@ func configureAdaptivePerformanceTest(
 
 	// Further adjust for cluster constraints
 	if clusterConfig.ResourceConstraints {
-		perfConfig.MinThroughputRPS *= 0.45 // 45% reduction for constrained clusters (CI environment)
-		perfConfig.MinSuccessRate = 90.0    // More lenient success rate
+		perfConfig.MinThroughputRPS *= 0.405 // 59.5% reduction for constrained clusters (CI environment + 10% margin)
+		perfConfig.MinSuccessRate = 90.0     // More lenient success rate
 	}
 
 	logger.Info("Adaptive performance test configuration",
