@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc8] - 2025-10-14
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **SSE Response Parsing** - Added SSE (Server-Sent Events) response parsing to the HTTP router. While rc7 added SSE scheme routing, it was missing the logic to parse SSE-formatted responses. The router was trying to parse SSE responses (which start with "event: message\ndata: {...}") directly as JSON, causing "invalid character 'e' looking for beginning of value" errors. The router now detects SSE responses via the Content-Type header and correctly extracts JSON from SSE data lines.
+
+### Technical Details
+- Modified `services/gateway/internal/router/router.go:processHTTPResponse` to detect `text/event-stream` Content-Type
+- Added `parseSSEResponse` method to extract JSON payload from SSE `data:` lines
+- This completes the SSE support initiated in rc7, enabling full end-to-end communication with SSE-based MCP servers
+
 ## [1.0.0-rc7] - 2025-10-14
 
 ### Fixed
