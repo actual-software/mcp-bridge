@@ -127,7 +127,7 @@ func TestClient_ConfigureTLS(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := testutil.NewTestLogger(t)
-			client, err := NewClient(tt.config, logger)
+			client, err := NewClient(tt.config, "", logger)
 
 			validateTLSTestResult(t, tt, client, err)
 		})
@@ -653,7 +653,7 @@ func TestClient_ConfigureTLS_Integration(t *testing.T) {
 	}
 
 	logger := testutil.NewTestLogger(t)
-	client, err := NewClient(config, logger)
+	client, err := NewClient(config, "", logger)
 	require.NoError(t, err)
 
 	// Verify complete TLS configuration.

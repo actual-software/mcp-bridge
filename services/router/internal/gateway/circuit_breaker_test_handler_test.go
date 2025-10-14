@@ -234,7 +234,7 @@ func (a *connectionAttempt) execute() bool {
 }
 
 func (a *connectionAttempt) createClient() *TCPClient {
-	client, err := NewTCPClient(a.cfg, a.handler.logger)
+	client, err := NewTCPClient(a.cfg, "", a.handler.logger)
 	if err != nil {
 		a.handler.t.Fatalf("Failed to create client: %v", err)
 

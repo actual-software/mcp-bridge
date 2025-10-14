@@ -556,27 +556,27 @@ func (r *Router) processHTTPResponse(httpResp *http.Response, span opentracing.S
 func (r *Router) parseSSEResponse(respBody []byte, span opentracing.Span) (*mcp.Response, error) {
 	// SSE format: lines starting with "data: " contain the JSON payload
 	lines := strings.Split(string(respBody), "\n")
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		
+
 		// Look for data lines in SSE format
 		if strings.HasPrefix(line, "data: ") {
 			// Extract JSON from the data line
 			jsonData := strings.TrimPrefix(line, "data: ")
-			
+
 			// Parse the JSON response
 			var resp mcp.Response
 			if err := json.Unmarshal([]byte(jsonData), &resp); err != nil {
 				return nil, fmt.Errorf("failed to parse SSE data as JSON: %w", err)
 			}
-			
+
 			span.LogKV("http.success", true, "format", "sse")
-			
+
 			return &resp, nil
 		}
 	}
-	
+
 	return nil, fmt.Errorf("no data line found in SSE response")
 }
 
