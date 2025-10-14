@@ -39,6 +39,13 @@ type RateLimitConfig struct {
 	Burst             int `json:"burst"`
 }
 
+const (
+	noOpSessionDuration       = 24 * time.Hour
+	noOpRequestsPerMinute     = 10000
+	noOpBurst                 = 100
+	noOpAnonymousSubject      = "anonymous"
+)
+
 // NoOpProvider is an authentication provider that allows all requests without authentication.
 type NoOpProvider struct {
 	logger *zap.Logger
@@ -48,9 +55,14 @@ type NoOpProvider struct {
 func (p *NoOpProvider) Authenticate(r *http.Request) (*Claims, error) {
 	// Allow all requests without authentication
 	return &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   noOpAnonymousSubject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(noOpSessionDuration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 		RateLimit: RateLimitConfig{
-			RequestsPerMinute: 10000,
-			Burst:             100,
+			RequestsPerMinute: noOpRequestsPerMinute,
+			Burst:             noOpBurst,
 		},
 	}, nil
 }
@@ -58,9 +70,14 @@ func (p *NoOpProvider) Authenticate(r *http.Request) (*Claims, error) {
 // ValidateToken is not used in NoOpProvider but required by the interface.
 func (p *NoOpProvider) ValidateToken(tokenString string) (*Claims, error) {
 	return &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   noOpAnonymousSubject,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(noOpSessionDuration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 		RateLimit: RateLimitConfig{
-			RequestsPerMinute: 10000,
-			Burst:             100,
+			RequestsPerMinute: noOpRequestsPerMinute,
+			Burst:             noOpBurst,
 		},
 	}, nil
 }
@@ -81,6 +98,7 @@ func InitializeAuthenticationProvider(cfg config.AuthConfig, logger *zap.Logger)
 	case "":
 		// No authentication provider configured - allow all requests
 		logger.Warn("No authentication provider configured - all requests will be allowed")
+
 		return &NoOpProvider{logger: logger}, nil
 	case "jwt":
 		return createJWTAuthProvider(cfg.JWT, logger)
