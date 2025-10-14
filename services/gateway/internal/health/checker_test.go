@@ -119,7 +119,7 @@ func TestChecker_GetStatus(t *testing.T) {
 	checker.status.HealthyEndpoints = 3
 	checker.status.Namespaces = []string{"ns1", "ns2"}
 	checker.status.Checks["test"] = CheckResult{
-		
+
 		Message:   "Test check",
 		LastCheck: time.Now(),
 	}
@@ -236,7 +236,7 @@ func TestChecker_checkServiceDiscovery(t *testing.T) {
 			name:       "Healthy with namespaces",
 			namespaces: []string{"ns1", "ns2", "ns3"},
 			expected: CheckResult{
-				
+				Healthy: true,
 				Message: "Discovered 3 namespaces",
 			},
 		},
@@ -244,7 +244,7 @@ func TestChecker_checkServiceDiscovery(t *testing.T) {
 			name:       "Unhealthy with no namespaces",
 			namespaces: []string{},
 			expected: CheckResult{
-				
+				Healthy: false,
 				Message: "No namespaces discovered",
 			},
 		},
@@ -322,6 +322,13 @@ func createHealthyEndpointTests() []struct {
 	expectedHealthy       int
 	expectedHealthyStatus bool
 } {
+	ep1 := discovery.Endpoint{Service: "svc1"}
+	ep1.SetHealthy(true)
+	ep2 := discovery.Endpoint{Service: "svc2"}
+	ep2.SetHealthy(true)
+	ep3 := discovery.Endpoint{Service: "svc3"}
+	ep3.SetHealthy(true)
+
 	return []struct {
 		name                  string
 		endpoints             map[string][]discovery.Endpoint
@@ -332,13 +339,8 @@ func createHealthyEndpointTests() []struct {
 		{
 			name: "All endpoints healthy",
 			endpoints: map[string][]discovery.Endpoint{
-				"ns1": {
-					{Service: "svc1"},
-					{Service: "svc2"},
-				},
-				"ns2": {
-					{Service: "svc3"},
-				},
+				"ns1": {ep1, ep2},
+				"ns2": {ep3},
 			},
 			expectedTotal:         3,
 			expectedHealthy:       3,
@@ -354,6 +356,20 @@ func createUnhealthyEndpointTests() []struct {
 	expectedHealthy       int
 	expectedHealthyStatus bool
 } {
+	// Some endpoints unhealthy test
+	ep1 := discovery.Endpoint{Service: "svc1"}
+	ep1.SetHealthy(true)
+	ep2 := discovery.Endpoint{Service: "svc2"}
+	ep2.SetHealthy(true)
+	ep3 := discovery.Endpoint{Service: "svc3"}
+	ep3.SetHealthy(false)
+
+	// All endpoints unhealthy test
+	ep4 := discovery.Endpoint{Service: "svc1"}
+	ep4.SetHealthy(false)
+	ep5 := discovery.Endpoint{Service: "svc2"}
+	ep5.SetHealthy(false)
+
 	return []struct {
 		name                  string
 		endpoints             map[string][]discovery.Endpoint
@@ -364,13 +380,8 @@ func createUnhealthyEndpointTests() []struct {
 		{
 			name: "Some endpoints unhealthy",
 			endpoints: map[string][]discovery.Endpoint{
-				"ns1": {
-					{Service: "svc1"},
-					{Service: "svc2"},
-				},
-				"ns2": {
-					{Service: "svc3"},
-				},
+				"ns1": {ep1, ep2},
+				"ns2": {ep3},
 			},
 			expectedTotal:         3,
 			expectedHealthy:       2,
@@ -379,10 +390,7 @@ func createUnhealthyEndpointTests() []struct {
 		{
 			name: "All endpoints unhealthy",
 			endpoints: map[string][]discovery.Endpoint{
-				"ns1": {
-					{Service: "svc1"},
-					{Service: "svc2"},
-				},
+				"ns1": {ep4, ep5},
 			},
 			expectedTotal:         2,
 			expectedHealthy:       0,
@@ -459,10 +467,11 @@ func TestChecker_performChecks(t *testing.T) {
 
 	// Set up healthy state
 	mockDiscovery.SetNamespaces([]string{"ns1", "ns2"})
-	mockDiscovery.SetEndpoints("ns1", []discovery.Endpoint{
-		{Service: "svc1"},
-		{Service: "svc2"},
-	})
+	ep1 := discovery.Endpoint{Service: "svc1"}
+	ep1.SetHealthy(true)
+	ep2 := discovery.Endpoint{Service: "svc2"}
+	ep2.SetHealthy(true)
+	mockDiscovery.SetEndpoints("ns1", []discovery.Endpoint{ep1, ep2})
 
 	checker := CreateHealthMonitor(mockDiscovery, logger)
 	checker.performChecks()
@@ -589,9 +598,9 @@ func getHealthEndpointTests(mockDiscovery *MockDiscovery, checker *Checker) []se
 			endpoint: "/health",
 			setupChecker: func() {
 				mockDiscovery.SetNamespaces([]string{"ns1"})
-				mockDiscovery.SetEndpoints("ns1", []discovery.Endpoint{
-					{Service: "svc1"},
-				})
+				ep := discovery.Endpoint{Service: "svc1"}
+				ep.SetHealthy(true)
+				mockDiscovery.SetEndpoints("ns1", []discovery.Endpoint{ep})
 				checker.performChecks()
 			},
 			expectedStatus:    http.StatusOK,
@@ -755,14 +764,14 @@ func TestServer_StartStop(t *testing.T) {
 
 func TestStatus_JSON(t *testing.T) {
 	status := Status{
-		
+
 		Message:          "Test status",
 		Endpoints:        10,
 		HealthyEndpoints: 8,
 		Namespaces:       []string{"ns1", "ns2"},
 		Checks: map[string]CheckResult{
 			"test_check": {
-				
+
 				Message:   "Check passed",
 				LastCheck: time.Now(),
 			},
