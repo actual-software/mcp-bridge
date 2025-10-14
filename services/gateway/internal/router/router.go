@@ -248,7 +248,7 @@ func (r *Router) forwardRequest(
 		span.LogKV("routing.path", "websocket")
 
 		return r.forwardRequestWebSocket(ctx, endpoint, req, span)
-	case schemeHTTP, "https":
+	case schemeHTTP, "https", "sse":
 		span.LogKV("routing.path", "http")
 
 		return r.forwardRequestHTTP(ctx, endpoint, req, span)

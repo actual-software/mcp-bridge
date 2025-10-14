@@ -40,10 +40,10 @@ type RateLimitConfig struct {
 }
 
 const (
-	noOpSessionDuration       = 24 * time.Hour
-	noOpRequestsPerMinute     = 10000
-	noOpBurst                 = 100
-	noOpAnonymousSubject      = "anonymous"
+	noOpSessionDuration   = 24 * time.Hour
+	noOpRequestsPerMinute = 10000
+	noOpBurst             = 100
+	noOpAnonymousSubject  = "anonymous"
 )
 
 // NoOpProvider is an authentication provider that allows all requests without authentication.

@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc7] - 2025-10-14
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **SSE Protocol Routing Support** - Added support for `sse` as a valid endpoint scheme in the gateway router. Previously, while SSE backend support existed in the codebase, the router's scheme validation did not include "sse" as a valid option, causing "unsupported endpoint scheme" errors. The router now properly routes SSE endpoints to the HTTP backend handler, which correctly processes Server-Sent Events responses.
+
+### Technical Details
+- Modified `services/gateway/internal/router/router.go:251` to add "sse" to the HTTP backend routing case
+- SSE endpoints are now routed through the same HTTP handler that already supports SSE response parsing (with the Accept header fix from rc6)
+- This enables full end-to-end connectivity for MCP servers using SSE transport (like Serena)
+- Fixed code formatting issue in `services/gateway/internal/auth/provider.go`
+
 ## [1.0.0-rc6] - 2025-10-14
 
 ### Fixed
