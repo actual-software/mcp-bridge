@@ -39,6 +39,32 @@ type RateLimitConfig struct {
 	Burst             int `json:"burst"`
 }
 
+// NoOpProvider is an authentication provider that allows all requests without authentication.
+type NoOpProvider struct {
+	logger *zap.Logger
+}
+
+// Authenticate allows all requests by returning empty claims.
+func (p *NoOpProvider) Authenticate(r *http.Request) (*Claims, error) {
+	// Allow all requests without authentication
+	return &Claims{
+		RateLimit: RateLimitConfig{
+			RequestsPerMinute: 10000,
+			Burst:             100,
+		},
+	}, nil
+}
+
+// ValidateToken is not used in NoOpProvider but required by the interface.
+func (p *NoOpProvider) ValidateToken(tokenString string) (*Claims, error) {
+	return &Claims{
+		RateLimit: RateLimitConfig{
+			RequestsPerMinute: 10000,
+			Burst:             100,
+		},
+	}, nil
+}
+
 // JWTProvider implements JWT-based authentication.
 type JWTProvider struct {
 	config    config.JWTConfig
@@ -52,6 +78,10 @@ type JWTProvider struct {
 //nolint:ireturn // Factory pattern requires interface return
 func InitializeAuthenticationProvider(cfg config.AuthConfig, logger *zap.Logger) (Provider, error) {
 	switch cfg.Provider {
+	case "":
+		// No authentication provider configured - allow all requests
+		logger.Warn("No authentication provider configured - all requests will be allowed")
+		return &NoOpProvider{logger: logger}, nil
 	case "jwt":
 		return createJWTAuthProvider(cfg.JWT, logger)
 	case "oauth2":
