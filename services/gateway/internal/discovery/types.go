@@ -29,22 +29,27 @@ type Endpoint struct {
 	Weight    int               `json:"weight"`
 	Metadata  map[string]string `json:"metadata"`
 	Tools     []ToolInfo        `json:"tools"`
-	healthy   atomic.Bool       `json:"-"` // Thread-safe health status
+	healthy   uint32            `json:"-"` // Thread-safe health status using atomic operations (0=false, 1=true)
 }
 
-// IsHealthy returns the health status of the endpoint.
+// IsHealthy returns the health status of the endpoint using atomic load.
 func (e *Endpoint) IsHealthy() bool {
-	return e.healthy.Load()
+	return atomic.LoadUint32(&e.healthy) != 0
 }
 
-// SetHealthy sets the health status of the endpoint.
+// SetHealthy sets the health status of the endpoint using atomic store.
 func (e *Endpoint) SetHealthy(healthy bool) {
-	e.healthy.Store(healthy)
+	if healthy {
+		atomic.StoreUint32(&e.healthy, 1)
+	} else {
+		atomic.StoreUint32(&e.healthy, 0)
+	}
 }
 
 // MarshalJSON implements custom JSON marshaling for Endpoint.
 func (e *Endpoint) MarshalJSON() ([]byte, error) {
 	type Alias Endpoint
+
 	return json.Marshal(&struct {
 		Healthy bool `json:"healthy"`
 		*Alias
@@ -67,6 +72,7 @@ func (e *Endpoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.SetHealthy(aux.Healthy)
+
 	return nil
 }
 

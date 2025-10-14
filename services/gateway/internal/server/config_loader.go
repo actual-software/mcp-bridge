@@ -246,7 +246,10 @@ func validateDiscoveryProvider(provider string) error {
 	}
 
 	if !validProviders[provider] {
-		return fmt.Errorf("unsupported service discovery mode: %s (valid options: static, kubernetes, sse, websocket, stdio, consul)", provider)
+		return fmt.Errorf(
+			"unsupported service discovery mode: %s (valid options: static, kubernetes, sse, websocket, stdio, consul)",
+			provider,
+		)
 	}
 
 	return nil

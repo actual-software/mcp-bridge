@@ -249,6 +249,7 @@ func createMockDiscoveryForLoadBalancer() *mockServiceDiscovery {
 	ep1.SetHealthy(true)
 	ep2 := discovery.Endpoint{Address: "host2", Port: 8080, Scheme: "http", Weight: 2}
 	ep2.SetHealthy(true)
+
 	return &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
 			"test":  {ep1, ep2},

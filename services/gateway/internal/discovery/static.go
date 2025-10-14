@@ -116,6 +116,7 @@ func (sd *StaticDiscovery) configToEndpoint(namespace string, cfg config.Endpoin
 		Tools:     []ToolInfo{}, // Static discovery doesn't provide tool info
 	}
 	endpoint.SetHealthy(true) // Assume healthy for static endpoints
+
 	return endpoint, nil
 }
 

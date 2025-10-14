@@ -338,6 +338,7 @@ func (d *ConsulDiscovery) buildEndpoint(
 		Tools: tools,
 	}
 	endpoint.SetHealthy(d.isHealthy(entry))
+
 	return endpoint
 }
 

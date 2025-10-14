@@ -58,6 +58,7 @@ func createRoundRobinTests() []struct {
 				for _, ep := range eps {
 					ep.SetHealthy(true)
 				}
+
 				return eps
 			}(),
 			calls: 6,
@@ -74,6 +75,7 @@ func createRoundRobinTests() []struct {
 				eps[0].SetHealthy(true)
 				eps[1].SetHealthy(false)
 				eps[2].SetHealthy(true)
+
 				return eps
 			}(),
 			calls: 4,
@@ -95,6 +97,7 @@ func createRoundRobinTests() []struct {
 				for _, ep := range eps {
 					ep.SetHealthy(false)
 				}
+
 				return eps
 			}(),
 			calls: 2,

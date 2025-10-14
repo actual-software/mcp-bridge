@@ -19,7 +19,7 @@ const (
 	httpStatusInternalError = 500
 )
 
-// setHealthy is a test helper to set health status on endpoints
+// setHealthy is a test helper to set health status on endpoints.
 func setHealthy(endpoints []*discovery.Endpoint, healthy bool) {
 	for _, ep := range endpoints {
 		ep.SetHealthy(healthy)
@@ -44,6 +44,7 @@ func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 				for _, ep := range eps {
 					ep.SetHealthy(true)
 				}
+
 				return eps
 			}(),
 			expected: 3,
@@ -59,6 +60,7 @@ func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 				eps[0].SetHealthy(true)
 				eps[1].SetHealthy(true)
 				eps[2].SetHealthy(false)
+
 				return eps
 			}(),
 			expected: 2,
@@ -73,6 +75,7 @@ func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 				for _, ep := range eps {
 					ep.SetHealthy(false)
 				}
+
 				return eps
 			}(),
 			expected: 0,

@@ -1,0 +1,73 @@
+---
+# Serena MCP Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serena-mcp
+  namespace: mcp
+  labels:
+    app: serena-mcp
+    component: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serena-mcp
+  template:
+    metadata:
+      labels:
+        app: serena-mcp
+        component: mcp-server
+    spec:
+      containers:
+      - name: serena
+        image: ghcr.io/oraios/serena:latest
+        imagePullPolicy: Always
+        command:
+          - serena
+          - start-mcp-server
+          - --transport
+          - streamable-http
+          - --host
+          - "0.0.0.0"
+          - --port
+          - "8080"
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: dashboard
+          containerPort: 24282
+          protocol: TCP
+        env:
+        - name: SERENA_LOG_LEVEL
+          value: "info"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+# Serena Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: serena-mcp
+  namespace: mcp
+  labels:
+    app: serena-mcp
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: dashboard
+    port: 24282
+    targetPort: 24282
+    protocol: TCP
+  selector:
+    app: serena-mcp

@@ -384,6 +384,7 @@ func (d *KubernetesDiscovery) createEndpoint(
 		Tools: config.tools,
 	}
 	endpoint.SetHealthy(true)
+
 	return endpoint
 }
 

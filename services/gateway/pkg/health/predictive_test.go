@@ -56,8 +56,8 @@ func TestPredictiveHealthMonitor_RegisterEndpoint(t *testing.T) {
 		Address: "127.0.0.1",
 		Port:    8080,
 		Scheme:  "http",
-		Healthy: true,
 	}
+	endpoint.SetHealthy(true)
 
 	monitor.RegisterEndpoint(endpoint)
 
