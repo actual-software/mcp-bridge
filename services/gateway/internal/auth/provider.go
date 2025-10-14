@@ -48,6 +48,11 @@ type NoOpProvider struct {
 func (p *NoOpProvider) Authenticate(r *http.Request) (*Claims, error) {
 	// Allow all requests without authentication
 	return &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "anonymous",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 		RateLimit: RateLimitConfig{
 			RequestsPerMinute: 10000,
 			Burst:             100,
@@ -58,6 +63,11 @@ func (p *NoOpProvider) Authenticate(r *http.Request) (*Claims, error) {
 // ValidateToken is not used in NoOpProvider but required by the interface.
 func (p *NoOpProvider) ValidateToken(tokenString string) (*Claims, error) {
 	return &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "anonymous",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 		RateLimit: RateLimitConfig{
 			RequestsPerMinute: 10000,
 			Burst:             100,
