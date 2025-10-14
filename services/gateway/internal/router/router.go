@@ -740,6 +740,7 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 			zap.String("address", endpoint.Address),
 			zap.Error(err),
 		)
+
 		return
 	}
 
@@ -749,6 +750,7 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 	resp, err := client.Do(req)
 	if err != nil {
 		r.handleHealthCheckError(endpoint, err)
+
 		return
 	}
 
