@@ -297,12 +297,13 @@ func (s *E2ETestSuite) setupGateway() {
 	backendPort := 8080
 	fmt.Sscanf(backendPortStr, "%d", &backendPort)
 
-	err = mockDiscovery.RegisterEndpoint("e2e-test", discovery.Endpoint{
+	ep := discovery.Endpoint{
 		Address: backendHost,
 		Port:    backendPort,
-		Healthy: true,
 		Tags:    map[string]string{"protocol": "websocket"},
-	})
+	}
+	ep.SetHealthy(true)
+	err = mockDiscovery.RegisterEndpoint("e2e-test", ep)
 	require.NoError(s.t, err)
 
 	// Initialize components

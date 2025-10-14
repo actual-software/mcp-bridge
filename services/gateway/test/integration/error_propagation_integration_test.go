@@ -302,12 +302,13 @@ func (s *ErrorPropagationTestSuite) setupGateway() {
 		backendPort := 8080
 		fmt.Sscanf(backendPortStr, "%d", &backendPort)
 
-		err = mockDiscovery.RegisterEndpoint("error-test", discovery.Endpoint{
+		ep := discovery.Endpoint{
 			Address: backendHost,
 			Port:    backendPort,
-			Healthy: true,
 			Tags:    map[string]string{"backend_id": fmt.Sprintf("backend-%d", i)},
-		})
+		}
+		ep.SetHealthy(true)
+		err = mockDiscovery.RegisterEndpoint("error-test", ep)
 		require.NoError(s.t, err)
 	}
 

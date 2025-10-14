@@ -865,11 +865,12 @@ func (s *AuthTestSuite) createMockDiscovery(t *testing.T) *mockServiceDiscovery 
 	backendPort := 8080
 	fmt.Sscanf(backendPortStr, "%d", &backendPort)
 
-	err = mockDiscovery.RegisterEndpoint("test", discovery.Endpoint{
+	ep := discovery.Endpoint{
 		Address: backendHost,
 		Port:    backendPort,
-		Healthy: true,
-	})
+	}
+	ep.SetHealthy(true)
+	err = mockDiscovery.RegisterEndpoint("test", ep)
 	require.NoError(t, err)
 
 	return mockDiscovery
