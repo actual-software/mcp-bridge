@@ -534,7 +534,14 @@ func (r *Router) processHTTPResponse(httpResp *http.Response, span opentracing.S
 		return nil, fmt.Errorf("backend returned status %d: %s", httpResp.StatusCode, string(respBody))
 	}
 
-	// Parse response
+	// Check if response is SSE format
+	contentType := httpResp.Header.Get("Content-Type")
+	if strings.Contains(contentType, "text/event-stream") {
+		// Parse SSE response
+		return r.parseSSEResponse(respBody, span)
+	}
+
+	// Parse JSON response
 	var resp mcp.Response
 	if err := json.Unmarshal(respBody, &resp); err != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", err)
@@ -543,6 +550,34 @@ func (r *Router) processHTTPResponse(httpResp *http.Response, span opentracing.S
 	span.LogKV("http.success", true)
 
 	return &resp, nil
+}
+
+// parseSSEResponse parses an SSE (Server-Sent Events) response and extracts the JSON data.
+func (r *Router) parseSSEResponse(respBody []byte, span opentracing.Span) (*mcp.Response, error) {
+	// SSE format: lines starting with "data: " contain the JSON payload
+	lines := strings.Split(string(respBody), "\n")
+	
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		
+		// Look for data lines in SSE format
+		if strings.HasPrefix(line, "data: ") {
+			// Extract JSON from the data line
+			jsonData := strings.TrimPrefix(line, "data: ")
+			
+			// Parse the JSON response
+			var resp mcp.Response
+			if err := json.Unmarshal([]byte(jsonData), &resp); err != nil {
+				return nil, fmt.Errorf("failed to parse SSE data as JSON: %w", err)
+			}
+			
+			span.LogKV("http.success", true, "format", "sse")
+			
+			return &resp, nil
+		}
+	}
+	
+	return nil, fmt.Errorf("no data line found in SSE response")
 }
 
 // extractNamespace extracts the target namespace from a request.
