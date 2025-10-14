@@ -35,6 +35,47 @@ func TestRoundRobin_Next(t *testing.T) {
 	runRoundRobinTests(t, tests)
 }
 
+// createAllHealthyEndpoints creates a set of healthy endpoints for testing.
+func createAllHealthyEndpoints() []*discovery.Endpoint {
+	eps := []*discovery.Endpoint{
+		{Address: "ep1"},
+		{Address: "ep2"},
+		{Address: "ep3"},
+	}
+	for _, ep := range eps {
+		ep.SetHealthy(true)
+	}
+
+	return eps
+}
+
+// createMixedHealthEndpoints creates endpoints with mixed health states for testing.
+func createMixedHealthEndpoints() []*discovery.Endpoint {
+	eps := []*discovery.Endpoint{
+		{Address: "ep1"},
+		{Address: "ep2"},
+		{Address: "ep3"},
+	}
+	eps[0].SetHealthy(true)
+	eps[1].SetHealthy(false)
+	eps[2].SetHealthy(true)
+
+	return eps
+}
+
+// createAllUnhealthyEndpoints creates a set of unhealthy endpoints for testing.
+func createAllUnhealthyEndpoints() []*discovery.Endpoint {
+	eps := []*discovery.Endpoint{
+		{Address: "ep1"},
+		{Address: "ep2"},
+	}
+	for _, ep := range eps {
+		ep.SetHealthy(false)
+	}
+
+	return eps
+}
+
 func createRoundRobinTests() []struct {
 	name      string
 	endpoints []*discovery.Endpoint
@@ -48,38 +89,16 @@ func createRoundRobinTests() []struct {
 		want      []string
 	}{
 		{
-			name: "All healthy endpoints",
-			endpoints: func() []*discovery.Endpoint {
-				eps := []*discovery.Endpoint{
-					{Address: "ep1"},
-					{Address: "ep2"},
-					{Address: "ep3"},
-				}
-				for _, ep := range eps {
-					ep.SetHealthy(true)
-				}
-
-				return eps
-			}(),
-			calls: 6,
-			want:  []string{"ep2", "ep3", "ep1", "ep2", "ep3", "ep1"},
+			name:      "All healthy endpoints",
+			endpoints: createAllHealthyEndpoints(),
+			calls:     6,
+			want:      []string{"ep2", "ep3", "ep1", "ep2", "ep3", "ep1"},
 		},
 		{
-			name: "Some unhealthy endpoints",
-			endpoints: func() []*discovery.Endpoint {
-				eps := []*discovery.Endpoint{
-					{Address: "ep1"},
-					{Address: "ep2"},
-					{Address: "ep3"},
-				}
-				eps[0].SetHealthy(true)
-				eps[1].SetHealthy(false)
-				eps[2].SetHealthy(true)
-
-				return eps
-			}(),
-			calls: 4,
-			want:  []string{"ep3", "ep3", "ep1", "ep3"},
+			name:      "Some unhealthy endpoints",
+			endpoints: createMixedHealthEndpoints(),
+			calls:     4,
+			want:      []string{"ep3", "ep3", "ep1", "ep3"},
 		},
 		{
 			name:      "No endpoints",
@@ -88,20 +107,10 @@ func createRoundRobinTests() []struct {
 			want:      []string{"", ""},
 		},
 		{
-			name: "All unhealthy",
-			endpoints: func() []*discovery.Endpoint {
-				eps := []*discovery.Endpoint{
-					{Address: "ep1"},
-					{Address: "ep2"},
-				}
-				for _, ep := range eps {
-					ep.SetHealthy(false)
-				}
-
-				return eps
-			}(),
-			calls: 2,
-			want:  []string{"", ""},
+			name:      "All unhealthy",
+			endpoints: createAllUnhealthyEndpoints(),
+			calls:     2,
+			want:      []string{"", ""},
 		},
 	}
 }

@@ -27,6 +27,47 @@ func setHealthy(endpoints []*discovery.Endpoint, healthy bool) {
 }
 
 // TestHybridLoadBalancer_BackendHealthIntegration_Advanced tests integration with backend health.
+// createHealthyEndpointsForHealthTest creates a set of all-healthy endpoints for testing.
+func createHealthyEndpointsForHealthTest() []*discovery.Endpoint {
+	eps := []*discovery.Endpoint{
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
+	}
+	for _, ep := range eps {
+		ep.SetHealthy(true)
+	}
+
+	return eps
+}
+
+// createMixedHealthEndpointsForHealthTest creates endpoints with mixed health states for testing.
+func createMixedHealthEndpointsForHealthTest() []*discovery.Endpoint {
+	eps := []*discovery.Endpoint{
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
+	}
+	eps[0].SetHealthy(true)
+	eps[1].SetHealthy(true)
+	eps[2].SetHealthy(false)
+
+	return eps
+}
+
+// createUnhealthyEndpointsForHealthTest creates a set of all-unhealthy endpoints for testing.
+func createUnhealthyEndpointsForHealthTest() []*discovery.Endpoint {
+	eps := []*discovery.Endpoint{
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+	}
+	for _, ep := range eps {
+		ep.SetHealthy(false)
+	}
+
+	return eps
+}
+
 func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -34,51 +75,19 @@ func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 		expected  int // expected number of healthy endpoints returned
 	}{
 		{
-			name: "all healthy endpoints",
-			endpoints: func() []*discovery.Endpoint {
-				eps := []*discovery.Endpoint{
-					{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
-					{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
-					{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
-				}
-				for _, ep := range eps {
-					ep.SetHealthy(true)
-				}
-
-				return eps
-			}(),
-			expected: 3,
+			name:      "all healthy endpoints",
+			endpoints: createHealthyEndpointsForHealthTest(),
+			expected:  3,
 		},
 		{
-			name: "mixed health endpoints",
-			endpoints: func() []*discovery.Endpoint {
-				eps := []*discovery.Endpoint{
-					{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
-					{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
-					{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
-				}
-				eps[0].SetHealthy(true)
-				eps[1].SetHealthy(true)
-				eps[2].SetHealthy(false)
-
-				return eps
-			}(),
-			expected: 2,
+			name:      "mixed health endpoints",
+			endpoints: createMixedHealthEndpointsForHealthTest(),
+			expected:  2,
 		},
 		{
-			name: "all unhealthy endpoints",
-			endpoints: func() []*discovery.Endpoint {
-				eps := []*discovery.Endpoint{
-					{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
-					{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
-				}
-				for _, ep := range eps {
-					ep.SetHealthy(false)
-				}
-
-				return eps
-			}(),
-			expected: 0,
+			name:      "all unhealthy endpoints",
+			endpoints: createUnhealthyEndpointsForHealthTest(),
+			expected:  0,
 		},
 	}
 

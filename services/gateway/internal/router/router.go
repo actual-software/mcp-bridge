@@ -729,24 +729,10 @@ func (r *Router) checkEndpointHealth(ctx context.Context) {
 
 // checkEndpoint checks a single endpoint's health.
 func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint) {
-	// Use shorter timeout for faster health check response
-	healthCtx, cancel := context.WithTimeout(ctx, defaultHealthCheckTimeout) // Reduced from 5s
+	healthCtx, cancel := context.WithTimeout(ctx, defaultHealthCheckTimeout)
 	defer cancel()
 
-	// Use endpoint's path if provided, otherwise default to /health
-	healthPath := "/health"
-	if endpoint.Path != "" {
-		healthPath = endpoint.Path
-	}
-
-	// Use endpoint's scheme if provided, otherwise default to http
-	scheme := "http"
-	if endpoint.Scheme != "" {
-		scheme = endpoint.Scheme
-	}
-
-	url := fmt.Sprintf("%s://%s:%d%s", scheme, endpoint.Address, endpoint.Port, healthPath)
-
+	url := r.buildHealthCheckURL(endpoint)
 	req, err := http.NewRequestWithContext(healthCtx, http.MethodGet, url, nil)
 	if err != nil {
 		endpoint.SetHealthy(false)
@@ -754,29 +740,15 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 			zap.String("address", endpoint.Address),
 			zap.Error(err),
 		)
-
 		return
 	}
 
-	// Add Accept headers for MCP streamable-http compatibility
 	req.Header.Set("Accept", "text/event-stream, application/json")
 
 	client := r.getOrCreateHTTPClient(endpoint)
 	resp, err := client.Do(req)
 	if err != nil {
-		endpoint.SetHealthy(false)
-		r.logger.Debug("Endpoint health check failed",
-			zap.String("address", endpoint.Address),
-			zap.Error(err),
-		)
-
-		// Immediately mark circuit breaker as failed for faster error propagation
-		if breaker := r.getCircuitBreaker(endpoint.Address); breaker != nil {
-			_ = breaker.Call(func() error {
-				return fmt.Errorf("health check failed: %w", err)
-			})
-		}
-
+		r.handleHealthCheckError(endpoint, err)
 		return
 	}
 
@@ -786,16 +758,50 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 		}
 	}()
 
+	r.updateEndpointHealth(endpoint, resp.StatusCode)
+}
+
+// buildHealthCheckURL constructs the health check URL for an endpoint.
+func (r *Router) buildHealthCheckURL(endpoint *discovery.Endpoint) string {
+	healthPath := "/health"
+	if endpoint.Path != "" {
+		healthPath = endpoint.Path
+	}
+
+	scheme := "http"
+	if endpoint.Scheme != "" {
+		scheme = endpoint.Scheme
+	}
+
+	return fmt.Sprintf("%s://%s:%d%s", scheme, endpoint.Address, endpoint.Port, healthPath)
+}
+
+// handleHealthCheckError marks an endpoint as unhealthy and triggers circuit breaker.
+func (r *Router) handleHealthCheckError(endpoint *discovery.Endpoint, err error) {
+	endpoint.SetHealthy(false)
+	r.logger.Debug("Endpoint health check failed",
+		zap.String("address", endpoint.Address),
+		zap.Error(err),
+	)
+
+	if breaker := r.getCircuitBreaker(endpoint.Address); breaker != nil {
+		_ = breaker.Call(func() error {
+			return fmt.Errorf("health check failed: %w", err)
+		})
+	}
+}
+
+// updateEndpointHealth updates endpoint health status and logs changes.
+func (r *Router) updateEndpointHealth(endpoint *discovery.Endpoint, statusCode int) {
 	wasHealthy := endpoint.IsHealthy()
-	isHealthy := resp.StatusCode == http.StatusOK
+	isHealthy := statusCode == http.StatusOK
 	endpoint.SetHealthy(isHealthy)
 
-	// Log health status changes for better observability
 	if wasHealthy != isHealthy {
 		r.logger.Info("Endpoint health status changed",
 			zap.String("address", endpoint.Address),
 			zap.Bool("healthy", isHealthy),
-			zap.Int("status_code", resp.StatusCode),
+			zap.Int("status_code", statusCode),
 		)
 	}
 }
