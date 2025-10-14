@@ -10,22 +10,21 @@ ENV GOWORK=off
 # Set working directory
 WORKDIR /build
 
-# Copy main project go.mod (needed for replace directive)
-COPY go.mod go.sum ../../
+# Copy only go.mod and go.sum files first for better caching
+# Dependencies change less frequently than source code
+COPY go.mod go.sum ./
+COPY services/gateway/go.mod services/gateway/go.sum ./services/gateway/
+COPY services/router/go.mod services/router/go.sum ./services/router/
 
-# Copy go mod files for gateway
-COPY services/gateway/go.mod services/gateway/go.sum ./
+# Download dependencies with cache mount for faster rebuilds
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    cd services/gateway && go mod download
 
-# Copy router go mod files (needed for replace directive)  
-COPY services/router/go.mod services/router/go.sum ../router/
-
-# Download dependencies
-RUN go mod download
-
-# Copy source code
-COPY services/gateway/ ./
-COPY services/router/ ../router/
-COPY pkg/ ../../pkg/
+# Copy source code (this invalidates less frequently than go.mod changes)
+COPY services/gateway/ ./services/gateway/
+COPY services/router/ ./services/router/
+COPY pkg/ ./pkg/
 
 # Build arguments
 ARG VERSION=v1.0.0
@@ -34,11 +33,14 @@ ARG GIT_COMMIT=unknown
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 
-# Build the binary
-RUN BUILD_TIME_VAL="${BUILD_TIME:-$(date +%FT%T%z)}" && \
+# Build the binary with cache mounts for much faster compilation
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    BUILD_TIME_VAL="${BUILD_TIME:-$(date +%FT%T%z)}" && \
+    cd services/gateway && \
     CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME_VAL} -X main.GitCommit=${GIT_COMMIT} -s -w" \
-    -o mcp-gateway \
+    -o /build/mcp-gateway \
     ./cmd/mcp-gateway
 
 # Runtime stage

@@ -68,6 +68,8 @@ audit-results/
 **/tools/dev/
 
 # Docker files in subdirectories (avoid recursive builds)
-**/Dockerfile*
+# Note: We keep Dockerfiles in services/ since they're needed for builds
 **/docker-compose*
-**/.dockerignore
+test/**/Dockerfile*
+deployment/**/Dockerfile*
+examples/**/Dockerfile*

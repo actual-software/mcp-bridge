@@ -10,13 +10,21 @@ ENV GOWORK=off
 # Set working directory
 WORKDIR /build
 
-# Copy the entire project structure to satisfy module dependencies
-COPY . /src/
-WORKDIR /src/services/router
+# Copy only go.mod and go.sum files first for better caching
+# Dependencies change less frequently than source code
+COPY go.mod go.sum ./
+COPY services/router/go.mod services/router/go.sum ./services/router/
+COPY services/gateway/go.mod services/gateway/go.sum ./services/gateway/
 
-# Download dependencies
-RUN go mod download
-RUN go mod tidy
+# Download dependencies with cache mount for faster rebuilds
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    cd services/router && go mod download
+
+# Copy source code (this invalidates less frequently than go.mod changes)
+COPY services/router/ ./services/router/
+COPY services/gateway/ ./services/gateway/
+COPY pkg/ ./pkg/
 
 # Build arguments
 ARG VERSION=v1.0.0
@@ -25,11 +33,14 @@ ARG GIT_COMMIT=unknown
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 
-# Build the binary
-RUN BUILD_TIME_VAL="${BUILD_TIME:-$(date +%FT%T%z)}" && \
+# Build the binary with cache mounts for much faster compilation
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    BUILD_TIME_VAL="${BUILD_TIME:-$(date +%FT%T%z)}" && \
+    cd services/router && \
     CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME_VAL} -X main.GitCommit=${GIT_COMMIT} -s -w" \
-    -o mcp-router \
+    -o /build/mcp-router \
     ./cmd/mcp-router
 
 # Runtime stage
@@ -50,7 +61,7 @@ RUN adduser -D -g '' appuser
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /src/services/router/mcp-router /app/
+COPY --from=builder /build/mcp-router /app/
 
 # Create directories for config
 RUN mkdir -p /etc/mcp-router && \
