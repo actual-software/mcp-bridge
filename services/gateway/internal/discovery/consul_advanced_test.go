@@ -151,17 +151,20 @@ func TestConsulDiscovery_HealthCheckLogic_Advanced(t *testing.T) {
 	testEndpoints := []Endpoint{
 		{
 			Service: "weather-1", Namespace: "weather", Address: "127.0.0.1", Port: 8080,
-			Healthy: true, Metadata: map[string]string{"consul_id": "weather-1"},
+			Metadata: map[string]string{"consul_id": "weather-1"},
 		},
 		{
 			Service: "weather-2", Namespace: "weather", Address: "127.0.0.2", Port: 8080,
-			Healthy: false, Metadata: map[string]string{"consul_id": "weather-2"},
+			Metadata: map[string]string{"consul_id": "weather-2"},
 		},
 		{
 			Service: "weather-3", Namespace: "weather", Address: "127.0.0.3", Port: 8080,
-			Healthy: true, Metadata: map[string]string{"consul_id": "weather-3"},
+			Metadata: map[string]string{"consul_id": "weather-3"},
 		},
 	}
+	testEndpoints[0].SetHealthy(true)
+	testEndpoints[1].SetHealthy(false) // One unhealthy initially
+	testEndpoints[2].SetHealthy(true)
 	discovery.endpoints["weather"] = testEndpoints
 
 	// Test initial health states
@@ -173,7 +176,7 @@ func TestConsulDiscovery_HealthCheckLogic_Advanced(t *testing.T) {
 	unhealthyCount := 0
 
 	for _, endpoint := range weatherEndpoints {
-		if endpoint.Healthy {
+		if endpoint.IsHealthy() {
 			healthyCount++
 		} else {
 			unhealthyCount++
@@ -184,15 +187,15 @@ func TestConsulDiscovery_HealthCheckLogic_Advanced(t *testing.T) {
 	assert.Equal(t, 1, unhealthyCount, "Should have 1 unhealthy endpoint")
 
 	// Test health status changes
-	discovery.endpoints["weather"][1].Healthy = true  // Make unhealthy endpoint healthy
-	discovery.endpoints["weather"][2].Healthy = false // Make healthy endpoint unhealthy
+	discovery.endpoints["weather"][1].SetHealthy(true)  // Make unhealthy endpoint healthy
+	discovery.endpoints["weather"][2].SetHealthy(false) // Make healthy endpoint unhealthy
 
 	updatedEndpoints := discovery.GetEndpoints("weather")
 	newHealthyCount := 0
 	newUnhealthyCount := 0
 
 	for _, endpoint := range updatedEndpoints {
-		if endpoint.Healthy {
+		if endpoint.IsHealthy() {
 			newHealthyCount++
 		} else {
 			newUnhealthyCount++
@@ -213,13 +216,16 @@ func TestConsulDiscovery_UpdateHealthStatusLogic_Advanced(t *testing.T) {
 	// Create test endpoints
 	initialEndpoints := []Endpoint{
 		{
-			Service: "service-1", Namespace: "ns1", Address: "127.0.0.1", Port: 8080, Healthy: true,
+			Service: "service-1", Namespace: "ns1", Address: "127.0.0.1", Port: 8080,
 			Metadata: map[string]string{"consul_id": "service-1-id"},
 		},
 		{
-			Service: "service-2", Namespace: "ns1", Address: "127.0.0.2", Port: 8080, Healthy: true,
+			Service: "service-2", Namespace: "ns1", Address: "127.0.0.2", Port: 8080,
 			Metadata: map[string]string{"consul_id": "service-2-id"},
 		},
+	}
+	for i := range initialEndpoints {
+		initialEndpoints[i].SetHealthy(true)
 	}
 	discovery.endpoints["ns1"] = initialEndpoints
 
@@ -231,7 +237,7 @@ func TestConsulDiscovery_UpdateHealthStatusLogic_Advanced(t *testing.T) {
 	// Verify initial states
 
 	for _, endpoint := range updatedEndpoints {
-		assert.True(t, endpoint.Healthy, "All endpoints should initially be healthy")
+		assert.True(t, endpoint.IsHealthy(), "All endpoints should initially be healthy")
 		assert.NotEmpty(t, endpoint.Metadata["consul_id"], "Endpoints should have consul_id metadata")
 	}
 
@@ -240,7 +246,7 @@ func TestConsulDiscovery_UpdateHealthStatusLogic_Advanced(t *testing.T) {
 	for i := range discovery.endpoints["ns1"] {
 		endpoint := &discovery.endpoints["ns1"][i]
 		if endpoint.Metadata["consul_id"] == "service-2-id" {
-			endpoint.Healthy = false // Simulate health check failure
+			endpoint.SetHealthy(false) // Simulate health check failure
 
 			break
 		}
@@ -252,7 +258,7 @@ func TestConsulDiscovery_UpdateHealthStatusLogic_Advanced(t *testing.T) {
 	unhealthyCount := 0
 
 	for _, endpoint := range finalEndpoints {
-		if endpoint.Healthy {
+		if endpoint.IsHealthy() {
 			healthyCount++
 		} else {
 			unhealthyCount++
@@ -272,8 +278,11 @@ func TestConsulDiscovery_ConcurrentAccess_Advanced(t *testing.T) {
 
 	// Initialize with test data
 	testEndpoints := []Endpoint{
-		{Service: "service-1", Namespace: "test", Address: "127.0.0.1", Port: 8080, Healthy: true},
-		{Service: "service-2", Namespace: "test", Address: "127.0.0.2", Port: 8080, Healthy: true},
+		{Service: "service-1", Namespace: "test", Address: "127.0.0.1", Port: 8080},
+		{Service: "service-2", Namespace: "test", Address: "127.0.0.2", Port: 8080},
+	}
+	for i := range testEndpoints {
+		testEndpoints[i].SetHealthy(true)
 	}
 	discovery.endpoints["test"] = testEndpoints
 
@@ -519,7 +528,7 @@ func createCustomMetadataTests() []struct {
 				assert.Equal(t, 9090, endpoint.Port)
 				assert.Equal(t, 150, endpoint.Weight)
 				assert.Equal(t, "/api/v1", endpoint.Path)
-				assert.True(t, endpoint.Healthy)
+				assert.True(t, endpoint.IsHealthy())
 				assert.Equal(t, "custom_value", endpoint.Metadata["custom_field"])
 				assert.Equal(t, "custom-node", endpoint.Metadata["consul_node"])
 				assert.Equal(t, "dc2", endpoint.Metadata["consul_datacenter"])

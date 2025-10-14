@@ -122,8 +122,8 @@ func (s *SSEDiscovery) GetServices(ctx context.Context) ([]Endpoint, error) {
 			Path:      u.Path,
 			Weight:    service.Weight,
 			Metadata:  s.createMetadata(service),
-			Healthy:   true, // Assume healthy initially
 		}
+		endpoint.SetHealthy(true) // Assume healthy initially
 
 		// Perform basic connectivity check
 		if err := s.checkServiceConnectivity(ctx, service); err != nil {
@@ -132,7 +132,7 @@ func (s *SSEDiscovery) GetServices(ctx context.Context) ([]Endpoint, error) {
 				zap.String("base_url", service.BaseURL),
 				zap.Error(err))
 
-			endpoint.Healthy = false
+			endpoint.SetHealthy(false)
 		}
 
 		endpoints = append(endpoints, endpoint)
@@ -175,12 +175,12 @@ func (s *SSEDiscovery) GetService(ctx context.Context, serviceName string) (*End
 		Path:      u.Path,
 		Weight:    service.Weight,
 		Metadata:  s.createMetadata(service),
-		Healthy:   true,
 	}
+	endpoint.SetHealthy(true)
 
 	// Check connectivity
 	if err := s.checkServiceConnectivity(ctx, service); err != nil {
-		endpoint.Healthy = false
+		endpoint.SetHealthy(false)
 	}
 
 	return endpoint, nil

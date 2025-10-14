@@ -11,9 +11,12 @@ import (
 
 func TestHybridLoadBalancer_NewHybridLoadBalancer(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "localhost", Port: 0, Scheme: "stdio", Healthy: true, Metadata: map[string]string{"protocol": "stdio"}},
-		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: true, Metadata: map[string]string{"protocol": "websocket"}},
-		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
+		{Address: "localhost", Port: 0, Scheme: "stdio", Metadata: map[string]string{"protocol": "stdio"}},
+		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Metadata: map[string]string{"protocol": "websocket"}},
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	config := HybridConfig{
@@ -34,9 +37,12 @@ func TestHybridLoadBalancer_NewHybridLoadBalancer(t *testing.T) {
 
 func TestHybridLoadBalancer_ProtocolPreference(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "localhost", Port: 0, Scheme: "stdio", Healthy: true, Metadata: map[string]string{"protocol": "stdio"}},
-		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: true, Metadata: map[string]string{"protocol": "websocket"}},
-		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
+		{Address: "localhost", Port: 0, Scheme: "stdio", Metadata: map[string]string{"protocol": "stdio"}},
+		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Metadata: map[string]string{"protocol": "websocket"}},
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	config := HybridConfig{
@@ -57,9 +63,12 @@ func TestHybridLoadBalancer_ProtocolPreference(t *testing.T) {
 
 func TestHybridLoadBalancer_RoundRobinWithinProtocol(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
-		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
-		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: true, Metadata: map[string]string{"protocol": "websocket"}},
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Metadata: map[string]string{"protocol": "websocket"}},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	config := HybridConfig{
@@ -92,8 +101,11 @@ func TestHybridLoadBalancer_RoundRobinWithinProtocol(t *testing.T) {
 
 func TestHybridLoadBalancer_LeastConnections(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
-		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	config := HybridConfig{
@@ -129,13 +141,16 @@ func TestHybridLoadBalancer_LeastConnections(t *testing.T) {
 func TestHybridLoadBalancer_WeightedSelection(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
 		{
-			Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Weight: 1,
+			Address: "127.0.0.1", Port: 9090, Scheme: "http", Weight: 1,
 			Metadata: map[string]string{"protocol": "http"},
 		},
 		{
-			Address: "127.0.0.1", Port: 9091, Scheme: "http", Healthy: true, Weight: 3,
+			Address: "127.0.0.1", Port: 9091, Scheme: "http", Weight: 3,
 			Metadata: map[string]string{"protocol": "http"},
 		},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	config := HybridConfig{
@@ -164,9 +179,11 @@ func TestHybridLoadBalancer_WeightedSelection(t *testing.T) {
 
 func TestHybridLoadBalancer_HealthAwareness(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: false, Metadata: map[string]string{"protocol": "http"}},
-		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: true, Metadata: map[string]string{"protocol": "websocket"}},
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Metadata: map[string]string{"protocol": "websocket"}},
 	}
+	endpoints[0].SetHealthy(false)
+	endpoints[1].SetHealthy(true)
 
 	config := HybridConfig{
 		Strategy:           "round_robin",
@@ -249,22 +266,26 @@ func TestHybridLoadBalancer_ProtocolDetection(t *testing.T) {
 func TestHybridLoadBalancer_ProtocolStats(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
 		{
-			Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Weight: 2,
+			Address: "127.0.0.1", Port: 9090, Scheme: "http", Weight: 2,
 			Metadata: map[string]string{"protocol": "http"},
 		},
 		{
-			Address: "127.0.0.1", Port: 9091, Scheme: "http", Healthy: false, Weight: 1,
+			Address: "127.0.0.1", Port: 9091, Scheme: "http", Weight: 1,
 			Metadata: map[string]string{"protocol": "http"},
 		},
 		{
-			Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: true, Weight: 1,
+			Address: "127.0.0.1", Port: 8080, Scheme: "ws", Weight: 1,
 			Metadata: map[string]string{"protocol": "websocket"},
 		},
 		{
-			Address: "localhost", Port: 0, Scheme: "stdio", Healthy: true, Weight: 1,
+			Address: "localhost", Port: 0, Scheme: "stdio", Weight: 1,
 			Metadata: map[string]string{"protocol": "stdio"},
 		},
 	}
+	endpoints[0].SetHealthy(true)
+	endpoints[1].SetHealthy(false)
+	endpoints[2].SetHealthy(true)
+	endpoints[3].SetHealthy(true)
 
 	config := HybridConfig{
 		Strategy:           "weighted",
@@ -307,7 +328,10 @@ func TestHybridLoadBalancer_ProtocolStats(t *testing.T) {
 
 func TestHybridLoadBalancer_UpdateEndpoints(t *testing.T) {
 	initialEndpoints := []*discovery.Endpoint{
-		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
+		{Address: "127.0.0.1", Port: 9090, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+	}
+	for _, ep := range initialEndpoints {
+		ep.SetHealthy(true)
 	}
 
 	config := HybridConfig{
@@ -323,8 +347,11 @@ func TestHybridLoadBalancer_UpdateEndpoints(t *testing.T) {
 
 	// Update with new endpoints
 	newEndpoints := []*discovery.Endpoint{
-		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: true, Metadata: map[string]string{"protocol": "websocket"}},
-		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Healthy: true, Metadata: map[string]string{"protocol": "http"}},
+		{Address: "127.0.0.1", Port: 8080, Scheme: "ws", Metadata: map[string]string{"protocol": "websocket"}},
+		{Address: "127.0.0.1", Port: 9091, Scheme: "http", Metadata: map[string]string{"protocol": "http"}},
+	}
+	for _, ep := range newEndpoints {
+		ep.SetHealthy(true)
 	}
 
 	lb.UpdateEndpoints(newEndpoints)
@@ -339,13 +366,16 @@ func TestHybridLoadBalancer_UpdateEndpoints(t *testing.T) {
 func TestHybridLoadBalancer_NoHealthyEndpoints(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
 		{
-			Address: "127.0.0.1", Port: 9090, Scheme: "http", Healthy: false,
+			Address: "127.0.0.1", Port: 9090, Scheme: "http",
 			Metadata: map[string]string{"protocol": "http"},
 		},
 		{
-			Address: "127.0.0.1", Port: 8080, Scheme: "ws", Healthy: false,
+			Address: "127.0.0.1", Port: 8080, Scheme: "ws",
 			Metadata: map[string]string{"protocol": "websocket"},
 		},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(false)
 	}
 
 	config := HybridConfig{

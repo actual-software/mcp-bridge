@@ -686,7 +686,7 @@ func verifyBasicEndpointFields(t *testing.T, ep Endpoint) {
 		t.Error("Endpoint missing port")
 	}
 
-	if !ep.Healthy {
+	if !ep.IsHealthy() {
 		t.Error("Expected endpoint to be healthy")
 	}
 }
@@ -1098,8 +1098,8 @@ func TestEndpoint_Serialization(t *testing.T) {
 			{Name: "tool1", Description: "Tool 1 description"},
 			{Name: "tool2", Description: "Tool 2 description"},
 		},
-		Healthy: true,
 	}
+	endpoint.SetHealthy(true)
 
 	// Test JSON serialization
 	data, err := json.Marshal(endpoint)

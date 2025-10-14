@@ -369,7 +369,7 @@ func (d *KubernetesDiscovery) createEndpoint(
 	serviceName, namespace string,
 	config *mcpServiceConfig,
 ) Endpoint {
-	return Endpoint{
+	endpoint := Endpoint{
 		Service:   serviceName,
 		Namespace: config.namespace,
 		Address:   ip,
@@ -381,9 +381,10 @@ func (d *KubernetesDiscovery) createEndpoint(
 			"k8s_namespace": namespace,
 			"k8s_service":   serviceName,
 		},
-		Tools:   config.tools,
-		Healthy: true,
+		Tools: config.tools,
 	}
+	endpoint.SetHealthy(true)
+	return endpoint
 }
 
 // watchNamespace starts watching for service changes in a namespace.

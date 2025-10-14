@@ -104,7 +104,7 @@ func (sd *StaticDiscovery) configToEndpoint(namespace string, cfg config.Endpoin
 		}
 	}
 
-	return Endpoint{
+	endpoint := Endpoint{
 		Service:   namespace + "-service", // Generate service name
 		Namespace: namespace,
 		Address:   parsedURL.Hostname(),
@@ -114,8 +114,9 @@ func (sd *StaticDiscovery) configToEndpoint(namespace string, cfg config.Endpoin
 		Weight:    DefaultWeight,    // Default weight
 		Metadata:  metadata,
 		Tools:     []ToolInfo{}, // Static discovery doesn't provide tool info
-		Healthy:   true,         // Assume healthy for static endpoints
-	}, nil
+	}
+	endpoint.SetHealthy(true) // Assume healthy for static endpoints
+	return endpoint, nil
 }
 
 // Start implements ServiceDiscovery interface.

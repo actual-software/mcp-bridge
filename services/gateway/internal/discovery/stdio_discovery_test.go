@@ -356,7 +356,7 @@ func TestStdioDiscovery_ServiceWithFullConfig(t *testing.T) {
 	assert.Equal(t, testTimeout, endpoint.Weight)
 	assert.Equal(t, "1.0.0", endpoint.Metadata["version"])
 	assert.Equal(t, "microservice", endpoint.Metadata["type"])
-	assert.True(t, endpoint.Healthy) // Should be healthy by default
+	assert.True(t, endpoint.IsHealthy()) // Should be healthy by default
 }
 
 func TestStdioDiscovery_CreateMetadata(t *testing.T) {

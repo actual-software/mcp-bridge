@@ -19,6 +19,13 @@ const (
 	httpStatusInternalError = 500
 )
 
+// setHealthy is a test helper to set health status on endpoints
+func setHealthy(endpoints []*discovery.Endpoint, healthy bool) {
+	for _, ep := range endpoints {
+		ep.SetHealthy(healthy)
+	}
+}
+
 // TestHybridLoadBalancer_BackendHealthIntegration_Advanced tests integration with backend health.
 func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 	tests := []struct {
@@ -28,28 +35,46 @@ func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 	}{
 		{
 			name: "all healthy endpoints",
-			endpoints: []*discovery.Endpoint{
-				{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-				{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations},
-				{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations},
-			},
+			endpoints: func() []*discovery.Endpoint {
+				eps := []*discovery.Endpoint{
+					{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+					{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+					{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
+				}
+				for _, ep := range eps {
+					ep.SetHealthy(true)
+				}
+				return eps
+			}(),
 			expected: 3,
 		},
 		{
 			name: "mixed health endpoints",
-			endpoints: []*discovery.Endpoint{
-				{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-				{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: false, Weight: testIterations},
-				{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations},
-			},
+			endpoints: func() []*discovery.Endpoint {
+				eps := []*discovery.Endpoint{
+					{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+					{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+					{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
+				}
+				eps[0].SetHealthy(true)
+				eps[1].SetHealthy(true)
+				eps[2].SetHealthy(false)
+				return eps
+			}(),
 			expected: 2,
 		},
 		{
 			name: "all unhealthy endpoints",
-			endpoints: []*discovery.Endpoint{
-				{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: false, Weight: testIterations},
-				{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: false, Weight: testIterations},
-			},
+			endpoints: func() []*discovery.Endpoint {
+				eps := []*discovery.Endpoint{
+					{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+					{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+				}
+				for _, ep := range eps {
+					ep.SetHealthy(false)
+				}
+				return eps
+			}(),
 			expected: 0,
 		},
 	}
@@ -68,7 +93,7 @@ func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 			for i := 0; i < len(tt.endpoints)*2; i++ {
 				endpoint := lb.Next()
 				if endpoint != nil {
-					assert.True(t, endpoint.Healthy, "Only healthy endpoints should be returned")
+					assert.True(t, endpoint.IsHealthy(), "Only healthy endpoints should be returned")
 
 					healthyCount++
 				}
@@ -86,10 +111,11 @@ func TestHybridLoadBalancer_BackendHealthIntegration_Advanced(t *testing.T) {
 // TestHybridLoadBalancer_TrafficDistribution_Advanced tests traffic distribution patterns.
 func TestHybridLoadBalancer_TrafficDistribution_Advanced(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testTimeout},
-		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: 30},
-		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: 20},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testTimeout},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: 30},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: 20},
 	}
+	setHealthy(endpoints, true)
 
 	config := HybridConfig{
 		Strategy:    "weighted",
@@ -125,10 +151,11 @@ func TestHybridLoadBalancer_TrafficDistribution_Advanced(t *testing.T) {
 // TestHybridLoadBalancer_ConcurrentTrafficDistribution_Advanced tests concurrent load balancing.
 func TestHybridLoadBalancer_ConcurrentTrafficDistribution_Advanced(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
 	}
+	setHealthy(endpoints, true)
 
 	config := HybridConfig{
 		Strategy:    "round_robin",
@@ -199,31 +226,27 @@ func setupProtocolGroupingTest(t *testing.T) (*HybridLoadBalancer, []*discovery.
 
 	endpoints := []*discovery.Endpoint{
 		{
-			Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Healthy: true,
-			Weight: testIterations, Scheme: "http",
+			Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations, Scheme: "http",
 			Metadata: map[string]string{"protocol": "http"},
 		},
 		{
-			Service: "http-svc2", Address: "192.168.1.2", Port: 8080, Healthy: true,
-			Weight: testIterations, Scheme: "http",
+			Service: "http-svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations, Scheme: "http",
 			Metadata: map[string]string{"protocol": "http"},
 		},
 		{
-			Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Healthy: true,
-			Weight: testIterations, Scheme: "ws",
+			Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Weight: testIterations, Scheme: "ws",
 			Metadata: map[string]string{"protocol": "websocket"},
 		},
 		{
-			Service: "ws-svc2", Address: "192.168.1.4", Port: 8080, Healthy: true,
-			Weight: testIterations, Scheme: "wss",
+			Service: "ws-svc2", Address: "192.168.1.4", Port: 8080, Weight: testIterations, Scheme: "wss",
 			Metadata: map[string]string{"protocol": "websocket"},
 		},
 		{
-			Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Healthy: true,
-			Weight: testIterations, Scheme: "http", Path: "/events",
+			Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Weight: testIterations, Scheme: "http", Path: "/events",
 			Metadata: map[string]string{"protocol": "sse"},
 		},
 	}
+	setHealthy(endpoints, true)
 
 	config := HybridConfig{
 		Strategy:           "round_robin",
@@ -271,7 +294,7 @@ func testWebSocketFallback(t *testing.T, originalEndpoints []*discovery.Endpoint
 
 	for _, ep := range endpointsNoHTTP {
 		if ep.Metadata["protocol"] == "http" {
-			ep.Healthy = false
+			ep.SetHealthy(false)
 		}
 	}
 
@@ -306,21 +329,21 @@ func testSSELastResort(t *testing.T, originalEndpoints []*discovery.Endpoint) {
 	// Create endpoints with only SSE healthy
 	endpointsOnlySSE := []*discovery.Endpoint{
 		{
-			Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Healthy: false,
-			Weight: testIterations, Scheme: "http",
+			Service: "http-svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations, Scheme: "http",
 			Metadata: map[string]string{"protocol": "http"},
 		},
 		{
-			Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Healthy: false,
-			Weight: testIterations, Scheme: "ws",
+			Service: "ws-svc1", Address: "192.168.1.3", Port: 8080, Weight: testIterations, Scheme: "ws",
 			Metadata: map[string]string{"protocol": "websocket"},
 		},
 		{
-			Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Healthy: true,
-			Weight: testIterations, Scheme: "http", Path: "/events",
+			Service: "sse-svc1", Address: "192.168.1.5", Port: 8080, Weight: testIterations, Scheme: "http", Path: "/events",
 			Metadata: map[string]string{"protocol": "sse"},
 		},
 	}
+	endpointsOnlySSE[0].SetHealthy(false)
+	endpointsOnlySSE[1].SetHealthy(false)
+	endpointsOnlySSE[2].SetHealthy(true)
 
 	config := HybridConfig{
 		Strategy:           "round_robin",
@@ -360,10 +383,11 @@ func setupHealthRecoveryTest(t *testing.T) *HybridLoadBalancer {
 	t.Helper()
 
 	initialEndpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
 	}
+	setHealthy(initialEndpoints, true)
 
 	config := HybridConfig{
 		Strategy:    "round_robin",
@@ -380,7 +404,7 @@ func testInitialHealthyState(t *testing.T, lb *HybridLoadBalancer) {
 
 	for i := 0; i < 30; i++ {
 		endpoint := lb.Next()
-		if endpoint != nil && endpoint.Healthy {
+		if endpoint != nil && endpoint.IsHealthy() {
 			healthyCount++
 		}
 	}
@@ -393,10 +417,12 @@ func testServiceDegradation(t *testing.T, lb *HybridLoadBalancer) {
 
 	// Simulate one service becoming unhealthy
 	degradedEndpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: false, Weight: testIterations}, // unhealthy
-		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations}, // unhealthy
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
 	}
+	degradedEndpoints[0].SetHealthy(false)
+	setHealthy(degradedEndpoints[1:], true)
 
 	lb.UpdateEndpoints(degradedEndpoints)
 
@@ -407,7 +433,7 @@ func testServiceDegradation(t *testing.T, lb *HybridLoadBalancer) {
 		endpoint := lb.Next()
 
 		require.NotNil(t, endpoint)
-		assert.True(t, endpoint.Healthy, "Should only return healthy endpoints")
+		assert.True(t, endpoint.IsHealthy(), "Should only return healthy endpoints")
 
 		serviceCounts[endpoint.Service]++
 	}
@@ -424,10 +450,11 @@ func testServiceRecovery(t *testing.T, lb *HybridLoadBalancer) {
 
 	// Simulate recovery
 	recoveredEndpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations}, // recovered
-		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations}, // recovered
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations},
 	}
+	setHealthy(recoveredEndpoints, true)
 
 	lb.UpdateEndpoints(recoveredEndpoints)
 
@@ -438,7 +465,7 @@ func testServiceRecovery(t *testing.T, lb *HybridLoadBalancer) {
 		endpoint := lb.Next()
 
 		require.NotNil(t, endpoint)
-		assert.True(t, endpoint.Healthy, "All endpoints should be healthy")
+		assert.True(t, endpoint.IsHealthy(), "All endpoints should be healthy")
 
 		recoveredServiceCounts[endpoint.Service]++
 	}
@@ -472,9 +499,9 @@ func TestLoadBalancer_WeightDistributionAccuracy_Advanced(t *testing.T) {
 					Service: "svc" + string(rune('1'+i)),
 					Address: "192.168.1." + string(rune('1'+i)),
 					Port:    8080,
-					Healthy: true,
 					Weight:  weight,
 				}
+				endpoints[i].SetHealthy(true)
 				totalWeight += weight
 			}
 
@@ -551,8 +578,9 @@ func getHybridLoadBalancerEdgeCaseTests() []struct {
 
 func setupZeroWeightEndpoint() *HybridLoadBalancer {
 	endpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: 0},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: 0},
 	}
+	setHealthy(endpoints, true)
 	config := HybridConfig{Strategy: "weighted", HealthAware: true}
 
 	return NewHybridLoadBalancer(endpoints, config)
@@ -578,8 +606,9 @@ func testEmptyEndpointsList(t *testing.T, lb *HybridLoadBalancer) {
 
 func setupSingleHealthyEndpoint() *HybridLoadBalancer {
 	endpoints := []*discovery.Endpoint{
-		{Service: "only-svc", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
+		{Service: "only-svc", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
 	}
+	setHealthy(endpoints, true)
 	config := HybridConfig{Strategy: "round_robin", HealthAware: true}
 
 	return NewHybridLoadBalancer(endpoints, config)
@@ -621,9 +650,9 @@ func createManyTestEndpoints() []*discovery.Endpoint {
 			Service: "svc-" + string(rune('a'+i%26)),
 			Address: "192.168.1." + string(rune('1'+i%254)),
 			Port:    8080 + i,
-			Healthy: i%10 != 0, // 90% healthy
 			Weight:  testTimeout + i%testIterations,
 		}
+		endpoints[i].SetHealthy(i%10 != 0) // 90% healthy
 	}
 
 	return endpoints
@@ -649,7 +678,7 @@ func executePerformanceRequests(lb *HybridLoadBalancer, requests int) int {
 
 	for i := 0; i < requests; i++ {
 		endpoint := lb.Next()
-		if endpoint != nil && endpoint.Healthy {
+		if endpoint != nil && endpoint.IsHealthy() {
 			successCount++
 		}
 	}
@@ -676,9 +705,10 @@ func validatePerformanceResults(t *testing.T, algorithm string, successCount, re
 func TestHybridLoadBalancer_UpdateEndpoints_Advanced(t *testing.T) {
 	// Start with initial endpoints
 	initialEndpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: testIterations},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: testIterations},
 	}
+	setHealthy(initialEndpoints, true)
 
 	config := HybridConfig{
 		Strategy:    "round_robin",
@@ -702,12 +732,13 @@ func TestHybridLoadBalancer_UpdateEndpoints_Advanced(t *testing.T) {
 
 	// Update with new endpoints
 	updatedEndpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
 		{
-			Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: testIterations,
+			Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: testIterations,
 		}, // svc2 removed, svc3 added
-		{Service: "svc4", Address: "192.168.1.4", Port: 8080, Healthy: true, Weight: testIterations}, // svc4 added
+		{Service: "svc4", Address: "192.168.1.4", Port: 8080, Weight: testIterations}, // svc4 added
 	}
+	setHealthy(updatedEndpoints, true)
 
 	lb.UpdateEndpoints(updatedEndpoints)
 
@@ -734,12 +765,13 @@ func TestHybridLoadBalancer_UpdateEndpoints_Advanced(t *testing.T) {
 // BenchmarkHybridLoadBalancer_Advanced benchmarks the hybrid load balancer.
 func BenchmarkHybridLoadBalancer_Advanced(b *testing.B) {
 	endpoints := []*discovery.Endpoint{
-		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Healthy: true, Weight: testIterations},
-		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Healthy: true, Weight: 150},
-		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Healthy: true, Weight: httpStatusOK},
-		{Service: "svc4", Address: "192.168.1.4", Port: 8080, Healthy: true, Weight: testTimeout},
-		{Service: "svc5", Address: "192.168.1.5", Port: 8080, Healthy: true, Weight: 75},
+		{Service: "svc1", Address: "192.168.1.1", Port: 8080, Weight: testIterations},
+		{Service: "svc2", Address: "192.168.1.2", Port: 8080, Weight: 150},
+		{Service: "svc3", Address: "192.168.1.3", Port: 8080, Weight: httpStatusOK},
+		{Service: "svc4", Address: "192.168.1.4", Port: 8080, Weight: testTimeout},
+		{Service: "svc5", Address: "192.168.1.5", Port: 8080, Weight: 75},
 	}
+	setHealthy(endpoints, true)
 
 	algorithms := map[string]HybridConfig{
 		"RoundRobin":       {Strategy: "round_robin", HealthAware: true},

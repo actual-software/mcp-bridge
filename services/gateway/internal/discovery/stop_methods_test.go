@@ -388,7 +388,7 @@ func TestSSEDiscovery_HealthCheck(t *testing.T) {
 	// Verify endpoint exists and is marked as unhealthy
 	endpoints := discovery.GetEndpoints("weather")
 	assert.Len(t, endpoints, 1)
-	assert.False(t, endpoints[0].Healthy)
+	assert.False(t, endpoints[0].IsHealthy())
 }
 
 // TestStdioDiscovery_HealthCheck tests the HealthCheck method.
@@ -471,5 +471,5 @@ func TestWebSocketDiscovery_HealthCheck(t *testing.T) {
 	// Verify endpoint exists and is marked as unhealthy
 	endpoints := discovery.GetEndpoints("weather")
 	assert.Len(t, endpoints, 1)
-	assert.False(t, endpoints[0].Healthy)
+	assert.False(t, endpoints[0].IsHealthy())
 }

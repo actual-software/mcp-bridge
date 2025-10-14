@@ -106,7 +106,7 @@ func (h *HybridLoadBalancer) selectFromProtocol(protocol string) *discovery.Endp
 	}
 
 	// Check health if enabled
-	if h.healthAware && !selected.Healthy {
+	if h.healthAware && !selected.IsHealthy() {
 		return nil
 	}
 
@@ -155,7 +155,7 @@ func (h *HybridLoadBalancer) nextRoundRobin(endpoints []*discovery.Endpoint) *di
 		idx := (start + uint64(i)) % uint64(len(endpoints)) // #nosec G115 - i is bounded by endpoints length
 		ep := endpoints[idx]
 
-		if !h.healthAware || ep.Healthy {
+		if !h.healthAware || ep.IsHealthy() {
 			return ep
 		}
 	}
@@ -175,7 +175,7 @@ func (h *HybridLoadBalancer) nextLeastConnections(endpoints []*discovery.Endpoin
 
 	// Find endpoints with minimum connections
 	for _, ep := range endpoints {
-		if h.healthAware && !ep.Healthy {
+		if h.healthAware && !ep.IsHealthy() {
 			continue
 		}
 
@@ -224,7 +224,7 @@ func (h *HybridLoadBalancer) getHealthyWeightedEndpoints(endpoints []*discovery.
 	healthyEndpoints := make([]*discovery.Endpoint, 0, len(endpoints))
 
 	for _, ep := range endpoints {
-		if h.healthAware && !ep.Healthy {
+		if h.healthAware && !ep.IsHealthy() {
 			continue
 		}
 
@@ -357,7 +357,7 @@ func (h *HybridLoadBalancer) GetProtocolStats() map[string]ProtocolStats {
 		totalWeight := 0
 
 		for _, ep := range endpoints {
-			if ep.Healthy {
+			if ep.IsHealthy() {
 				healthy++
 			} else {
 				unhealthy++

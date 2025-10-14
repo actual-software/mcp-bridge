@@ -106,8 +106,8 @@ func (w *WebSocketDiscovery) GetServices(ctx context.Context) ([]Endpoint, error
 				Path:      u.Path,
 				Weight:    service.Weight,
 				Metadata:  w.createMetadata(service, endpointURL),
-				Healthy:   true, // Assume healthy initially
 			}
+			endpoint.SetHealthy(true) // Assume healthy initially
 
 			// Perform basic connectivity check
 			if w.config.Services != nil {
@@ -117,7 +117,7 @@ func (w *WebSocketDiscovery) GetServices(ctx context.Context) ([]Endpoint, error
 						zap.String("endpoint", endpointURL),
 						zap.Error(err))
 
-					endpoint.Healthy = false
+					endpoint.SetHealthy(false)
 				}
 			}
 
@@ -169,12 +169,12 @@ func (w *WebSocketDiscovery) GetService(ctx context.Context, serviceName string)
 		Path:      u.Path,
 		Weight:    service.Weight,
 		Metadata:  w.createMetadata(service, endpointURL),
-		Healthy:   true,
 	}
+	endpoint.SetHealthy(true)
 
 	// Check connectivity
 	if err := w.checkEndpointConnectivity(ctx, endpointURL, service); err != nil {
-		endpoint.Healthy = false
+		endpoint.SetHealthy(false)
 	}
 
 	return endpoint, nil

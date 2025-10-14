@@ -77,8 +77,8 @@ func (s *StdioDiscovery) GetServices(ctx context.Context) ([]Endpoint, error) {
 			Path:      service.WorkingDir,
 			Weight:    service.Weight,
 			Metadata:  s.createMetadata(service),
-			Healthy:   true, // Assume healthy initially
 		}
+		endpoint.SetHealthy(true) // Assume healthy initially
 
 		// Check if the command is available
 		if len(service.Command) > 0 {
@@ -88,7 +88,7 @@ func (s *StdioDiscovery) GetServices(ctx context.Context) ([]Endpoint, error) {
 					zap.String("command", service.Command[0]),
 					zap.Error(err))
 
-				endpoint.Healthy = false
+				endpoint.SetHealthy(false)
 			}
 		}
 
@@ -116,13 +116,13 @@ func (s *StdioDiscovery) GetService(ctx context.Context, serviceName string) (*E
 		Path:      service.WorkingDir,
 		Weight:    service.Weight,
 		Metadata:  s.createMetadata(service),
-		Healthy:   true,
 	}
+	endpoint.SetHealthy(true)
 
 	// Check command availability
 	if len(service.Command) > 0 {
 		if _, err := exec.LookPath(service.Command[0]); err != nil {
-			endpoint.Healthy = false
+			endpoint.SetHealthy(false)
 		}
 	}
 

@@ -321,7 +321,7 @@ func (d *ConsulDiscovery) buildEndpoint(
 ) *Endpoint {
 	service := entry.Service
 
-	return &Endpoint{
+	endpoint := &Endpoint{
 		Service:   service.Service,
 		Namespace: namespace,
 		Address:   service.Address,
@@ -335,9 +335,10 @@ func (d *ConsulDiscovery) buildEndpoint(
 			"consul_node":       entry.Node.Node,
 			"protocol":          d.inferProtocol(service),
 		},
-		Tools:   tools,
-		Healthy: d.isHealthy(entry),
+		Tools: tools,
 	}
+	endpoint.SetHealthy(d.isHealthy(entry))
+	return endpoint
 }
 
 // addServiceMetadata adds all service metadata to the endpoint.
@@ -444,12 +445,12 @@ func (d *ConsulDiscovery) updateHealthStatus() error {
 				}
 			}
 
-			if endpoint.Healthy != healthy {
+			if endpoint.IsHealthy() != healthy {
 				d.logger.Debug("Endpoint health status changed",
 					zap.String("endpoint", fmt.Sprintf("%s:%d", endpoint.Address, endpoint.Port)),
 					zap.Bool("healthy", healthy))
 
-				endpoint.Healthy = healthy
+				endpoint.SetHealthy(healthy)
 			}
 		}
 	}

@@ -44,7 +44,7 @@ func (rr *RoundRobin) Next() *discovery.Endpoint {
 		idx := (start + uint64(i)) % uint64(len(endpoints)) // #nosec G115 - i is bounded by endpoints length
 
 		ep := endpoints[idx]
-		if ep.Healthy {
+		if ep.IsHealthy() {
 			return ep
 		}
 	}
@@ -89,7 +89,7 @@ func (lc *LeastConnections) Next() *discovery.Endpoint {
 	minConns := int64(^uint64(0) >> 1) // Max int64
 
 	for _, ep := range lc.endpoints {
-		if !ep.Healthy {
+		if !ep.IsHealthy() {
 			continue
 		}
 
@@ -189,7 +189,7 @@ func (w *Weighted) Next() *discovery.Endpoint {
 	currentWeight := 0
 
 	for i, ep := range w.endpoints {
-		if !ep.Healthy {
+		if !ep.IsHealthy() {
 			continue
 		}
 
@@ -201,7 +201,7 @@ func (w *Weighted) Next() *discovery.Endpoint {
 
 	// Fallback to first healthy endpoint
 	for _, ep := range w.endpoints {
-		if ep.Healthy {
+		if ep.IsHealthy() {
 			return ep
 		}
 	}

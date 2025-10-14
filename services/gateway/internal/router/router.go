@@ -749,7 +749,7 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 
 	req, err := http.NewRequestWithContext(healthCtx, http.MethodGet, url, nil)
 	if err != nil {
-		endpoint.Healthy = false
+		endpoint.SetHealthy(false)
 		r.logger.Debug("Failed to create health check request",
 			zap.String("address", endpoint.Address),
 			zap.Error(err),
@@ -764,7 +764,7 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 	client := r.getOrCreateHTTPClient(endpoint)
 	resp, err := client.Do(req)
 	if err != nil {
-		endpoint.Healthy = false
+		endpoint.SetHealthy(false)
 		r.logger.Debug("Endpoint health check failed",
 			zap.String("address", endpoint.Address),
 			zap.Error(err),
@@ -786,14 +786,15 @@ func (r *Router) checkEndpoint(ctx context.Context, endpoint *discovery.Endpoint
 		}
 	}()
 
-	wasHealthy := endpoint.Healthy
-	endpoint.Healthy = resp.StatusCode == http.StatusOK
+	wasHealthy := endpoint.IsHealthy()
+	isHealthy := resp.StatusCode == http.StatusOK
+	endpoint.SetHealthy(isHealthy)
 
 	// Log health status changes for better observability
-	if wasHealthy != endpoint.Healthy {
+	if wasHealthy != isHealthy {
 		r.logger.Info("Endpoint health status changed",
 			zap.String("address", endpoint.Address),
-			zap.Bool("healthy", endpoint.Healthy),
+			zap.Bool("healthy", isHealthy),
 			zap.Int("status_code", resp.StatusCode),
 		)
 	}

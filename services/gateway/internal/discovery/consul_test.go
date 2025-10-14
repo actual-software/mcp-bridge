@@ -199,7 +199,7 @@ func TestConsulDiscovery_consulServiceToEndpoint_BasicHTTP(t *testing.T) {
 	assert.Equal(t, "http", endpoint.Scheme)
 	assert.Equal(t, "/mcp", endpoint.Path)
 	assert.Equal(t, testIterations, endpoint.Weight)
-	assert.True(t, endpoint.Healthy)
+	assert.True(t, endpoint.IsHealthy())
 }
 
 func TestConsulDiscovery_consulServiceToEndpoint_WebSocketTLS(t *testing.T) {

@@ -10,8 +10,11 @@ import (
 
 func TestNewRoundRobin(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true},
-		{Address: "ep2", Healthy: true},
+		{Address: "ep1"},
+		{Address: "ep2"},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	rr := NewRoundRobin(endpoints)
@@ -46,21 +49,33 @@ func createRoundRobinTests() []struct {
 	}{
 		{
 			name: "All healthy endpoints",
-			endpoints: []*discovery.Endpoint{
-				{Address: "ep1", Healthy: true},
-				{Address: "ep2", Healthy: true},
-				{Address: "ep3", Healthy: true},
-			},
+			endpoints: func() []*discovery.Endpoint {
+				eps := []*discovery.Endpoint{
+					{Address: "ep1"},
+					{Address: "ep2"},
+					{Address: "ep3"},
+				}
+				for _, ep := range eps {
+					ep.SetHealthy(true)
+				}
+				return eps
+			}(),
 			calls: 6,
 			want:  []string{"ep2", "ep3", "ep1", "ep2", "ep3", "ep1"},
 		},
 		{
 			name: "Some unhealthy endpoints",
-			endpoints: []*discovery.Endpoint{
-				{Address: "ep1", Healthy: true},
-				{Address: "ep2", Healthy: false},
-				{Address: "ep3", Healthy: true},
-			},
+			endpoints: func() []*discovery.Endpoint {
+				eps := []*discovery.Endpoint{
+					{Address: "ep1"},
+					{Address: "ep2"},
+					{Address: "ep3"},
+				}
+				eps[0].SetHealthy(true)
+				eps[1].SetHealthy(false)
+				eps[2].SetHealthy(true)
+				return eps
+			}(),
 			calls: 4,
 			want:  []string{"ep3", "ep3", "ep1", "ep3"},
 		},
@@ -72,10 +87,16 @@ func createRoundRobinTests() []struct {
 		},
 		{
 			name: "All unhealthy",
-			endpoints: []*discovery.Endpoint{
-				{Address: "ep1", Healthy: false},
-				{Address: "ep2", Healthy: false},
-			},
+			endpoints: func() []*discovery.Endpoint {
+				eps := []*discovery.Endpoint{
+					{Address: "ep1"},
+					{Address: "ep2"},
+				}
+				for _, ep := range eps {
+					ep.SetHealthy(false)
+				}
+				return eps
+			}(),
 			calls: 2,
 			want:  []string{"", ""},
 		},
@@ -122,8 +143,9 @@ func runRoundRobinTests(t *testing.T, tests []struct {
 
 func TestRoundRobin_UpdateEndpoints(t *testing.T) {
 	initial := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true},
+		{Address: "ep1"},
 	}
+	initial[0].SetHealthy(true)
 
 	rr := NewRoundRobin(initial)
 
@@ -135,8 +157,11 @@ func TestRoundRobin_UpdateEndpoints(t *testing.T) {
 
 	// Update endpoints
 	updated := []*discovery.Endpoint{
-		{Address: "ep2", Healthy: true},
-		{Address: "ep3", Healthy: true},
+		{Address: "ep2"},
+		{Address: "ep3"},
+	}
+	for _, ep := range updated {
+		ep.SetHealthy(true)
 	}
 	rr.UpdateEndpoints(updated)
 
@@ -161,8 +186,11 @@ func TestRoundRobin_UpdateEndpoints(t *testing.T) {
 
 func TestNewLeastConnections(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true},
-		{Address: "ep2", Healthy: true},
+		{Address: "ep1"},
+		{Address: "ep2"},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	lc := NewLeastConnections(endpoints)
@@ -184,9 +212,12 @@ func TestNewLeastConnections(t *testing.T) {
 
 func TestLeastConnections_Next(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true},
-		{Address: "ep2", Healthy: true},
-		{Address: "ep3", Healthy: true},
+		{Address: "ep1"},
+		{Address: "ep2"},
+		{Address: "ep3"},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	lc := NewLeastConnections(endpoints)
@@ -223,8 +254,11 @@ func TestLeastConnections_Next(t *testing.T) {
 
 func TestLeastConnections_UpdateEndpoints(t *testing.T) {
 	initial := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true},
-		{Address: "ep2", Healthy: true},
+		{Address: "ep1"},
+		{Address: "ep2"},
+	}
+	for _, ep := range initial {
+		ep.SetHealthy(true)
 	}
 
 	lc := NewLeastConnections(initial)
@@ -236,8 +270,11 @@ func TestLeastConnections_UpdateEndpoints(t *testing.T) {
 
 	// Update endpoints, keeping ep2
 	updated := []*discovery.Endpoint{
-		{Address: "ep2", Healthy: true},
-		{Address: "ep3", Healthy: true},
+		{Address: "ep2"},
+		{Address: "ep3"},
+	}
+	for _, ep := range updated {
+		ep.SetHealthy(true)
 	}
 	lc.UpdateEndpoints(updated)
 
@@ -254,8 +291,11 @@ func TestLeastConnections_UpdateEndpoints(t *testing.T) {
 
 func TestNewWeighted(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true, Weight: testIterations},
-		{Address: "ep2", Healthy: true, Weight: httpStatusOK},
+		{Address: "ep1", Weight: testIterations},
+		{Address: "ep2", Weight: httpStatusOK},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	w := NewWeighted(endpoints)
@@ -273,9 +313,12 @@ func TestNewWeighted(t *testing.T) {
 
 func TestWeighted_Next(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true, Weight: 10},
-		{Address: "ep2", Healthy: true, Weight: 30},
-		{Address: "ep3", Healthy: true, Weight: 60},
+		{Address: "ep1", Weight: 10},
+		{Address: "ep2", Weight: 30},
+		{Address: "ep3", Weight: 60},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	w := NewWeighted(endpoints)
@@ -312,8 +355,11 @@ func TestWeighted_Next(t *testing.T) {
 
 func TestWeighted_ZeroWeight(t *testing.T) {
 	endpoints := []*discovery.Endpoint{
-		{Address: "ep1", Healthy: true, Weight: 0},
-		{Address: "ep2", Healthy: true, Weight: 0},
+		{Address: "ep1", Weight: 0},
+		{Address: "ep2", Weight: 0},
+	}
+	for _, ep := range endpoints {
+		ep.SetHealthy(true)
 	}
 
 	w := NewWeighted(endpoints)
@@ -351,9 +397,9 @@ func createConcurrentTestEndpoints() []*discovery.Endpoint {
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),
-			Healthy: true,
 			Weight:  testIterations,
 		}
+		endpoints[i].SetHealthy(true)
 	}
 
 	return endpoints
@@ -432,9 +478,9 @@ func createUpdateEndpoints(iter int) []*discovery.Endpoint {
 	for j := range newEndpoints {
 		newEndpoints[j] = &discovery.Endpoint{
 			Address: fmt.Sprintf("new-ep%d-%d", iter, j),
-			Healthy: true,
 			Weight:  testIterations,
 		}
+		newEndpoints[j].SetHealthy(true)
 	}
 
 	return newEndpoints
@@ -461,8 +507,8 @@ func BenchmarkRoundRobin_Next(b *testing.B) {
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),
-			Healthy: true,
 		}
+		endpoints[i].SetHealthy(true)
 	}
 
 	rr := NewRoundRobin(endpoints)
@@ -480,8 +526,8 @@ func BenchmarkLeastConnections_Next(b *testing.B) {
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),
-			Healthy: true,
 		}
+		endpoints[i].SetHealthy(true)
 	}
 
 	lc := NewLeastConnections(endpoints)
@@ -502,9 +548,9 @@ func BenchmarkWeighted_Next(b *testing.B) {
 	for i := range endpoints {
 		endpoints[i] = &discovery.Endpoint{
 			Address: fmt.Sprintf("ep%d", i),
-			Healthy: true,
 			Weight:  i + 1,
 		}
+		endpoints[i].SetHealthy(true)
 	}
 
 	w := NewWeighted(endpoints)

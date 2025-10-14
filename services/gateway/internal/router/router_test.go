@@ -44,11 +44,11 @@ func TestInitializeRequestRouter(t *testing.T) {
 		},
 	}
 
+	testEndpoint := discovery.Endpoint{Address: "localhost", Port: 8080, Scheme: "http"}
+	testEndpoint.SetHealthy(true)
 	mockDiscovery := &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
-			"test": {
-				{Address: "localhost", Port: 8080, Scheme: "http", Healthy: true},
-			},
+			"test": {testEndpoint},
 		},
 	}
 
@@ -245,12 +245,13 @@ func TestRouter_getLoadBalancer(t *testing.T) {
 }
 
 func createMockDiscoveryForLoadBalancer() *mockServiceDiscovery {
+	ep1 := discovery.Endpoint{Address: "host1", Port: 8080, Scheme: "http", Weight: 1}
+	ep1.SetHealthy(true)
+	ep2 := discovery.Endpoint{Address: "host2", Port: 8080, Scheme: "http", Weight: 2}
+	ep2.SetHealthy(true)
 	return &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
-			"test": {
-				{Address: "host1", Port: 8080, Scheme: "http", Healthy: true, Weight: 1},
-				{Address: "host2", Port: 8080, Scheme: "http", Healthy: true, Weight: 2},
-			},
+			"test":  {ep1, ep2},
 			"empty": {},
 		},
 	}
@@ -471,11 +472,11 @@ func setupTestRouter(t *testing.T, backendURL string) *Router {
 	port := 80
 	_, _ = fmt.Sscanf(parts[1], "%d", &port)
 
+	ep := discovery.Endpoint{Address: parts[0], Port: port, Scheme: "http"}
+	ep.SetHealthy(true)
 	mockDiscovery := &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
-			"default": {
-				{Address: parts[0], Port: port, Scheme: "http", Healthy: true},
-			},
+			"default": {ep},
 		},
 	}
 
@@ -567,11 +568,11 @@ func setupSessionTestRouter(backend *httptest.Server) *Router {
 	port := 80
 	_, _ = fmt.Sscanf(parts[1], "%d", &port)
 
+	ep := discovery.Endpoint{Address: parts[0], Port: port, Scheme: "http"}
+	ep.SetHealthy(true)
 	mockDiscovery := &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
-			"test": {
-				{Address: parts[0], Port: port, Scheme: "http", Healthy: true},
-			},
+			"test": {ep},
 		},
 	}
 
@@ -793,13 +794,13 @@ func testEndpointCheck(t *testing.T, tt struct {
 		Address: parts[0],
 		Port:    port,
 		Scheme:  "http",
-		Healthy: !tt.expectedHealth,
 	}
+	endpoint.SetHealthy(!tt.expectedHealth)
 
 	router.checkEndpoint(context.Background(), endpoint)
 
-	if endpoint.Healthy != tt.expectedHealth {
-		t.Errorf("Expected health %v, got %v", tt.expectedHealth, endpoint.Healthy)
+	if endpoint.IsHealthy() != tt.expectedHealth {
+		t.Errorf("Expected health %v, got %v", tt.expectedHealth, endpoint.IsHealthy())
 	}
 }
 
@@ -848,11 +849,11 @@ func setupConcurrentTestRouter(backend *httptest.Server) *Router {
 	port := 80
 	_, _ = fmt.Sscanf(parts[1], "%d", &port)
 
+	ep := discovery.Endpoint{Address: parts[0], Port: port, Scheme: "http"}
+	ep.SetHealthy(true)
 	mockDiscovery := &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
-			"test": {
-				{Address: parts[0], Port: port, Scheme: "http", Healthy: true},
-			},
+			"test": {ep},
 		},
 	}
 
@@ -1039,11 +1040,11 @@ func BenchmarkRouter_RouteRequest(b *testing.B) {
 	port := 80
 	_, _ = fmt.Sscanf(parts[1], "%d", &port) // Best effort parse, default to 80
 
+	ep := discovery.Endpoint{Address: parts[0], Port: port, Scheme: "http"}
+	ep.SetHealthy(true)
 	mockDiscovery := &mockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
-			"test": {
-				{Address: parts[0], Port: port, Scheme: "http", Healthy: true},
-			},
+			"test": {ep},
 		},
 	}
 
