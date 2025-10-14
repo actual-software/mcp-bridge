@@ -15,7 +15,7 @@ func TestChecker_TCPHealthCheck(t *testing.T) {
 	logger := zap.NewNop()
 	mockDisc := NewMockDiscovery()
 	mockDisc.SetEndpoints("default", []discovery.Endpoint{
-		{Service: "test-server", Address: "localhost:8080", Healthy: true},
+		{Service: "test-server", Address: "localhost:8080"},
 	})
 
 	checker := CreateHealthMonitor(mockDisc, logger)

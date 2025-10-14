@@ -64,7 +64,7 @@ func TestChecker_UpdateSubsystem_Advanced(t *testing.T) {
 	// Test updating a subsystem
 	subsystem := Subsystem{
 		Name:         "test_service",
-		Healthy:      true,
+		
 		Status:       "operational",
 		Message:      "Service is running normally",
 		Metrics:      map[string]interface{}{"connections": 5},
@@ -77,7 +77,7 @@ func TestChecker_UpdateSubsystem_Advanced(t *testing.T) {
 	assert.Contains(t, status.Subsystems, "test_service")
 
 	retrievedSubsystem := status.Subsystems["test_service"]
-	assert.True(t, retrievedSubsystem.Healthy)
+	assert.True(t, retrievedSubsystem.IsHealthy())
 	assert.Equal(t, "operational", retrievedSubsystem.Status)
 	assert.Equal(t, "Service is running normally", retrievedSubsystem.Message)
 	assert.Equal(t, 5, retrievedSubsystem.Metrics["connections"])
@@ -92,7 +92,7 @@ func TestChecker_GetDetailedStatus_Advanced(t *testing.T) {
 		namespaces: []string{"test-ns"},
 		endpoints: map[string][]discovery.Endpoint{
 			"test-ns": {
-				{Service: "test-service", Address: "127.0.0.1", Port: 8080, Healthy: true},
+				{Service: "test-service", Address: "127.0.0.1", Port: 8080},
 			},
 		},
 	}
@@ -107,7 +107,7 @@ func TestChecker_GetDetailedStatus_Advanced(t *testing.T) {
 	// Service discovery subsystem should be created
 	assert.Contains(t, status.Subsystems, "service_discovery")
 	sdStatus := status.Subsystems["service_discovery"]
-	assert.True(t, sdStatus.Healthy)
+	assert.True(t, sdStatus.IsHealthy())
 	assert.Contains(t, sdStatus.Message, "endpoints")
 	assert.NotZero(t, sdStatus.Duration)
 	assert.Contains(t, sdStatus.Metrics, "endpoint_count")
@@ -128,11 +128,11 @@ func TestChecker_ServiceDiscoverySubsystem_Advanced(t *testing.T) {
 			mockDiscovery: &MockServiceDiscovery{
 				namespaces: []string{"ns1", "ns2"},
 				endpoints: map[string][]discovery.Endpoint{
-					"ns1": {{Service: "svc1", Healthy: true}},
-					"ns2": {{Service: "svc2", Healthy: true}},
+					"ns1": {{Service: "svc1"}},
+					"ns2": {{Service: "svc2"}},
 				},
 			},
-			expectHealthy: true,
+			expect
 			expectMessage: "endpoints",
 		},
 		{
@@ -140,7 +140,7 @@ func TestChecker_ServiceDiscoverySubsystem_Advanced(t *testing.T) {
 			mockDiscovery: &MockServiceDiscovery{
 				endpoints: map[string][]discovery.Endpoint{},
 			},
-			expectHealthy: true,
+			expect
 			expectMessage: "0 endpoints",
 		},
 	}
@@ -153,7 +153,7 @@ func TestChecker_ServiceDiscoverySubsystem_Advanced(t *testing.T) {
 
 			sdStatus, exists := status.Subsystems["service_discovery"]
 			assert.True(t, exists)
-			assert.Equal(t, tt.expectHealthy, sdStatus.Healthy)
+			assert.Equal(t, tt.expectHealthy, sdStatus.IsHealthy())
 			assert.Contains(t, sdStatus.Message, tt.expectMessage)
 		})
 	}
@@ -169,7 +169,7 @@ func TestChecker_ConnectionPoolSubsystem_Advanced(t *testing.T) {
 
 	poolStatus, exists := status.Subsystems["connection_pool"]
 	assert.True(t, exists)
-	assert.True(t, poolStatus.Healthy, "Connection pool should be healthy by default")
+	assert.True(t, poolStatus.IsHealthy(), "Connection pool should be healthy by default")
 	assert.Contains(t, poolStatus.Message, "operational")
 	assert.NotZero(t, poolStatus.Duration)
 
@@ -189,7 +189,7 @@ func TestChecker_AuthSubsystem_Advanced(t *testing.T) {
 
 	authStatus, exists := status.Subsystems["authentication"]
 	assert.True(t, exists)
-	assert.True(t, authStatus.Healthy, "Auth should be healthy by default")
+	assert.True(t, authStatus.IsHealthy(), "Auth should be healthy by default")
 	assert.Contains(t, authStatus.Message, "operational")
 	assert.NotZero(t, authStatus.Duration)
 }
@@ -204,7 +204,7 @@ func TestChecker_RateLimitSubsystem_Advanced(t *testing.T) {
 
 	rlStatus, exists := status.Subsystems["rate_limiting"]
 	assert.True(t, exists)
-	assert.True(t, rlStatus.Healthy, "Rate limit should be healthy by default")
+	assert.True(t, rlStatus.IsHealthy(), "Rate limit should be healthy by default")
 	assert.Contains(t, rlStatus.Message, "operational")
 	assert.NotZero(t, rlStatus.Duration)
 }
@@ -221,16 +221,16 @@ func TestChecker_OverallHealth_Advanced(t *testing.T) {
 		{
 			name: "all healthy",
 			subsystems: map[string]Subsystem{
-				"s1": {Healthy: true, Status: "ok"},
-				"s2": {Healthy: true, Status: "ok"},
+				"s1": { Status: "ok"},
+				"s2": { Status: "ok"},
 			},
 			expectedOverall: true,
 		},
 		{
 			name: "one unhealthy",
 			subsystems: map[string]Subsystem{
-				"s1": {Healthy: true, Status: "ok"},
-				"s2": {Healthy: false, Status: "failed"},
+				"s1": { Status: "ok"},
+				"s2": { Status: "failed"},
 			},
 			expectedOverall: false,
 		},
@@ -266,7 +266,7 @@ func TestChecker_HealthAggregation_Advanced(t *testing.T) {
 	// Add multiple subsystems with different health states
 	healthySubsystem := Subsystem{
 		Name:    "healthy_service",
-		Healthy: true,
+		
 		Status:  "operational",
 		Message: "All good",
 		Metrics: map[string]interface{}{"uptime": 3600},
@@ -274,7 +274,7 @@ func TestChecker_HealthAggregation_Advanced(t *testing.T) {
 
 	unhealthySubsystem := Subsystem{
 		Name:    "unhealthy_service",
-		Healthy: false,
+		
 		Status:  "failed",
 		Message: "Service down",
 		Metrics: map[string]interface{}{"errors": 10},
@@ -291,7 +291,7 @@ func TestChecker_HealthAggregation_Advanced(t *testing.T) {
 
 	// Fix the failing subsystem
 	fixedSubsystem := unhealthySubsystem
-	fixedSubsystem.Healthy = true
+	fixedSubsystem.IsHealthy() = true
 	fixedSubsystem.Status = "recovered"
 	fixedSubsystem.Message = "Service restored"
 
@@ -307,9 +307,9 @@ func TestChecker_PredictiveHealthPatterns_Advanced(t *testing.T) {
 	mockDiscovery := &MockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
 			"service": {
-				{Service: "svc1", Healthy: true},
-				{Service: "svc2", Healthy: true},
-				{Service: "svc3", Healthy: true},
+				{Service: "svc1"},
+				{Service: "svc2"},
+				{Service: "svc3"},
 			},
 		},
 	}
@@ -318,16 +318,16 @@ func TestChecker_PredictiveHealthPatterns_Advanced(t *testing.T) {
 	// Initial state - all healthy
 	status1 := checker.GetDetailedStatus()
 	sdStatus1 := status1.Subsystems["service_discovery"]
-	assert.True(t, sdStatus1.Healthy)
+	assert.True(t, sdStatus1.IsHealthy())
 	endpointCount1, ok := sdStatus1.Metrics["endpoint_count"].(int)
 	require.True(t, ok, "Expected endpoint_count to be int")
 	assert.Equal(t, 3, endpointCount1)
 
 	// Simulate endpoint degradation
-	mockDiscovery.endpoints["service"][0].Healthy = false
+	mockDiscovery.endpoints["service"][0].IsHealthy() = false
 	status2 := checker.GetDetailedStatus()
 	sdStatus2 := status2.Subsystems["service_discovery"]
-	assert.True(t, sdStatus2.Healthy) // Service discovery itself is still healthy
+	assert.True(t, sdStatus2.IsHealthy()) // Service discovery itself is still healthy
 	endpointCount2, ok := sdStatus2.Metrics["endpoint_count"].(int)
 	require.True(t, ok, "Expected endpoint_count to be int")
 	assert.Equal(t, 3, endpointCount2) // Total count unchanged
@@ -335,7 +335,7 @@ func TestChecker_PredictiveHealthPatterns_Advanced(t *testing.T) {
 	// Add a custom subsystem to test health aggregation
 	degradedSubsystem := Subsystem{
 		Name:    "predictive_monitor",
-		Healthy: false,
+		
 		Status:  "degraded",
 		Message: "Predictive failure detected",
 		Metrics: map[string]interface{}{
@@ -350,7 +350,7 @@ func TestChecker_PredictiveHealthPatterns_Advanced(t *testing.T) {
 
 	// Simulate recovery
 	recoveredSubsystem := degradedSubsystem
-	recoveredSubsystem.Healthy = true
+	recoveredSubsystem.IsHealthy() = true
 	recoveredSubsystem.Status = "recovered"
 	recoveredSubsystem.Message = "System recovered"
 	recoveredSubsystem.Metrics["failure_rate"] = 0.1
@@ -365,7 +365,7 @@ func TestChecker_ConcurrentAccess_Advanced(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	mockDiscovery := &MockServiceDiscovery{
 		endpoints: map[string][]discovery.Endpoint{
-			"test": {{Service: "test-svc", Healthy: true}},
+			"test": {{Service: "test-svc"}},
 		},
 	}
 	checker := CreateHealthMonitor(mockDiscovery, logger)
@@ -479,7 +479,7 @@ func TestChecker_NilDiscovery(t *testing.T) {
 	// Service discovery subsystem should be marked as unhealthy
 	sdStatus, exists := status.Subsystems["service_discovery"]
 	assert.True(t, exists)
-	assert.False(t, sdStatus.Healthy)
+	assert.False(t, sdStatus.IsHealthy())
 	assert.Contains(t, sdStatus.Message, "not configured")
 }
 
@@ -511,6 +511,6 @@ func BenchmarkChecker_HealthCheck(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		status := checker.GetDetailedStatus()
-		_ = status.Healthy
+		_ = status.IsHealthy()
 	}
 }

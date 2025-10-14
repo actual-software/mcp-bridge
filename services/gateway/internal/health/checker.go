@@ -433,7 +433,7 @@ func (c *Checker) checkEndpoints() CheckResult {
 		for _, ep := range endpoints {
 			totalEndpoints++
 
-			if ep.Healthy {
+			if ep.IsHealthy() {
 				healthyEndpoints++
 			}
 		}

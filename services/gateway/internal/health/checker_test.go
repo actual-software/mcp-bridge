@@ -119,7 +119,7 @@ func TestChecker_GetStatus(t *testing.T) {
 	checker.status.HealthyEndpoints = 3
 	checker.status.Namespaces = []string{"ns1", "ns2"}
 	checker.status.Checks["test"] = CheckResult{
-		Healthy:   true,
+		
 		Message:   "Test check",
 		LastCheck: time.Now(),
 	}
@@ -236,7 +236,7 @@ func TestChecker_checkServiceDiscovery(t *testing.T) {
 			name:       "Healthy with namespaces",
 			namespaces: []string{"ns1", "ns2", "ns3"},
 			expected: CheckResult{
-				Healthy: true,
+				
 				Message: "Discovered 3 namespaces",
 			},
 		},
@@ -244,7 +244,7 @@ func TestChecker_checkServiceDiscovery(t *testing.T) {
 			name:       "Unhealthy with no namespaces",
 			namespaces: []string{},
 			expected: CheckResult{
-				Healthy: false,
+				
 				Message: "No namespaces discovered",
 			},
 		},
@@ -333,11 +333,11 @@ func createHealthyEndpointTests() []struct {
 			name: "All endpoints healthy",
 			endpoints: map[string][]discovery.Endpoint{
 				"ns1": {
-					{Service: "svc1", Healthy: true},
-					{Service: "svc2", Healthy: true},
+					{Service: "svc1"},
+					{Service: "svc2"},
 				},
 				"ns2": {
-					{Service: "svc3", Healthy: true},
+					{Service: "svc3"},
 				},
 			},
 			expectedTotal:         3,
@@ -365,11 +365,11 @@ func createUnhealthyEndpointTests() []struct {
 			name: "Some endpoints unhealthy",
 			endpoints: map[string][]discovery.Endpoint{
 				"ns1": {
-					{Service: "svc1", Healthy: true},
-					{Service: "svc2", Healthy: false},
+					{Service: "svc1"},
+					{Service: "svc2"},
 				},
 				"ns2": {
-					{Service: "svc3", Healthy: true},
+					{Service: "svc3"},
 				},
 			},
 			expectedTotal:         3,
@@ -380,8 +380,8 @@ func createUnhealthyEndpointTests() []struct {
 			name: "All endpoints unhealthy",
 			endpoints: map[string][]discovery.Endpoint{
 				"ns1": {
-					{Service: "svc1", Healthy: false},
-					{Service: "svc2", Healthy: false},
+					{Service: "svc1"},
+					{Service: "svc2"},
 				},
 			},
 			expectedTotal:         2,
@@ -460,8 +460,8 @@ func TestChecker_performChecks(t *testing.T) {
 	// Set up healthy state
 	mockDiscovery.SetNamespaces([]string{"ns1", "ns2"})
 	mockDiscovery.SetEndpoints("ns1", []discovery.Endpoint{
-		{Service: "svc1", Healthy: true},
-		{Service: "svc2", Healthy: true},
+		{Service: "svc1"},
+		{Service: "svc2"},
 	})
 
 	checker := CreateHealthMonitor(mockDiscovery, logger)
@@ -590,7 +590,7 @@ func getHealthEndpointTests(mockDiscovery *MockDiscovery, checker *Checker) []se
 			setupChecker: func() {
 				mockDiscovery.SetNamespaces([]string{"ns1"})
 				mockDiscovery.SetEndpoints("ns1", []discovery.Endpoint{
-					{Service: "svc1", Healthy: true},
+					{Service: "svc1"},
 				})
 				checker.performChecks()
 			},
@@ -755,14 +755,14 @@ func TestServer_StartStop(t *testing.T) {
 
 func TestStatus_JSON(t *testing.T) {
 	status := Status{
-		Healthy:          true,
+		
 		Message:          "Test status",
 		Endpoints:        10,
 		HealthyEndpoints: 8,
 		Namespaces:       []string{"ns1", "ns2"},
 		Checks: map[string]CheckResult{
 			"test_check": {
-				Healthy:   true,
+				
 				Message:   "Check passed",
 				LastCheck: time.Now(),
 			},
@@ -853,7 +853,7 @@ func TestChecker_ConcurrentAccess(t *testing.T) {
 			if i%2 == 0 {
 				mockDiscovery.SetNamespaces([]string{"ns1", "ns2"})
 				mockDiscovery.SetEndpoints("ns1", []discovery.Endpoint{
-					{Service: "svc", Healthy: true},
+					{Service: "svc"},
 				})
 			} else {
 				mockDiscovery.SetNamespaces([]string{})
