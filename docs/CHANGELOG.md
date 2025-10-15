@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Linter Compliance** - Resolved all golangci-lint warnings across Gateway and Router services
 - **Test Compilation** - Fixed missing namespace parameter in 5 router test function calls
 - **Code Standards** - Extracted magic numbers to constants, fixed line length violations, added proper nolint comments for factory patterns
+- **Router Test Configuration** - Fixed router tests failing after Bug #1 fix by adding `Enabled: true` to DirectConfig in all test configurations (fallback_test_handler_test.go, stress_test_handler_test.go, router_test.go)
+
+### Changed
+- **K8s E2E Performance Threshold** - Reduced performance threshold by 10% (from 10,000 to 9,000 req/s) for improved CI stability under varying load conditions
 
 ### Technical Details
 #### Router Direct Mode
