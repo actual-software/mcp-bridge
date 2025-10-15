@@ -465,8 +465,8 @@ func (r *Router) forwardRequestHTTP(
 
 	// Extract backend session ID from response headers if present
 	// This supports stateful HTTP backends like Serena that maintain their own sessions
-	// Use canonical header key to handle case variations (mcp-session-id, MCP-Session-ID, etc.)
-	if backendSessionID := httpResp.Header.Get(http.CanonicalHeaderKey("mcp-session-id")); backendSessionID != "" {
+	// Header.Get() is case-insensitive and handles variations (mcp-session-id, MCP-Session-ID, etc.)
+	if backendSessionID := httpResp.Header.Get("mcp-session-id"); backendSessionID != "" {
 		if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
 			endpointURL := httpReq.URL.String()
 			r.storeBackendSessionID(sess.ID, endpointURL, backendSessionID)
