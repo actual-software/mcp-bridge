@@ -14,6 +14,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc15] - 2025-10-15
+
+### Added
+
+#### ✨ **Features**
+- **Backend Session Tracking for Stateful HTTP MCP Servers** - Added dynamic session tracking to support stateful HTTP backends like Serena that maintain their own session state across requests. The gateway now automatically detects stateful backends by checking for `X-MCP-Session-ID` headers in responses, stores the backend's session ID, and uses it for subsequent requests to that endpoint. This eliminates the "Bad Request: Missing session ID" errors when routing to stateful HTTP MCP servers. The feature is protocol-agnostic, requires no configuration, and falls back gracefully to gateway session IDs for stateless backends, ensuring full backwards compatibility.
+
+### Technical Details
+#### Backend Session Management
+- Added backend session cache structure to Router: `frontendSessionID → endpointURL → backendSessionID`
+- Thread-safe with RWMutex for concurrent access
+- Extracts backend session IDs from `X-MCP-Session-ID` response headers in `forwardRequestHTTP()`
+- Updated `enhanceHTTPRequest()` to check for and use backend-specific session IDs
+- Falls back to gateway session ID when no backend session exists
+- Added helper methods `getBackendSessionID()` and `storeBackendSessionID()`
+- Enhanced logging shows both frontend and backend session IDs
+- Auto-detection via response headers - no configuration required
+- Modified files: `services/gateway/internal/router/router.go`
+
 ## [1.0.0-rc14] - 2025-10-15
 
 ### Added
