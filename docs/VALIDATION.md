@@ -10,7 +10,7 @@ make install-hooks
 
 This installs:
 - **pre-commit hook** → runs `make check` (30s) before every commit
-- **pre-push hook** → runs `make validate` (~2min) before every push
+- **pre-push hook** → runs `make validate` before every push
 
 **After installation, validation runs automatically in your normal workflow:**
 ```bash
@@ -35,7 +35,7 @@ Runs:
 
 **Use:** Frequently during development for fast feedback
 
-### Full Validation (~2 minutes)
+### Full Validation
 ```bash
 make validate
 ```

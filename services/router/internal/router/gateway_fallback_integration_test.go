@@ -22,6 +22,9 @@ import (
 
 // TestMessageRouter_DirectToGatewayFallbackFlow tests the complete fallback flow.
 func TestMessageRouter_DirectToGatewayFallbackFlow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
 	handler := CreateFallbackTestHandler(t)
 	handler.ExecuteTest()
 }
@@ -287,6 +290,9 @@ func validatePerformanceResults(t *testing.T, scenario struct {
 }
 
 func TestMessageRouter_FallbackPerformanceComparison(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping performance test in short mode")
+	}
 	logger := zaptest.NewLogger(t)
 
 	scenarios := createPerformanceTestScenarios()

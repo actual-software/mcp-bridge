@@ -37,7 +37,7 @@ If hooks are installed, these run automatically. If not, I run them manually.
 
 Use frequently during development.
 
-### `make validate` (Full - ~2min)
+### `make validate` (Full validation)
 - Everything in `make check`
 - Full linting audit
 - Unit and integration tests (E2E and slow tests skipped)

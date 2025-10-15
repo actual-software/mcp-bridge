@@ -412,6 +412,9 @@ func TestConnectionPool_NoReuse(t *testing.T) {
 }
 
 func TestConnectionPool_ConcurrentAccess(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping concurrent access test in short mode")
+	}
 	t.Parallel()
 
 	pool := setupConcurrentAccessPool(t)
