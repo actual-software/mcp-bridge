@@ -72,6 +72,11 @@ type Router struct {
 	endpointClients  map[string]*http.Client
 	endpointClientMu sync.RWMutex
 
+	// Backend session tracking for stateful HTTP backends
+	// Maps: frontendSessionID -> endpointKey -> backendSessionID
+	backendSessions   map[string]map[string]string
+	backendSessionsMu sync.RWMutex
+
 	// Request counter for round-robin
 	requestCounter uint64
 }
@@ -92,6 +97,7 @@ func InitializeRequestRouter(
 		balancers:       make(map[string]loadbalancer.LoadBalancer),
 		breakers:        make(map[string]*circuit.CircuitBreaker),
 		endpointClients: make(map[string]*http.Client),
+		backendSessions: make(map[string]map[string]string),
 	}
 
 	// Register callback to invalidate load balancer cache when endpoints change
@@ -466,6 +472,15 @@ func (r *Router) forwardRequestHTTP(
 	}
 	defer r.closeResponseBody(httpResp)
 
+	// Extract backend session ID from response headers if present
+	// This supports stateful HTTP backends like Serena that maintain their own sessions
+	if backendSessionID := httpResp.Header.Get("X-MCP-Session-ID"); backendSessionID != "" {
+		if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+			endpointURL := httpReq.URL.String()
+			r.storeBackendSessionID(sess.ID, endpointURL, backendSessionID)
+		}
+	}
+
 	// Process the response
 	return r.processHTTPResponse(httpResp, span)
 }
@@ -529,13 +544,29 @@ func (r *Router) enhanceHTTPRequest(ctx context.Context, httpReq *http.Request, 
 
 	// Add session info if available
 	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
-		r.logger.Debug("Session retrieved from context for HTTP request",
-			zap.String("session_id", sess.ID),
-			zap.String("user", sess.User),
-			zap.String("url", httpReq.URL.String()))
-		httpReq.Header.Set("X-MCP-Session-ID", sess.ID)
+		// Check if we have a backend-specific session ID for this endpoint
+		endpointURL := httpReq.URL.String()
+		backendSessionID := r.getBackendSessionID(sess.ID, endpointURL)
+
+		// Use backend session ID if available, otherwise use frontend session ID
+		sessionIDToUse := sess.ID
+		if backendSessionID != "" {
+			sessionIDToUse = backendSessionID
+			r.logger.Debug("Using backend session ID for HTTP request",
+				zap.String("frontend_session_id", sess.ID),
+				zap.String("backend_session_id", backendSessionID),
+				zap.String("user", sess.User),
+				zap.String("url", endpointURL))
+		} else {
+			r.logger.Debug("Session retrieved from context for HTTP request",
+				zap.String("session_id", sess.ID),
+				zap.String("user", sess.User),
+				zap.String("url", endpointURL))
+		}
+
+		httpReq.Header.Set("X-MCP-Session-ID", sessionIDToUse)
 		httpReq.Header.Set("X-MCP-User", sess.User)
-		span.SetTag("session.id", sess.ID)
+		span.SetTag("session.id", sessionIDToUse)
 		span.SetTag("session.user", sess.User)
 	} else {
 		r.logger.Warn("No session found in context for HTTP request",
@@ -553,6 +584,36 @@ func (r *Router) closeResponseBody(resp *http.Response) {
 	if err := resp.Body.Close(); err != nil {
 		r.logger.Warn("failed to close response body", zap.Error(err))
 	}
+}
+
+// getBackendSessionID retrieves the backend session ID for a specific endpoint.
+// Returns empty string if no backend session exists.
+func (r *Router) getBackendSessionID(frontendSessionID, endpointURL string) string {
+	r.backendSessionsMu.RLock()
+	defer r.backendSessionsMu.RUnlock()
+
+	if endpointSessions, ok := r.backendSessions[frontendSessionID]; ok {
+		return endpointSessions[endpointURL]
+	}
+
+	return ""
+}
+
+// storeBackendSessionID stores the backend session ID for a specific endpoint.
+func (r *Router) storeBackendSessionID(frontendSessionID, endpointURL, backendSessionID string) {
+	r.backendSessionsMu.Lock()
+	defer r.backendSessionsMu.Unlock()
+
+	if _, ok := r.backendSessions[frontendSessionID]; !ok {
+		r.backendSessions[frontendSessionID] = make(map[string]string)
+	}
+
+	r.backendSessions[frontendSessionID][endpointURL] = backendSessionID
+
+	r.logger.Debug("Stored backend session ID",
+		zap.String("frontend_session_id", frontendSessionID),
+		zap.String("endpoint_url", endpointURL),
+		zap.String("backend_session_id", backendSessionID))
 }
 
 // processHTTPResponse reads and validates the HTTP response.
