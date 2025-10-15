@@ -295,8 +295,14 @@ run_test_analysis() {
                 # Create a temp log file to capture output
                 local temp_log=$(mktemp)
 
+                # Build test flags
+                local test_flags="--json ./... -timeout=${go_test_timeout}"
+                if [[ "${RUN_PERFORMANCE_TESTS}" != "true" ]]; then
+                    test_flags="${test_flags} -short"
+                fi
+
                 # Run with JSON output for production-quality counting
-                if timeout ${module_timeout}s go test --json ./... -timeout="${go_test_timeout}" > "${temp_log}" 2>&1; then
+                if timeout ${module_timeout}s go test ${test_flags} > "${temp_log}" 2>&1; then
                     local end_time=$(date +%s)
                     local duration=$((end_time - start_time))
                     echo "Module ${module_name} tests: PASSED (${duration}s)"

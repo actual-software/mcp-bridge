@@ -7,8 +7,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
-# Skip E2E tests for speed (CI runs them)
+# Skip E2E and performance tests for speed (CI runs them)
 export RUN_E2E_TESTS=false
+export RUN_PERFORMANCE_TESTS=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -264,8 +265,8 @@ else
     echo -e "${GREEN}✅ FULL VALIDATION PASSED${NC}"
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "Core checks passed (E2E tests and coverage skipped for speed)."
-    echo "CI will run full suite including E2E tests and coverage."
+    echo "Core checks passed (E2E tests, performance tests, and coverage skipped for speed)."
+    echo "CI will run full suite including E2E tests, performance tests, and coverage."
     echo "Safe to push."
     exit 0
 fi

@@ -88,11 +88,20 @@ run_coverage_analysis() {
                 esac
                 echo "Starting coverage collection (timeout: ${module_timeout}s)..."
 
-                # Run tests with -short to skip stress tests and long-running benchmarks
-                local start_time=$(date +%s)
-                echo "Running go test (skipping stress tests with -short flag)..."
+                # Build test flags
+                local test_flags="-timeout=${module_timeout}s -coverprofile=${module_profile} -covermode=atomic ./..."
+                if [[ "${RUN_PERFORMANCE_TESTS}" != "true" ]]; then
+                    test_flags="-short ${test_flags}"
+                fi
 
-                if timeout ${module_timeout}s go test -short -timeout=${module_timeout}s -coverprofile="${module_profile}" -covermode=atomic ./... > "${module_log}" 2>&1; then
+                local start_time=$(date +%s)
+                if [[ "${RUN_PERFORMANCE_TESTS}" != "true" ]]; then
+                    echo "Running go test (skipping performance tests with -short flag)..."
+                else
+                    echo "Running go test (including performance tests)..."
+                fi
+
+                if timeout ${module_timeout}s go test ${test_flags} > "${module_log}" 2>&1; then
                     # Check if profile was actually created and has content
                     if [[ -f "${module_profile}" ]] && [[ $(wc -l < "${module_profile}") -gt 1 ]]; then
                         local coverage_lines=$(wc -l < "${module_profile}")

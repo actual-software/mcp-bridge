@@ -40,12 +40,12 @@ Use frequently during development.
 ### `make validate` (Full - ~2min)
 - Everything in `make check`
 - Full linting audit
-- Unit and integration tests (E2E skipped)
+- Unit and integration tests (E2E and slow tests skipped)
 - Documentation checks
 - Complexity checks
 - Binary verification
 
-**Skipped for speed:** E2E tests, coverage (CI runs these)
+**Skipped for speed:** E2E tests, performance/slow tests (via `-short` flag), coverage (CI runs these)
 
 **MUST pass before pushing.**
 

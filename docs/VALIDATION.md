@@ -43,12 +43,14 @@ make validate
 Runs core CI checks:
 - Quick check (above)
 - Full lint audit
-- Unit and integration tests (E2E tests skipped)
+- Unit and integration tests (E2E and slow tests skipped)
 - Documentation checks
 - Complexity analysis
 - Binary verification
 
-**Note:** E2E tests and coverage skipped for speed. CI runs full suite.
+**Note:** E2E tests, performance/slow tests, and coverage skipped for speed. CI runs full suite.
+
+**Skipped tests:** Tests using `testing.Short()` (typically slow integration tests) are skipped via `-short` flag.
 
 **Use:** Before pushing code
 
