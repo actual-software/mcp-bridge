@@ -1,17 +1,30 @@
 # Claude Code Rules for MCP Repository
 
-## Git Hooks (User Setup)
+## CRITICAL: First Session Setup
 
-User should run once:
-```bash
-make install-hooks
-```
+**On first interaction with this repository, I MUST:**
 
-This installs hooks that automatically enforce:
+1. Check if git hooks are installed:
+   ```bash
+   ls -la .git/hooks/pre-commit .git/hooks/pre-push
+   ```
+
+2. If hooks don't exist or aren't executable, install them:
+   ```bash
+   make install-hooks
+   ```
+
+This ensures consistent validation for all commits and pushes.
+
+## Git Hooks (Automatic Enforcement)
+
+Once installed, hooks automatically run:
 - `git commit` → runs `make check` (30s)
 - `git push` → runs `make validate` (5min)
 
-## My Workflow (With or Without Hooks)
+**I MUST wait for hooks to complete fully.** Never use `--no-verify` to bypass them.
+
+## My Workflow
 
 **Before every `git commit`:**
 ```bash
@@ -23,7 +36,8 @@ make check  # Fast validation
 make validate  # Full validation - MUST pass
 ```
 
-If hooks are installed, these run automatically. If not, I run them manually.
+If hooks are installed, these run automatically and **I must wait for completion**.
+If hooks aren't installed, I run these commands manually.
 
 **Exit 0 = proceed. Exit 1 = fix and re-run.**
 
