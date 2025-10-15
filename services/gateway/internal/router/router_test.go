@@ -56,7 +56,11 @@ func TestInitializeRequestRouter(t *testing.T) {
 	registry := testutil.CreateTestMetricsRegistry()
 	logger := testutil.NewTestLogger(t)
 
-	router := InitializeRequestRouter(context.Background(), config, mockDiscovery, registry, logger)
+	// Create a cancellable context to stop the health check goroutine
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	router := InitializeRequestRouter(ctx, config, mockDiscovery, registry, logger)
 
 	if router == nil {
 		t.Fatal("Expected router to be created")

@@ -165,51 +165,48 @@ func (r *Router) executeWithCircuitBreaker(
 	return resp, err
 }
 
+// logSessionContext logs session context at various points for debugging.
+func (r *Router) logSessionContext(ctx context.Context, stage, method string) {
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+		r.logger.Debug("DEBUG: Session found at "+stage,
+			zap.String("session_id", sess.ID),
+			zap.String("user", sess.User),
+			zap.String("method", method))
+	} else {
+		r.logger.Warn("DEBUG: NO SESSION at "+stage,
+			zap.String("method", method))
+	}
+}
+
+// recordRequestMetrics records success/error metrics and span information.
+func (r *Router) recordRequestMetrics(span opentracing.Span, req *mcp.Request, err error, duration time.Duration) {
+	span.SetTag("duration.ms", duration.Milliseconds())
+	if err != nil {
+		r.metrics.RecordRequestDuration(req.Method, "error", duration)
+		ext.Error.Set(span, true)
+		span.LogKV("error", err.Error())
+	} else {
+		r.metrics.RecordRequestDuration(req.Method, "success", duration)
+	}
+}
+
 func (r *Router) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
 	startTime := time.Now()
 
-	// DEBUG: Check session before enrichment
-	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
-		r.logger.Debug("DEBUG: Session found at start of RouteRequest",
-			zap.String("session_id", sess.ID),
-			zap.String("user", sess.User),
-			zap.String("method", req.Method))
-	} else {
-		r.logger.Warn("DEBUG: NO SESSION at start of RouteRequest",
-			zap.String("method", req.Method))
-	}
-
-	// Enrich context with request information
+	// Debug session tracking
+	r.logSessionContext(ctx, "start of RouteRequest", req.Method)
 	ctx = EnrichContextWithRequest(ctx, req, targetNamespace)
-
-	// DEBUG: Check session after enrichment
-	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
-		r.logger.Debug("DEBUG: Session found after EnrichContextWithRequest",
-			zap.String("session_id", sess.ID),
-			zap.String("user", sess.User))
-	} else {
-		r.logger.Warn("DEBUG: NO SESSION after EnrichContextWithRequest")
-	}
+	r.logSessionContext(ctx, "after EnrichContextWithRequest", req.Method)
 
 	// Start tracing span
 	span, ctx := opentracing.StartSpanFromContext(ctx, "router.RouteRequest")
 	defer span.Finish()
+	r.logSessionContext(ctx, "after StartSpanFromContext", req.Method)
 
-	// DEBUG: Check session after tracing span creation
-	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
-		r.logger.Debug("DEBUG: Session found after StartSpanFromContext",
-			zap.String("session_id", sess.ID),
-			zap.String("user", sess.User))
-	} else {
-		r.logger.Warn("DEBUG: NO SESSION after StartSpanFromContext")
-	}
-
-	// Set span tags
+	// Set span tags and extract namespace
 	span.SetTag("mcp.method", req.Method)
 	span.SetTag("mcp.id", req.ID)
 	span.SetTag("target.namespace", targetNamespace)
-
-	// Extract namespace from request if not provided
 	if targetNamespace == "" {
 		targetNamespace = r.extractNamespace(req)
 		span.SetTag("target.namespace.extracted", targetNamespace)
@@ -219,7 +216,6 @@ func (r *Router) RouteRequest(ctx context.Context, req *mcp.Request, targetNames
 	endpoint, err := r.selectEndpoint(targetNamespace, span)
 	if err != nil {
 		wrappedErr := errors.FromContext(ctx, err)
-		// Record error metrics
 		if r.metrics != nil {
 			errors.RecordError(wrappedErr, r.metrics)
 		}
@@ -231,25 +227,16 @@ func (r *Router) RouteRequest(ctx context.Context, req *mcp.Request, targetNames
 	resp, err := r.executeWithCircuitBreaker(ctx, endpoint, req)
 	if err != nil {
 		err = WrapForwardingError(ctx, err, endpoint, req.Method)
-		// Record error metrics
 		if r.metrics != nil {
 			errors.RecordError(err, r.metrics)
 		}
 	}
 
-	// Record metrics
-	duration := time.Since(startTime)
-	span.SetTag("duration.ms", duration.Milliseconds())
-
+	// Record metrics and return
+	r.recordRequestMetrics(span, req, err, time.Since(startTime))
 	if err != nil {
-		r.metrics.RecordRequestDuration(req.Method, "error", duration)
-		ext.Error.Set(span, true)
-		span.LogKV("error", err.Error())
-
 		return nil, err
 	}
-
-	r.metrics.RecordRequestDuration(req.Method, "success", duration)
 
 	return resp, nil
 }
