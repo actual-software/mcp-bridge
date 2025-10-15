@@ -495,10 +495,17 @@ func (r *Router) buildHTTPURL(endpoint *discovery.Endpoint) string {
 func (r *Router) enhanceHTTPRequest(ctx context.Context, httpReq *http.Request, span opentracing.Span) {
 	// Add session info if available
 	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+		r.logger.Debug("Session retrieved from context for HTTP request",
+			zap.String("session_id", sess.ID),
+			zap.String("user", sess.User),
+			zap.String("url", httpReq.URL.String()))
 		httpReq.Header.Set("X-MCP-Session-ID", sess.ID)
 		httpReq.Header.Set("X-MCP-User", sess.User)
 		span.SetTag("session.id", sess.ID)
 		span.SetTag("session.user", sess.User)
+	} else {
+		r.logger.Warn("No session found in context for HTTP request",
+			zap.String("url", httpReq.URL.String()))
 	}
 
 	// Inject tracing headers
