@@ -20,12 +20,6 @@ import (
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
-type contextKey string
-
-const (
-	contextKeyUser contextKey = "user"
-)
-
 // WireMessage represents the wire protocol message format.
 type WireMessage struct {
 	ID              interface{} `json:"id"`
@@ -365,6 +359,7 @@ func (f *Frontend) processRequest(ctx context.Context, data []byte, authClaims *
 		f.logger.Error("Failed to create session for HTTP request",
 			zap.Error(err),
 			zap.String("user", authClaims.Subject))
+
 		return nil, customerrors.Wrap(err, "failed to create session")
 	}
 
