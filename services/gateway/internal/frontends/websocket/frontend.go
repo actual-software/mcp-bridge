@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 
 	authpkg "github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/common"
 	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/types"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/logging"
@@ -23,11 +24,7 @@ import (
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
 )
 
-type contextKey string
-
 const (
-	contextKeySession contextKey = "session"
-
 	defaultWriteWait  = 10 * time.Second
 	defaultPongWait   = 60 * time.Second
 	defaultPingPeriod = 30 * time.Second
@@ -590,7 +587,7 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 	}
 
 	// Add session to context
-	ctx = context.WithValue(ctx, contextKeySession, client.Session)
+	ctx = context.WithValue(ctx, common.SessionContextKey, client.Session)
 
 	// Route the request
 	resp, err := f.router.RouteRequest(ctx, &req, wireMsg.TargetNamespace)

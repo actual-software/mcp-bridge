@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/common"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/session"
@@ -603,7 +604,7 @@ func testSessionRouting(t *testing.T, router *Router, sessionReceived *bool) {
 		User: "test-user",
 	}
 
-	ctx := context.WithValue(context.Background(), sessionContextKey, sess)
+	ctx := context.WithValue(context.Background(), common.SessionContextKey, sess)
 
 	req := &mcp.Request{
 		JSONRPC: "2.0",

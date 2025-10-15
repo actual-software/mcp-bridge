@@ -19,6 +19,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"go.uber.org/zap"
 
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/common"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/config"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/discovery"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
@@ -28,14 +29,6 @@ import (
 	"github.com/actual-software/mcp-bridge/services/gateway/pkg/circuit"
 	"github.com/actual-software/mcp-bridge/services/gateway/pkg/loadbalancer"
 	"github.com/actual-software/mcp-bridge/services/router/pkg/mcp"
-)
-
-// contextKey is a custom type for context keys to avoid collisions.
-type contextKey string
-
-const (
-	// sessionContextKey is the context key for session information.
-	sessionContextKey contextKey = "session"
 )
 
 // Protocol scheme constants.
@@ -335,7 +328,7 @@ func (r *Router) buildWebSocketHeaders(ctx context.Context, span opentracing.Spa
 	headers := http.Header{}
 	headers.Set("User-Agent", "mcp-gateway/1.0.0")
 
-	if sess, ok := ctx.Value(sessionContextKey).(*session.Session); ok {
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
 		headers.Set("X-MCP-Session-ID", sess.ID)
 		headers.Set("X-MCP-User", sess.User)
 		span.SetTag("session.id", sess.ID)
@@ -501,7 +494,7 @@ func (r *Router) buildHTTPURL(endpoint *discovery.Endpoint) string {
 // enhanceHTTPRequest adds session info and tracing headers.
 func (r *Router) enhanceHTTPRequest(ctx context.Context, httpReq *http.Request, span opentracing.Span) {
 	// Add session info if available
-	if sess, ok := ctx.Value(sessionContextKey).(*session.Session); ok {
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
 		httpReq.Header.Set("X-MCP-Session-ID", sess.ID)
 		httpReq.Header.Set("X-MCP-User", sess.User)
 		span.SetTag("session.id", sess.ID)
