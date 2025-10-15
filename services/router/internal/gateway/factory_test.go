@@ -127,7 +127,7 @@ func getErrorTests() []gatewayClientTest {
 
 func testNewGatewayClientCase(t *testing.T, tt gatewayClientTest, logger *zap.Logger) {
 	t.Helper()
-	client, err := NewGatewayClient(tt.cfg, logger)
+	client, err := NewGatewayClient(tt.cfg, "default", logger)
 
 	if (err != nil) != tt.wantErr {
 		t.Errorf("NewGatewayClient() error = %v, wantErr %v", err, tt.wantErr)
@@ -180,12 +180,12 @@ func TestGatewayClient_InterfaceCompliance(t *testing.T) {
 		},
 	}
 
-	wsClient, err := NewGatewayClient(wsConfig, logger)
+	wsClient, err := NewGatewayClient(wsConfig, "default", logger)
 	if err != nil {
 		t.Fatalf("Failed to create WebSocket client: %v", err)
 	}
 
-	tcpClient, err := NewGatewayClient(tcpConfig, logger)
+	tcpClient, err := NewGatewayClient(tcpConfig, "default", logger)
 	if err != nil {
 		t.Fatalf("Failed to create TCP client: %v", err)
 	}

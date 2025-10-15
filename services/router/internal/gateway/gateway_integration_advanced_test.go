@@ -216,7 +216,7 @@ func TestGatewayClient_LoadBalancing(t *testing.T) {
 	}
 
 	logger := zaptest.NewLogger(t)
-	client, err := NewTCPClient(gatewayConfig, logger)
+	client, err := NewTCPClient(gatewayConfig, "default", logger)
 	require.NoError(t, err)
 
 	defer func() { _ = client.Close() }()

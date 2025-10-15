@@ -26,6 +26,10 @@ import (
 const (
 	// ProtocolVersion is the current protocol version.
 	ProtocolVersion = 0x0001
+
+	// Standard MCP methods and namespaces.
+	methodInitialize = "initialize"
+	namespaceSystem  = "system"
 )
 
 // TCPClient manages TCP connections to the gateway using binary protocol.
@@ -456,8 +460,8 @@ func (c *TCPClient) IsConnected() bool {
 // extractNamespace determines the target namespace from the method name.
 func (c *TCPClient) extractNamespace(method string) string {
 	// Handle standard MCP methods - route to system namespace.
-	if method == "initialize" || method == "tools/list" || method == "tools/call" || method == "ping" {
-		return "system"
+	if method == methodInitialize || method == "tools/list" || method == "tools/call" || method == "ping" {
+		return namespaceSystem
 	}
 
 	// Extract namespace from tool name (e.g., "k8s.getPods" -> "k8s")

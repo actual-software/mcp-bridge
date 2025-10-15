@@ -75,7 +75,8 @@ func (cb *CircuitBreaker) autoRecovery() {
 	defer close(cb.doneCh)
 
 	// Check every 100ms for potential state transitions
-	ticker := time.NewTicker(100 * time.Millisecond)
+	const autoRecoveryCheckInterval = 100 * time.Millisecond
+	ticker := time.NewTicker(autoRecoveryCheckInterval)
 	defer ticker.Stop()
 
 	for {
@@ -106,6 +107,7 @@ func (cb *CircuitBreaker) Call(fn func() error) error {
 	// Fail fast when circuit is open - the background goroutine will handle recovery
 	if cb.state == StateOpen {
 		cb.mu.Unlock()
+
 		return errors.New("circuit breaker is open (failing fast)")
 	}
 

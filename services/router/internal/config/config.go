@@ -79,8 +79,9 @@ type ServiceDiscoveryConfig struct {
 
 // GatewayPoolConfig defines configuration for multiple gateway support.
 type GatewayPoolConfig struct {
-	Endpoints        []GatewayEndpoint      `mapstructure:"endpoints"          yaml:"endpoints"`
-	DefaultNamespace string                 `mapstructure:"default_namespace"  yaml:"default_namespace"` // Default MCP namespace when not specified
+	Endpoints []GatewayEndpoint `mapstructure:"endpoints" yaml:"endpoints"`
+	// DefaultNamespace is the default MCP namespace when not specified.
+	DefaultNamespace string                 `mapstructure:"default_namespace"  yaml:"default_namespace"`
 	LoadBalancer     LoadBalancerConfig     `mapstructure:"load_balancer"      yaml:"load_balancer"`
 	ServiceDiscovery ServiceDiscoveryConfig `mapstructure:"service_discovery"  yaml:"service_discovery"`
 	CircuitBreaker   CircuitBreakerConfig   `mapstructure:"circuit_breaker"    yaml:"circuit_breaker"`
