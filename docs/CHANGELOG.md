@@ -14,6 +14,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc17] - 2025-10-15
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **Session Context Preservation Through Tracing** - Fixed session context being lost when OpenTracing span creation happens. The router was using `tracer.StartSpanFromContext(ctx, ...)` which creates a new context, but then continued using the original `ctx` instead of the returned context with the tracing span. This caused the session information added in the previous step to be lost when tracing was enabled. The fix properly captures and uses the context returned from `StartSpanFromContext()`, ensuring session information flows through both the tracing instrumentation and to backend requests. This resolves intermittent "Missing session ID" errors that occurred only when OpenTracing was enabled.
+
+- **Backend Session ID Extraction** - Fixed backend session ID extraction using non-canonical HTTP header keys. HTTP headers are case-insensitive and Go's `net/http` package canonicalizes them (e.g., `x-mcp-session-id` → `X-Mcp-Session-Id`). The router was looking up headers using the raw key `X-MCP-Session-ID` which failed when the actual key in the header map was canonicalized differently. The fix uses `http.CanonicalHeaderKey()` to ensure consistent lookups, preventing backend session IDs from being lost. Also removed redundant canonicalization in the session ID extraction helper function since the header map already uses canonical keys.
+
+### Technical Details
+#### Session Context and Tracing
+- Modified `RouteRequest()` in `services/gateway/internal/router/router.go`
+- Changed from ignoring the context returned by `StartSpanFromContext()` to capturing and using it
+- Ensures session context survives OpenTracing span creation
+- Fixed variable shadowing issue where new context was created but old one was used
+- Modified files: `services/gateway/internal/router/router.go`
+
+#### Backend Session ID Header Handling
+- Modified `forwardRequestHTTP()` in `services/gateway/internal/router/router.go`
+- Added `http.CanonicalHeaderKey()` wrapper around `X-MCP-Session-ID` header lookup
+- Removed redundant `CanonicalHeaderKey` call in `extractSessionID()` helper
+- Ensures backend session IDs are consistently extracted regardless of header case
+- Modified files: `services/gateway/internal/router/router.go`
+
+## [1.0.0-rc16] - 2025-10-15
+
+### Fixed
+
+#### 🐛 **Code Quality**
+- **Project Documentation** - Moved Claude Code rules from `.clauderules` to `CLAUDE.md` for automatic loading and improved maintainability. This ensures the AI coding assistant has consistent access to project validation requirements and git workflow rules without manual configuration.
+
+- **Router Test Issues** - Fixed data race condition in router package tests and addressed function length lint warnings. The data race occurred in concurrent access patterns during test execution, and several functions exceeded the cyclomatic complexity threshold. Split long functions into smaller, more focused helper functions to improve code maintainability and pass lint checks.
+
+- **HTTP Frontend Lint Issues** - Addressed lint warnings in HTTP frontend code including unused variables, inefficient string operations, and error handling improvements. Cleaned up code to pass golangci-lint checks without compromising functionality.
+
+### Technical Details
+#### Documentation
+- Moved validation rules from `.clauderules` to `CLAUDE.md`
+- Added git hooks installation instructions
+- Documented `make check` and `make validate` workflow
+- Modified files: `CLAUDE.md`, `.clauderules` (removed)
+
+#### Router Fixes
+- Fixed data race in `services/gateway/internal/router/router_test.go`
+- Split long functions in router package to reduce cyclomatic complexity
+- All router tests now pass with `-race` flag
+- Modified files: `services/router/internal/router/*.go`
+
+#### HTTP Frontend Fixes
+- Cleaned up unused variables in `services/gateway/internal/frontends/http/frontend.go`
+- Optimized string building operations
+- Improved error handling patterns
+- Modified files: `services/gateway/internal/frontends/http/frontend.go`
+
 ## [1.0.0-rc15] - 2025-10-15
 
 ### Added
