@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	authpkg "github.com/actual-software/mcp-bridge/services/gateway/internal/auth"
+	"github.com/actual-software/mcp-bridge/services/gateway/internal/common"
 	customerrors "github.com/actual-software/mcp-bridge/services/gateway/internal/errors"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/frontends/types"
 	"github.com/actual-software/mcp-bridge/services/gateway/internal/logging"
@@ -37,11 +38,12 @@ type WireMessage struct {
 
 // Frontend implements the HTTP frontend.
 type Frontend struct {
-	name   string
-	config Config
-	logger *zap.Logger
-	router types.RequestRouter
-	auth   types.AuthProvider
+	name     string
+	config   Config
+	logger   *zap.Logger
+	router   types.RequestRouter
+	auth     types.AuthProvider
+	sessions types.SessionManager
 
 	// HTTP server
 	server *nethttp.Server
@@ -81,6 +83,7 @@ func CreateHTTPFrontend(
 		logger:     logger.With(zap.String("frontend", name), zap.String("protocol", "http")),
 		router:     router,
 		auth:       auth,
+		sessions:   sessions,
 		mux:        nethttp.NewServeMux(),
 		ctx:        ctx,
 		cancel:     cancel,
@@ -355,8 +358,23 @@ func (f *Frontend) processRequest(ctx context.Context, data []byte, authClaims *
 		return nil, customerrors.NewValidationError("invalid MCP request: " + err.Error())
 	}
 
-	// Create a session context (HTTP requests are stateless, but we need to pass context)
-	ctx = context.WithValue(ctx, contextKeyUser, authClaims.Subject)
+	// Create or retrieve session for this request
+	// HTTP is stateless, so we create a session per request from the auth claims
+	sess, err := f.sessions.CreateSession(authClaims)
+	if err != nil {
+		f.logger.Error("Failed to create session for HTTP request",
+			zap.Error(err),
+			zap.String("user", authClaims.Subject))
+		return nil, customerrors.Wrap(err, "failed to create session")
+	}
+
+	// Add session to context using the correct key that the router expects
+	ctx = context.WithValue(ctx, common.SessionContextKey, sess)
+
+	f.logger.Debug("Session created and added to context for HTTP request",
+		zap.String("session_id", sess.ID),
+		zap.String("user", sess.User),
+		zap.String("method", req.Method))
 
 	// Route the request
 	resp, err := f.router.RouteRequest(ctx, &req, wireMsg.TargetNamespace)

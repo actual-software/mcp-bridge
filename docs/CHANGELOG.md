@@ -14,6 +14,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc13] - 2025-10-15
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **HTTP Frontend Session Context** - Fixed HTTP frontend not properly creating and attaching session information to request context before routing to backend servers. The HTTP frontend was only storing the user ID under a local context key instead of creating a full session object under `common.SessionContextKey` like the WebSocket frontend does. This caused the router to never find session information, resulting in missing `X-MCP-Session-ID` headers on backend requests. HTTP/SSE backends rejected these requests with "Bad Request: Missing session ID". The HTTP frontend now properly creates sessions from authentication claims and attaches them to the request context using the correct shared context key, ensuring session headers reach backends for both HTTP and WebSocket connections.
+
+### Technical Details
+#### HTTP Frontend Session Management
+- Added `sessions types.SessionManager` field to HTTP Frontend struct
+- Updated `CreateHTTPFrontend` constructor to store session manager reference
+- Added `common` package import for shared context keys
+- Modified `processRequest()` to create session from auth claims before routing
+- Session now properly attached to context using `common.SessionContextKey`
+- Added debug logging for session creation and context attachment
+- Added error handling for session creation failures
+- All HTTP frontend tests pass, confirming backward compatibility
+- Modified files: `services/gateway/internal/frontends/http/frontend.go`
+
+## [1.0.0-rc12] - 2025-10-15
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **Load Balancer Cache Invalidation** - Fixed gateway continuing to route requests to terminating pods during Kubernetes rolling updates. When pods changed, the endpoint change callback was called with the Kubernetes namespace, but the load balancer cache is keyed by MCP namespace. For example, during a rolling update in the `mcp-e2e-123` K8s namespace, the callback tried to invalidate the `mcp-e2e-123` cache entry, but the actual cache key was `system`. This caused 70% of requests to fail during rolling updates as the gateway kept sending traffic to terminating pods. The fix properly tracks which MCP namespaces are affected by Kubernetes endpoint changes and invalidates the correct cache entries.
+
+### Technical Details
+#### Endpoint Change Notification
+- Modified `handleEndpointsEvent` in `services/gateway/internal/discovery/kubernetes.go` to:
+  - Track which MCP namespaces are affected by K8s endpoint changes
+  - Filter and reorganize endpoints when K8s pods change
+  - Call invalidation callback for each affected MCP namespace (not K8s namespace)
+  - Add detailed logging showing which MCP namespaces were updated
+- Load balancer cache now properly invalidated using MCP namespace keys
+- Gateway correctly removes terminating endpoints during rolling updates
+- Rolling update success rate improved from 30% to 100%
+- Modified files: `services/gateway/internal/discovery/kubernetes.go`
+
 ## [1.0.0-rc11] - 2025-10-15
 
 ### Fixed
