@@ -198,8 +198,12 @@ func (r *Router) RouteRequest(ctx context.Context, req *mcp.Request, targetNames
 	ctx = EnrichContextWithRequest(ctx, req, targetNamespace)
 	r.logSessionContext(ctx, "after EnrichContextWithRequest", req.Method)
 
-	// Start tracing span
+	// Start tracing span - preserve session explicitly to work around context propagation issues
+	sess, _ := ctx.Value(common.SessionContextKey).(*session.Session)
 	span, ctx := opentracing.StartSpanFromContext(ctx, "router.RouteRequest")
+	if sess != nil {
+		ctx = context.WithValue(ctx, common.SessionContextKey, sess)
+	}
 	defer span.Finish()
 	r.logSessionContext(ctx, "after StartSpanFromContext", req.Method)
 
