@@ -37,16 +37,17 @@ If hooks are installed, these run automatically. If not, I run them manually.
 
 Use frequently during development.
 
-### `make validate` (Full - 5min)
+### `make validate` (Full - ~2min)
 - Everything in `make check`
 - Full linting audit
-- All tests
-- Coverage analysis
+- Unit and integration tests (E2E skipped)
 - Documentation checks
 - Complexity checks
 - Binary verification
 
-Mirrors complete CI pipeline. **MUST pass before pushing.**
+**Skipped for speed:** E2E tests, coverage (CI runs these)
+
+**MUST pass before pushing.**
 
 ## Key Rules
 

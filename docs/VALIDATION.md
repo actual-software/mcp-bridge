@@ -10,7 +10,7 @@ make install-hooks
 
 This installs:
 - **pre-commit hook** → runs `make check` (30s) before every commit
-- **pre-push hook** → runs `make validate` (5min) before every push
+- **pre-push hook** → runs `make validate` (~2min) before every push
 
 **After installation, validation runs automatically in your normal workflow:**
 ```bash
@@ -35,19 +35,20 @@ Runs:
 
 **Use:** Frequently during development for fast feedback
 
-### Full Validation (~5 minutes)
+### Full Validation (~2 minutes)
 ```bash
 make validate
 ```
 
-Runs everything CI runs:
+Runs core CI checks:
 - Quick check (above)
 - Full lint audit
-- All tests
-- Coverage analysis
+- Unit and integration tests (E2E tests skipped)
 - Documentation checks
 - Complexity analysis
 - Binary verification
+
+**Note:** E2E tests and coverage skipped for speed. CI runs full suite.
 
 **Use:** Before pushing code
 

@@ -68,7 +68,7 @@ check-go-version:
 check:
 	@./scripts/quick-check.sh
 
-# Full validation (5min) - before pushing
+# Full validation (~2min) - before pushing
 validate:
 	@./scripts/validate.sh
 
@@ -236,7 +236,7 @@ help:
 	@echo ""
 	@echo "🔍 VALIDATION:"
 	@echo "  make check       - Quick validation (30s) - build + format + basic lint"
-	@echo "  make validate    - Full validation (5min) - all CI checks"
+	@echo "  make validate    - Full validation (~2min) - core CI checks"
 	@echo "  make lint        - Run linters"
 	@echo "  make fmt         - Format code"
 	@echo ""

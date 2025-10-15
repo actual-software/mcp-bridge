@@ -7,6 +7,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
+# Skip E2E tests for speed (CI runs them)
+export RUN_E2E_TESTS=false
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -184,25 +187,9 @@ else
 fi
 
 # =============================================================================
-# PHASE 6: COVERAGE (mirrors audit-coverage.sh)
+# PHASE 6: CODE QUALITY CHECKS
 # =============================================================================
-print_header "PHASE 6: COVERAGE"
-
-echo "📊 Running coverage audit..."
-if make audit-coverage; then
-    print_success "Coverage: Meets threshold"
-else
-    print_error "Coverage: Below threshold"
-    echo "Check audit-results/ for details"
-    # Note: Coverage failures might be acceptable depending on context
-    # Uncomment next line to make coverage failures block pushes:
-    # exit 1
-fi
-
-# =============================================================================
-# PHASE 7: CODE QUALITY CHECKS
-# =============================================================================
-print_header "PHASE 7: CODE QUALITY CHECKS"
+print_header "PHASE 6: CODE QUALITY CHECKS"
 
 echo "📚 Checking documentation completeness..."
 REQUIRED_DOCS=("README.md" "docs/SECURITY.md" "services/gateway/README.md" "services/router/README.md")
@@ -230,9 +217,9 @@ else
 fi
 
 # =============================================================================
-# PHASE 8: BUILD VERIFICATION (mirrors build-verification.yml)
+# PHASE 7: BUILD VERIFICATION (mirrors build-verification.yml)
 # =============================================================================
-print_header "PHASE 8: BUILD VERIFICATION"
+print_header "PHASE 7: BUILD VERIFICATION"
 
 echo "✅ Verifying build artifacts..."
 for service in gateway router; do
@@ -277,6 +264,8 @@ else
     echo -e "${GREEN}✅ FULL VALIDATION PASSED${NC}"
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "All CI checks passed. Safe to push."
+    echo "Core checks passed (E2E tests and coverage skipped for speed)."
+    echo "CI will run full suite including E2E tests and coverage."
+    echo "Safe to push."
     exit 0
 fi
