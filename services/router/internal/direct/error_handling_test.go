@@ -397,7 +397,13 @@ func TestDirectClientManager_ErrorPropagation(t *testing.T) {
 	err := manager.Start(context.Background())
 	require.NoError(t, err)
 
-	defer func() { _ = manager.Stop(context.Background()) }()
+	defer func() {
+		// Ensure manager stops and all background goroutines complete
+		stopErr := manager.Stop(context.Background())
+		require.NoError(t, stopErr)
+		// Give a moment for any pending log writes to complete
+		time.Sleep(50 * time.Millisecond)
+	}()
 
 	tests := createErrorPropagationTests()
 

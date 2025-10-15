@@ -214,6 +214,13 @@ func measurePerformance(t *testing.T, msgRouter *MessageRouter, useDirectMode bo
 			ID:      fmt.Sprintf("perf-test-%d", i),
 		}
 
+		// Add serverURL for direct mode
+		if useDirectMode {
+			req.Params = map[string]interface{}{
+				"serverURL": "ws://test-server",
+			}
+		}
+
 		reqData, err := json.Marshal(req)
 		if err != nil {
 			t.Fatalf("Failed to marshal request: %v", err)
