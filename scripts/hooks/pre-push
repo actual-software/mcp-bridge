@@ -1,0 +1,17 @@
+#!/bin/bash
+# Pre-push hook - runs full validation before push
+
+echo "🚀 Running pre-push validation..."
+echo ""
+
+if make validate; then
+    echo ""
+    echo "✅ All CI checks passed. Proceeding with push..."
+    exit 0
+else
+    echo ""
+    echo "❌ Validation failed"
+    echo ""
+    echo "Fix issues above or bypass with: git push --no-verify"
+    exit 1
+fi

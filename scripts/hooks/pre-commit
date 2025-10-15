@@ -1,0 +1,17 @@
+#!/bin/bash
+# Pre-commit hook - runs fast validation before commit
+
+echo "🔍 Running pre-commit validation..."
+echo ""
+
+if make check; then
+    echo ""
+    echo "✅ Pre-commit checks passed"
+    exit 0
+else
+    echo ""
+    echo "❌ Pre-commit checks failed"
+    echo ""
+    echo "Fix issues above or bypass with: git commit --no-verify"
+    exit 1
+fi

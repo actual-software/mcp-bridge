@@ -1,4 +1,4 @@
-.PHONY: help test build clean lint fmt coverage install check check-go-version
+.PHONY: help test build clean lint fmt coverage install check check-go-version validate install-hooks
 
 # Extract Go version from go.mod (industry standard approach)
 GO_VERSION := $(shell awk '/^go / {print $$2}' go.mod)
@@ -64,9 +64,13 @@ check-go-version:
 		echo "✅ Go version is compatible"; \
 	fi
 
-# Run all quality checks
-check: lint test
-	@echo "✅ All quality checks passed!"
+# Quick validation (30s) - for dev loop
+check:
+	@./scripts/quick-check.sh
+
+# Full validation (5min) - before pushing
+validate:
+	@./scripts/validate.sh
 
 # =============================================================================
 # COVERAGE TARGETS
@@ -210,6 +214,10 @@ verify:
 	@test -f services/router/bin/mcp-router || (echo "❌ Router binary missing" && exit 1)
 	@echo "✅ All binaries present!"
 
+# Install git hooks (enforces validation automatically)
+install-hooks:
+	@./scripts/install-hooks.sh
+
 # Display help
 help:
 	@echo "MCP Bridge - Streamlined Makefile"
@@ -226,11 +234,11 @@ help:
 	@echo "  make coverage-badge   - Update README badges"
 	@echo "  make coverage-html    - Generate HTML reports"
 	@echo ""
-	@echo "🔍 CODE QUALITY:"
+	@echo "🔍 VALIDATION:"
+	@echo "  make check       - Quick validation (30s) - build + format + basic lint"
+	@echo "  make validate    - Full validation (5min) - all CI checks"
 	@echo "  make lint        - Run linters"
 	@echo "  make fmt         - Format code"
-	@echo "  make check       - Run all quality checks"
-	@echo "  make dev-check   - Quick pre-commit checks"
 	@echo ""
 	@echo "🎯 SERVICE-SPECIFIC:"
 	@echo "  make test-gateway     - Test gateway only"
@@ -252,8 +260,9 @@ help:
 	@echo "  make audit-clean      - Clean audit results"
 	@echo ""
 	@echo "🛠️  UTILITIES:"
-	@echo "  make install     - Install dependencies"
-	@echo "  make verify      - Verify build artifacts"
-	@echo "  make help        - Show this help"
+	@echo "  make install       - Install dependencies"
+	@echo "  make install-hooks - Install git hooks (auto-runs validation)"
+	@echo "  make verify        - Verify build artifacts"
+	@echo "  make help          - Show this help"
 	@echo ""
-	@echo "For advanced features, see the old Makefile or individual service directories."
+	@echo "💡 SETUP: Run 'make install-hooks' once to enforce validation automatically"
