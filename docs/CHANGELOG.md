@@ -14,6 +14,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc14] - 2025-10-15
+
+### Added
+
+#### 🔍 **Debugging**
+- **Session Context Tracking Logs** - Added comprehensive debug logging throughout the session context propagation chain to diagnose session loss issues. Logs added at: WebSocket frontend session attachment, router entry point, after context enrichment, after tracing span creation, and HTTP request enhancement. This logging helps identify exactly where session context is lost when routing WebSocket connections to HTTP/SSE backends.
+
+### Technical Details
+#### Debug Logging
+- Added debug log in `websocket/frontend.go` after session context attachment
+- Added debug logs in `router/router.go` at multiple checkpoints:
+  - Start of `RouteRequest()` before enrichment
+  - After `EnrichContextWithRequest()`
+  - After `StartSpanFromContext()` tracing span creation
+  - Start of `enhanceHTTPRequest()` before session header addition
+- Logs include session ID, user, method, and URL information
+- Modified files: `services/gateway/internal/frontends/websocket/frontend.go`, `services/gateway/internal/router/router.go`
+
 ## [1.0.0-rc13] - 2025-10-15
 
 ### Fixed

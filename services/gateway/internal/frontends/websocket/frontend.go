@@ -588,6 +588,10 @@ func (f *Frontend) processClientMessage(ctx context.Context, client *ClientConne
 
 	// Add session to context
 	ctx = context.WithValue(ctx, common.SessionContextKey, client.Session)
+	client.logger.Debug("DEBUG: Session added to context in WebSocket frontend",
+		zap.String("session_id", client.Session.ID),
+		zap.String("user", client.Session.User),
+		zap.String("method", req.Method))
 
 	// Route the request
 	resp, err := f.router.RouteRequest(ctx, &req, wireMsg.TargetNamespace)

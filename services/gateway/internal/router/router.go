@@ -162,12 +162,41 @@ func (r *Router) executeWithCircuitBreaker(
 func (r *Router) RouteRequest(ctx context.Context, req *mcp.Request, targetNamespace string) (*mcp.Response, error) {
 	startTime := time.Now()
 
+	// DEBUG: Check session before enrichment
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+		r.logger.Debug("DEBUG: Session found at start of RouteRequest",
+			zap.String("session_id", sess.ID),
+			zap.String("user", sess.User),
+			zap.String("method", req.Method))
+	} else {
+		r.logger.Warn("DEBUG: NO SESSION at start of RouteRequest",
+			zap.String("method", req.Method))
+	}
+
 	// Enrich context with request information
 	ctx = EnrichContextWithRequest(ctx, req, targetNamespace)
+
+	// DEBUG: Check session after enrichment
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+		r.logger.Debug("DEBUG: Session found after EnrichContextWithRequest",
+			zap.String("session_id", sess.ID),
+			zap.String("user", sess.User))
+	} else {
+		r.logger.Warn("DEBUG: NO SESSION after EnrichContextWithRequest")
+	}
 
 	// Start tracing span
 	span, ctx := opentracing.StartSpanFromContext(ctx, "router.RouteRequest")
 	defer span.Finish()
+
+	// DEBUG: Check session after tracing span creation
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+		r.logger.Debug("DEBUG: Session found after StartSpanFromContext",
+			zap.String("session_id", sess.ID),
+			zap.String("user", sess.User))
+	} else {
+		r.logger.Warn("DEBUG: NO SESSION after StartSpanFromContext")
+	}
 
 	// Set span tags
 	span.SetTag("mcp.method", req.Method)
@@ -493,6 +522,11 @@ func (r *Router) buildHTTPURL(endpoint *discovery.Endpoint) string {
 
 // enhanceHTTPRequest adds session info and tracing headers.
 func (r *Router) enhanceHTTPRequest(ctx context.Context, httpReq *http.Request, span opentracing.Span) {
+	// DEBUG: Check context value directly
+	r.logger.Debug("DEBUG: enhanceHTTPRequest checking for session",
+		zap.String("url", httpReq.URL.String()),
+		zap.Bool("has_session", ctx.Value(common.SessionContextKey) != nil))
+
 	// Add session info if available
 	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
 		r.logger.Debug("Session retrieved from context for HTTP request",
