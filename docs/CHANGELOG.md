@@ -14,6 +14,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc10] - 2025-10-15
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **Router Direct Mode Configuration** - Fixed router ignoring `direct.enabled: false` configuration. The `IsDirectMode()` function only checked if `MaxConnections > 0`, completely ignoring the `Enabled` field which didn't exist in the DirectConfig struct. Router now properly respects the `direct.enabled` flag, allowing users to disable direct mode even when max_connections is set.
+
+- **Circuit Breaker Auto-Recovery** - Fixed circuit breakers lacking active auto-recovery mechanism. Previously, circuit breakers only transitioned from Open to Half-Open state when a new request arrived after the timeout period. Without incoming requests, circuits remained Open indefinitely, preventing recovery even after backends became healthy. Circuit breakers now have a background goroutine that checks every 100ms and automatically transitions to Half-Open state after the timeout expires, enabling self-healing without manual intervention or incoming traffic.
+
+#### 🔧 **Code Quality Improvements**
+- **Linter Compliance** - Resolved all golangci-lint warnings across Gateway and Router services
+- **Test Compilation** - Fixed missing namespace parameter in 5 router test function calls
+- **Code Standards** - Extracted magic numbers to constants, fixed line length violations, added proper nolint comments for factory patterns
+
+### Technical Details
+#### Router Direct Mode
+- Added `Enabled bool` field to `DirectConfig` struct in `services/router/internal/direct/manager.go`
+- Updated `IsDirectMode()` in `services/router/internal/config/config.go` to check `c.Direct.Enabled` first
+- Set default `direct.enabled: true` for backward compatibility
+- Modified files: `services/router/internal/config/config.go`, `services/router/internal/direct/manager.go`
+
+#### Circuit Breaker
+- Added `stopCh` and `doneCh` channels to CircuitBreaker struct for lifecycle management
+- Implemented `autoRecovery()` background goroutine with 100ms ticker interval
+- Added `checkAndTransitionToHalfOpen()` method for automatic state transitions
+- Refactored `Call()` method to delegate state transitions to background goroutine
+- Added `Close()` method to properly shutdown background goroutine
+- Updated tests in `breaker_test.go` to account for 100ms ticker interval (wait timeout + 150ms)
+- Modified files: `services/gateway/pkg/circuit/breaker.go`, `services/gateway/pkg/circuit/breaker_test.go`
+
+#### Code Quality
+- Gateway: Added `autoRecoveryCheckInterval` constant (100ms), fixed nlreturn warning with blank line before return
+- Router: Added `methodInitialize` and `namespaceSystem` constants, moved DefaultNamespace comment to separate line
+- Router Tests: Added missing `defaultNamespace` parameter to NewClient, NewGatewayClient, NewTCPClient calls (5 locations)
+- Router Factories: Added `//nolint:ireturn` comments for factory pattern methods in manager.go
+- All code passes golangci-lint with 0 issues
+- Modified files: `services/gateway/pkg/circuit/breaker.go`, `services/router/internal/config/config.go`, `services/router/internal/direct/manager.go`, `services/router/internal/gateway/tcp_client.go`, and 3 test files
+
 ## [1.0.0-rc9] - 2025-10-14
 
 ### Added

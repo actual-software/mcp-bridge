@@ -525,6 +525,7 @@ func (m *DirectClientManager) Start(ctx context.Context) error {
 }
 
 // GetClient returns a direct client for the specified server URL.
+//
 //nolint:ireturn // Manager pattern requires interface return
 func (m *DirectClientManager) GetClient(ctx context.Context, serverURL string) (DirectClient, error) {
 	m.mu.RLock()
@@ -614,6 +615,7 @@ func (m *DirectClientManager) DetectProtocol(ctx context.Context, serverURL stri
 }
 
 // getOrCreateClient gets an existing client or creates a new one using the connection pool.
+//
 //nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) getOrCreateClient(
 	ctx context.Context,
@@ -719,6 +721,7 @@ func (m *DirectClientManager) recordConnectionSuccess(serverURL string, protocol
 }
 
 // createClient creates a new client of the specified protocol type.
+//
 //nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) createClient(
 	ctx context.Context, serverURL string, protocol ClientType,
@@ -738,6 +741,7 @@ func (m *DirectClientManager) createClient(
 }
 
 // Protocol-specific client creation methods.
+//
 //nolint:ireturn // Factory pattern requires interface return
 func (m *DirectClientManager) createStdioClient(ctx context.Context, serverURL string) (DirectClient, error) {
 	// Create stdio-specific config from manager config.
