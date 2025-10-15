@@ -14,6 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc11] - 2025-10-15
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **Session Context Key Mismatch** - Fixed websocket frontend and router using different `contextKey` type instances for session storage. Even though both had the string value "session", Go's `context.Value()` requires exact type matching for lookups. This caused the router to never find the session in context, resulting in missing `X-MCP-Session-ID` headers on backend requests. SSE backends (like Serena) rejected these requests with "Bad Request: Missing session ID", which triggered the circuit breaker to open and fail all subsequent requests. The fix creates a shared `SessionContextKey` in `internal/common/context.go` that both packages now use, ensuring session information properly flows from the websocket frontend through the router to backend HTTP headers.
+
+### Technical Details
+#### Session Propagation Fix
+- Created shared context key type: `internal/common/context.go` with `SessionContextKey`
+- Updated websocket frontend (`frontends/websocket/frontend.go`) to use `common.SessionContextKey` when setting session in context
+- Updated router (`router/router.go`) to use `common.SessionContextKey` when retrieving session from context
+- Updated router tests (`router/router_test.go`) to use shared context key
+- All session propagation tests now pass, verifying session headers reach backends correctly
+- Modified files: `services/gateway/internal/common/context.go` (new), `services/gateway/internal/frontends/websocket/frontend.go`, `services/gateway/internal/router/router.go`, `services/gateway/internal/router/router_test.go`
+
 ## [1.0.0-rc10] - 2025-10-15
 
 ### Added
