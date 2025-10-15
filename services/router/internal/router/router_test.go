@@ -2633,6 +2633,7 @@ func createFallbackTestConfig(gatewayURL string) *config.Config {
 		Local: config.LocalConfig{RequestTimeoutMs: 3000},
 		// Configure direct mode with fallback enabled.
 		Direct: direct.DirectConfig{
+			Enabled:        true,
 			MaxConnections: 10, // Enable direct mode
 			Fallback: direct.FallbackConfig{
 				Enabled:       true,
@@ -2868,7 +2869,8 @@ func createRoutingTestRouter(t *testing.T, serverURL string, tt routingDecisionT
 	// Configure direct mode if enabled
 	if tt.directEnabled {
 		cfg.Direct = direct.DirectConfig{
-			MaxConnections: 10, // Enable direct mode
+			Enabled:        true, // Enable direct mode
+			MaxConnections: 10,
 			Fallback: direct.FallbackConfig{
 				Enabled:            true,
 				DirectOnlyMethods:  tt.directOnlyList,

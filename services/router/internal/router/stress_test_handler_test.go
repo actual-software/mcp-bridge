@@ -82,6 +82,7 @@ func (h *StressTestHandler) setupConfiguration() {
 			},
 		},
 		Direct: direct.DirectConfig{
+			Enabled:        true,
 			MaxConnections: 10,
 			Fallback: direct.FallbackConfig{
 				Enabled:       true,

@@ -66,6 +66,7 @@ func (h *FallbackTestHandler) initializeConfig() {
 			},
 		},
 		Direct: direct.DirectConfig{
+			Enabled:        true,
 			MaxConnections: 10,
 			Fallback: direct.FallbackConfig{
 				Enabled:       true,
