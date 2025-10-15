@@ -304,6 +304,7 @@ func setGatewayPoolDefaults(v *viper.Viper) {
 
 func setDirectDefaults(v *viper.Viper) {
 	// Direct server defaults.
+	v.SetDefault("direct.enabled", true)
 	v.SetDefault("direct.default_timeout", "30s")
 	v.SetDefault("direct.max_connections", constants.DefaultMaxConnections)
 	v.SetDefault("direct.health_check.enabled", true)
@@ -575,6 +576,10 @@ func (c *Config) GetDirectConfig() direct.DirectConfig {
 // IsDirectMode returns true if the router should operate in direct server mode.
 // This is determined by checking if direct configuration is enabled and valid.
 func (c *Config) IsDirectMode() bool {
-	// Check if direct configuration has meaningful settings.
+	// First check if direct mode is explicitly enabled.
+	if !c.Direct.Enabled {
+		return false
+	}
+	// Then check if direct configuration has meaningful settings.
 	return c.Direct.MaxConnections > 0
 }

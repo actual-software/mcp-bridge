@@ -94,6 +94,10 @@ type FallbackConfig struct {
 
 type DirectConfig struct {
 	// Default timeout for all direct connections.
+	// Enabled controls whether direct mode is active.
+	// When false, the router will not attempt direct connections to MCP servers.
+	Enabled bool `mapstructure:"enabled" yaml:"enabled"`
+
 	DefaultTimeout time.Duration `mapstructure:"default_timeout" yaml:"default_timeout"`
 
 	// Maximum number of concurrent direct connections.

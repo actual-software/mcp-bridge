@@ -137,20 +137,20 @@ func TestCircuitBreaker_HalfOpen(t *testing.T) {
 		t.Fatal("Expected circuit to be open")
 	}
 
-	// Wait for the circuit timeout to expire
-	// Instead of sleeping, wait just a bit longer than the timeout
-	waitTime := cb.timeout + 10*time.Millisecond
+	// Wait for the circuit timeout to expire PLUS time for background goroutine to detect and transition
+	// Background goroutine checks every 100ms, so wait timeout + 150ms to be safe
+	waitTime := cb.timeout + 150*time.Millisecond
 
 	timer := time.NewTimer(waitTime)
 	defer timer.Stop()
 
 	select {
 	case <-timer.C:
-		// Circuit should now be ready to transition to half-open
+		// Circuit should now have been transitioned to half-open by background goroutine
 	case <-time.After(httpStatusOK * time.Millisecond):
 		t.Fatal("Timeout waiting for circuit breaker timeout")
 	}
-	// Next call should transition to half-open and execute
+	// Next call should execute in half-open state
 	called := false
 	err := cb.Call(func() error {
 		called = true
@@ -380,8 +380,9 @@ func testOpenStateTransitions(t *testing.T, cb *CircuitBreaker, checkState func(
 
 	checkState(StateOpen)
 
-	// Wait for the circuit timeout to expire
-	waitTime := cb.timeout + 10*time.Millisecond
+	// Wait for the circuit timeout to expire PLUS time for background goroutine to detect and transition
+	// Background goroutine checks every 100ms, so wait timeout + 150ms to be safe
+	waitTime := cb.timeout + 150*time.Millisecond
 
 	timer := time.NewTimer(waitTime)
 	defer timer.Stop()

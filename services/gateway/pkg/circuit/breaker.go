@@ -45,37 +45,78 @@ type CircuitBreaker struct {
 	successes       int
 	lastFailureTime time.Time
 	lastStateChange time.Time
+
+	// Auto-recovery support
+	stopCh chan struct{}
+	doneCh chan struct{}
 }
 
 // NewCircuitBreaker creates a new circuit breaker.
 func NewCircuitBreaker(maxFailures, successThreshold int, timeout time.Duration) *CircuitBreaker {
-	return &CircuitBreaker{
+	cb := &CircuitBreaker{
 		maxFailures:      maxFailures,
 		successThreshold: successThreshold,
 		timeout:          timeout,
 		state:            StateClosed,
 		lastStateChange:  time.Now(),
+		stopCh:           make(chan struct{}),
+		doneCh:           make(chan struct{}),
+	}
+
+	// Start background auto-recovery goroutine
+	go cb.autoRecovery()
+
+	return cb
+}
+
+// autoRecovery periodically checks if the circuit should transition from Open to Half-Open.
+// This enables active recovery without waiting for incoming requests.
+func (cb *CircuitBreaker) autoRecovery() {
+	defer close(cb.doneCh)
+
+	// Check every 100ms for potential state transitions
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-cb.stopCh:
+			return
+		case <-ticker.C:
+			cb.checkAndTransitionToHalfOpen()
+		}
+	}
+}
+
+// checkAndTransitionToHalfOpen checks if enough time has passed to transition from Open to Half-Open.
+func (cb *CircuitBreaker) checkAndTransitionToHalfOpen() {
+	cb.mu.Lock()
+	defer cb.mu.Unlock()
+
+	if cb.state == StateOpen && time.Since(cb.lastFailureTime) > cb.timeout {
+		cb.setState(StateHalfOpen)
+		cb.successes = 0
 	}
 }
 
 // Call executes the function through the circuit breaker.
 func (cb *CircuitBreaker) Call(fn func() error) error {
 	cb.mu.Lock()
-	defer cb.mu.Unlock()
 
-	// Check if we should transition from Open to Half-Open
+	// Fail fast when circuit is open - the background goroutine will handle recovery
 	if cb.state == StateOpen {
-		if time.Since(cb.lastFailureTime) > cb.timeout {
-			cb.setState(StateHalfOpen)
-			cb.successes = 0
-		} else {
-			// Fail fast when circuit is open - immediate error propagation
-			return errors.New("circuit breaker is open (failing fast)")
-		}
+		cb.mu.Unlock()
+		return errors.New("circuit breaker is open (failing fast)")
 	}
+
+	cb.mu.Unlock()
 
 	// Execute the function with shorter context timeout for faster error detection
 	err := fn()
+
+	cb.mu.Lock()
+	defer cb.mu.Unlock()
+
 	if err != nil {
 		cb.recordFailure()
 	} else {
@@ -159,4 +200,11 @@ func (cb *CircuitBreaker) Reset() {
 	cb.failures = 0
 	cb.successes = 0
 	cb.lastStateChange = time.Now()
+}
+
+// Close stops the background auto-recovery goroutine and cleans up resources.
+// This should be called when the circuit breaker is no longer needed.
+func (cb *CircuitBreaker) Close() {
+	close(cb.stopCh)
+	<-cb.doneCh
 }
