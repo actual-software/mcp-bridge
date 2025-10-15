@@ -3,3 +3,4 @@ test/e2e/weather/certs/
 .*_test\.go$
 .*/testdata/
 node_modules/
+deployment/helm/mcp-bridge/charts/.*\.tgz$
