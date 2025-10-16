@@ -1251,6 +1251,7 @@ func (r *Router) readSSEStream(ctx context.Context, endpointURL string, stream *
 		case <-ctx.Done():
 			r.logger.Info("SSE stream context cancelled",
 				zap.String("endpoint", endpointURL))
+
 			return
 		default:
 		}
@@ -1268,6 +1269,7 @@ func (r *Router) readSSEStream(ctx context.Context, endpointURL string, stream *
 					zap.String("session_id", stream.sessionID),
 					zap.Error(err))
 			}
+
 			return
 		}
 
@@ -1400,6 +1402,7 @@ func (r *Router) forwardRequestViaSSE(
 		stream.pendingMu.Lock()
 		delete(stream.pendingRequests, req.ID)
 		stream.pendingMu.Unlock()
+
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer func() { _ = httpResp.Body.Close() }()
