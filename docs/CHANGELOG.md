@@ -14,6 +14,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc19] - 2025-10-16
+
+### Added
+
+#### 🚀 **New Features**
+- **Full SSE Session Support** - Added complete Server-Sent Events (SSE) session support to the gateway router for MCP over HTTP with SSE backends. The router now:
+  - Establishes persistent SSE sessions via GET requests with `Accept: text/event-stream`
+  - Extracts session IDs from `Mcp-Session-Id` response headers
+  - Maintains persistent SSE connections with background goroutine for event streaming
+  - Sends requests via POST with session ID header
+  - Correlates asynchronous SSE responses with pending requests using request ID channels
+  - Handles proper cleanup when streams close or context is cancelled
+  - This enables full end-to-end connectivity with SSE-based MCP servers like serena-mcp that require stateful session management.
+
+### Technical Details
+#### SSE Session Implementation
+- Added `sseStream` struct to manage persistent SSE connections:
+  - Stores session ID, HTTP response connection, buffered reader
+  - Maps pending request IDs to response channels for async correlation
+  - Thread-safe with mutex protection for concurrent request handling
+  - Context cancellation support for proper lifecycle management
+- Implemented `establishSSESession()` method in router:
+  - Sends GET request with `Accept: text/event-stream` header
+  - Extracts `Mcp-Session-Id` from response headers
+  - Creates buffered reader for SSE event parsing
+  - Launches background goroutine for continuous stream reading
+- Implemented `readSSEStream()` background goroutine:
+  - Continuously reads SSE events from persistent connection
+  - Parses `data:` lines containing MCP response JSON
+  - Delivers responses to waiting requests via channels
+  - Handles EOF, context cancellation, and parse errors gracefully
+  - Cleans up pending requests on stream termination
+- Implemented `forwardRequestViaSSE()` method:
+  - Reuses or establishes SSE stream for endpoint
+  - Sends POST requests with `Mcp-Session-Id` header
+  - Registers response channel before sending request
+  - Waits for async response from SSE stream
+  - Handles timeouts and stream failures with proper cleanup
+- Updated `forwardRequestHTTP()` to route `sse` scheme to SSE handler
+- Added `sseStreams` map to Router struct for session management
+- Router now supports three MCP transport patterns:
+  - WebSocket (persistent bidirectional)
+  - HTTP (request/response)
+  - HTTP with SSE sessions (request via POST, async response via SSE)
+- Modified files: `services/gateway/internal/router/router.go`
+
+#### Code Quality
+- All changes pass golangci-lint with 0 issues
+- Added proper blank lines before return statements (nlreturn)
+- Used `//nolint:funlen` for complex stream handling functions
+- Proper error handling with context propagation
+- Thread-safe concurrent access patterns
+
 ## [1.0.0-rc18] - 2025-10-16
 
 ### Fixed
