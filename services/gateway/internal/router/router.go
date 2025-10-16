@@ -467,6 +467,7 @@ func (r *Router) forwardRequestHTTP(
 	// Check if this endpoint uses SSE session pattern
 	if endpoint.Scheme == "sse" {
 		span.LogKV("routing.method", "sse_session")
+
 		return r.forwardRequestViaSSE(ctx, endpoint, req, span)
 	}
 
@@ -1173,14 +1174,16 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
+
 		return nil, fmt.Errorf("session establishment returned %d: %s", resp.StatusCode, string(body))
 	}
 
 	// Extract session ID from response header
 	sessionID := resp.Header.Get("Mcp-Session-Id")
 	if sessionID == "" {
-		resp.Body.Close()
+		_ = resp.Body.Close()
+
 		return nil, fmt.Errorf("no session ID received from backend (missing Mcp-Session-Id header)")
 	}
 
@@ -1189,8 +1192,9 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 		zap.String("session_id", sessionID),
 		zap.String("content_type", resp.Header.Get("Content-Type")))
 
-	// Create cancellable context for the stream
-	streamCtx, cancel := context.WithCancel(context.Background())
+	// Create cancellable context for the stream that inherits from parent
+	// but will outlive the initial request
+	streamCtx, cancel := context.WithCancel(ctx)
 
 	// Create sseStream struct
 	stream := &sseStream{
@@ -1210,10 +1214,12 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 
 // readSSEStream reads from an SSE stream and delivers responses to pending requests.
 // This runs as a goroutine for each SSE connection.
+//
+//nolint:funlen // Complex stream reading logic benefits from being in one function
 func (r *Router) readSSEStream(ctx context.Context, endpointURL string, stream *sseStream) {
 	defer func() {
 		// Clean up when stream ends
-		stream.conn.Body.Close()
+		_ = stream.conn.Body.Close()
 
 		// Cancel any pending requests
 		stream.pendingMu.Lock()
@@ -1284,6 +1290,7 @@ func (r *Router) readSSEStream(ctx context.Context, endpointURL string, stream *
 					zap.String("session_id", stream.sessionID),
 					zap.String("data", data),
 					zap.Error(err))
+
 				continue
 			}
 
@@ -1320,6 +1327,8 @@ func (r *Router) readSSEStream(ctx context.Context, endpointURL string, stream *
 // forwardRequestViaSSE forwards a request to a backend MCP server via SSE session.
 // It establishes an SSE session if needed, sends the request via POST with the session ID,
 // and waits for the response to arrive via the SSE stream.
+//
+//nolint:funlen // Complex SSE session management with error handling needs multiple statements
 func (r *Router) forwardRequestViaSSE(
 	ctx context.Context,
 	endpoint *discovery.Endpoint,
@@ -1393,7 +1402,7 @@ func (r *Router) forwardRequestViaSSE(
 		stream.pendingMu.Unlock()
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer httpResp.Body.Close()
+	defer func() { _ = httpResp.Body.Close() }()
 
 	// Check that POST was accepted (200 or 202)
 	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusAccepted {
