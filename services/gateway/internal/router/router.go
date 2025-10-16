@@ -2,6 +2,7 @@
 package router
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -54,6 +55,19 @@ const (
 )
 
 // Router routes MCP requests to appropriate backend servers.
+// sseStream represents a persistent SSE connection to a backend MCP server.
+// It manages the session ID, connection, and pending requests for MCP over HTTP with SSE pattern.
+type sseStream struct {
+	sessionID       string                             // Backend session ID from initial GET request
+	conn            *http.Response                     // HTTP response with open SSE stream
+	reader          *bufio.Reader                      // Buffered reader for parsing SSE events
+	pendingRequests map[interface{}]chan *mcp.Response // Maps request ID to response channel
+	pendingMu       sync.Mutex                         // Protects pendingRequests map
+	ctx             context.Context                    // Stream context
+	cancel          context.CancelFunc                 // Function to cancel stream
+}
+
+// Router routes MCP requests to appropriate backend servers.
 type Router struct {
 	config    config.RoutingConfig
 	discovery discovery.ServiceDiscovery
@@ -77,6 +91,11 @@ type Router struct {
 	backendSessions   map[string]map[string]string
 	backendSessionsMu sync.RWMutex
 
+	// SSE stream management for MCP over HTTP with SSE backends
+	// Maps: endpointURL -> sseStream
+	sseStreams   map[string]*sseStream
+	sseStreamsMu sync.RWMutex
+
 	// Request counter for round-robin
 	requestCounter uint64
 }
@@ -98,6 +117,7 @@ func InitializeRequestRouter(
 		breakers:        make(map[string]*circuit.CircuitBreaker),
 		endpointClients: make(map[string]*http.Client),
 		backendSessions: make(map[string]map[string]string),
+		sseStreams:      make(map[string]*sseStream),
 	}
 
 	// Register callback to invalidate load balancer cache when endpoints change
@@ -444,6 +464,15 @@ func (r *Router) forwardRequestHTTP(
 	req *mcp.Request,
 	span opentracing.Span,
 ) (*mcp.Response, error) {
+	// Check if this endpoint uses SSE session pattern
+	if endpoint.Scheme == "sse" {
+		span.LogKV("routing.method", "sse_session")
+		return r.forwardRequestViaSSE(ctx, endpoint, req, span)
+	}
+
+	// Otherwise use standard HTTP request/response
+	span.LogKV("routing.method", "http_standard")
+
 	// Prepare the HTTP request
 	httpReq, err := r.prepareHTTPRequest(ctx, endpoint, req, span)
 	if err != nil {
@@ -1110,4 +1139,295 @@ func (r *Router) closeEndpointClientsForNamespace(namespace string) {
 // GetRequestCount returns the total request count.
 func (r *Router) GetRequestCount() uint64 {
 	return atomic.LoadUint64(&r.requestCounter)
+}
+
+// establishSSESession establishes an SSE session with a backend MCP server.
+// It sends a GET request with Accept: text/event-stream to initiate the session,
+// extracts the session ID from the response, and starts reading from the SSE stream.
+func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.Endpoint) (*sseStream, error) {
+	// Build URL for session establishment
+	url := r.buildHTTPURL(endpoint)
+
+	// Create GET request for session establishment
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create session request: %w", err)
+	}
+
+	// Set Accept header to request SSE stream
+	req.Header.Set("Accept", "text/event-stream")
+
+	// Get HTTP client for this endpoint
+	client := r.getOrCreateHTTPClient(endpoint)
+
+	r.logger.Info("Establishing SSE session with backend",
+		zap.String("endpoint", url),
+		zap.String("method", "GET"))
+
+	// Send GET request to establish session
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("session establishment failed: %w", err)
+	}
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, fmt.Errorf("session establishment returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Extract session ID from response header
+	sessionID := resp.Header.Get("Mcp-Session-Id")
+	if sessionID == "" {
+		resp.Body.Close()
+		return nil, fmt.Errorf("no session ID received from backend (missing Mcp-Session-Id header)")
+	}
+
+	r.logger.Info("SSE session established successfully",
+		zap.String("endpoint", url),
+		zap.String("session_id", sessionID),
+		zap.String("content_type", resp.Header.Get("Content-Type")))
+
+	// Create cancellable context for the stream
+	streamCtx, cancel := context.WithCancel(context.Background())
+
+	// Create sseStream struct
+	stream := &sseStream{
+		sessionID:       sessionID,
+		conn:            resp,
+		reader:          bufio.NewReader(resp.Body),
+		pendingRequests: make(map[interface{}]chan *mcp.Response),
+		ctx:             streamCtx,
+		cancel:          cancel,
+	}
+
+	// Start goroutine to read from SSE stream
+	go r.readSSEStream(streamCtx, url, stream)
+
+	return stream, nil
+}
+
+// readSSEStream reads from an SSE stream and delivers responses to pending requests.
+// This runs as a goroutine for each SSE connection.
+func (r *Router) readSSEStream(ctx context.Context, endpointURL string, stream *sseStream) {
+	defer func() {
+		// Clean up when stream ends
+		stream.conn.Body.Close()
+
+		// Cancel any pending requests
+		stream.pendingMu.Lock()
+		for requestID, ch := range stream.pendingRequests {
+			close(ch)
+			r.logger.Warn("SSE stream closed with pending request",
+				zap.String("endpoint", endpointURL),
+				zap.String("session_id", stream.sessionID),
+				zap.Any("request_id", requestID))
+		}
+		stream.pendingMu.Unlock()
+
+		// Remove stream from router's map
+		r.sseStreamsMu.Lock()
+		delete(r.sseStreams, endpointURL)
+		r.sseStreamsMu.Unlock()
+
+		r.logger.Info("SSE stream closed",
+			zap.String("endpoint", endpointURL),
+			zap.String("session_id", stream.sessionID))
+	}()
+
+	r.logger.Info("Starting to read SSE stream",
+		zap.String("endpoint", endpointURL),
+		zap.String("session_id", stream.sessionID))
+
+	for {
+		select {
+		case <-ctx.Done():
+			r.logger.Info("SSE stream context cancelled",
+				zap.String("endpoint", endpointURL))
+			return
+		default:
+		}
+
+		// Read line from SSE stream
+		line, err := stream.reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				r.logger.Info("SSE stream EOF",
+					zap.String("endpoint", endpointURL),
+					zap.String("session_id", stream.sessionID))
+			} else {
+				r.logger.Error("SSE stream read error",
+					zap.String("endpoint", endpointURL),
+					zap.String("session_id", stream.sessionID),
+					zap.Error(err))
+			}
+			return
+		}
+
+		line = strings.TrimSpace(line)
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, ":") {
+			continue
+		}
+
+		// Parse SSE event
+		if strings.HasPrefix(line, "data: ") {
+			data := strings.TrimPrefix(line, "data: ")
+
+			// Parse MCP response
+			var resp mcp.Response
+			if err := json.Unmarshal([]byte(data), &resp); err != nil {
+				r.logger.Error("Failed to parse SSE response",
+					zap.String("endpoint", endpointURL),
+					zap.String("session_id", stream.sessionID),
+					zap.String("data", data),
+					zap.Error(err))
+				continue
+			}
+
+			r.logger.Debug("Received SSE response",
+				zap.String("endpoint", endpointURL),
+				zap.String("session_id", stream.sessionID),
+				zap.Any("response_id", resp.ID))
+
+			// Deliver response to waiting request
+			stream.pendingMu.Lock()
+			if ch, ok := stream.pendingRequests[resp.ID]; ok {
+				select {
+				case ch <- &resp:
+					r.logger.Debug("Delivered response to pending request",
+						zap.String("endpoint", endpointURL),
+						zap.Any("response_id", resp.ID))
+				default:
+					r.logger.Warn("Response channel full or closed",
+						zap.String("endpoint", endpointURL),
+						zap.Any("response_id", resp.ID))
+				}
+				delete(stream.pendingRequests, resp.ID)
+			} else {
+				r.logger.Warn("Received response for unknown request ID",
+					zap.String("endpoint", endpointURL),
+					zap.String("session_id", stream.sessionID),
+					zap.Any("response_id", resp.ID))
+			}
+			stream.pendingMu.Unlock()
+		}
+	}
+}
+
+// forwardRequestViaSSE forwards a request to a backend MCP server via SSE session.
+// It establishes an SSE session if needed, sends the request via POST with the session ID,
+// and waits for the response to arrive via the SSE stream.
+func (r *Router) forwardRequestViaSSE(
+	ctx context.Context,
+	endpoint *discovery.Endpoint,
+	req *mcp.Request,
+	span opentracing.Span,
+) (*mcp.Response, error) {
+	endpointURL := r.buildHTTPURL(endpoint)
+
+	// Get or establish SSE stream
+	r.sseStreamsMu.Lock()
+	stream, exists := r.sseStreams[endpointURL]
+	if !exists {
+		// Release lock while establishing session (may take time)
+		r.sseStreamsMu.Unlock()
+
+		r.logger.Info("Establishing new SSE session",
+			zap.String("endpoint", endpointURL))
+
+		newStream, err := r.establishSSESession(ctx, endpoint)
+		if err != nil {
+			return nil, fmt.Errorf("failed to establish SSE session: %w", err)
+		}
+
+		r.sseStreamsMu.Lock()
+		r.sseStreams[endpointURL] = newStream
+		stream = newStream
+	}
+	r.sseStreamsMu.Unlock()
+
+	span.SetTag("sse.session_id", stream.sessionID)
+	span.SetTag("sse.endpoint", endpointURL)
+
+	// Prepare POST request with session ID
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpointURL, bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Mcp-Session-Id", stream.sessionID)
+
+	// Add tracing headers
+	if err := tracing.InjectHTTPHeaders(span, httpReq); err != nil {
+		span.LogKV("warning", "failed to inject tracing headers", "err", err)
+	}
+
+	r.logger.Info("Sending request via SSE session",
+		zap.String("endpoint", endpointURL),
+		zap.String("session_id", stream.sessionID),
+		zap.String("method", req.Method),
+		zap.Any("request_id", req.ID))
+
+	// Create channel for response
+	respChan := make(chan *mcp.Response, 1)
+	stream.pendingMu.Lock()
+	stream.pendingRequests[req.ID] = respChan
+	stream.pendingMu.Unlock()
+
+	// Send POST request
+	client := r.getOrCreateHTTPClient(endpoint)
+	httpResp, err := client.Do(httpReq)
+	if err != nil {
+		// Remove pending request on error
+		stream.pendingMu.Lock()
+		delete(stream.pendingRequests, req.ID)
+		stream.pendingMu.Unlock()
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer httpResp.Body.Close()
+
+	// Check that POST was accepted (200 or 202)
+	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusAccepted {
+		// Remove pending request on error
+		stream.pendingMu.Lock()
+		delete(stream.pendingRequests, req.ID)
+		stream.pendingMu.Unlock()
+
+		body, _ := io.ReadAll(httpResp.Body)
+		return nil, fmt.Errorf("backend returned status %d: %s", httpResp.StatusCode, string(body))
+	}
+
+	r.logger.Debug("Request sent successfully, waiting for SSE response",
+		zap.String("endpoint", endpointURL),
+		zap.Any("request_id", req.ID),
+		zap.Int("http_status", httpResp.StatusCode))
+
+	// Wait for response via SSE stream
+	select {
+	case resp := <-respChan:
+		if resp == nil {
+			return nil, fmt.Errorf("SSE stream closed while waiting for response")
+		}
+		r.logger.Info("Received response via SSE stream",
+			zap.String("endpoint", endpointURL),
+			zap.Any("request_id", req.ID),
+			zap.Any("response_id", resp.ID))
+		span.LogKV("sse.success", true)
+		return resp, nil
+	case <-ctx.Done():
+		// Remove pending request on timeout
+		stream.pendingMu.Lock()
+		delete(stream.pendingRequests, req.ID)
+		stream.pendingMu.Unlock()
+		return nil, fmt.Errorf("context cancelled while waiting for SSE response: %w", ctx.Err())
+	}
 }
