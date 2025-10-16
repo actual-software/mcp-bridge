@@ -1152,16 +1152,18 @@ func (r *Router) prepareSSESessionRequest(ctx context.Context, url string) (*htt
 	// Include both content types as some backends (like Serena) require both
 	req.Header.Set("Accept", "application/json, text/event-stream")
 
-	// Add session info from context if available
+	// Add user info for correlation/logging, but NOT session ID
+	// The session ID is created by the backend during establishment - we'll receive it in the response.
+	// This supports both session-managed backends (which create their own sessions) and stateless backends
+	// (which ignore session headers). Sending a session ID here would cause session-managed backends to
+	// reject the request if they don't recognize the ID.
 	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
-		req.Header.Set("Mcp-Session-Id", sess.ID)
 		req.Header.Set("X-MCP-User", sess.User)
-		r.logger.Info("Establishing SSE session with session headers",
-			zap.String("session_id", sess.ID),
+		r.logger.Info("Establishing SSE session (backend will create session ID)",
 			zap.String("user", sess.User),
 			zap.String("endpoint", url))
 	} else {
-		r.logger.Warn("No session found in context for SSE session establishment",
+		r.logger.Debug("No session found in context for SSE session establishment",
 			zap.String("endpoint", url))
 	}
 
