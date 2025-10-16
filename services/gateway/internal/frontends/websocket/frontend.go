@@ -690,6 +690,19 @@ func (f *Frontend) removeConnection(sessionID string) {
 			}
 		})
 
+		// Clean up backend sessions associated with this frontend session
+		// This prevents memory leaks when clients disconnect
+		if f.router != nil {
+			// Type assert to access ClearBackendSessions method
+			// The router interface may not expose this method, so we check first
+			type backendSessionCleaner interface {
+				ClearBackendSessions(frontendSessionID string)
+			}
+			if cleaner, ok := f.router.(backendSessionCleaner); ok {
+				cleaner.ClearBackendSessions(sessionID)
+			}
+		}
+
 		client.logger.Info("Connection removed")
 	}
 }

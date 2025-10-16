@@ -465,11 +465,26 @@ func (r *Router) forwardRequestHTTP(
 
 	// Extract backend session ID from response headers if present
 	// This supports stateful HTTP backends like Serena that maintain their own sessions
-	// Header.Get() is case-insensitive and handles variations (mcp-session-id, MCP-Session-ID, etc.)
-	if backendSessionID := httpResp.Header.Get("mcp-session-id"); backendSessionID != "" {
+	// Per MCP spec, the header name is "Mcp-Session-Id" (case-insensitive matching)
+	backendSessionID := httpResp.Header.Get("Mcp-Session-Id")
+	if backendSessionID != "" {
 		if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
 			endpointURL := httpReq.URL.String()
 			r.storeBackendSessionID(sess.ID, endpointURL, backendSessionID)
+			r.logger.Info("Received backend session ID from HTTP response",
+				zap.String("frontend_session_id", sess.ID),
+				zap.String("backend_session_id", backendSessionID),
+				zap.String("endpoint", endpointURL),
+				zap.Int("status_code", httpResp.StatusCode))
+		}
+	} else {
+		// Log when no backend session ID is present (helps debug if server isn't sending it)
+		if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+			r.logger.Debug("No backend session ID in HTTP response",
+				zap.String("frontend_session_id", sess.ID),
+				zap.String("endpoint", httpReq.URL.String()),
+				zap.Int("status_code", httpResp.StatusCode),
+				zap.Strings("response_headers", getHeaderKeys(httpResp.Header)))
 		}
 	}
 
@@ -544,19 +559,23 @@ func (r *Router) enhanceHTTPRequest(ctx context.Context, httpReq *http.Request, 
 		sessionIDToUse := sess.ID
 		if backendSessionID != "" {
 			sessionIDToUse = backendSessionID
-			r.logger.Debug("Using backend session ID for HTTP request",
+			r.logger.Info("Sending HTTP request with CACHED backend session ID",
 				zap.String("frontend_session_id", sess.ID),
 				zap.String("backend_session_id", backendSessionID),
+				zap.String("header_name", "Mcp-Session-Id"),
 				zap.String("user", sess.User),
-				zap.String("url", endpointURL))
+				zap.String("endpoint", endpointURL))
 		} else {
-			r.logger.Debug("Session retrieved from context for HTTP request",
-				zap.String("session_id", sess.ID),
+			r.logger.Info("Sending HTTP request WITHOUT backend session ID (first request or new backend)",
+				zap.String("frontend_session_id", sess.ID),
+				zap.String("header_name", "Mcp-Session-Id"),
 				zap.String("user", sess.User),
-				zap.String("url", endpointURL))
+				zap.String("endpoint", endpointURL))
 		}
 
-		httpReq.Header.Set("X-MCP-Session-ID", sessionIDToUse)
+		// Use MCP spec-compliant header name: Mcp-Session-Id
+		// This is the official header name per the MCP Streamable HTTP transport spec
+		httpReq.Header.Set("Mcp-Session-Id", sessionIDToUse)
 		httpReq.Header.Set("X-MCP-User", sess.User)
 		span.SetTag("session.id", sessionIDToUse)
 		span.SetTag("session.user", sess.User)
@@ -576,6 +595,15 @@ func (r *Router) closeResponseBody(resp *http.Response) {
 	if err := resp.Body.Close(); err != nil {
 		r.logger.Warn("failed to close response body", zap.Error(err))
 	}
+}
+
+// getHeaderKeys returns all header keys from an HTTP header map for debugging
+func getHeaderKeys(headers http.Header) []string {
+	keys := make([]string, 0, len(headers))
+	for key := range headers {
+		keys = append(keys, key)
+	}
+	return keys
 }
 
 // getBackendSessionID retrieves the backend session ID for a specific endpoint.
@@ -606,6 +634,31 @@ func (r *Router) storeBackendSessionID(frontendSessionID, endpointURL, backendSe
 		zap.String("frontend_session_id", frontendSessionID),
 		zap.String("endpoint_url", endpointURL),
 		zap.String("backend_session_id", backendSessionID))
+}
+
+// ClearBackendSessions removes all backend session mappings for a given frontend session
+// This should be called when a frontend client disconnects to prevent memory leaks
+func (r *Router) ClearBackendSessions(frontendSessionID string) {
+	r.backendSessionsMu.Lock()
+	defer r.backendSessionsMu.Unlock()
+
+	if sessions, ok := r.backendSessions[frontendSessionID]; ok {
+		// Log each backend session being cleared for debugging
+		for endpoint, backendSessionID := range sessions {
+			r.logger.Debug("Clearing backend session mapping",
+				zap.String("frontend_session_id", frontendSessionID),
+				zap.String("endpoint", endpoint),
+				zap.String("backend_session_id", backendSessionID))
+		}
+
+		r.logger.Info("Cleared all backend sessions for frontend session",
+			zap.String("frontend_session_id", frontendSessionID),
+			zap.Int("backend_session_count", len(sessions)))
+		delete(r.backendSessions, frontendSessionID)
+	} else {
+		r.logger.Debug("No backend sessions to clear for frontend session",
+			zap.String("frontend_session_id", frontendSessionID))
+	}
 }
 
 // processHTTPResponse reads and validates the HTTP response.

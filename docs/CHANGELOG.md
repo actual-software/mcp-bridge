@@ -14,6 +14,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc18] - 2025-10-16
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **MCP Protocol Session Header Compliance** - Fixed gateway using incorrect `X-MCP-Session-ID` header instead of the MCP spec-compliant `Mcp-Session-Id` header when communicating with HTTP backends. The gateway was extracting session IDs from responses using lowercase `mcp-session-id` (which worked due to case-insensitive header matching), but was injecting them back into requests using `X-MCP-Session-ID` which is not part of the MCP specification. MCP-compliant backends like serena-mcp rejected requests with the wrong header name, returning "Missing session ID" errors. The fix uses the canonical `Mcp-Session-Id` header name for both extraction and injection, ensuring compatibility with all spec-compliant MCP servers.
+
+### Added
+
+#### 🔍 **Debugging & Observability**
+- **Enhanced Session Lifecycle Logging** - Added comprehensive debug logging throughout the backend session management flow to help diagnose session-related issues:
+  - Request logging showing whether cached backend session ID is being used or if it's the first request
+  - Response logging when backend session IDs are received, including all response headers for debugging
+  - Cleanup logging when backend sessions are cleared on frontend disconnect
+  - All logs include frontend session ID, backend session ID, endpoint URL, and HTTP status codes
+  - Added helper function to extract response header keys for troubleshooting header name mismatches
+
+#### 🛡️ **Reliability**
+- **Backend Session Cleanup on Disconnect** - Added automatic cleanup of backend session mappings when frontend clients disconnect. The WebSocket frontend now calls `ClearBackendSessions()` when removing connections, preventing memory leaks from accumulating session data. Session cleanup is logged with counts for observability.
+
+### Technical Details
+#### MCP Protocol Compliance
+- Modified `enhanceHTTPRequest()` in `services/gateway/internal/router/router.go:561`
+  - Changed from `X-MCP-Session-ID` to `Mcp-Session-Id` for request header injection
+  - Added comment explaining this is the MCP Streamable HTTP transport spec header name
+- Modified `forwardRequestHTTP()` in `services/gateway/internal/router/router.go:469`
+  - Changed from `mcp-session-id` to `Mcp-Session-Id` for response header extraction
+  - Ensures consistency with canonical form on both extraction and injection sides
+- Both sides now use the same canonical header name per MCP specification
+
+#### Session Lifecycle Logging
+- Enhanced `forwardRequestHTTP()` to log when backend session IDs are received
+  - Info-level logging includes frontend session, backend session, endpoint, and status code
+  - Debug-level logging when no session ID is present, includes all response header keys
+- Enhanced `enhanceHTTPRequest()` to distinguish between first requests and cached sessions
+  - Info-level logging shows "Sending HTTP request with CACHED backend session ID" for subsequent requests
+  - Info-level logging shows "Sending HTTP request WITHOUT backend session ID" for first requests
+  - All logs include header_name field showing which header is being used
+- Enhanced `ClearBackendSessions()` to log each individual backend session being cleared
+  - Debug-level logging for each backend session mapping removed
+  - Info-level logging shows total count of backend sessions cleared per frontend session
+- Added `getHeaderKeys()` helper function to extract all header names for debugging
+
+#### Session Cleanup
+- Modified `removeConnection()` in `services/gateway/internal/frontends/websocket/frontend.go:674`
+  - Added type assertion to check if router implements `ClearBackendSessions()` method
+  - Calls cleanup when frontend connection is removed
+  - Prevents memory leaks from accumulating backend session mappings
+- Modified files: `services/gateway/internal/router/router.go`, `services/gateway/internal/frontends/websocket/frontend.go`
+
 ## [1.0.0-rc17] - 2025-10-15
 
 ### Fixed
