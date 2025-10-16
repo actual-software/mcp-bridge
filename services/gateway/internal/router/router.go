@@ -1156,7 +1156,22 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 	}
 
 	// Set Accept header to request SSE stream
-	req.Header.Set("Accept", "text/event-stream")
+	// Include both application/json and text/event-stream as some backends (like Serena) require both
+	req.Header.Set("Accept", "application/json, text/event-stream")
+
+	// Add session info from context if available
+	// This is required by some backends (like Serena) that need session ID for SSE establishment
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+		req.Header.Set("Mcp-Session-Id", sess.ID)
+		req.Header.Set("X-MCP-User", sess.User)
+		r.logger.Info("Establishing SSE session with session headers",
+			zap.String("session_id", sess.ID),
+			zap.String("user", sess.User),
+			zap.String("endpoint", url))
+	} else {
+		r.logger.Warn("No session found in context for SSE session establishment",
+			zap.String("endpoint", url))
+	}
 
 	// Get HTTP client for this endpoint
 	client := r.getOrCreateHTTPClient(endpoint)

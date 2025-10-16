@@ -14,6 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc20] - 2025-10-16
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **SSE Session Establishment Accept Header** - Fixed SSE session establishment using incomplete `Accept: text/event-stream` header instead of the required `Accept: application/json, text/event-stream`. Some MCP backends (like Serena) validate that clients accept both response formats before establishing SSE sessions, returning 406 "Not Acceptable" errors when only `text/event-stream` is specified. The gateway's SSE session establishment now includes both content types in the Accept header, matching the behavior of the standard HTTP transport path and enabling full compatibility with strict SSE backend implementations.
+
+### Technical Details
+#### SSE Session Establishment
+- Modified `establishSSESession()` in `services/gateway/internal/router/router.go:1160`
+  - Changed from `Accept: text/event-stream` to `Accept: application/json, text/event-stream`
+  - Matches the Accept header format used in regular HTTP requests (line 555)
+  - Ensures compatibility with backends that require both content types for SSE session negotiation
+- This fix completes the SSE implementation from rc19, enabling successful session establishment with strict MCP backends
+- Modified files: `services/gateway/internal/router/router.go`
+
 ## [1.0.0-rc19] - 2025-10-16
 
 ### Added
