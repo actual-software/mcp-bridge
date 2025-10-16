@@ -553,7 +553,7 @@ func setupSessionTestBackend(sessionReceived *bool) *httptest.Server {
 			return
 		}
 
-		sessionID := r.Header.Get("X-MCP-Session-ID")
+		sessionID := r.Header.Get("Mcp-Session-Id")
 		user := r.Header.Get("X-MCP-User")
 
 		if sessionID == "test-session-123" && user == "test-user" {
