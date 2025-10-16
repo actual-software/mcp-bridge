@@ -14,6 +14,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc21] - 2025-10-16
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **SSE Session Establishment Protocol** - Fixed gateway sending incorrect session ID during SSE session establishment. When establishing a new SSE session (GET request), the gateway was incorrectly sending its own frontend session ID (from the router→gateway connection) to the backend. Session-managed backends like Serena create their own session IDs and reject requests with unrecognized session IDs, returning "400: No valid session ID provided". The SSE session flow is: (1) Client sends GET with NO session ID to create session, (2) Backend creates session and returns ID in `Mcp-Session-Id` header, (3) SSE stream starts, (4) Subsequent POSTs include the backend's session ID. This fix removes the `Mcp-Session-Id` header from session establishment requests while keeping `X-MCP-User` for correlation, making the gateway work correctly with all backend types: session-managed backends (Serena) create sessions without validation errors, stateless backends ignore session headers as before, and correlation-only backends use `X-MCP-User` for logging.
+
+### Technical Details
+#### SSE Session Establishment
+- Modified `prepareSSESessionRequest()` in `services/gateway/internal/router/router.go:1155-1168`
+  - Removed `Mcp-Session-Id` header from SSE session establishment GET requests
+  - Kept `X-MCP-User` header for correlation and logging purposes
+  - Added detailed comments explaining the session establishment pattern
+  - Changed log message to clarify that backend will create the session ID
+- This implements the standard SSE session pattern where backends create their own session IDs
+- Prevents session ID validation errors from session-managed backends
+- Maintains backward compatibility with stateless and correlation-only backends
+- Modified files: `services/gateway/internal/router/router.go`
+
 ## [1.0.0-rc20] - 2025-10-16
 
 ### Fixed
