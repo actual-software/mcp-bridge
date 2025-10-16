@@ -1415,6 +1415,7 @@ func (r *Router) forwardRequestViaSSE(
 		stream.pendingMu.Unlock()
 
 		body, _ := io.ReadAll(httpResp.Body)
+
 		return nil, fmt.Errorf("backend returned status %d: %s", httpResp.StatusCode, string(body))
 	}
 
@@ -1434,12 +1435,14 @@ func (r *Router) forwardRequestViaSSE(
 			zap.Any("request_id", req.ID),
 			zap.Any("response_id", resp.ID))
 		span.LogKV("sse.success", true)
+
 		return resp, nil
 	case <-ctx.Done():
 		// Remove pending request on timeout
 		stream.pendingMu.Lock()
 		delete(stream.pendingRequests, req.ID)
 		stream.pendingMu.Unlock()
+
 		return nil, fmt.Errorf("context cancelled while waiting for SSE response: %w", ctx.Err())
 	}
 }
