@@ -597,12 +597,13 @@ func (r *Router) closeResponseBody(resp *http.Response) {
 	}
 }
 
-// getHeaderKeys returns all header keys from an HTTP header map for debugging
+// getHeaderKeys returns all header keys from an HTTP header map for debugging.
 func getHeaderKeys(headers http.Header) []string {
 	keys := make([]string, 0, len(headers))
 	for key := range headers {
 		keys = append(keys, key)
 	}
+
 	return keys
 }
 
@@ -636,8 +637,8 @@ func (r *Router) storeBackendSessionID(frontendSessionID, endpointURL, backendSe
 		zap.String("backend_session_id", backendSessionID))
 }
 
-// ClearBackendSessions removes all backend session mappings for a given frontend session
-// This should be called when a frontend client disconnects to prevent memory leaks
+// ClearBackendSessions removes all backend session mappings for a given frontend session.
+// This should be called when a frontend client disconnects to prevent memory leaks.
 func (r *Router) ClearBackendSessions(frontendSessionID string) {
 	r.backendSessionsMu.Lock()
 	defer r.backendSessionsMu.Unlock()
