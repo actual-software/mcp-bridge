@@ -1169,7 +1169,9 @@ func (r *Router) prepareSSESessionRequest(ctx context.Context, url string) (*htt
 }
 
 // sendSSESessionRequest sends the session establishment request and validates the response.
-func (r *Router) sendSSESessionRequest(client *http.Client, req *http.Request, url string) (*http.Response, string, error) {
+func (r *Router) sendSSESessionRequest(
+	client *http.Client, req *http.Request, url string,
+) (*http.Response, string, error) {
 	r.logger.Info("Establishing SSE session with backend",
 		zap.String("endpoint", url),
 		zap.String("method", "GET"))
@@ -1218,6 +1220,14 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 		return nil, err
 	}
 
+	// Ensure response body is closed if we fail before transferring ownership to goroutine
+	shouldClose := true
+	defer func() {
+		if shouldClose && resp != nil {
+			_ = resp.Body.Close()
+		}
+	}()
+
 	streamCtx, cancel := context.WithCancel(ctx)
 
 	stream := &sseStream{
@@ -1230,6 +1240,9 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 	}
 
 	go r.readSSEStream(streamCtx, url, stream)
+
+	// Ownership transferred to goroutine, don't close here
+	shouldClose = false
 
 	return stream, nil
 }
