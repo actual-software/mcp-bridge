@@ -1142,25 +1142,17 @@ func (r *Router) GetRequestCount() uint64 {
 	return atomic.LoadUint64(&r.requestCounter)
 }
 
-// establishSSESession establishes an SSE session with a backend MCP server.
-// It sends a GET request with Accept: text/event-stream to initiate the session,
-// extracts the session ID from the response, and starts reading from the SSE stream.
-func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.Endpoint) (*sseStream, error) {
-	// Build URL for session establishment
-	url := r.buildHTTPURL(endpoint)
-
-	// Create GET request for session establishment
+// prepareSSESessionRequest creates and configures the HTTP request for SSE session establishment.
+func (r *Router) prepareSSESessionRequest(ctx context.Context, url string) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session request: %w", err)
 	}
 
-	// Set Accept header to request SSE stream
-	// Include both application/json and text/event-stream as some backends (like Serena) require both
+	// Include both content types as some backends (like Serena) require both
 	req.Header.Set("Accept", "application/json, text/event-stream")
 
 	// Add session info from context if available
-	// This is required by some backends (like Serena) that need session ID for SSE establishment
 	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
 		req.Header.Set("Mcp-Session-Id", sess.ID)
 		req.Header.Set("X-MCP-User", sess.User)
@@ -1173,33 +1165,32 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 			zap.String("endpoint", url))
 	}
 
-	// Get HTTP client for this endpoint
-	client := r.getOrCreateHTTPClient(endpoint)
+	return req, nil
+}
 
+// sendSSESessionRequest sends the session establishment request and validates the response.
+func (r *Router) sendSSESessionRequest(client *http.Client, req *http.Request, url string) (*http.Response, string, error) {
 	r.logger.Info("Establishing SSE session with backend",
 		zap.String("endpoint", url),
 		zap.String("method", "GET"))
 
-	// Send GET request to establish session
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("session establishment failed: %w", err)
+		return nil, "", fmt.Errorf("session establishment failed: %w", err)
 	}
 
-	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
 
-		return nil, fmt.Errorf("session establishment returned %d: %s", resp.StatusCode, string(body))
+		return nil, "", fmt.Errorf("session establishment returned %d: %s", resp.StatusCode, string(body))
 	}
 
-	// Extract session ID from response header
 	sessionID := resp.Header.Get("Mcp-Session-Id")
 	if sessionID == "" {
 		_ = resp.Body.Close()
 
-		return nil, fmt.Errorf("no session ID received from backend (missing Mcp-Session-Id header)")
+		return nil, "", fmt.Errorf("no session ID received from backend (missing Mcp-Session-Id header)")
 	}
 
 	r.logger.Info("SSE session established successfully",
@@ -1207,11 +1198,28 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 		zap.String("session_id", sessionID),
 		zap.String("content_type", resp.Header.Get("Content-Type")))
 
-	// Create cancellable context for the stream that inherits from parent
-	// but will outlive the initial request
+	return resp, sessionID, nil
+}
+
+// establishSSESession establishes an SSE session with a backend MCP server.
+// It sends a GET request with Accept: text/event-stream to initiate the session,
+// extracts the session ID from the response, and starts reading from the SSE stream.
+func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.Endpoint) (*sseStream, error) {
+	url := r.buildHTTPURL(endpoint)
+
+	req, err := r.prepareSSESessionRequest(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+
+	client := r.getOrCreateHTTPClient(endpoint)
+	resp, sessionID, err := r.sendSSESessionRequest(client, req, url)
+	if err != nil {
+		return nil, err
+	}
+
 	streamCtx, cancel := context.WithCancel(ctx)
 
-	// Create sseStream struct
 	stream := &sseStream{
 		sessionID:       sessionID,
 		conn:            resp,
@@ -1221,7 +1229,6 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 		cancel:          cancel,
 	}
 
-	// Start goroutine to read from SSE stream
 	go r.readSSEStream(streamCtx, url, stream)
 
 	return stream, nil
