@@ -273,6 +273,20 @@ func (s *GatewayServer) startSharedServers() error {
 			handler = &multiHandler{handlers: handlers}
 		}
 
+		// Check TLS configuration from frontends
+		// If any frontend on this address needs TLS, enable it for the shared server
+		var tlsEnabled bool
+		var certFile, keyFile string
+		for _, fe := range fes {
+			enabled, cert, key := fe.GetTLSConfig()
+			if enabled {
+				tlsEnabled = true
+				certFile = cert
+				keyFile = key
+				break
+			}
+		}
+
 		// Create shared HTTP server
 		server := &http.Server{
 			Addr:    addr,
@@ -281,22 +295,31 @@ func (s *GatewayServer) startSharedServers() error {
 
 		// Start the server in a goroutine
 		s.wg.Add(1)
-		go func(addr string, srv *http.Server) {
+		go func(addr string, srv *http.Server, useTLS bool, cert, key string) {
 			defer s.wg.Done()
 
-			s.logger.Info("starting shared HTTP server", zap.String("address", addr))
-
-			var err error
-			// TODO: Handle TLS configuration properly
-			// For now using HTTP only - TLS will be added in a follow-up
-			err = srv.ListenAndServe()
-
-			if err != nil && err != http.ErrServerClosed {
-				s.logger.Error("shared HTTP server error",
+			if useTLS {
+				s.logger.Info("starting shared HTTPS server",
 					zap.String("address", addr),
-					zap.Error(err))
+					zap.String("cert_file", cert))
+
+				err := srv.ListenAndServeTLS(cert, key)
+				if err != nil && err != http.ErrServerClosed {
+					s.logger.Error("shared HTTPS server error",
+						zap.String("address", addr),
+						zap.Error(err))
+				}
+			} else {
+				s.logger.Info("starting shared HTTP server", zap.String("address", addr))
+
+				err := srv.ListenAndServe()
+				if err != nil && err != http.ErrServerClosed {
+					s.logger.Error("shared HTTP server error",
+						zap.String("address", addr),
+						zap.Error(err))
+				}
 			}
-		}(addr, server)
+		}(addr, server, tlsEnabled, certFile, keyFile)
 
 		// Store the server and inject it into each frontend
 		s.sharedServers[addr] = server
@@ -304,9 +327,17 @@ func (s *GatewayServer) startSharedServers() error {
 			fe.SetServer(server)
 		}
 
-		s.logger.Info("started shared HTTP server",
-			zap.String("address", addr),
-			zap.Int("frontends", len(fes)))
+		if tlsEnabled {
+			s.logger.Info("started shared HTTPS server",
+				zap.String("address", addr),
+				zap.Int("frontends", len(fes)),
+				zap.Bool("tls", true))
+		} else {
+			s.logger.Info("started shared HTTP server",
+				zap.String("address", addr),
+				zap.Int("frontends", len(fes)),
+				zap.Bool("tls", false))
+		}
 	}
 
 	return nil

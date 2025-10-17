@@ -252,6 +252,11 @@ func (f *Frontend) SetServer(server *nethttp.Server) {
 	f.server = server
 }
 
+// GetTLSConfig returns TLS configuration for this frontend.
+func (f *Frontend) GetTLSConfig() (enabled bool, certFile, keyFile string) {
+	return f.config.TLS.Enabled, f.config.TLS.CertFile, f.config.TLS.KeyFile
+}
+
 // handleSSEStream handles SSE stream connections.
 func (f *Frontend) handleSSEStream(w nethttp.ResponseWriter, r *nethttp.Request) {
 	if !f.validateGetMethod(w, r.Method) {

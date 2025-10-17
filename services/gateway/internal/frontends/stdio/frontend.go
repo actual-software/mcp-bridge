@@ -820,6 +820,11 @@ func (f *Frontend) SetServer(server *http.Server) {
 	// No-op for STDIO frontend
 }
 
+// GetTLSConfig returns TLS configuration for this frontend.
+func (f *Frontend) GetTLSConfig() (enabled bool, certFile, keyFile string) {
+	return false, "", ""
+}
+
 // updateMetrics safely updates frontend metrics.
 func (f *Frontend) updateMetrics(updateFn func(*FrontendMetrics)) {
 	f.mu_metrics.Lock()

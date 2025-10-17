@@ -249,6 +249,11 @@ func (f *Frontend) SetServer(server *nethttp.Server) {
 	// No-op for TCP frontend
 }
 
+// GetTLSConfig returns TLS configuration for this frontend.
+func (f *Frontend) GetTLSConfig() (enabled bool, certFile, keyFile string) {
+	return false, "", ""
+}
+
 // acceptConnections accepts incoming TCP connections.
 func (f *Frontend) acceptConnections() {
 	defer f.wg.Done()

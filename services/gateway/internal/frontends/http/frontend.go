@@ -229,6 +229,11 @@ func (f *Frontend) SetServer(server *nethttp.Server) {
 	f.server = server
 }
 
+// GetTLSConfig returns TLS configuration for this frontend.
+func (f *Frontend) GetTLSConfig() (enabled bool, certFile, keyFile string) {
+	return f.config.TLS.Enabled, f.config.TLS.CertFile, f.config.TLS.KeyFile
+}
+
 // handleRequest handles HTTP POST requests with JSON-RPC payloads.
 func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 	// Initialize request context with tracing

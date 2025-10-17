@@ -253,6 +253,11 @@ func (f *Frontend) SetServer(server *http.Server) {
 	f.server = server
 }
 
+// GetTLSConfig returns TLS configuration for this frontend.
+func (f *Frontend) GetTLSConfig() (enabled bool, certFile, keyFile string) {
+	return f.config.TLS.Enabled, f.config.TLS.CertFile, f.config.TLS.KeyFile
+}
+
 // handleWebSocketUpgrade handles WebSocket upgrade requests.
 func (f *Frontend) handleWebSocketUpgrade(w http.ResponseWriter, r *http.Request) {
 	// Initialize request context

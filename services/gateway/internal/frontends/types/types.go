@@ -37,6 +37,10 @@ type Frontend interface {
 	// SetServer injects the shared HTTP server into this frontend
 	// Called by the server manager after creating the shared server
 	SetServer(server *http.Server)
+
+	// GetTLSConfig returns TLS configuration for this frontend
+	// Returns enabled status, cert file path, and key file path
+	GetTLSConfig() (enabled bool, certFile, keyFile string)
 }
 
 // FrontendMetrics contains performance and health metrics for a frontend.

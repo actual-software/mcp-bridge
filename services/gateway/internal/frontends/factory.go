@@ -49,6 +49,10 @@ func (w *stdioFrontendWrapper) SetServer(server *nethttp.Server) {
 	w.Frontend.SetServer(server)
 }
 
+func (w *stdioFrontendWrapper) GetTLSConfig() (enabled bool, certFile, keyFile string) {
+	return false, "", ""
+}
+
 // Adapter types for stdio frontend interfaces
 
 type stdioRouterAdapter struct {
