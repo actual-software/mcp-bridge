@@ -1249,35 +1249,25 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 	return stream, nil
 }
 
-// establishSSESessionViaInitialize establishes an SSE session by sending an initialize request directly.
-// This supports backends like Serena that create the session during the initialize request itself,
-// returning the session ID in the Mcp-Session-Id header along with an SSE-formatted response.
-// This is compliant with the MCP Streamable HTTP spec which states that servers MAY assign a session ID
-// "at initialization time, by including it in an Mcp-Session-Id header on the HTTP response containing
-// the InitializeResult."
-func (r *Router) establishSSESessionViaInitialize(
+// prepareInitializeHTTPRequest creates and configures the HTTP request for initialize-based session establishment.
+func (r *Router) prepareInitializeHTTPRequest(
 	ctx context.Context,
-	endpoint *discovery.Endpoint,
+	url string,
 	req *mcp.Request,
-) (*sseStream, *mcp.Response, error) {
-	url := r.buildHTTPURL(endpoint)
-
-	// Marshal the initialize request
+) (*http.Request, error) {
 	reqBody, err := json.Marshal(req)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal initialize request: %w", err)
+		return nil, fmt.Errorf("failed to marshal initialize request: %w", err)
 	}
 
-	// Create POST request with the initialize request
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBody))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create initialize request: %w", err)
+		return nil, fmt.Errorf("failed to create initialize request: %w", err)
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "application/json, text/event-stream")
 
-	// Add user info for correlation/logging (but NOT session ID - this is the first request)
 	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
 		httpReq.Header.Set("X-MCP-User", sess.User)
 		r.logger.Info("Establishing SSE session via initialize request",
@@ -1285,40 +1275,40 @@ func (r *Router) establishSSESessionViaInitialize(
 			zap.String("endpoint", url))
 	}
 
-	// Send the initialize request
-	client := r.getOrCreateHTTPClient(endpoint)
+	return httpReq, nil
+}
+
+// sendInitializeRequest sends the initialize request and validates the response.
+func (r *Router) sendInitializeRequest(
+	client *http.Client,
+	httpReq *http.Request,
+	url string,
+) (*http.Response, string, error) {
 	r.logger.Info("Sending initialize request to establish SSE session",
 		zap.String("endpoint", url),
 		zap.String("method", "POST"))
 
 	resp, err := client.Do(httpReq)
 	if err != nil {
-		return nil, nil, fmt.Errorf("initialize request failed: %w", err)
+		return nil, "", fmt.Errorf("initialize request failed: %w", err)
 	}
 
-	// Check for 200 OK status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
-
-		return nil, nil, fmt.Errorf("initialize request returned %d: %s", resp.StatusCode, string(body))
+		return nil, "", fmt.Errorf("initialize request returned %d: %s", resp.StatusCode, string(body))
 	}
 
-	// Extract session ID from response header
 	sessionID := resp.Header.Get("Mcp-Session-Id")
 	if sessionID == "" {
 		_ = resp.Body.Close()
-
-		return nil, nil, fmt.Errorf("no session ID received from initialize response (missing Mcp-Session-Id header)")
+		return nil, "", fmt.Errorf("no session ID received from initialize response (missing Mcp-Session-Id header)")
 	}
 
-	// Check if response is SSE format
 	contentType := resp.Header.Get("Content-Type")
 	if !strings.Contains(contentType, "text/event-stream") {
-		// Not SSE format - read the response and return it without creating a stream
 		_ = resp.Body.Close()
-
-		return nil, nil, fmt.Errorf("initialize response is not SSE format (Content-Type: %s)", contentType)
+		return nil, "", fmt.Errorf("initialize response is not SSE format (Content-Type: %s)", contentType)
 	}
 
 	r.logger.Info("SSE session established via initialize request",
@@ -1326,56 +1316,75 @@ func (r *Router) establishSSESessionViaInitialize(
 		zap.String("session_id", sessionID),
 		zap.String("content_type", contentType))
 
-	// The response body is an SSE stream - we need to read the first event (initialize response)
-	// then keep the stream open for future responses
-	reader := bufio.NewReader(resp.Body)
+	return resp, sessionID, nil
+}
 
-	// Read the first SSE event which should be the initialize response
-	var initializeResp *mcp.Response
+// readInitializeResponseFromSSE reads the first SSE event containing the initialize response.
+func (r *Router) readInitializeResponseFromSSE(reader *bufio.Reader, url string) (*mcp.Response, error) {
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			_ = resp.Body.Close()
-
-			return nil, nil, fmt.Errorf("failed to read initialize response from SSE stream: %w", err)
+			return nil, fmt.Errorf("failed to read initialize response from SSE stream: %w", err)
 		}
 
 		line = strings.TrimSpace(line)
 
-		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, ":") {
 			continue
 		}
 
-		// Look for data line
 		if strings.HasPrefix(line, "data: ") {
 			data := strings.TrimPrefix(line, "data: ")
-
-			// Parse the initialize response
+			var initializeResp mcp.Response
 			if err := json.Unmarshal([]byte(data), &initializeResp); err != nil {
-				_ = resp.Body.Close()
-
-				return nil, nil, fmt.Errorf("failed to parse initialize response: %w", err)
+				return nil, fmt.Errorf("failed to parse initialize response: %w", err)
 			}
 
-			break
+			r.logger.Info("Read initialize response from SSE stream",
+				zap.String("endpoint", url),
+				zap.Any("response_id", initializeResp.ID))
+
+			return &initializeResp, nil
 		}
 	}
+}
 
-	if initializeResp == nil {
-		_ = resp.Body.Close()
+// establishSSESessionViaInitialize establishes an SSE session by sending an initialize request directly.
+// This supports backends like Serena that create the session during the initialize request itself,
+// returning the session ID in the Mcp-Session-Id header along with an SSE-formatted response.
+// This is compliant with the MCP Streamable HTTP spec which states that servers MAY assign a session ID
+// "at initialization time, by including it in an Mcp-Session-Id header on the HTTP response containing
+// the InitializeResult.".
+func (r *Router) establishSSESessionViaInitialize(
+	ctx context.Context,
+	endpoint *discovery.Endpoint,
+	req *mcp.Request,
+) (*sseStream, *mcp.Response, error) {
+	url := r.buildHTTPURL(endpoint)
 
-		return nil, nil, fmt.Errorf("no initialize response found in SSE stream")
+	// Prepare HTTP request with initialize payload
+	httpReq, err := r.prepareInitializeHTTPRequest(ctx, url, req)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	r.logger.Info("Read initialize response from SSE stream",
-		zap.String("endpoint", url),
-		zap.Any("response_id", initializeResp.ID))
+	// Send request and validate response
+	client := r.getOrCreateHTTPClient(endpoint)
+	resp, sessionID, err := r.sendInitializeRequest(client, httpReq, url)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	// Create the SSE stream for future requests
-	// The reader already consumed the initialize response, so it's ready to read future responses
+	// Read the initialize response from the SSE stream
+	reader := bufio.NewReader(resp.Body)
+	initializeResp, err := r.readInitializeResponseFromSSE(reader, url)
+	if err != nil {
+		_ = resp.Body.Close()
+		return nil, nil, err
+	}
+
+	// Create SSE stream for future requests
 	streamCtx, cancel := context.WithCancel(ctx)
-
 	stream := &sseStream{
 		sessionID:       sessionID,
 		conn:            resp,
@@ -1385,7 +1394,6 @@ func (r *Router) establishSSESessionViaInitialize(
 		cancel:          cancel,
 	}
 
-	// Start reading from the SSE stream
 	go r.readSSEStream(streamCtx, url, stream)
 
 	return stream, initializeResp, nil
