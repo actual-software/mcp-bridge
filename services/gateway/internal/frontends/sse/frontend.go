@@ -139,7 +139,8 @@ func CreateSSEFrontend(
 	}
 }
 
-// Start initializes the frontend and begins accepting connections.
+// Start initializes the frontend (routes and background workers only).
+// The HTTP server is managed externally via SetServer() for shared server support.
 func (f *Frontend) Start(ctx context.Context) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -148,41 +149,10 @@ func (f *Frontend) Start(ctx context.Context) error {
 		return fmt.Errorf("sse frontend already running")
 	}
 
-	// Setup routes
+	// Setup routes on internal mux
 	f.mux.HandleFunc(f.config.StreamEndpoint, f.handleSSEStream)
 	f.mux.HandleFunc(f.config.RequestEndpoint, f.handleRequest)
 	f.mux.HandleFunc("/health", f.handleHealth)
-
-	addr := fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
-
-	f.server = &nethttp.Server{
-		Addr:         addr,
-		Handler:      f.mux,
-		ReadTimeout:  f.config.ReadTimeout,
-		WriteTimeout: f.config.WriteTimeout,
-		TLSConfig:    f.createTLSConfig(),
-	}
-
-	// Start server
-	f.wg.Add(1)
-	go func() {
-		defer f.wg.Done()
-
-		var err error
-		if f.config.TLS.Enabled {
-			f.logger.Info("starting SSE frontend with TLS",
-				zap.String("address", addr))
-			err = f.server.ListenAndServeTLS(f.config.TLS.CertFile, f.config.TLS.KeyFile)
-		} else {
-			f.logger.Info("starting SSE frontend",
-				zap.String("address", addr))
-			err = f.server.ListenAndServe()
-		}
-
-		if err != nil && err != nethttp.ErrServerClosed {
-			f.logger.Error("server error", zap.Error(err))
-		}
-	}()
 
 	// Start keepalive goroutine
 	f.wg.Add(1)
@@ -193,7 +163,8 @@ func (f *Frontend) Start(ctx context.Context) error {
 		m.IsRunning = true
 	})
 
-	f.logger.Info("sse frontend started",
+	addr := fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
+	f.logger.Info("sse frontend initialized",
 		zap.String("address", addr),
 		zap.String("stream_endpoint", f.config.StreamEndpoint),
 		zap.String("request_endpoint", f.config.RequestEndpoint),
@@ -222,15 +193,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	// Close all streams
 	f.closeAllStreams()
 
-	// Shutdown HTTP server
-	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-		defer cancel()
-
-		if err := f.server.Shutdown(shutdownCtx); err != nil {
-			f.logger.Error("error shutting down HTTP server", zap.Error(err))
-		}
-	}
+	// Note: HTTP server is externally managed, so we don't shutdown it here
 
 	// Wait for goroutines to finish
 	done := make(chan struct{})
@@ -270,6 +233,23 @@ func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	defer f.metricsMu.RUnlock()
 
 	return f.metrics
+}
+
+// GetHandler returns the HTTP handler for this frontend.
+func (f *Frontend) GetHandler() nethttp.Handler {
+	return f.mux
+}
+
+// GetAddress returns the host:port address this frontend listens on.
+func (f *Frontend) GetAddress() string {
+	return fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
+}
+
+// SetServer injects the shared HTTP server into this frontend.
+func (f *Frontend) SetServer(server *nethttp.Server) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.server = server
 }
 
 // handleSSEStream handles SSE stream connections.

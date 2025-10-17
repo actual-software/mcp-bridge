@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"testing"
 	"time"
@@ -42,11 +43,31 @@ func setupTestServer(
 		t.Fatalf("Failed to start frontend: %v", err)
 	}
 
+	// Create listener to get actual address when using port 0
+	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		t.Fatalf("Failed to create listener: %v", err)
+	}
+
+	// Create and inject HTTP server for testing
+	server := &http.Server{
+		Handler: frontend.GetHandler(),
+	}
+	frontend.SetServer(server)
+
+	// Start the server with the listener
+	go func() {
+		if err := server.Serve(ln); err != nil && err != http.ErrServerClosed {
+			t.Logf("Server error: %v", err)
+		}
+	}()
+
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
 
-	// Build WebSocket URL from server address
-	url := fmt.Sprintf("ws://%s", frontend.server.Addr)
+	// Build WebSocket URL from listener address
+	url := fmt.Sprintf("ws://%s", ln.Addr().String())
 
 	ts := &testServer{
 		frontend: frontend,

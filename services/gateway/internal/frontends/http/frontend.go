@@ -212,6 +212,23 @@ func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	return f.metrics
 }
 
+// GetHandler returns the HTTP handler for this frontend.
+func (f *Frontend) GetHandler() nethttp.Handler {
+	return f.mux
+}
+
+// GetAddress returns the host:port address this frontend listens on.
+func (f *Frontend) GetAddress() string {
+	return fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
+}
+
+// SetServer injects the shared HTTP server into this frontend.
+func (f *Frontend) SetServer(server *nethttp.Server) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.server = server
+}
+
 // handleRequest handles HTTP POST requests with JSON-RPC payloads.
 func (f *Frontend) handleRequest(w nethttp.ResponseWriter, r *nethttp.Request) {
 	// Initialize request context with tracing

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -799,6 +800,24 @@ func (f *Frontend) GetMetrics() FrontendMetrics {
 	defer f.mu_metrics.RUnlock()
 
 	return f.metrics
+}
+
+// GetHandler returns the HTTP handler for this frontend.
+// STDIO frontend doesn't use HTTP handlers, so this returns nil.
+func (f *Frontend) GetHandler() http.Handler {
+	return nil
+}
+
+// GetAddress returns the host:port address this frontend listens on.
+// STDIO frontend doesn't use network addresses, so this returns empty string.
+func (f *Frontend) GetAddress() string {
+	return ""
+}
+
+// SetServer injects the shared HTTP server into this frontend.
+// STDIO frontend doesn't use HTTP servers, so this is a no-op.
+func (f *Frontend) SetServer(server *http.Server) {
+	// No-op for STDIO frontend
 }
 
 // updateMetrics safely updates frontend metrics.

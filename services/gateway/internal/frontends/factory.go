@@ -2,6 +2,7 @@ package frontends
 
 import (
 	"context"
+	nethttp "net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -34,6 +35,18 @@ func (w *stdioFrontendWrapper) GetMetrics() FrontendMetrics {
 		ErrorCount:        m.ErrorCount,
 		IsRunning:         m.IsRunning,
 	}
+}
+
+func (w *stdioFrontendWrapper) GetHandler() nethttp.Handler {
+	return w.Frontend.GetHandler()
+}
+
+func (w *stdioFrontendWrapper) GetAddress() string {
+	return w.Frontend.GetAddress()
+}
+
+func (w *stdioFrontendWrapper) SetServer(server *nethttp.Server) {
+	w.Frontend.SetServer(server)
 }
 
 // Adapter types for stdio frontend interfaces

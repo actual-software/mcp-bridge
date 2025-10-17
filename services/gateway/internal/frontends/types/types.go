@@ -25,6 +25,18 @@ type Frontend interface {
 
 	// GetMetrics returns frontend-specific metrics
 	GetMetrics() FrontendMetrics
+
+	// GetHandler returns the HTTP handler for this frontend
+	// This allows multiple frontends to share a single HTTP server
+	GetHandler() http.Handler
+
+	// GetAddress returns the host:port address this frontend listens on
+	// Used to group frontends that share the same address
+	GetAddress() string
+
+	// SetServer injects the shared HTTP server into this frontend
+	// Called by the server manager after creating the shared server
+	SetServer(server *http.Server)
 }
 
 // FrontendMetrics contains performance and health metrics for a frontend.

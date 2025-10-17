@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	nethttp "net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -229,6 +230,23 @@ func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	defer f.metricsMu.RUnlock()
 
 	return f.metrics
+}
+
+// GetHandler returns the HTTP handler for this frontend.
+// TCP frontend doesn't use HTTP handlers, so this returns nil.
+func (f *Frontend) GetHandler() nethttp.Handler {
+	return nil
+}
+
+// GetAddress returns the host:port address this frontend listens on.
+func (f *Frontend) GetAddress() string {
+	return fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
+}
+
+// SetServer injects the shared HTTP server into this frontend.
+// TCP frontend doesn't use HTTP servers, so this is a no-op.
+func (f *Frontend) SetServer(server *nethttp.Server) {
+	// No-op for TCP frontend
 }
 
 // acceptConnections accepts incoming TCP connections.

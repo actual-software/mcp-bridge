@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"sync"
 	"time"
 
@@ -26,6 +28,41 @@ const (
 	frontendShutdownTimeout            = 30 * time.Second
 )
 
+// multiHandler multiplexes requests across multiple handlers.
+// It tries each handler in order. Since each handler is a frontend's mux
+// with specific paths registered, the first handler that matches will handle the request.
+type multiHandler struct {
+	handlers []http.Handler
+}
+
+func (m *multiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Try each handler in sequence, using a response recorder to detect 404s
+	for i, h := range m.handlers {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, r)
+
+		// If this handler returned a non-404 status, use its response
+		if rec.Code != http.StatusNotFound {
+			// Copy the recorded response to the actual response writer
+			for k, v := range rec.Header() {
+				w.Header()[k] = v
+			}
+			w.WriteHeader(rec.Code)
+			_, _ = w.Write(rec.Body.Bytes())
+			return
+		}
+
+		// If this was the last handler and it returned 404, send that 404
+		if i == len(m.handlers)-1 {
+			for k, v := range rec.Header() {
+				w.Header()[k] = v
+			}
+			w.WriteHeader(rec.Code)
+			_, _ = w.Write(rec.Body.Bytes())
+		}
+	}
+}
+
 // GatewayServer handles MCP client connections through pluggable frontends.
 type GatewayServer struct {
 	config      *config.Config
@@ -38,7 +75,8 @@ type GatewayServer struct {
 	rateLimiter ratelimit.RateLimiter
 
 	// Frontend management
-	frontends []frontends.Frontend
+	frontends     []frontends.Frontend
+	sharedServers map[string]*http.Server
 
 	// Health HTTP server
 	healthServer *HealthHTTPServer
@@ -66,16 +104,17 @@ func BootstrapGatewayServer(
 	ctx, cancel := context.WithCancel(context.Background())
 
 	s := &GatewayServer{
-		config:      cfg,
-		logger:      logger,
-		auth:        auth,
-		sessions:    sessions,
-		router:      router,
-		health:      health,
-		metrics:     metrics,
-		rateLimiter: rateLimiter,
-		ctx:         ctx,
-		cancel:      cancel,
+		config:        cfg,
+		logger:        logger,
+		auth:          auth,
+		sessions:      sessions,
+		router:        router,
+		health:        health,
+		metrics:       metrics,
+		rateLimiter:   rateLimiter,
+		sharedServers: make(map[string]*http.Server),
+		ctx:           ctx,
+		cancel:        cancel,
 	}
 
 	s.initializeMessageAuth(cfg, auth, logger)
@@ -170,27 +209,105 @@ func (s *GatewayServer) Start() error {
 		}
 	}
 
-	// Start all frontends
+	// Initialize all frontends (setup routes, but don't start servers)
 	for _, frontend := range s.frontends {
 		if err := frontend.Start(s.ctx); err != nil {
-			s.logger.Error("failed to start frontend",
+			s.logger.Error("failed to initialize frontend",
 				zap.String("name", frontend.GetName()),
 				zap.String("protocol", frontend.GetProtocol()),
 				zap.Error(err))
-			// Stop health server and previously started frontends
+			// Stop health server
 			if s.healthServer != nil {
 				_ = s.healthServer.Stop(s.ctx)
 			}
-			s.stopStartedFrontends(s.ctx)
 
-			return fmt.Errorf("failed to start frontend %s: %w", frontend.GetName(), err)
+			return fmt.Errorf("failed to initialize frontend %s: %w", frontend.GetName(), err)
 		}
-		s.logger.Info("started frontend",
+		s.logger.Info("initialized frontend",
 			zap.String("name", frontend.GetName()),
 			zap.String("protocol", frontend.GetProtocol()))
 	}
 
+	// Start shared HTTP servers (groups frontends by address)
+	if err := s.startSharedServers(); err != nil {
+		s.logger.Error("failed to start shared servers", zap.Error(err))
+		// Stop health server and frontends
+		if s.healthServer != nil {
+			_ = s.healthServer.Stop(s.ctx)
+		}
+		s.stopStartedFrontends(s.ctx)
+
+		return fmt.Errorf("failed to start shared servers: %w", err)
+	}
+
 	s.logger.Info("gateway server started successfully")
+
+	return nil
+}
+
+// startSharedServers groups frontends by address and starts shared HTTP servers.
+// Multiple frontends on the same address will share a single HTTP server with multiplexed handlers.
+func (s *GatewayServer) startSharedServers() error {
+	// Group frontends by address
+	addressGroups := make(map[string][]frontends.Frontend)
+	for _, frontend := range s.frontends {
+		addr := frontend.GetAddress()
+		addressGroups[addr] = append(addressGroups[addr], frontend)
+	}
+
+	// Create and start a shared server for each address
+	for addr, fes := range addressGroups {
+		// Create a multiplexing handler that delegates to each frontend's handler
+		// Each frontend's handler (their internal mux) has specific paths registered
+		var handler http.Handler
+		if len(fes) == 1 {
+			// Single frontend - use its handler directly
+			handler = fes[0].GetHandler()
+		} else {
+			// Multiple frontends - create a custom multiplexing handler
+			// that delegates to each frontend's handler
+			handlers := make([]http.Handler, len(fes))
+			for i, fe := range fes {
+				handlers[i] = fe.GetHandler()
+			}
+			handler = &multiHandler{handlers: handlers}
+		}
+
+		// Create shared HTTP server
+		server := &http.Server{
+			Addr:    addr,
+			Handler: handler,
+		}
+
+		// Start the server in a goroutine
+		s.wg.Add(1)
+		go func(addr string, srv *http.Server) {
+			defer s.wg.Done()
+
+			s.logger.Info("starting shared HTTP server", zap.String("address", addr))
+
+			var err error
+			// TODO: Handle TLS configuration properly
+			// For now using HTTP only - TLS will be added in a follow-up
+			err = srv.ListenAndServe()
+
+			if err != nil && err != http.ErrServerClosed {
+				s.logger.Error("shared HTTP server error",
+					zap.String("address", addr),
+					zap.Error(err))
+			}
+		}(addr, server)
+
+		// Store the server and inject it into each frontend
+		s.sharedServers[addr] = server
+		for _, fe := range fes {
+			fe.SetServer(server)
+		}
+
+		s.logger.Info("started shared HTTP server",
+			zap.String("address", addr),
+			zap.Int("frontends", len(fes)))
+	}
 
 	return nil
 }
@@ -226,6 +343,20 @@ func (s *GatewayServer) Shutdown(ctx context.Context) error {
 
 	// Stop all frontends
 	s.stopStartedFrontends(ctx)
+
+	// Shutdown shared HTTP servers
+	shutdownCtx, cancel := context.WithTimeout(ctx, frontendShutdownTimeout)
+	defer cancel()
+
+	for addr, server := range s.sharedServers {
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			s.logger.Warn("error shutting down shared HTTP server",
+				zap.String("address", addr),
+				zap.Error(err))
+		} else {
+			s.logger.Info("shut down shared HTTP server", zap.String("address", addr))
+		}
+	}
 
 	// Wait for all goroutines to finish
 	done := make(chan struct{})

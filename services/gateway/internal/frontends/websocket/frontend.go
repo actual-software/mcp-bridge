@@ -87,6 +87,7 @@ type Frontend struct {
 
 	// WebSocket server
 	server   *http.Server
+	mux      *http.ServeMux
 	upgrader websocket.Upgrader
 
 	// Connection management
@@ -130,6 +131,7 @@ func CreateWebSocketFrontend(
 		router:      router,
 		auth:        auth,
 		sessions:    sessions,
+		mux:         http.NewServeMux(),
 		connections: make(map[string]*ClientConnection),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  defaultReadBufferSize,
@@ -142,7 +144,8 @@ func CreateWebSocketFrontend(
 	}
 }
 
-// Start initializes the frontend and begins accepting connections.
+// Start initializes the frontend (routes only).
+// The HTTP server is managed externally via SetServer() for shared server support.
 func (f *Frontend) Start(ctx context.Context) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -151,49 +154,16 @@ func (f *Frontend) Start(ctx context.Context) error {
 		return fmt.Errorf("websocket frontend already running")
 	}
 
-	// Create HTTP server for WebSocket upgrade
-	mux := http.NewServeMux()
-	mux.HandleFunc(f.config.Path, f.handleWebSocketUpgrade)
-
-	addr := fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
-
-	f.server = &http.Server{
-		Addr:         addr,
-		Handler:      mux,
-		ReadTimeout:  f.config.ReadTimeout,
-		WriteTimeout: f.config.WriteTimeout,
-		TLSConfig:    f.createTLSConfig(),
-	}
-
-	// Start server
-	f.wg.Add(1)
-	go func() {
-		defer f.wg.Done()
-
-		var err error
-		if f.config.TLS.Enabled {
-			f.logger.Info("starting WebSocket frontend with TLS",
-				zap.String("address", addr),
-				zap.String("path", f.config.Path))
-			err = f.server.ListenAndServeTLS(f.config.TLS.CertFile, f.config.TLS.KeyFile)
-		} else {
-			f.logger.Info("starting WebSocket frontend",
-				zap.String("address", addr),
-				zap.String("path", f.config.Path))
-			err = f.server.ListenAndServe()
-		}
-
-		if err != nil && err != http.ErrServerClosed {
-			f.logger.Error("server error", zap.Error(err))
-		}
-	}()
+	// Setup routes on internal mux
+	f.mux.HandleFunc(f.config.Path, f.handleWebSocketUpgrade)
 
 	f.running = true
 	f.updateMetrics(func(m *types.FrontendMetrics) {
 		m.IsRunning = true
 	})
 
-	f.logger.Info("websocket frontend started",
+	addr := fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
+	f.logger.Info("websocket frontend initialized",
 		zap.String("address", addr),
 		zap.String("path", f.config.Path),
 		zap.Bool("tls", f.config.TLS.Enabled))
@@ -218,15 +188,7 @@ func (f *Frontend) Stop(ctx context.Context) error {
 	close(f.shutdownCh)
 	f.cancel()
 
-	// Shutdown HTTP server
-	if f.server != nil {
-		shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-		defer cancel()
-
-		if err := f.server.Shutdown(shutdownCtx); err != nil {
-			f.logger.Error("error shutting down HTTP server", zap.Error(err))
-		}
-	}
+	// Note: HTTP server is externally managed, so we don't shutdown it here
 
 	// Notify all connections of shutdown
 	f.notifyConnectionsOfShutdown()
@@ -272,6 +234,23 @@ func (f *Frontend) GetMetrics() types.FrontendMetrics {
 	defer f.metricsMu.RUnlock()
 
 	return f.metrics
+}
+
+// GetHandler returns the HTTP handler for this frontend.
+func (f *Frontend) GetHandler() http.Handler {
+	return f.mux
+}
+
+// GetAddress returns the host:port address this frontend listens on.
+func (f *Frontend) GetAddress() string {
+	return fmt.Sprintf("%s:%d", f.config.Host, f.config.Port)
+}
+
+// SetServer injects the shared HTTP server into this frontend.
+func (f *Frontend) SetServer(server *http.Server) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.server = server
 }
 
 // handleWebSocketUpgrade handles WebSocket upgrade requests.
