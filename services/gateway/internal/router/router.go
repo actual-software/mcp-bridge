@@ -1249,6 +1249,148 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 	return stream, nil
 }
 
+// establishSSESessionViaInitialize establishes an SSE session by sending an initialize request directly.
+// This supports backends like Serena that create the session during the initialize request itself,
+// returning the session ID in the Mcp-Session-Id header along with an SSE-formatted response.
+// This is compliant with the MCP Streamable HTTP spec which states that servers MAY assign a session ID
+// "at initialization time, by including it in an Mcp-Session-Id header on the HTTP response containing
+// the InitializeResult."
+func (r *Router) establishSSESessionViaInitialize(
+	ctx context.Context,
+	endpoint *discovery.Endpoint,
+	req *mcp.Request,
+) (*sseStream, *mcp.Response, error) {
+	url := r.buildHTTPURL(endpoint)
+
+	// Marshal the initialize request
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal initialize request: %w", err)
+	}
+
+	// Create POST request with the initialize request
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create initialize request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "application/json, text/event-stream")
+
+	// Add user info for correlation/logging (but NOT session ID - this is the first request)
+	if sess, ok := ctx.Value(common.SessionContextKey).(*session.Session); ok {
+		httpReq.Header.Set("X-MCP-User", sess.User)
+		r.logger.Info("Establishing SSE session via initialize request",
+			zap.String("user", sess.User),
+			zap.String("endpoint", url))
+	}
+
+	// Send the initialize request
+	client := r.getOrCreateHTTPClient(endpoint)
+	r.logger.Info("Sending initialize request to establish SSE session",
+		zap.String("endpoint", url),
+		zap.String("method", "POST"))
+
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return nil, nil, fmt.Errorf("initialize request failed: %w", err)
+	}
+
+	// Check for 200 OK status
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+
+		return nil, nil, fmt.Errorf("initialize request returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Extract session ID from response header
+	sessionID := resp.Header.Get("Mcp-Session-Id")
+	if sessionID == "" {
+		_ = resp.Body.Close()
+
+		return nil, nil, fmt.Errorf("no session ID received from initialize response (missing Mcp-Session-Id header)")
+	}
+
+	// Check if response is SSE format
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.Contains(contentType, "text/event-stream") {
+		// Not SSE format - read the response and return it without creating a stream
+		_ = resp.Body.Close()
+
+		return nil, nil, fmt.Errorf("initialize response is not SSE format (Content-Type: %s)", contentType)
+	}
+
+	r.logger.Info("SSE session established via initialize request",
+		zap.String("endpoint", url),
+		zap.String("session_id", sessionID),
+		zap.String("content_type", contentType))
+
+	// The response body is an SSE stream - we need to read the first event (initialize response)
+	// then keep the stream open for future responses
+	reader := bufio.NewReader(resp.Body)
+
+	// Read the first SSE event which should be the initialize response
+	var initializeResp *mcp.Response
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			_ = resp.Body.Close()
+
+			return nil, nil, fmt.Errorf("failed to read initialize response from SSE stream: %w", err)
+		}
+
+		line = strings.TrimSpace(line)
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, ":") {
+			continue
+		}
+
+		// Look for data line
+		if strings.HasPrefix(line, "data: ") {
+			data := strings.TrimPrefix(line, "data: ")
+
+			// Parse the initialize response
+			if err := json.Unmarshal([]byte(data), &initializeResp); err != nil {
+				_ = resp.Body.Close()
+
+				return nil, nil, fmt.Errorf("failed to parse initialize response: %w", err)
+			}
+
+			break
+		}
+	}
+
+	if initializeResp == nil {
+		_ = resp.Body.Close()
+
+		return nil, nil, fmt.Errorf("no initialize response found in SSE stream")
+	}
+
+	r.logger.Info("Read initialize response from SSE stream",
+		zap.String("endpoint", url),
+		zap.Any("response_id", initializeResp.ID))
+
+	// Create the SSE stream for future requests
+	// The reader already consumed the initialize response, so it's ready to read future responses
+	streamCtx, cancel := context.WithCancel(ctx)
+
+	stream := &sseStream{
+		sessionID:       sessionID,
+		conn:            resp,
+		reader:          reader,
+		pendingRequests: make(map[interface{}]chan *mcp.Response),
+		ctx:             streamCtx,
+		cancel:          cancel,
+	}
+
+	// Start reading from the SSE stream
+	go r.readSSEStream(streamCtx, url, stream)
+
+	return stream, initializeResp, nil
+}
+
 // readSSEStream reads from an SSE stream and delivers responses to pending requests.
 // This runs as a goroutine for each SSE connection.
 //
@@ -1386,7 +1528,44 @@ func (r *Router) forwardRequestViaSSE(
 		r.logger.Info("Establishing new SSE session",
 			zap.String("endpoint", endpointURL))
 
-		newStream, err := r.establishSSESession(ctx, endpoint)
+		// For initialize requests, try POST-based session establishment first
+		// This supports backends like Serena that create sessions during initialization
+		var newStream *sseStream
+		var initializeResp *mcp.Response
+		var err error
+
+		if req.Method == "initialize" {
+			r.logger.Info("Trying POST-based initialization for SSE session",
+				zap.String("endpoint", endpointURL))
+
+			newStream, initializeResp, err = r.establishSSESessionViaInitialize(ctx, endpoint, req)
+			if err == nil {
+				// Success! Store stream and return initialize response immediately
+				r.sseStreamsMu.Lock()
+				r.sseStreams[endpointURL] = newStream
+				r.sseStreamsMu.Unlock()
+
+				r.logger.Info("SSE session established via POST-initialize, returning response",
+					zap.String("endpoint", endpointURL),
+					zap.String("session_id", newStream.sessionID))
+
+				span.SetTag("sse.session_id", newStream.sessionID)
+				span.SetTag("sse.endpoint", endpointURL)
+				span.SetTag("sse.establishment", "post-initialize")
+				span.LogKV("sse.success", true)
+
+				return initializeResp, nil
+			}
+
+			// POST-initialize failed, log and fall back to GET-based establishment
+			r.logger.Warn("POST-initialize failed, falling back to GET-based establishment",
+				zap.String("endpoint", endpointURL),
+				zap.Error(err))
+		}
+
+		// Fall back to GET-based session establishment
+		// (either because it's not an initialize request, or POST-initialize failed)
+		newStream, err = r.establishSSESession(ctx, endpoint)
 		if err != nil {
 			return nil, fmt.Errorf("failed to establish SSE session: %w", err)
 		}

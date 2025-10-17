@@ -14,6 +14,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc22] - 2025-10-17
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **SSE Session Initialization Protocol Support** - Added support for MCP backends (like Serena) that create sessions during the initialize request itself, returning the session ID in the `Mcp-Session-Id` header along with an SSE-formatted initialize response. The MCP Streamable HTTP spec states that servers MAY assign a session ID "at initialization time, by including it in an Mcp-Session-Id header on the HTTP response containing the InitializeResult." The rc21 gateway only supported the GET-based session establishment pattern (GET request → receive session ID → POST initialize request), which didn't work with backends that expect the initialize request to be sent directly and return both the session ID and initialize response in one round trip. The gateway now detects initialize requests and tries POST-based initialization first, falling back to GET-based establishment if that fails. This maintains full backward compatibility while enabling connectivity with a wider range of MCP server implementations.
+
+### Technical Details
+#### SSE Session Initialization
+- Added `establishSSESessionViaInitialize()` method in `services/gateway/internal/router/router.go:1252`
+  - Sends POST request with initialize request body
+  - Extracts session ID from `Mcp-Session-Id` response header
+  - Reads first SSE event (initialize response) from the stream
+  - Creates SSE stream for future requests using the existing reader
+  - Returns both the stream and the initialize response
+- Modified `forwardRequestViaSSE()` in `services/gateway/internal/router/router.go:1537-1564`
+  - Added detection for initialize requests
+  - Tries POST-based initialization first for initialize requests
+  - If POST succeeds: stores stream and returns initialize response immediately
+  - If POST fails: falls back to GET-based session establishment (rc21 behavior)
+  - For non-initialize requests: uses existing GET-based flow
+- This implements dual initialization flow support:
+  - POST-initialize pattern: Serena's approach where initialize request creates the session
+  - GET-establish pattern: rc21's approach where GET creates session, then POST sends initialize
+- Maintains full backward compatibility with all backend types
+- Modified files: `services/gateway/internal/router/router.go`
+
 ## [1.0.0-rc21] - 2025-10-16
 
 ### Fixed
