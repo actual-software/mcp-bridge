@@ -74,6 +74,10 @@ type Router struct {
 	metrics   *metrics.Registry
 	logger    *zap.Logger
 
+	// Background context for long-lived operations like SSE streams
+	// This context should outlive individual HTTP requests
+	bgCtx context.Context
+
 	// Load balancers per namespace
 	balancers  map[string]loadbalancer.LoadBalancer
 	balancerMu sync.RWMutex
@@ -113,6 +117,7 @@ func InitializeRequestRouter(
 		discovery:       discovery,
 		metrics:         metrics,
 		logger:          logger,
+		bgCtx:           ctx, // Store background context for long-lived operations
 		balancers:       make(map[string]loadbalancer.LoadBalancer),
 		breakers:        make(map[string]*circuit.CircuitBreaker),
 		endpointClients: make(map[string]*http.Client),
@@ -1230,7 +1235,9 @@ func (r *Router) establishSSESession(ctx context.Context, endpoint *discovery.En
 		}
 	}()
 
-	streamCtx, cancel := context.WithCancel(ctx)
+	// IMPORTANT: Use background context for SSE stream, not the request context
+	// The stream must outlive individual HTTP requests to support persistent connections
+	streamCtx, cancel := context.WithCancel(r.bgCtx)
 
 	stream := &sseStream{
 		sessionID:       sessionID,
@@ -1384,7 +1391,10 @@ func (r *Router) establishSSESessionViaInitialize(
 	}
 
 	// Create SSE stream for future requests
-	streamCtx, cancel := context.WithCancel(ctx)
+	// IMPORTANT: Use background context for SSE stream, not the request context
+	// The stream must outlive the initialize request to support subsequent requests
+	// This is critical for backends like Serena that use POST-based session initialization
+	streamCtx, cancel := context.WithCancel(r.bgCtx)
 	stream := &sseStream{
 		sessionID:       sessionID,
 		conn:            resp,

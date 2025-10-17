@@ -14,6 +14,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overall test coverage improved from 84.3% to 69.0%
 - Production readiness status increased to 99%
 
+## [1.0.0-rc23] - 2025-10-17
+
+### Fixed
+
+#### 🐛 **Critical Fixes**
+- **SSE Stream Lifecycle Management** - Fixed SSE streams terminating after the initialize request completes, causing subsequent requests to fail. In rc22, when the gateway used POST-based initialization (for backends like Serena), it created the SSE stream context from the HTTP request context. When the initialize request completed and returned to the client, the request context was cancelled, which killed the stream reading goroutine and removed the stream from the cache. Subsequent requests (tools/list, prompts/list, etc.) didn't find the cached stream and tried to establish new sessions with GET, which failed because the backend expected the session ID from the initialize request. The fix uses the router's long-lived background context for SSE streams instead of the per-request context, ensuring streams persist across multiple requests. This is critical for POST-based SSE initialization where the session must outlive the initialize request.
+
+### Technical Details
+#### SSE Stream Context Lifecycle
+- Added `bgCtx context.Context` field to Router struct in `services/gateway/internal/router/router.go:79`
+  - Stores the long-lived background context passed during router initialization
+  - This context outlives individual HTTP requests and is suitable for persistent connections
+- Modified `InitializeRequestRouter()` in `services/gateway/internal/router/router.go:120`
+  - Stores the initialization context as `bgCtx` for long-lived operations
+  - This context typically lives for the entire lifetime of the gateway process
+- Modified `establishSSESession()` in `services/gateway/internal/router/router.go:1240`
+  - Changed from `context.WithCancel(ctx)` to `context.WithCancel(r.bgCtx)`
+  - GET-based session establishment now uses background context
+  - Ensures GET-established streams persist across requests
+- Modified `establishSSESessionViaInitialize()` in `services/gateway/internal/router/router.go:1397`
+  - Changed from `context.WithCancel(ctx)` to `context.WithCancel(r.bgCtx)`
+  - POST-based session establishment now uses background context
+  - Critical for backends like Serena that create sessions during initialize
+  - Stream now survives after initialize request completes and response is returned
+- Stream lifecycle is now decoupled from HTTP request lifecycle
+- Fixes the "failed to establish SSE session: session establishment returned 400: Missing session ID" errors
+- Enables successful end-to-end connectivity with Serena and other POST-initialize backends
+- Modified files: `services/gateway/internal/router/router.go`
+
 ## [1.0.0-rc22] - 2025-10-17
 
 ### Fixed
