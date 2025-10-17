@@ -1,10 +1,11 @@
 package server
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"net"
 	"net/http"
-	"net/http/httptest"
 	"sync"
 	"time"
 
@@ -28,37 +29,67 @@ const (
 	frontendShutdownTimeout            = 30 * time.Second
 )
 
+// statusTracker wraps http.ResponseWriter to track if a response was written.
+type statusTracker struct {
+	http.ResponseWriter
+	status  int
+	written bool
+}
+
+func (st *statusTracker) WriteHeader(status int) {
+	if !st.written {
+		st.status = status
+		st.written = true
+		st.ResponseWriter.WriteHeader(status)
+	}
+}
+
+func (st *statusTracker) Write(b []byte) (int, error) {
+	if !st.written {
+		st.WriteHeader(http.StatusOK)
+	}
+	return st.ResponseWriter.Write(b)
+}
+
+// Hijack implements http.Hijacker if the underlying ResponseWriter supports it.
+func (st *statusTracker) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacker, ok := st.ResponseWriter.(http.Hijacker); ok {
+		return hijacker.Hijack()
+	}
+	return nil, nil, fmt.Errorf("hijacking not supported")
+}
+
 // multiHandler multiplexes requests across multiple handlers.
-// It tries each handler in order. Since each handler is a frontend's mux
-// with specific paths registered, the first handler that matches will handle the request.
+// It tries each handler in order until one handles the request (returns non-404).
 type multiHandler struct {
 	handlers []http.Handler
 }
 
 func (m *multiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Try each handler in sequence, using a response recorder to detect 404s
+	// Try each handler until one handles the request
 	for i, h := range m.handlers {
-		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, r)
+		tracker := &statusTracker{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+			written:        false,
+		}
 
-		// If this handler returned a non-404 status, use its response
-		if rec.Code != http.StatusNotFound {
-			// Copy the recorded response to the actual response writer
-			for k, v := range rec.Header() {
-				w.Header()[k] = v
-			}
-			w.WriteHeader(rec.Code)
-			_, _ = w.Write(rec.Body.Bytes())
+		h.ServeHTTP(tracker, r)
+
+		// If this handler wrote something and it's not a 404, we're done
+		if tracker.written && tracker.status != http.StatusNotFound {
 			return
 		}
 
-		// If this was the last handler and it returned 404, send that 404
+		// If we're on the last handler, let its response through even if it's a 404
 		if i == len(m.handlers)-1 {
-			for k, v := range rec.Header() {
-				w.Header()[k] = v
-			}
-			w.WriteHeader(rec.Code)
-			_, _ = w.Write(rec.Body.Bytes())
+			return
+		}
+
+		// This handler returned 404, try the next one
+		// Clear any headers set by the 404 handler before trying the next
+		for k := range w.Header() {
+			w.Header().Del(k)
 		}
 	}
 }
